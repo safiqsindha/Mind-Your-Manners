@@ -66,10 +66,22 @@ tests.
 
 ## Total spend
 
-**$0.00.** No live API call has been made from this harness. Per-call
-spend logging (`results/raw/*.jsonl`) and a running total
+**$0.00 against the study's target-model budget caps.** No target model
+(Gemini/DeepSeek/Qwen/Llama/frontier spot-check) has been called.
+
+Separately, **~$0.28** was spent on real-inference *pipeline* smoke tests
+using `harness/providers/claude_cli_provider.py` (local `claude` CLI,
+session-authenticated) -- a handful of exploratory calls plus a 2-item x
+5-tone-level run through the actual Study 1 Part B runner, confirming the
+wrapper -> real call -> extraction -> scoring -> cost-tracking path works
+end-to-end. This is not counted against the $50/$15/$40/$150 caps below,
+since it used a non-target model purely to validate plumbing -- see
+README.md "Smoke-testing with real inference."
+
+Per-call spend logging (`results/raw/*.jsonl`) and a running total
 (`results/spend_log.jsonl`) are wired up and budget-capped
-(`harness/spend_tracker.py:BudgetExceeded`) for whenever a live run starts:
+(`harness/spend_tracker.py:BudgetExceeded`) for whenever a live target-model
+run starts:
 
 | Phase | Cap |
 |---|---|
