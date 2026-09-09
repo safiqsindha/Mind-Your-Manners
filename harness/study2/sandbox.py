@@ -48,14 +48,40 @@ _UNSHARE_NET_ARGS = ["--net", "--user", "--map-root-user", "--pid", "--mount-pro
 
 @functools.lru_cache(maxsize=1)
 def sandbox_isolation_mode() -> str:
-    """Returns "namespace" if network isolation via `unshare` is available
-    on this host, else "none". Callers/tests should check this rather than
-    assuming network isolation is active -- see module docstring."""
+    """Returns "namespace" if network isolation via `unshare` is both
+    present AND actually usable on this host, else "none". The `unshare`
+    binary being on PATH is not sufficient -- user-namespace creation can
+    be permission-denied even for root, and this varies by host: it
+    succeeds in this project's own dev/build environment but fails on a
+    default GitHub Actions ubuntu-latest runner with "write failed
+    /proc/self/uid_map: Operation not permitted" (confirmed via a real CI
+    run -- see git history). So this actually attempts a trivial
+    `unshare --net --user --map-root-user ... true` and checks it
+    succeeds, rather than assuming binary-presence implies it works.
+    Callers/tests should check this rather than assuming network isolation
+    is active -- see module docstring."""
     if shutil.which("unshare") is None:
         warnings.warn(
             "`unshare` binary not found -- Study 2's code sandbox has NO network "
             "isolation on this host. Do not run a live, spend-worthy Study 2 batch "
             "without fixing this (install util-linux, or run inside a container).",
+            stacklevel=2,
+        )
+        return "none"
+
+    probe = subprocess.run(
+        ["unshare", *_UNSHARE_NET_ARGS, "true"],
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    if probe.returncode != 0:
+        warnings.warn(
+            "`unshare` is present but namespace creation failed on this host "
+            f"({probe.stderr.strip()!r}) -- Study 2's code sandbox has NO network "
+            "isolation here. Do not run a live, spend-worthy Study 2 batch without "
+            "fixing this (run as a user allowed to create user namespaces, or use a "
+            "container instead).",
             stacklevel=2,
         )
         return "none"
