@@ -94,10 +94,12 @@ def cmd_study1_validation_gate(args: argparse.Namespace) -> None:
 
 
 def cmd_study1_part_a(args: argparse.Namespace) -> None:
+    from .study1.dataset import ensure_mind_your_tone_repo
     from .study1.runner import run_part_a_replication
 
+    dataset_path = Path(args.dataset_path) if args.dataset_path else ensure_mind_your_tone_repo(Path("data"))
     models = resolve_models(args.models.split(","), args.live)
-    rows = run_part_a_replication(models, Path(args.dataset_path), RESULTS_ROOT, budget_cap_usd=args.budget_cap)
+    rows = run_part_a_replication(models, dataset_path, RESULTS_ROOT, budget_cap_usd=args.budget_cap, n_runs=args.n_runs)
     print(f"Part A: {len(rows)} calls logged to results/raw/study1_part_a.jsonl")
 
 
@@ -186,8 +188,13 @@ def build_parser() -> argparse.ArgumentParser:
     g.set_defaults(func=cmd_study1_validation_gate)
 
     a = s1_sub.add_parser("part-a")
-    a.add_argument("--dataset-path", required=True, help="Local path to the Mind Your Tone 250-prompt file")
+    a.add_argument(
+        "--dataset-path", default=None,
+        help="Path to 50_que_dataset.csv or its containing dir. Omit to auto-clone "
+             "github.com/OmDobariya/AMCIS_politeness_llms into data/ (see study1/dataset.py).",
+    )
     a.add_argument("--models", default=",".join(m.key for m in CORE_MODELS))
+    a.add_argument("--n-runs", type=int, default=10, help="Repeats per prompt, matching the original protocol's NUM_RUNS=10")
     a.add_argument("--budget-cap", type=float, default=STUDY1_BUDGET_CAP_USD)
     a.set_defaults(func=cmd_study1_part_a)
 

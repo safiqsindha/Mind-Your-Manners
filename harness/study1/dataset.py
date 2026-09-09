@@ -1,14 +1,33 @@
 """Dataset loaders for Study 1.
 
-Part A (replication) needs the Mind Your Tone (arXiv 2510.04950) 250-prompt
-set exactly as published. As of this harness's last research pass (see
-README.md "Dataset availability"), no public code/data repository for that
-paper could be located -- the paper text does not link one, and no
-`anonymous.4open.science` or GitHub link for it turned up in search. Part A
-is therefore blocked on obtaining that file directly from the authors (Om
-Dobariya and Akhil Kumar) or from ACL Anthology supplementary materials, and
-`load_mind_your_tone()` below takes a required local path rather than a URL
--- do not hardcode a guessed download URL here.
+Part A (replication) needs the Mind Your Tone 250-prompt set exactly as
+published. The original short paper (arXiv 2510.04950) does not link a
+repository, and none turned up in search -- but its full-paper extension
+("Mind Your Tone: Does Tone Alter LLM Performance?", Dobariya & Kumar,
+AMCIS 2026, arXiv 2605.29027) does, and it's the same 50-question/250-prompt
+dataset (the full paper explicitly calls it "our earlier preliminary
+study"). Confirmed by actually cloning it: `MIND_YOUR_TONE_REPO_URL` below
+is real, MIT-licensed, and contains exactly the CSV the paper cites.
+
+Real CSV schema (confirmed against the actual file, not the paper's prose):
+  columns: QID, Domain, "Base Question", "Politeness Level", Prompt, Answer
+  "Politeness Level" values: "Very Rude", "Rude", "Normal" (not "Neutral"),
+  "Polite", "Very Polite". `Prompt` is the FULL ready-to-send text (tone
+  prefix + base question + lettered options already combined) -- send it
+  verbatim, don't reconstruct it from parts.
+
+Real evaluation protocol (confirmed from the repo's own
+`code_50_que_all_llms.ipynb`, not re-derived): every call uses system
+message "You are an AI tutor answering multiple choice questions. Always
+reply with ONLY the letter of the correct answer (A, B, C, or D). Do not
+explain your answer.", and a user message of
+"Completely forget this session so far, and start afresh.\n\nPlease answer
+this multiple choice question. Respond with only the letter of the correct
+answer (A, B, C, or D). Do not explain.\n\n" + the CSV's Prompt column,
+at temperature=0, run NUM_RUNS=10 times per prompt. See
+`MIND_YOUR_TONE_SYSTEM_PROMPT` / `render_mind_your_tone_prompt()` below and
+`study1/runner.py:run_part_a_replication`, which reproduces this exactly
+rather than using Study 1's generic system prompt.
 
 Part B (remaster) uses MMLU-Pro (primary) and optionally GPQA Diamond
 (secondary), both pulled via the `datasets` library from Hugging Face.
@@ -16,10 +35,30 @@ Part B (remaster) uses MMLU-Pro (primary) and optionally GPQA Diamond
 from __future__ import annotations
 
 import csv
-import json
+import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
+
+MIND_YOUR_TONE_REPO_URL = "https://github.com/OmDobariya/AMCIS_politeness_llms.git"
+MIND_YOUR_TONE_CSV_NAME = "50_que_dataset.csv"
+
+MIND_YOUR_TONE_SYSTEM_PROMPT = (
+    "You are an AI tutor answering multiple choice questions. "
+    "Always reply with ONLY the letter of the correct answer (A, B, C, or D). "
+    "Do not explain your answer."
+)
+
+
+def render_mind_your_tone_prompt(csv_prompt_text: str) -> str:
+    """Wraps the CSV's `Prompt` column in the exact user-message text their
+    own notebook sends -- do not send csv_prompt_text bare."""
+    return (
+        "Completely forget this session so far, and start afresh.\n\n"
+        "Please answer this multiple choice question. Respond with only the "
+        "letter of the correct answer (A, B, C, or D). Do not explain.\n\n"
+        + csv_prompt_text
+    )
 
 
 @dataclass(frozen=True)
@@ -47,66 +86,80 @@ class MindYourToneRow:
     """One row of the *original* Mind Your Tone dataset: a single
     (base_question, tone_level) pair with its own hand-rewritten prompt text.
     Used only for Part A, where we must reproduce their protocol exactly --
-    including their own tone rewrites, not our wrappers."""
+    including their own tone rewrites, not our wrappers.
+
+    `prompt_text` is the CSV's `Prompt` column verbatim (tone prefix +
+    question + lettered options already combined) -- pass it through
+    `render_mind_your_tone_prompt()` before sending, don't re-wrap it
+    yourself; that function reproduces their notebook's exact user-message
+    text, including the "Completely forget this session..." instruction
+    preamble that is NOT in the CSV.
+    """
 
     base_id: str
-    tone_level: str  # one of TONE_ORDER keys, mapped from their label
+    domain: str
+    tone_level: str  # one of TONE_ORDER keys, mapped from their "Politeness Level"
     prompt_text: str
-    choices: list[str]
     answer_letter: str
-    subject: str
 
 
 _MIND_YOUR_TONE_LABEL_MAP = {
     "very polite": "L1_very_polite",
     "polite": "L2_polite",
-    "neutral": "L3_neutral",
+    "normal": "L3_neutral",  # their label is "Normal", not "Neutral"
     "rude": "L4_rude",
     "very rude": "L5_very_rude",
 }
 
 
-def load_mind_your_tone(path: Path) -> list[MindYourToneRow]:
-    """Load the original 250-prompt Mind Your Tone dataset from a local file.
+def ensure_mind_your_tone_repo(cache_dir: Path) -> Path:
+    """Clone the Mind Your Tone dataset repo into cache_dir if not already
+    present. Confirmed real and MIT-licensed by actually cloning it -- see
+    module docstring for how it was found (it's linked from the paper's
+    AMCIS 2026 full-paper extension, arXiv 2605.29027, not the original
+    short paper)."""
+    cache_dir = Path(cache_dir)
+    repo_dir = cache_dir / "AMCIS_politeness_llms"
+    if repo_dir.exists():
+        return repo_dir
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    subprocess.run(["git", "clone", "--depth", "1", MIND_YOUR_TONE_REPO_URL, str(repo_dir)], check=True)
+    return repo_dir
 
-    Expects either .json (a list of objects) or .csv, with fields:
-    base_id, tone_level (one of "Very Polite".."Very Rude", case-insensitive),
-    prompt_text, choices (list or "A|B|C|D"-joined string), answer_letter,
-    subject. Adjust this loader once the actual file is obtained if its
-    schema differs -- the paper's exact column names were not confirmed
-    (see module docstring).
+
+def load_mind_your_tone(path: Path) -> list[MindYourToneRow]:
+    """Load the original 250-prompt Mind Your Tone dataset from a local
+    copy of `50_que_dataset.csv` (see `ensure_mind_your_tone_repo()`) or
+    an equivalent file at `path`.
+
+    Real, confirmed schema (not the paper's prose -- the actual CSV
+    header): QID, Domain, "Base Question", "Politeness Level", Prompt,
+    Answer. `path` may point directly at the CSV, or at a directory
+    containing `50_que_dataset.csv` (e.g. the cloned repo root).
     """
     path = Path(path)
+    if path.is_dir():
+        path = path / MIND_YOUR_TONE_CSV_NAME
     if not path.exists():
         raise FileNotFoundError(
             f"Mind Your Tone dataset not found at {path}. Part A replication cannot "
-            "proceed without it -- see harness/study1/dataset.py module docstring "
-            "for why this must be supplied locally rather than fetched."
+            "proceed without it -- call ensure_mind_your_tone_repo() first, or supply "
+            "the path to 50_que_dataset.csv directly."
         )
 
-    rows: list[dict] = []
-    if path.suffix == ".json":
-        rows = json.loads(path.read_text())
-    elif path.suffix == ".csv":
-        with open(path, newline="", encoding="utf-8") as fh:
-            rows = list(csv.DictReader(fh))
-    else:
-        raise ValueError(f"Unsupported dataset file type: {path.suffix}")
+    with open(path, newline="", encoding="utf-8") as fh:
+        rows = list(csv.DictReader(fh))
 
     out = []
     for r in rows:
-        choices = r["choices"]
-        if isinstance(choices, str):
-            choices = [c.strip() for c in choices.split("|")]
-        tone_level = _MIND_YOUR_TONE_LABEL_MAP[str(r["tone_level"]).strip().lower()]
+        tone_level = _MIND_YOUR_TONE_LABEL_MAP[r["Politeness Level"].strip().lower()]
         out.append(
             MindYourToneRow(
-                base_id=str(r["base_id"]),
+                base_id=str(r["QID"]),
+                domain=r["Domain"],
                 tone_level=tone_level,
-                prompt_text=r["prompt_text"],
-                choices=choices,
-                answer_letter=str(r["answer_letter"]).strip().upper(),
-                subject=r.get("subject", "unknown"),
+                prompt_text=r["Prompt"],
+                answer_letter=r["Answer"].strip().upper(),
             )
         )
     if len(out) != 250:

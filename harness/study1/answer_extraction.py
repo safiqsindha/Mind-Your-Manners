@@ -57,3 +57,27 @@ def extract_answer(response_text: str, correct_letter: str, provider_flagged_ref
             )
 
     return ExtractionResult(outcome="unparseable", letter=None, is_correct=None)
+
+
+# Mind Your Tone's own extractor, confirmed verbatim from their
+# code_50_que_all_llms.ipynb: `re.search(r'\b([A-D])\b', response.upper().strip())`.
+# Used only by study1/runner.py:run_part_a_replication, where the task spec
+# requires "same answer extraction" as the original -- everywhere else in
+# this harness uses the more permissive extract_answer() above.
+_MIND_YOUR_TONE_LETTER_RE = re.compile(r"\b([A-D])\b")
+
+
+def extract_answer_mind_your_tone(response_text: str, correct_letter: str, provider_flagged_refusal: bool) -> ExtractionResult:
+    if provider_flagged_refusal or (response_text and _REFUSAL_RE.search(response_text)):
+        return ExtractionResult(outcome="refused", letter=None, is_correct=None)
+
+    text = (response_text or "").upper().strip()
+    if not text:
+        return ExtractionResult(outcome="unparseable", letter=None, is_correct=None)
+
+    m = _MIND_YOUR_TONE_LETTER_RE.search(text)
+    if not m:
+        return ExtractionResult(outcome="unparseable", letter=None, is_correct=None)
+
+    letter = m.group(1)
+    return ExtractionResult(outcome="answered", letter=letter, is_correct=(letter == correct_letter.upper()))
