@@ -21,12 +21,18 @@ suite. They have not been run against a real model.
 
 ## Part A — Replication (Mind Your Tone, arXiv 2510.04950)
 
-**Blocked.** The original 250-prompt dataset has no discoverable public
-repository (searched the arXiv abstract, PDF, HTML mirror, and secondary
-sources — see `README.md` "Dataset availability"). The paper text does not
-link a repo, and no `anonymous.4open.science`/GitHub link for it exists in
-the published version. Replication cannot proceed without this file coming
-from the authors or ACL Anthology supplementary materials.
+**No longer blocked; not yet run against a target model.** The 250-prompt
+dataset's repo was found via the paper's full-paper extension (arXiv
+2605.29027, same authors) at
+`github.com/OmDobariya/AMCIS_politeness_llms` — confirmed real, cloned, and
+inspected directly (see `README.md` "Dataset availability" for the full
+account). `harness/study1/dataset.py`, `runner.py`, and
+`answer_extraction.py` were rewritten to reproduce their real CSV schema,
+their real system prompt + instruction preamble (pulled directly from
+their own `code_50_que_all_llms.ipynb`, not re-derived), their NUM_RUNS=10
+protocol, and their exact answer-extraction regex. A full mock-provider
+pass through `run_part_a_replication` against the real cloned 250-row CSV
+completes correctly end-to-end.
 
 Original paper's own reported numbers, for reference (ChatGPT-4o only, not
 yet reproduced by this harness on any model):
@@ -39,7 +45,18 @@ yet reproduced by this harness on any model):
 | Rude | 82.8% |
 | Very Rude | 84.8% |
 
-**Replication verdict: not yet determined — dataset unobtained.**
+The AMCIS 2026 full-paper extension adds a second, larger dataset (570
+MMLU questions across 57 subjects, 7 tones including two new extremes —
+Sycophantic and Threatening — tested on ChatGPT-4o, ChatGPT-5-nano, Gemini
+2.5 Flash, and Gemini 2.5 Flash Lite) and reports tone effects as
+"systematic but highly model-dependent." Not yet incorporated into this
+harness — Part B's MMLU-Pro remaster already covers similar ground with
+programmatic (not hand-written) wrappers, which is the more important
+methodological fix; a 7-tone extension is a possible future addition, not
+a blocker.
+
+**Replication verdict: not yet determined — needs a live run against a
+target model.**
 
 ## Part B — Remaster (MMLU-Pro / GPQA Diamond, programmatic tone wrappers)
 
@@ -116,16 +133,21 @@ run starts:
 
 ## What's needed to actually run this
 
-1. API keys for at least: Google (Gemini Flash-tier), DeepSeek, Qwen
-   (DashScope), OpenRouter (Llama/Gemma-tier) — see `.env.example`.
-2. The Mind Your Tone 250-prompt dataset, obtained directly from the
-   authors, for Part A only (Part B does not need it).
-3. A cloned `SpreadsheetBench` checkout (`harness/study2/dataset.py:ensure_repo`)
-   and one manual grader sanity check before trusting Study 2's scored
-   output.
-4. A container-level sandbox for Study 2's code execution step before any
-   live/spend run (see `harness/study2/sandbox.py` docstring) — the current
-   subprocess-level isolation is a development-time floor, not production
-   isolation for arbitrarily adversarial model-generated code.
+1. **API keys** for at least: Google (Gemini Flash-tier), DeepSeek, Qwen
+   (DashScope), OpenRouter (Llama/Gemma-tier) — see `.env.example`. Only
+   remaining hard blocker that requires the repo owner specifically.
+2. ~~The Mind Your Tone 250-prompt dataset~~ — **resolved**: found via the
+   paper's AMCIS 2026 full-paper extension, `ensure_mind_your_tone_repo()`
+   clones it automatically.
+3. ~~A cloned `SpreadsheetBench` checkout and grader sanity check~~ —
+   **resolved**: cloned, and the grader/dataset code was rewritten to match
+   the real repo (see "Study 2" above). One gap remains: LibreOffice's
+   formula recalculation is broken in this build's own environment —
+   confirm it works wherever a live batch actually runs.
+4. ~~A better sandbox for Study 2's code execution~~ — **resolved**: real,
+   tested network isolation via a Linux user+network namespace. Filesystem
+   access is still unrestricted — a full container is still preferable
+   where available.
 5. Re-verification of every model ID / price in `harness/config.py` against
-   current provider docs (flagged inline with `VERIFY` comments).
+   current provider docs (flagged inline with `VERIFY` comments) — not yet
+   done.

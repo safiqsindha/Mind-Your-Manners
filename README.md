@@ -117,14 +117,29 @@ length/wording changes.
   workflow tasks, `github.com/RUCKBReasoning/SpreadsheetBench-2`) has not
   been schema-verified this way -- treat `dataset.py`'s `v2=True` path as
   unverified.
-- **Mind Your Tone's own 250-prompt dataset** (arXiv 2510.04950) has **no
-  discoverable public repository** -- searched arXiv, the paper text, and
-  common secondary sources; no GitHub/anonymous.4open.science link exists in
-  the published paper. Part A replication is blocked until this file is
-  obtained directly from the authors (Om Dobariya, Akhil Kumar) or from ACL
-  Anthology supplementary materials. `harness/study1/dataset.py:load_mind_your_tone()`
-  takes a local file path for exactly this reason -- don't route around it
-  with a guessed URL.
+- **Mind Your Tone's 250-prompt dataset -- found, and Part A is no longer
+  blocked.** The original short paper (arXiv 2510.04950) links no repo. Its
+  full-paper extension ("Mind Your Tone: Does Tone Alter LLM Performance?",
+  Dobariya & Kumar, AMCIS 2026, arXiv 2605.29027 -- same authors, explicitly
+  calls the short paper "our earlier preliminary study" using the same
+  50-question/250-prompt set) does:
+  `github.com/OmDobariya/AMCIS_politeness_llms` (confirmed real, MIT
+  licensed, cloned and inspected directly). `harness/study1/dataset.py` was
+  rewritten against the real CSV schema (`QID, Domain, "Base Question",
+  "Politeness Level", Prompt, Answer` -- their label is "Normal", not
+  "Neutral") and `ensure_mind_your_tone_repo()` clones it automatically; the
+  CLI's `study1 part-a` now needs no `--dataset-path` at all by default.
+  `harness/study1/runner.py:run_part_a_replication` also now reproduces
+  their exact call protocol, read directly out of their own
+  `code_50_que_all_llms.ipynb` rather than re-derived: their system prompt,
+  their "Completely forget this session so far, and start afresh..."
+  instruction preamble, temperature=0, and NUM_RUNS=10 repeats per prompt.
+  `harness/study1/answer_extraction.py:extract_answer_mind_your_tone()`
+  reproduces their exact extraction regex (`\b([A-D])\b`) rather than this
+  harness's more permissive general extractor, since the task spec requires
+  "same answer extraction" for a faithful replication. Verified end-to-end:
+  a full mock-provider pass through `run_part_a_replication` against the
+  real cloned 250-row CSV completes correctly.
 
 ## Running it
 
@@ -147,6 +162,12 @@ python -m harness.cli --live study1 validation-gate \
 python -m harness.cli --live study1 part-b \
   --benchmark mmlu_pro --models gemini-flash,deepseek-v3,qwen2.5-72b,llama-3.3-70b \
   --n-items 100 --budget-cap 50
+
+# Part A: clones the Mind Your Tone dataset automatically (no --dataset-path
+# needed), reproduces their exact protocol including NUM_RUNS=10 repeats --
+# 250 prompts x 10 runs x n models adds up fast, size --budget-cap accordingly
+python -m harness.cli --live study1 part-a \
+  --models gemini-flash --n-runs 10 --budget-cap 20
 
 python -m harness.cli --live study2 validation-gate \
   --model gemini-flash --repo-dir data/spreadsheetbench \
