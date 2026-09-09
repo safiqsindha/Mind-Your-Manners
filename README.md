@@ -4,16 +4,47 @@ A reproducible harness for testing whether prompt politeness/tone affects
 LLM accuracy (Study 1, single-turn QA) and agentic task quality (Study 2,
 SpreadsheetBench). See `RESULTS.md` for the current results status.
 
-## Execution status: harness built, not yet run live
+## Execution status: harness built, not yet run against the target models
 
-This repository was built in an environment with **no LLM provider API
-keys** and was scoped, at the requester's direction, to produce a working,
-tested harness rather than to spend real money against the budget caps in
-the original task spec. Every piece of plumbing below has been exercised
-end-to-end against a deterministic mock provider (`harness/providers/mock_provider.py`)
-and a real pull of MMLU-Pro from Hugging Face, but **no real model has been
-called and $0 has been spent.** See `RESULTS.md` for the honest, current
-state and exactly what's blocking a live run.
+This repository was built in an environment with **no target-model API
+keys** (no Gemini/DeepSeek/Qwen/OpenRouter/Anthropic-direct credentials),
+and was scoped, at the requester's direction, to produce a working, tested
+harness rather than to spend real money against the budget caps in the
+original task spec without those credentials.
+
+Every piece of plumbing has been exercised end-to-end two ways: against a
+deterministic mock provider (`harness/providers/mock_provider.py`, $0,
+no network), and, for a real-inference smoke test, against
+`harness/providers/claude_cli_provider.py` -- which shells out to the local
+`claude` CLI (session-authenticated, no separate API key needed in a
+Claude Code environment). A 2-item x 5-tone-level run through the real
+Study 1 Part B pipeline (`harness/study1/runner.py:run_part_b_remaster`)
+produced 10/10 valid extracted answers, zero refusals, and correctly
+tracked real dollar cost -- see git history for the exact run. That
+confirms the wrapper -> real model call -> answer extraction -> scoring ->
+cost-tracking path all work correctly; it is **not** a target model and
+the n=2 accuracy numbers from it mean nothing statistically. **No target
+model has been called and no spend against the study's actual budget caps
+has happened.** See `RESULTS.md` for the honest, current state and exactly
+what's blocking a live run.
+
+### Smoke-testing with real inference, no target-model API keys
+
+If you're running this from inside a Claude Code session (interactive or
+`claude.ai/code`), you can validate the full pipeline with genuine
+(non-mocked) inference before wiring up any target-model API key:
+
+```bash
+python -m harness.cli --live study1 part-b \
+  --models claude-cli-smoketest --benchmark mmlu_pro --n-items 2 --budget-cap 1
+```
+
+This uses `harness/config.py:CLAUDE_CLI_SMOKETEST`, which is excluded from
+`CORE_MODELS` specifically so it never gets pulled into a real study run by
+default. Each call is a fresh CLI subprocess (no warm cache across calls),
+so per-call cost is higher than a normal API call to the same model --
+keep smoke tests small (a handful of items, not the full n-items count for
+a real run).
 
 ## Layout
 
