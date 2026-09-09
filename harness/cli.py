@@ -33,6 +33,7 @@ from .config import (
     STUDY2_PILOT_BUDGET_CAP_USD,
 )
 from .providers.anthropic_provider import AnthropicProvider
+from .providers.claude_cli_provider import ClaudeCLIProvider
 from .providers.google_provider import GoogleProvider
 from .providers.openai_compatible import OpenAICompatibleProvider
 
@@ -40,6 +41,8 @@ RESULTS_ROOT = Path("results")
 
 
 def _provider_available(model) -> bool:
+    if model.provider == "claude_cli":
+        return ClaudeCLIProvider().available()
     if model.provider == "anthropic":
         return AnthropicProvider().available()
     if model.provider == "google":

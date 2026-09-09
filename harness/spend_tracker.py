@@ -61,6 +61,14 @@ class ResultRow:
 
 
 def compute_cost_usd(model: ModelConfig, response: ProviderResponse) -> float:
+    # Some providers (e.g. claude_cli_provider, which shells out to a
+    # billed CLI session) report their own authoritative dollar cost --
+    # prefer that over the ModelConfig price table when present, since the
+    # price table is 0 for those models (there's no per-token price to
+    # apply; the CLI already did the accounting).
+    reported = response.raw.get("total_cost_usd")
+    if reported is not None:
+        return float(reported)
     input_cost = (response.prompt_tokens / 1_000_000) * model.input_price_per_1m
     output_cost = ((response.completion_tokens + response.reasoning_tokens) / 1_000_000) * model.output_price_per_1m
     return input_cost + output_cost

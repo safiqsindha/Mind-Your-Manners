@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from .anthropic_provider import AnthropicProvider
 from .base import Provider
+from .claude_cli_provider import ClaudeCLIProvider
 from .google_provider import GoogleProvider
 from .mock_provider import MockProvider
 from .openai_compatible import OpenAICompatibleProvider
@@ -11,6 +12,7 @@ PROVIDER_REGISTRY: dict[str, Provider] = {
     "anthropic": AnthropicProvider(),
     "google": GoogleProvider(),
     "openai_compatible": OpenAICompatibleProvider(),
+    "claude_cli": ClaudeCLIProvider(),
 }
 
 

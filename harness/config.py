@@ -88,7 +88,25 @@ FRONTIER_SPOTCHECK = ModelConfig(
 )
 
 CORE_MODELS: list[ModelConfig] = [GEMINI_FLASH, DEEPSEEK_CHAT, QWEN_72B, LLAMA_70B]
-ALL_MODELS: list[ModelConfig] = CORE_MODELS + [FRONTIER_SPOTCHECK]
+
+# NOT a target model -- see harness/providers/claude_cli_provider.py
+# docstring. Exists only so the harness can be smoke-tested with genuine
+# (non-mocked) inference from a Claude Code session that has no raw
+# ANTHROPIC_API_KEY. Cost is read from the CLI's own reported
+# total_cost_usd (see spend_tracker.compute_cost_usd), not the price
+# fields below, hence they're 0.
+CLAUDE_CLI_SMOKETEST = ModelConfig(
+    key="claude-cli-smoketest",
+    provider="claude_cli",
+    model_id="haiku",  # CLI model alias; cheapest available for repeated smoke-test calls
+    display_name="Claude (local CLI smoke test only)",
+    temperature=0.0,
+    max_tokens=1024,
+    input_price_per_1m=0.0,
+    output_price_per_1m=0.0,
+)
+
+ALL_MODELS: list[ModelConfig] = CORE_MODELS + [FRONTIER_SPOTCHECK, CLAUDE_CLI_SMOKETEST]
 
 MODELS_BY_KEY: dict[str, ModelConfig] = {m.key: m for m in ALL_MODELS}
 
