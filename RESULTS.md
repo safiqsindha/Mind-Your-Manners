@@ -53,14 +53,38 @@ end-to-end against real MMLU-Pro items with the mock provider.
 
 ## Study 2 — Agentic spreadsheet work (SpreadsheetBench)
 
-Not yet run. `harness/study2/grader.py`'s call into the authors' own
-`evaluation.sh` is a best-effort mapping from their documented CLI usage,
-not verified against a live checkout — see that module's docstring for the
-manual check to run before trusting scored results. The agent loop
-(single-round and multi-round ReAct with sandboxed Python execution against
-the workbook) is built and tested end-to-end (mock provider + real .xlsx
-files via openpyxl) in `tests/test_study2_scoring.py` and the runner smoke
-tests.
+Not yet run against a target model. Since the previous update, the dataset
+loader and grader were rewritten after actually cloning
+`RUCKBReasoning/SpreadsheetBench` and reading the real `evaluation.py` —
+the earlier version guessed a CLI/env-var interface that does not exist.
+The corrected grader imports and calls their real `compare_workbooks()`
+function directly (not a subprocess/CLI guess) and reproduces their exact
+soft/hard-restriction scoring. Verified on a real sample task: grading the
+answer file against itself passes on all 3 test cases; grading the
+unmodified input against the answer fails all 3, as expected. A full
+mock-provider run through `run_condition_batch` (2 real tasks × 5 tone
+levels, real cloned repo, real grader) completes without error.
+
+**Known gap, discovered while verifying:** grading requires formulas to be
+recalculated first (LibreOffice headless conversion), and LibreOffice's
+headless conversion is broken in this build's own container — it fails
+even on the benchmark's own known-good sample files. This must be
+confirmed working in whatever environment runs a live batch before any
+formula-based task's grade can be trusted.
+
+The agent loop (single-round and multi-round ReAct with sandboxed Python
+execution against the workbook) is built and tested end-to-end (mock
+provider + real .xlsx files via openpyxl) in `tests/test_study2_scoring.py`.
+Its sandbox now has real, tested network isolation via a Linux
+user+network namespace (`tests/test_sandbox.py` confirms a socket connect
+attempt inside it actually fails) — see README.md "Before spending real
+money" for what's still not covered (filesystem access).
+
+Grading also now correctly reflects SpreadsheetBench's actual design: each
+task's 3 test cases are graded for *generalization* of one agent-produced
+solution, not 3 independent agent runs — the agent sees only test case 1,
+and its generated code is mechanically re-applied (no extra model calls)
+to test cases 2 and 3 before grading all 3 together.
 
 **Divergence-from-Study-1 check: not yet determined.**
 

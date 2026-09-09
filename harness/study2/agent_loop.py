@@ -77,6 +77,7 @@ class Trajectory:
     trial: int
     steps: list[TrajectoryStep] = field(default_factory=list)
     final_output_path: Optional[Path] = None
+    final_code: Optional[str] = None  # the code snippet that produced final_output_path
     refused: bool = False
     result_rows: list[ResultRow] = field(default_factory=list)
 
@@ -167,6 +168,7 @@ def run_single_round(
         output_path = exec_result.output_workbook_path
     traj.steps.append(TrajectoryStep(0, response.text, code, stdout, stderr, is_final=True))
     traj.final_output_path = output_path
+    traj.final_code = code if output_path else None
     return traj
 
 
@@ -220,6 +222,7 @@ def run_react_multi_round(
         traj.steps.append(TrajectoryStep(turn, response.text, code, exec_result.stdout, exec_result.stderr, is_final=False))
         if exec_result.output_workbook_path:
             traj.final_output_path = exec_result.output_workbook_path
+            traj.final_code = code
     else:
         traj.steps.append(TrajectoryStep(max_turns, "", None, "", "[max_turns reached without FINAL]", is_final=True))
 
