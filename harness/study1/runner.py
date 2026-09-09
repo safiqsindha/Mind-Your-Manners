@@ -16,8 +16,14 @@ from ..providers.base import ModelConfig
 from ..providers.registry import get_provider
 from ..spend_tracker import ResultRow, SpendTracker, compute_cost_usd
 from ..tone_wrappers import TONE_ORDER, TONE_WRAPPERS
-from .answer_extraction import extract_answer
-from .dataset import BenchmarkItem, MindYourToneRow, load_mind_your_tone
+from .answer_extraction import extract_answer, extract_answer_mind_your_tone
+from .dataset import (
+    MIND_YOUR_TONE_SYSTEM_PROMPT,
+    BenchmarkItem,
+    MindYourToneRow,
+    load_mind_your_tone,
+    render_mind_your_tone_prompt,
+)
 
 SYSTEM_PROMPT = "You are a helpful assistant answering multiple-choice questions."
 
@@ -33,6 +39,7 @@ def _call_and_record(
     trial: int,
     phase: str,
     subject: str,
+    extractor=extract_answer,
 ) -> ResultRow:
     provider = get_provider(model.provider if model.provider != "openai_compatible" else "openai_compatible")
     # cheap pre-call estimate: assume ~2x the wrapper+question length in tokens, small completion
@@ -40,7 +47,7 @@ def _call_and_record(
 
     response = provider.complete(model, system, [{"role": "user", "content": user_text}])
     cost = compute_cost_usd(model, response)
-    extraction = extract_answer(response.text, correct_letter, response.refused)
+    extraction = extractor(response.text, correct_letter, response.refused)
 
     row = ResultRow(
         row_id=str(uuid.uuid4()),
@@ -129,22 +136,30 @@ def run_part_a_replication(
     dataset_path: Path,
     out_dir: Path,
     budget_cap_usd: float,
+    n_runs: int = 10,
 ) -> list[ResultRow]:
-    """Reproduce the Mind Your Tone protocol exactly: their prompts, their
-    tone rewrites, as-is -- our tone_wrappers are NOT used here (see
-    dataset.py module docstring for why Part A needs their original file)."""
+    """Reproduce the Mind Your Tone protocol exactly: their system prompt,
+    their "Completely forget this session..." instruction preamble, their
+    prompts and tone rewrites as-is (our tone_wrappers are NOT used here --
+    see dataset.py module docstring for the confirmed real protocol this
+    reproduces), at temperature=0, run n_runs=10 times per prompt to match
+    their own NUM_RUNS=10 (confirmed from their notebook)."""
     rows_data = load_mind_your_tone(dataset_path)
     tracker = SpendTracker(out_dir / "raw" / "study1_part_a.jsonl", phase="part_a_replication", cap_usd=budget_cap_usd)
     all_rows = []
     try:
-        for model in models:
-            for row in rows_data:
-                r = _call_and_record(
-                    tracker, model, SYSTEM_PROMPT, row.prompt_text, row.answer_letter,
-                    item_id=row.base_id, tone_level=row.tone_level, trial=0,
-                    phase="part_a_replication", subject=row.subject,
-                )
-                all_rows.append(r)
+        for base_model in models:
+            model = replace(base_model, temperature=0.0)
+            for trial in range(n_runs):
+                for row in rows_data:
+                    r = _call_and_record(
+                        tracker, model, MIND_YOUR_TONE_SYSTEM_PROMPT,
+                        render_mind_your_tone_prompt(row.prompt_text), row.answer_letter,
+                        item_id=row.base_id, tone_level=row.tone_level, trial=trial,
+                        phase="part_a_replication", subject=row.domain,
+                        extractor=extract_answer_mind_your_tone,
+                    )
+                    all_rows.append(r)
     finally:
         tracker.close()
     return all_rows
