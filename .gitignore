@@ -1,0 +1,18 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+*.egg-info/
+
+# Raw/analysis output from real or dry-run harness executions -- these are
+# generated data, not source. Keep the directories tracked via .gitkeep but
+# never commit their contents.
+results/raw/*.jsonl
+results/analysis/*.json
+!results/raw/.gitkeep
+!results/analysis/.gitkeep
+
+# Large cloned/downloaded benchmark data
+data/spreadsheetbench/
+*.xlsx
+!tests/**/*.xlsx
