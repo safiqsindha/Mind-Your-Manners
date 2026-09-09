@@ -3,11 +3,20 @@ stages, each under its own budget cap (harness/config.py), each applying the
 five tone wrappers to the task instruction only -- spreadsheet contents,
 tool definitions, and system prompt stay identical across conditions (task
 spec requirement).
+
+Grading design (verified against a real SpreadsheetBench clone -- see
+grader.py and dataset.py module docstrings): each task ships 3 test cases,
+each a differently-shaped variant of the same instruction. SpreadsheetBench
+grades *generalization* -- one agent-produced solution is checked against
+all 3. So the agent only ever sees test case 1's input; once it produces
+code that writes a solution (`Trajectory.final_code`), that same code is
+mechanically re-executed (no further model calls, no extra spend) against
+test cases 2 and 3's inputs, and all 3 outputs are graded together via
+`SpreadsheetBenchGrader.evaluate_task()`.
 """
 from __future__ import annotations
 
 import json
-import shutil
 from pathlib import Path
 from typing import Optional
 
@@ -18,9 +27,36 @@ from ..spend_tracker import SpendTracker, append_spend_log
 from ..tone_wrappers import TONE_ORDER, TONE_WRAPPERS
 from .agent_loop import Trajectory, run_react_multi_round, run_single_round
 from .dataset import SpreadsheetTask
-from .failure_taxonomy import SeverityLabel, classify_failure
+from .failure_taxonomy import classify_failure
 from .grader import GradeResult, SpreadsheetBenchGrader
-from .verification_scoring import TrajectoryBehavior, score_trajectory
+from .sandbox import execute_python_on_workbook
+from .verification_scoring import score_trajectory
+
+
+def _generalize_to_other_test_cases(traj: Trajectory, task: SpreadsheetTask, workdir: Path) -> list[Optional[Path]]:
+    """Re-runs traj.final_code (produced against test case 1) against test
+    cases 2..N's inputs, without any further model calls. Returns one output
+    path per test case, in order, with test case 1's own output first."""
+    outputs: list[Optional[Path]] = [traj.final_output_path]
+    if traj.final_code is None:
+        return outputs + [None] * (len(task.input_spreadsheet_paths) - 1)
+
+    for idx, input_path in enumerate(task.input_spreadsheet_paths[1:], start=2):
+        exec_result = execute_python_on_workbook(traj.final_code, input_path, workdir / f"generalize_case{idx}")
+        outputs.append(exec_result.output_workbook_path)
+    return outputs
+
+
+def _grade_trajectory(grader: SpreadsheetBenchGrader, task: SpreadsheetTask, traj: Trajectory, workdir: Path) -> GradeResult:
+    n_cases = len(task.answer_spreadsheet_paths)
+    if traj.refused or traj.final_output_path is None:
+        return GradeResult(task.task_id, False, n_cases, 0, 0.0, ["no output produced"] * n_cases, error="no output produced")
+
+    output_paths = _generalize_to_other_test_cases(traj, task, workdir)
+    return grader.evaluate_task(
+        task.task_id, task.instruction_type, task.answer_position,
+        output_paths, task.answer_spreadsheet_paths,
+    )
 
 
 def run_validation_gate(
@@ -63,18 +99,8 @@ def run_validation_gate(
     }
 
 
-def _grade_trajectory(grader: SpreadsheetBenchGrader, task: SpreadsheetTask, traj: Trajectory, workdir: Path) -> GradeResult:
-    if traj.refused or traj.final_output_path is None:
-        return GradeResult(task.task_id, False, len(task.input_spreadsheet_paths), 0, "", "", error="no output produced")
-    model_output_dir = workdir / "model_output"
-    model_output_dir.mkdir(parents=True, exist_ok=True)
-    for input_path in task.input_spreadsheet_paths:
-        shutil.copy(traj.final_output_path, model_output_dir / input_path.name.replace("_input.xlsx", "_result.xlsx"))
-    return grader.evaluate_task(task.task_id, task.input_spreadsheet_paths[0].parent, model_output_dir)
-
-
 def _row_count(path: Optional[Path]) -> Optional[int]:
-    if path is None or not path.exists():
+    if path is None or not Path(path).exists():
         return None
     try:
         wb = openpyxl.load_workbook(path)
@@ -84,7 +110,7 @@ def _row_count(path: Optional[Path]) -> Optional[int]:
 
 
 def _has_formula(path: Optional[Path]) -> bool:
-    if path is None or not path.exists():
+    if path is None or not Path(path).exists():
         return False
     try:
         wb = openpyxl.load_workbook(path, data_only=False)
@@ -140,7 +166,7 @@ def run_condition_batch(
                             output_row_count=output_row_count,
                             expected_row_count=expected_row_count,
                             output_loaded_ok=traj.final_output_path is not None,
-                            grader_stdout=grade.raw_stdout,
+                            grader_stdout="; ".join(grade.per_test_case_messages),
                         )
                         behavior = score_trajectory(traj.code_snippets_in_order)
                         total_tokens = sum(r.prompt_tokens + r.completion_tokens + r.reasoning_tokens for r in traj.result_rows)
@@ -149,10 +175,11 @@ def run_condition_batch(
                             {
                                 "model_key": model.key,
                                 "task_id": task.task_id,
-                                "category": task.category,
+                                "instruction_type": task.instruction_type,
                                 "tone_level": tone_key,
                                 "trial": trial,
                                 "passed": grade.passed,
+                                "soft_restriction": grade.soft_restriction,
                                 "refused": traj.refused,
                                 "severity": severity.category,
                                 "severity_detail": severity.detail,

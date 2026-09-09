@@ -92,14 +92,31 @@ length/wording changes.
 - **MMLU-Pro** (`TIGER-Lab/MMLU-Pro`) and **GPQA Diamond**
   (`Idavidrein/gpqa`, gated -- needs `HF_TOKEN` + accepting its terms) pull
   directly via the `datasets` library. Confirmed working in this build.
-- **SpreadsheetBench** (912 tasks) and **SpreadsheetBench 2** clone from
-  `github.com/RUCKBReasoning/SpreadsheetBench{,-2}` (confirmed real repos,
-  `data/all_data_912.tar.gz` / `data/sample_data_200.tar.gz`). Not yet
-  cloned or run against in this build -- `harness/study2/grader.py`'s exact
-  subprocess invocation of their `evaluation.sh` is a best-effort mapping
-  from their README, not something exercised against a live checkout.
-  Validate it manually (see the module docstring) before trusting scored
-  results.
+- **SpreadsheetBench** (912 tasks) clones from `github.com/RUCKBReasoning/SpreadsheetBench`
+  (`data/spreadsheetbench_912_v0.1.tar.gz` full set, `data/sample_data_200.tar.gz`
+  pilot sample -- both confirmed present). **Verified against a real clone**
+  (see git history): `harness/study2/dataset.py` and `harness/study2/grader.py`
+  were rewritten after extracting the real tarball and reading the real
+  `evaluation/evaluation.py` -- an earlier version of both files guessed a
+  CLI/env-var interface (`bash evaluation.sh` + `DATA_DIR`/`RESULT_DIR`) that
+  turned out not to exist. The corrected grader imports and calls their real
+  `compare_workbooks()` function directly, confirmed against a real sample
+  task: grading the answer file against itself passes, grading the
+  unmodified input against the answer fails, exactly as expected.
+  **Known gap:** SpreadsheetBench grades *generalization* -- one agent
+  solution is checked against 3 test-case variants per task -- and
+  comparison requires formulas to be recalculated first (LibreOffice
+  headless conversion, same as their own `open_spreadsheet.py`). LibreOffice
+  is installed but **headless conversion fails in this build's own
+  environment** ("Error: source file could not be loaded", reproduces even
+  on the benchmark's own known-good sample files) -- looks like a broken
+  LibreOffice install in this specific container, not a bug in the
+  integration. Verify `harness/study2/grader.py:recalculate_with_libreoffice()`
+  actually works wherever a live batch runs before trusting graded results
+  on any formula-based task. **SpreadsheetBench 2** (end-to-end business
+  workflow tasks, `github.com/RUCKBReasoning/SpreadsheetBench-2`) has not
+  been schema-verified this way -- treat `dataset.py`'s `v2=True` path as
+  unverified.
 - **Mind Your Tone's own 250-prompt dataset** (arXiv 2510.04950) has **no
   discoverable public repository** -- searched arXiv, the paper text, and
   common secondary sources; no GitHub/anonymous.4open.science link exists in
@@ -153,10 +170,23 @@ tests being skippable offline).
 3. Watch `results/spend_log.jsonl` / the CLI's printed spend summaries
    against the caps in `harness/config.py` (Study 1: $50; Study 2 pilot/core/
    frontier: $15/$40/$150).
-4. For Study 2 specifically: the sandbox (`harness/study2/sandbox.py`) that
-   executes model-generated code is process-level isolation only. Put it in
-   a real container (network disabled, throwaway filesystem) before a live
-   run -- see that module's docstring.
+4. For Study 2 specifically: the sandbox (`harness/study2/sandbox.py`) now
+   runs model-generated code inside a Linux user+network namespace
+   (`unshare --net --user --map-root-user`) when `unshare` is available --
+   **network access is genuinely blocked**, verified by a real test
+   (`tests/test_sandbox.py`: a `socket.connect()` inside the sandbox raises
+   "Network is unreachable"). Call `sandbox_isolation_mode()` before a live
+   run and confirm it returns `"namespace"`, not `"none"`, on whatever host
+   runs the batch. This still does NOT restrict filesystem access -- the
+   sandboxed process sees the same filesystem as the harness itself. A full
+   container (Docker with a throwaway filesystem, or gVisor) is still
+   preferable where available; this is what's actually available and
+   tested in a typical Claude Code remote session, where a Docker daemon is
+   usually not running (confirmed in this build: `docker info` has no
+   server to talk to).
+5. Verify LibreOffice's headless formula recalculation actually works in
+   your run environment (see "Dataset availability" above) -- it's broken
+   in this build's own container.
 
 ## License note
 
