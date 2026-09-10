@@ -31,7 +31,8 @@ class ModelConfig:
     reasoning_effort: Optional[str] = None  # e.g. "low"/"medium"/"high", None if N/A
     thinking_budget_tokens: Optional[int] = None  # for models with an explicit thinking budget
     api_base: Optional[str] = None  # override base URL (e.g. OpenRouter with pinned provider)
-    provider_pin: Optional[str] = None  # e.g. OpenRouter "provider" routing field
+    provider_pin: Optional[str] = None  # OpenRouter provider slug for "provider.only", e.g. "Together"
+    quantization_pin: Optional[list[str]] = None  # OpenRouter "provider.quantizations" lock, e.g. ["fp8"]
     input_price_per_1m: float = 0.0  # USD, for spend tracking
     output_price_per_1m: float = 0.0  # USD, for spend tracking
     max_tokens: int = 1024
@@ -44,6 +45,9 @@ class ProviderResponse:
     prompt_tokens: int
     completion_tokens: int
     reasoning_tokens: int = 0
+    cached_tokens: int = 0  # provider-side prompt-cache hits (usage.prompt_tokens_details.cached_tokens);
+    # measure only -- see harness/config.py module docstring on caching instrumentation.
+    served_provider: Optional[str] = None  # actual backend that served this call, when reported
     latency_s: float = 0.0
     refused: bool = False
     error: Optional[str] = None
@@ -57,6 +61,19 @@ class ProviderResponse:
 
 class ProviderError(RuntimeError):
     pass
+
+
+class ProviderPinViolation(ProviderError):
+    """The provider that actually served a call didn't match the configured
+    pin (or couldn't be determined). Must propagate uncaught and halt the
+    run -- callers must not catch-and-continue on this, same convention as
+    spend_tracker.BudgetExceeded."""
+
+
+class ResponseCacheViolation(ProviderError):
+    """OpenRouter's response cache served a cached response despite being
+    asserted off. Left unswallowed, this would silently destroy
+    trial-level variance estimates -- must propagate and halt the run."""
 
 
 class Provider:

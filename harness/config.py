@@ -60,19 +60,34 @@ QWEN_72B = ModelConfig(
 )
 
 # One Western open-weight model (Llama/Gemma tier), routed through
-# OpenRouter with the backend provider pinned explicitly so it cannot
-# silently swap mid-run (task spec requirement).
+# OpenRouter with the backend provider AND quantization pinned explicitly
+# so it cannot silently swap mid-run (task spec requirement: provider.only +
+# allow_fallbacks:false + provider.quantizations together, not a subset --
+# see harness/providers/openai_compatible.py).
+#
+# Checked directly against `GET /api/v1/models/meta-llama/llama-3.3-70b-instruct/endpoints`
+# (2026-09-10): the previously-pinned "Together" endpoint reports
+# quantization "unknown" (no discrete value OpenRouter can filter/lock on),
+# which can't satisfy the new mandatory triple-pin -- pinning `only:
+# ["Together"], quantizations: ["fp8"]` together would ask OpenRouter for a
+# combination Together doesn't declare and likely return zero eligible
+# providers. Repinned to Nebius, which does report a quantization (fp8) and
+# is also cheaper (verified pricing $0.13/$0.40 per 1M in/out vs. the
+# previous placeholder $0.60/$0.60 -- full VERIFY-table reconciliation
+# across the whole roster is a separate change, this is just what's needed
+# to make this specific model's pin satisfiable).
 LLAMA_70B = ModelConfig(
     key="llama-3.3-70b",
     provider="openai_compatible",
-    model_id="meta-llama/llama-3.3-70b-instruct",  # VERIFY current OpenRouter slug + pin before a live run
+    model_id="meta-llama/llama-3.3-70b-instruct",
     display_name="Llama 3.3 70B Instruct",
     temperature=0.0,
     api_base="https://openrouter.ai/api/v1",
-    provider_pin="Together",  # pin explicitly; do not leave OpenRouter free to route
+    provider_pin="Nebius",
+    quantization_pin=["fp8"],
     max_tokens=2048,
-    input_price_per_1m=0.60,
-    output_price_per_1m=0.60,
+    input_price_per_1m=0.13,
+    output_price_per_1m=0.40,
 )
 
 # Optional frontier spot-check.

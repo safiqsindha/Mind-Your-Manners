@@ -131,6 +131,8 @@ def _call_and_record(
         extracted_answer=None,
         is_correct=None,
         timestamp=time.time(),
+        cached_tokens=response.cached_tokens,
+        served_provider=response.served_provider,
         raw_response=response.raw,
         extra={"turn": turn},
     )
