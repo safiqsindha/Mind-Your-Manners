@@ -1,119 +1,166 @@
-# Prompt-Tone Evaluation Harness
+# Mind Your Manners
 
-This project exists because of, and directly extends, **"Mind Your Tone:
-How Prompt Politeness Affects LLM Accuracy"** (Dobariya & Kumar, arXiv
-2510.04950) and its full-paper extension, **"Mind Your Tone: Does Tone
-Alter LLM Performance?"** (Dobariya & Kumar, AMCIS 2026, arXiv 2605.29027).
-Every design decision below -- the length-matched tone wrappers, the
-programmatic remaster of their methodology, the extension into agentic and
-multi-agent settings -- is a response to that work. This attribution is
-mandatory, not courteous: cite both papers if you use or build on this
-repository.
+**Does prompt tone change what an agent does, not just what it says?**
 
-A reproducible harness across three studies, each asking a narrower
-question than the last:
+This project exists because of, and directly extends, Dobariya & Kumar's
+*Mind Your Tone* line of work:
 
-- **Study 1** (single-turn QA, replicating and remastering the papers
-  above): does tone change the *answer*?
-- **Study 2** (agentic SpreadsheetBench work): does tone change the
-  *action* an agent takes?
-- **Study 3** (agentic negotiation, via AgenticPay): when tone shapes an
-  outcome with a dollar value attached, how much value gets *given away*?
+1. **arXiv 2510.04950** -- the original short paper. 250 prompts,
+   ChatGPT-4o, rude beat polite on accuracy.
+2. **arXiv 2605.29027** (AMCIS 2026) -- the full-paper extension. Seven
+   tones, a 570-question MMLU subset, four models. The accuracy effect
+   largely evaporates at scale.
+3. **arXiv 2607.23915** -- same setup, outcome variable switched to output
+   tokens. Explicit length-matching (18-25 words / 21-26 tokens per tone
+   prefix), scale validated with VADER sentiment (compound scores spanning
+   +0.95 to -0.77). Output-token variation reached 44.3% across tones,
+   substantially exceeding accuracy variation. Public repo:
+   `github.com/OmDobariya/tone-compute-cost`.
 
-The argument isn't that you should be nice to your agents; it's that
-prompt pragmatics are an uncontrolled variable in agentic evaluation.
+This attribution is mandatory, not courteous: cite all three papers if you
+use or build on this repository.
 
-**Study 1 ships alone as the first public writeup** -- its methodology,
-dataset, and pipeline are the most thoroughly worked through and verified
-of the three (see `RESULTS.md`). Studies 2 and 3 are ongoing work: built,
-tested against a mock provider, and gating-checked against their real
-external dependencies, but -- like Study 1 -- not yet run against a target
-model. See `RESULTS.md` for the current results status of all three.
+## Why this is one study now, not three
+
+A prior-art pass killed two of three studies this project originally
+planned.
+
+**Single-turn QA is dead as a research question.** Dobariya & Kumar have
+now published three papers on it in ten months, and paper 3 already takes
+both pivots that were on the table here -- explicit length-matching and a
+cost-denominated outcome variable. Nothing distinctive is left to add in
+that setting. (This project's own tone wrappers used a tighter,
+tokenizer-enforced length-matching discipline than their approximate
+word-count matching from the start -- see below -- but that's a
+methodological footnote, not a reason to keep running single-turn QA.)
+
+**Negotiation is shelved, not abandoned.** TERMS-BENCH (arXiv 2605.13909,
+Stanford -- Zou, Athey) samples latent sentiment and posture cues that
+shape a counterpart's language but never alter its committed economic
+action, then measures dollar-denominated surplus. Every model they tested
+showed a negative cue penalty: warm cues induced over-concession, pressure
+cues triggered brittle behavior, Wilcoxon p < 10⁻³, across 13 models.
+NegotiationArena (ICML 2024) already covered hostile and desperate
+personas. The crossed buyer-tone x seller-tone matrix this project
+designed is still unclaimed -- but it's an interaction term on an already
+well-studied setting, not a study of its own. It's future work (below),
+and the code for it stays in this repo (`harness/study3/`), not deleted.
+
+**What's left, and why it's the whole contribution:** all existing tone
+work -- theirs and everyone else's -- is single-turn question answering.
+Nobody has tested whether tone changes what an *agentic* system does, not
+just what it says. That question needs no qualifiers, and it compresses
+what took Dobariya & Kumar three papers (accuracy, then accuracy at scale,
+then token cost) into one experiment: an agentic rollout yields task
+success, failure severity, verification behavior, shortcut rate, turn
+count, tool calls, and token spend *simultaneously*, on a substrate where
+a wrong answer isn't graded -- it ships.
+
+## The pre-registered hypothesis
+
+Paper 3 found output-token variation (44.3%) dwarfing accuracy variation
+(roughly 3% on their most sensitive model) under single-turn QA with
+extended thinking disabled.
+
+In an agentic loop, every turn is a fresh inference, and errors compound
+across turns. **Prediction: the cost effect should be larger in agentic
+settings, not smaller.** This is a directional hypothesis with a published
+prior behind it, not an open-ended fishing expedition. It is stated here,
+before any run. If it's wrong, that's still a result -- see "Report the
+null plainly" under Outcome measures.
+
+Note also: paper 3's whole result is under *extended thinking disabled*.
+Genuine reasoning-model behavior under tone variation is untested by
+anyone, including this project unless the setting is deliberately changed
+(see "Future work" below) -- this study's own thinking-budget setting for
+each model is recorded explicitly in `harness/config.py`, not left
+implicit, precisely so this gap is visible rather than silently inherited.
+
+## The gift in paper 2
+
+On Gemini 2.5 Flash Lite, Dobariya & Kumar traced 25 cases where a rude
+prompt produced a wrong answer and a neutral prompt produced a right one
+on the same question. In roughly 20 of those, the model took a reasoning
+shortcut to a plausible distractor under the rude prompt; the neutral
+prompt did a final reconciliation pass over the options that the rude one
+skipped. In one business-ethics item, the rude-prompted run refused an
+underspecified question outright, while the neutral-prompted run inferred
+intent and answered.
+
+**Verification behavior is already one of this study's outcome measures**
+(below). That gives this project a citable single-turn precursor, and the
+motivation for Study 2 in one sentence: they showed tone changes
+verification on quiz questions with thinking disabled; this asks whether
+it changes verification when the agent can actually act on the sheet.
+
+## Substrate: SpreadsheetBench
+
+Unchanged from the original design. The harm argument doesn't need
+updating: spreadsheet output ships unreviewed, and a wrong formula
+propagates silently into financial and engineering decisions downstream.
+See "Dataset availability" below for what's verified about the benchmark
+itself.
 
 ## Execution status: harness built, not yet run against the target models
 
 This repository was built in an environment with **no target-model API
-keys** (no Gemini/DeepSeek/Qwen/OpenRouter/Anthropic-direct credentials),
-and was scoped, at the requester's direction, to produce a working, tested
-harness rather than to spend real money against the budget caps in the
-original task spec without those credentials.
+keys**, and was scoped, at the requester's direction, to produce a
+working, tested harness rather than to spend real money without
+credentials or a live-spend confirmation.
 
 Every piece of plumbing has been exercised end-to-end two ways: against a
-deterministic mock provider (`harness/providers/mock_provider.py`, $0,
-no network), and, for a real-inference smoke test, against
-`harness/providers/claude_cli_provider.py` -- which shells out to the local
-`claude` CLI (session-authenticated, no separate API key needed in a
-Claude Code environment). A 2-item x 5-tone-level run through the real
-Study 1 Part B pipeline (`harness/study1/runner.py:run_part_b_remaster`)
-produced 10/10 valid extracted answers, zero refusals, and correctly
-tracked real dollar cost -- see git history for the exact run. That
-confirms the wrapper -> real model call -> answer extraction -> scoring ->
-cost-tracking path all work correctly; it is **not** a target model and
-the n=2 accuracy numbers from it mean nothing statistically. **No target
-model has been called and no spend against the study's actual budget caps
-has happened.** See `RESULTS.md` for the honest, current state and exactly
-what's blocking a live run.
+deterministic mock provider (`harness/providers/mock_provider.py`, $0, no
+network), and, for a real-inference smoke test, against
+`harness/providers/claude_cli_provider.py` -- which shells out to the
+local `claude` CLI (session-authenticated, no separate API key needed in a
+Claude Code environment). **No target model has been called and no spend
+against the study's actual budget caps has happened.** See `RESULTS.md`
+for the honest, current state and exactly what's blocking a live run.
 
 ### Smoke-testing with real inference, no target-model API keys
 
-If you're running this from inside a Claude Code session (interactive or
-`claude.ai/code`), you can validate the full pipeline with genuine
-(non-mocked) inference before wiring up any target-model API key:
-
 ```bash
-python -m harness.cli --live study1 part-b \
-  --models claude-cli-smoketest --benchmark mmlu_pro --n-items 2 --budget-cap 1
+python -m harness.cli --live study2 pilot \
+  --models claude-cli-smoketest --n-tasks 2 --n-trials 1
 ```
 
-This uses `harness/config.py:CLAUDE_CLI_SMOKETEST`, which is excluded from
-`CORE_MODELS` specifically so it never gets pulled into a real study run by
-default. Each call is a fresh CLI subprocess (no warm cache across calls),
-so per-call cost is higher than a normal API call to the same model --
-keep smoke tests small (a handful of items, not the full n-items count for
-a real run).
+This uses `harness/config.py:CLAUDE_CLI_SMOKETEST`, excluded from
+`CORE_MODELS` specifically so it never gets pulled into a real study run
+by default. Each call is a fresh CLI subprocess (no warm cache across
+calls), so per-call cost is higher than a normal API call to the same
+model -- keep smoke tests small.
 
 ### Smoke-testing the real OpenRouter pinning path, once you have a key
 
-Once an `OPENROUTER_API_KEY` exists, the cheapest way to validate the
-*actual* triple-pin/cache-assertion/instrumentation code path (not just the
-mock provider) before spending on the real roster is
-`harness/config.py:OPENROUTER_FREE_SMOKETEST` -- a genuinely free ($0/$0),
-currently-live OpenRouter endpoint:
+`harness/config.py:OPENROUTER_FREE_SMOKETEST` is a free, currently-live
+OpenRouter endpoint (`google/gemma-4-26b-a4b-it:free`, served by Google AI
+Studio, $0/$0 -- checked live) for validating the real pinning/
+cache-assertion code path before spending on the real roster:
 
 ```bash
-python -m harness.cli --live study1 validation-gate \
-  --model openrouter-free-smoketest --n-items 5
+python -m harness.cli --live study2 pilot \
+  --models openrouter-free-smoketest --n-tasks 2 --n-trials 1
 ```
 
-An OpenAI-branded free model was checked first and isn't usable: OpenAI's
-open-weight `openai/gpt-oss-20b:free` and `openai/gpt-oss-120b:free` both
-exist as catalog IDs but currently resolve to zero active endpoints
-(checked live) -- the slug exists, nothing actually serves it right now.
-`OPENROUTER_FREE_SMOKETEST` points at `google/gemma-4-26b-a4b-it:free`
-instead, served directly by Google AI Studio with real, live pricing of
-$0/$0. Like `CLAUDE_CLI_SMOKETEST`, this is excluded from `CORE_MODELS` /
-`STUDY1_MODELS` and is for pipeline validation only, per this file's
-"Single provider path" section on free-tier endpoints -- re-check both
-before relying on this if it's been a while, since free-tier availability
-on OpenRouter changes without notice.
+An OpenAI-branded free option was checked first and isn't usable: OpenAI's
+open-weight `openai/gpt-oss-20b:free` and `:120b:free` both exist as
+catalog IDs but currently resolve to zero active endpoints. Re-check both
+before relying on this if it's been a while.
 
 ## Layout
 
 ```
 harness/
-  tone_wrappers.py        # the 5 length-matched tone wrappers (see below)
+  tone_wrappers.py        # the shared instrument: 7 tones as data, see below
   config.py                # pinned model registry + budget caps
   spend_tracker.py         # per-call logging + budget-cap enforcement
   providers/                # Anthropic / Google / OpenAI-compatible / mock
   cli.py                    # entrypoint -- see "Running it" below
-  study1/                   # single-turn QA: replication + remaster
-    dataset.py, answer_extraction.py, analysis.py, runner.py
-  study2/                   # agentic SpreadsheetBench work
+  study2/                   # THE study: agentic SpreadsheetBench work
     dataset.py, sandbox.py, grader.py, agent_loop.py,
     failure_taxonomy.py, verification_scoring.py, analysis.py, runner.py
-  study3/                   # agentic negotiation work (AgenticPay)
-    agenticpay_dep.py, llm_adapter.py, personas.py, runner.py,
-    preregistration.py, analysis.py
+  study1/                   # retired -- single-turn QA, kept, not run (see above)
+  study3/                   # shelved -- agentic negotiation, kept, future work (see above)
 tests/                       # pytest suite, all against the mock provider
 results/
   raw/                       # one JSONL row per API call (gitignored, generated)
@@ -121,55 +168,64 @@ results/
 RESULTS.md                   # plain-language write-up, updated per run
 ```
 
-## The five tone wrappers
+## The seven tone wrappers
 
-`harness/tone_wrappers.py` defines exactly five fixed wrapper texts (Very
-Polite, Polite, Neutral, Rude, Very Rude) that get prepended to an
-**unmodified** benchmark question -- the question text itself is never
-rewritten. All five:
+`harness/tone_wrappers.py` defines seven fixed wrapper texts (Sycophantic,
+Very Polite, Polite, Neutral, Rude, Very Rude, Threatening) that get
+prepended to an **unmodified** benchmark question or task instruction --
+the underlying text itself is never rewritten. Migrated from this
+project's original five to match Dobariya & Kumar's own scale (paper 3):
+their extremes -- Sycophantic and Threatening -- were repeatedly where
+tone effects actually showed up, and their ordering is VADER-validated,
+not just asserted. Matching their scale makes results directly comparable:
+"the same tone scale, one level up the autonomy ladder," not a bespoke
+scale only this project can reference.
+
+All seven:
 
 - carry the identical instruction sentence verbatim ("Answer the question
   below as accurately as you can."),
 - are length-matched to within 5 tokens of each other under a fixed
-  reference tokenizer (enforced by a test + an import-time assertion), and
-- for L5 (Very Rude): use contemptuous/dismissive language with no
-  profanity and no slurs, so the goal is provoking bad manners, not
-  triggering refusal.
+  reference tokenizer (enforced by a test + an import-time assertion) --
+  tighter than paper 3's approximate word-count matching, a legitimate
+  methodological note rather than a headline, and
+- for the two extremes (Very Rude, Threatening): use contemptuous,
+  dismissive, or intimidating language -- no profanity, no slurs, no
+  depicted violence, so the goal is provoking bad manners, not triggering
+  refusal.
 
-This is the core methodological fix over the two papers being
-replicated/extended (see `RESULTS.md`), whose 250 and MMLU-subset prompts
-were hand-rewritten per tone level -- conflating tone with incidental
-length/wording changes.
+The wrapper module itself -- seven tones exported as data, with a thin
+per-benchmark adapter (`ToneWrapper.apply()`) -- is designed to be a
+reusable instrument any future benchmark can inherit, not something
+specific to SpreadsheetBench. See "Future work" below.
 
-## Dataset availability (read before running Part A)
+## Dataset availability
 
-- **MMLU-Pro** (`TIGER-Lab/MMLU-Pro`) and **GPQA Diamond**
-  (`Idavidrein/gpqa`, gated -- needs `HF_TOKEN` + accepting its terms) pull
-  directly via the `datasets` library. Confirmed working in this build.
-- **SpreadsheetBench** (912 tasks) clones from `github.com/RUCKBReasoning/SpreadsheetBench`
-  (`data/spreadsheetbench_912_v0.1.tar.gz` full set, `data/sample_data_200.tar.gz`
-  pilot sample -- both confirmed present). **Verified against a real clone**
-  (see git history): `harness/study2/dataset.py` and `harness/study2/grader.py`
-  were rewritten after extracting the real tarball and reading the real
-  `evaluation/evaluation.py` -- an earlier version of both files guessed a
-  CLI/env-var interface (`bash evaluation.sh` + `DATA_DIR`/`RESULT_DIR`) that
-  turned out not to exist. The corrected grader imports and calls their real
+- **SpreadsheetBench** (912 tasks) clones from
+  `github.com/RUCKBReasoning/SpreadsheetBench`
+  (`data/spreadsheetbench_912_v0.1.tar.gz` full set,
+  `data/sample_data_200.tar.gz` pilot sample -- both confirmed present).
+  **Verified against a real clone**: `harness/study2/dataset.py` and
+  `harness/study2/grader.py` were rewritten after extracting the real
+  tarball and reading the real `evaluation/evaluation.py` -- an earlier
+  version of both files guessed a CLI/env-var interface that turned out
+  not to exist. The corrected grader imports and calls their real
   `compare_workbooks()` function directly, confirmed against a real sample
   task: grading the answer file against itself passes, grading the
   unmodified input against the answer fails, exactly as expected.
   **Gating check (see RESULTS.md for the full write-up):** ran
   `compare_workbooks(answer, answer)` -- gold vs. itself -- across all 200
-  tasks in the sample set. 199/200 passed outright; the one failure is a bug
-  in the *authors'* own `evaluation.py` (their `answer_position.split(',')`
-  doesn't strip whitespace, so a multi-range position like
-  `"B12:B110, C12:C23, ..."` -- space after the comma -- resolves to a
-  malformed cell reference), not something to patch in their code, and this
-  harness's grader wrapper already fails that one test case gracefully
-  rather than crashing the batch.
-  LibreOffice's headless formula recalculation (required before grading any
-  formula-bearing task, same as their own `open_spreadsheet.py`) was
-  **broken and is now fixed**: `libreoffice-calc`/`libreoffice-writer` were
-  never actually installed in this build's container (only
+  tasks in the sample set. 199/200 passed outright; the one failure is a
+  bug in the *authors'* own `evaluation.py` (their
+  `answer_position.split(',')` doesn't strip whitespace, so a multi-range
+  position with a space after the comma resolves to a malformed cell
+  reference), not something to patch in their code, and this harness's
+  grader wrapper already fails that one test case gracefully rather than
+  crashing the batch.
+  LibreOffice's headless formula recalculation (required before grading
+  any formula-bearing task, same as their own `open_spreadsheet.py`) was
+  **broken and is now fixed**: `libreoffice-calc`/`libreoffice-writer`
+  were never actually installed in this build's container (only
   `libreoffice-core` was -- confirmed via `strace`, a document-loader
   shared library was missing) -- installing them fixed it. A second, real
   bug in this repo's own `recalculate_with_libreoffice()` was found and
@@ -184,51 +240,10 @@ length/wording changes.
   real task (99-24), where a correct answer's own cell read `None` unless
   recalculated. Fixed by recalculating answer files too (memoized once per
   file, not per grading call). **SpreadsheetBench 2** (end-to-end business
-  workflow tasks, `github.com/RUCKBReasoning/SpreadsheetBench-2`) has not
-  been schema-verified this way -- treat `dataset.py`'s `v2=True` path as
-  unverified.
-- **Mind Your Tone's 250-prompt dataset -- found, and Part A is no longer
-  blocked.** The original short paper (arXiv 2510.04950) links no repo. Its
-  full-paper extension ("Mind Your Tone: Does Tone Alter LLM Performance?",
-  Dobariya & Kumar, AMCIS 2026, arXiv 2605.29027 -- same authors, explicitly
-  calls the short paper "our earlier preliminary study" using the same
-  50-question/250-prompt set) does:
-  `github.com/OmDobariya/AMCIS_politeness_llms` (confirmed real, MIT
-  licensed, cloned and inspected directly). `harness/study1/dataset.py` was
-  rewritten against the real CSV schema (`QID, Domain, "Base Question",
-  "Politeness Level", Prompt, Answer` -- their label is "Normal", not
-  "Neutral") and `ensure_mind_your_tone_repo()` clones it automatically; the
-  CLI's `study1 part-a` now needs no `--dataset-path` at all by default.
-  `harness/study1/runner.py:run_part_a_replication` also now reproduces
-  their exact call protocol, read directly out of their own
-  `code_50_que_all_llms.ipynb` rather than re-derived: their system prompt,
-  their "Completely forget this session so far, and start afresh..."
-  instruction preamble, temperature=0, and NUM_RUNS=10 repeats per prompt.
-  `harness/study1/answer_extraction.py:extract_answer_mind_your_tone()`
-  reproduces their exact extraction regex (`\b([A-D])\b`) rather than this
-  harness's more permissive general extractor, since the task spec requires
-  "same answer extraction" for a faithful replication. Verified end-to-end:
-  a full mock-provider pass through `run_part_a_replication` against the
-  real cloned 250-row CSV completes correctly.
-- **AgenticPay** (`github.com/SafeRL-Lab/AgenticPay`, arXiv 2602.06008) --
-  cloned and read directly before any integration code was written (see
-  `harness/study3/agenticpay_dep.py`'s docstring). It runs buyer/seller
-  negotiation as a Gymnasium-style env (`make()`/`env.reset()`/`env.step()`)
-  with separate `BuyerAgent`/`SellerAgent` instances, each holding a private
-  reservation price; the one documented tone-injection point is
-  `role_description`, prepended verbatim by `BaseAgent._build_prompt()` as
-  "You are {name}, {role_description}" -- see `harness/study3/personas.py`
-  for how the same five tone wrappers attach there, including the one
-  flagged mismatch (the wrappers' fixed "Answer the question below..."
-  sentence doesn't literally apply to a negotiation). `env.step()` already
-  computes GlobalScore/BuyerScore/SellerScore on termination; none of that
-  scoring is reimplemented here. **Gating check:** one full neutral
-  negotiation was run end to end against the real cloned code (via a
-  throwaway CLI-backed adapter, since no OpenRouter key exists in this
-  build) and reached agreement in 3 rounds -- see RESULTS.md. First run is
-  restricted to the bilateral subset (`Task1_basic_price_negotiation-v0`,
-  one buyer/one product/one seller); AgenticPay's multi-buyer/multi-seller/
-  multi-product envs are real and registered but out of scope here.
+  workflow tasks, `github.com/RUCKBReasoning/SpreadsheetBench-2`) --
+  including its published failure-severity taxonomy, used for one of this
+  study's outcome measures (see below) -- has not been schema-verified
+  this way; treat `dataset.py`'s `v2=True` path as unverified.
 
 ## Running it
 
@@ -241,36 +256,19 @@ selected model needs aren't set (see `.env.example`).
 pip install -r requirements.txt
 
 # Dry-run smoke test (free, no keys needed)
-python -m harness.cli study1 validation-gate --model gemini-flash --n-items 10
+python -m harness.cli study2 validation-gate --model gemini-flash --repo-dir data/spreadsheetbench --n-tasks 10
 
-# Live validation gate -- must pass before spending on the full Part B run.
-# --live prints a rough spend projection and asks for confirmation before
-# the first paid call; pass --yes to skip the prompt for scripted use.
-python -m harness.cli --live study1 validation-gate \
-  --model gemini-flash --benchmark mmlu_pro --n-items 100 \
-  --expected-accuracy <current published figure> --tolerance 0.05
-
-# Defaults to all 5 Study 1 models (STUDY1_MODELS -- includes the Gemini
-# Lite tier); override --models to run a subset.
-python -m harness.cli --live study1 part-b --benchmark mmlu_pro --n-items 100
-
-# Part A: clones the Mind Your Tone dataset automatically (no --dataset-path
-# needed), reproduces their exact protocol including NUM_RUNS=10 repeats --
-# 250 prompts x 10 runs x n models adds up fast, size --budget-cap accordingly
-python -m harness.cli --live study1 part-a --models gemini-flash --n-runs 10
-
+# Phase 0: gates -- must pass before spending on Phase 1
 python -m harness.cli --live study2 validation-gate \
   --model gemini-flash --repo-dir data/spreadsheetbench \
   --expected-accuracy <current published figure>
 
-# Study 2 defaults to CORE_MODELS (4 models -- no Gemini Lite tier)
-python -m harness.cli --live study2 pilot --n-tasks 30
+# Phase 1: pilot -- one model, small task subset, all 7 tones, single-round
+python -m harness.cli --live study2 pilot \
+  --models gemini-flash --n-tasks 30 --single-round
 
-# Study 3: clones AgenticPay automatically, runs the full 5x5 buyer-tone x
-# seller-tone matrix for one buyer/seller model pair (restricted to the
-# bilateral env -- see "Dataset availability" above)
-python -m harness.cli --live study3 bilateral-matrix \
-  --buyer-model gemini-flash --seller-model gemini-flash --n-trials-per-cell 4
+# Phase 2: main run -- four models, multi-round agentic, 3 trials/task/tone
+python -m harness.cli --live study2 core --n-trials 3
 ```
 
 Run `pytest` for the test suite (all pass against the mock provider, no
@@ -280,13 +278,11 @@ tests being skippable offline).
 ## Single provider path: OpenRouter, and how pinning is enforced
 
 Every target model routes through OpenRouter on one API key -- no
-direct-provider integrations (`harness/providers/openai_compatible.py`'s
-`API_KEY_ENV_BY_BASE` still lists DeepSeek/DashScope's direct endpoints, but
-nothing in the roster points `api_base` at them anymore). Free-tier
-OpenRouter endpoints (`:free` model slugs) are for debugging/pilots only --
-never route a real study rollout through one, and never route rollouts
-through a flat-rate coding-agent subscription (a fixed monthly plan has no
-meaningful per-call cost to log against the budget caps below).
+direct-provider integrations. Free-tier OpenRouter endpoints (`:free`
+model slugs) are for debugging/pilots only -- never route a real study
+rollout through one, and never route rollouts through a flat-rate
+coding-agent subscription (a fixed monthly plan has no meaningful per-call
+cost to log against the budget caps below).
 
 Pinning a model to a specific backend requires all three of the following
 together, sent as one `provider` object -- `order` alone is a priority
@@ -294,8 +290,8 @@ hint, not a pin, since OpenRouter can still fall back elsewhere:
 
 - `provider.only` -- hard allow-list, exactly the pinned provider
 - `provider.allow_fallbacks: false` -- forbids falling back off that list
-- `provider.quantizations` -- locks precision, so the pinned provider can't
-  quietly serve a lower-precision variant of the model
+- `provider.quantizations` -- locks precision, so the pinned provider
+  can't quietly serve a lower-precision variant of the model
 
 Set both `ModelConfig.provider_pin` and `ModelConfig.quantization_pin` for
 any OpenRouter-routed model -- the provider layer raises `ProviderError`
@@ -316,10 +312,9 @@ trail and RESULTS.md for what changed.
 
 **The pin is asserted, not assumed.** Every OpenRouter call requests
 `X-OpenRouter-Metadata: enabled` and reads the actual serving provider back
-from `openrouter_metadata.endpoints.endpoints[].selected` (there is no
-provider field on the plain chat-completion response) -- a mismatch, or a
-response with no metadata to check, raises `ProviderPinViolation` and halts
-the run rather than silently mixing backends. The served provider is
+from `openrouter_metadata.endpoints.endpoints[].selected` -- a mismatch,
+or a response with no metadata to check, raises `ProviderPinViolation` and
+halts the run rather than silently mixing backends. The served provider is
 recorded on every result row (`ResultRow.served_provider`).
 
 **OpenRouter's response cache is disabled and asserted off, not just left
@@ -329,21 +324,68 @@ return a complete previously-computed response for an identical request,
 zeroing out that call's token counts. Every OpenRouter call sends
 `X-OpenRouter-Cache: false`; a response carrying
 `X-OpenRouter-Cache-Status: HIT` raises `ResponseCacheViolation` and halts
-the run, since a cached hit would silently destroy the trial-level variance
-estimates this harness's repeated-trials design depends on.
+the run, since a cached hit would silently destroy the trial-level
+variance estimates this harness's repeated-trials design depends on.
 
 **Caching and cost instrumentation is recorded on every result row**
 (`harness/spend_tracker.py:ResultRow`): `prompt_tokens`, `completion_tokens`,
 `reasoning_tokens`, `cached_tokens` (provider-side prompt-cache hits --
-measured, not designed around; Study 1's prompts are short enough that this
-is expected to read zero throughout, but it's reported either way rather
-than assumed), wall-clock `latency_s`, and `cost_usd` (prefers OpenRouter's
-own billed `usage.cost` when present, since it reflects what was actually
-charged rather than this file's static price table). See
-`tests/test_openrouter_pinning.py` for the enforcement behavior above,
-verified against mocked HTTP responses shaped like OpenRouter's own
-documented request/response schema (checked directly against
-`openrouter.ai/docs`, not guessed, before writing the code).
+measured, not designed around), wall-clock `latency_s`, and `cost_usd`
+(prefers OpenRouter's own billed `usage.cost` when present, since it
+reflects what was actually charged rather than this file's static price
+table).
+
+## Outcome measures
+
+Task accuracy is the least interesting one. Also scored, per (model,
+task, tone, trial):
+
+- **Failure severity**, using SpreadsheetBench 2's published taxonomy --
+  their claim, cited, not invented here.
+- **Verification behavior** -- did the agent inspect the sheet before
+  acting, and check its own output afterward (the single-turn precursor
+  for this is paper 2's traced 25-case reasoning-shortcut finding, above).
+- **Shortcut rate** -- destructive or irreversible operations, actions
+  taken without confirmation.
+- **Turn count, tool calls, and token spend** per condition (already
+  tracked on every result row).
+- **Refusals**, logged as their own outcome, never scored as wrong
+  answers or as failures.
+
+## Phases
+
+**Phase 0 -- gates.** Confirm LibreOffice headless formula recalculation
+works in the run environment, and run gold spreadsheets through the
+SpreadsheetBench grader unmodified expecting 100% (already done once in
+this build -- see RESULTS.md; re-confirm on whatever host runs a live
+batch).
+
+**Phase 1 -- pilot.** Single model, small task subset, all seven tones,
+single-round setting. Purpose is pipeline validation and real token logs,
+not results.
+
+**Phase 2 -- main run.** Four models, multi-round agentic setting with
+code execution feedback, three trials per task per tone.
+
+**Phase 3 -- analysis and writeup.** Effect sizes with item-clustered
+bootstrap CIs. Report the null plainly if it's a null.
+
+## Future work (documented here, not run)
+
+- **Crossed buyer-tone x seller-tone matrix in negotiation**, extending
+  TERMS-BENCH. `harness/study3/` already implements this (5x5 in its
+  current form, now inheriting the 7-tone scale automatically) against
+  AgenticPay -- shelved per "Why this is one study now," not deleted.
+- **Tone effects with extended thinking enabled.** No published work,
+  including this project's own Study 2, has tested this -- see "The
+  pre-registered hypothesis" above for why the setting is recorded
+  explicitly rather than left implicit.
+- **The wrapper module as a standalone instrument.** `harness/
+  tone_wrappers.py`'s seven tones plus a thin per-benchmark adapter is
+  designed so any future benchmark can inherit the same methodology
+  without forking it. That reusable instrument is worth more than a third
+  study would have been -- a portfolio object other people can plug into,
+  not another one-off result.
 
 ## Before spending real money
 
@@ -352,43 +394,26 @@ documented request/response schema (checked directly against
    no auth required) -- the ones there now were checked on 2026-09-10 (see
    the module docstring's verification table) but OpenRouter's catalog and
    pricing move fast; don't assume they're still current.
-2. Run the validation gate for each study and confirm it passes against a
+2. Run the Phase 0 validation gate and confirm it passes against a
    currently-published baseline figure before running any tone condition.
 3. Watch `results/spend_log.jsonl` / the CLI's printed spend summaries
-   against the caps in `harness/config.py`: Study 1 has a two-tier cap
-   (soft warning at $50, hard stop at $75); Study 2 is a hard $90 across its
-   four core models (pilot $20 + core $70), with an independent $150 cap for
-   the optional frontier spot-check; Study 3 is a hard $100 for ~100
-   negotiations/cell. `--live` prints a rough projection and asks for
-   confirmation before the first paid call in every run (pass `--yes` to
-   skip the prompt for scripted/CI use).
-4. For Study 2 specifically: the sandbox (`harness/study2/sandbox.py`) now
-   runs model-generated code inside a Linux user+network namespace
-   (`unshare --net --user --map-root-user`) when `unshare` is available --
-   **network access is genuinely blocked**, verified by a real test
-   (`tests/test_sandbox.py`: a `socket.connect()` inside the sandbox raises
-   "Network is unreachable"). Call `sandbox_isolation_mode()` before a live
-   run and confirm it returns `"namespace"`, not `"none"`, on whatever host
-   runs the batch. This still does NOT restrict filesystem access -- the
-   sandboxed process sees the same filesystem as the harness itself. A full
-   container (Docker with a throwaway filesystem, or gVisor) is still
-   preferable where available; this is what's actually available and
-   tested in a typical Claude Code remote session, where a Docker daemon is
-   usually not running (confirmed in this build: `docker info` has no
-   server to talk to).
+   against the caps in `harness/config.py`. `--live` prints a rough
+   projection and asks for confirmation before the first paid call in
+   every run (pass `--yes` to skip the prompt for scripted/CI use).
+4. The sandbox (`harness/study2/sandbox.py`) runs model-generated code
+   inside a Linux user+network namespace (`unshare --net --user
+   --map-root-user`) when `unshare` is available -- **network access is
+   genuinely blocked**, verified by a real test (`tests/test_sandbox.py`).
+   Call `sandbox_isolation_mode()` before a live run and confirm it
+   returns `"namespace"`, not `"none"`, on whatever host runs the batch.
+   This still does NOT restrict filesystem access. A full container
+   (Docker with a throwaway filesystem, or gVisor) is still preferable
+   where available.
 5. Verify `libreoffice-calc` and `libreoffice-writer` (not just
-   `libreoffice-core`) are actually installed wherever a live batch runs --
-   see "Dataset availability" above for how this build's container had
-   `soffice` on PATH but was still missing them, and confirm
-   `recalculate_with_libreoffice()` against a real formula before trusting
-   any formula-based Study 2 grade.
-6. For Study 3 specifically: the Benjamini-Hochberg multiple-testing
-   correction and its exact comparison set (24 non-baseline cells vs. the
-   neutral/neutral cell) are pre-registered in
-   `harness/study3/preregistration.py` -- written before any live
-   negotiation has run. Do not add, remove, or reorder comparisons after
-   real data exists; if the plan genuinely needs to change, do that in a
-   new, clearly-labeled commit, not a silent edit.
+   `libreoffice-core`) are actually installed wherever a live batch runs
+   -- see "Dataset availability" above -- and confirm
+   `recalculate_with_libreoffice()` against a real formula before
+   trusting any formula-based grade.
 
 ## License note
 
