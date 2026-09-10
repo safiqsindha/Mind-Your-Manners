@@ -170,11 +170,12 @@ against a target model, and none of it is scheduled to be.
 
 ## Total spend
 
-**$0.00 against the study's target-model budget caps.** No target model
-has been called against the current roster (GPT-5.6 Luna, GLM 5.3 Flash,
-DeepSeek V4 Flash, Qwen3.8 Flash -- see `harness/config.py` module
-docstring for the roster rationale and the per-model OpenRouter
-verification table, checked 2026-09-10). Both Gemini tiers were dropped in
+**Under $0.10 against the study's target-model budget caps** -- see the
+pre-pilot spot-check entries below for the real (small) live spend so far
+against the current roster (GPT-5.6 Luna, GLM 5.3 Flash, DeepSeek V4.1
+Flash, Qwen3.8 Flash -- see `harness/config.py` module docstring for the
+roster rationale and the per-model OpenRouter verification table, checked
+2026-09-10). Both Gemini tiers were dropped in
 this revision -- Gemini 3.8 Flash on cost-per-capability (roughly 78% of
 projected roster spend for the lowest agentic index in the group) and
 Gemini 3.1 Flash-Lite because it only existed to pair with it for Study
@@ -275,6 +276,68 @@ but it's flagged here rather than assumed: whether `max_turns`/
 `max_tokens` need loosening for the real roster is an open question for
 the pilot to actually characterize, not something adjusted unilaterally
 here just to make a gate number look better.
+
+**Loosened `max_turns` 6->10, re-ran live: no improvement, at ~2x cost.**
+All 5 Luna tasks still hit the (now higher) turn limit without ever
+emitting `FINAL:`, at $0.044 vs the 6-turn run's $0.022 -- doubling the
+budget didn't move accuracy off the floor. Also checked whether
+`max_tokens=2048` was the real constraint: only 1 of 50 turn responses
+across both runs came anywhere near that cap, so it wasn't. Reported
+honestly rather than assumed fixed.
+
+**Turn-budget-awareness prompt fix, re-ran live: still 0/5, but the
+failure mode changed.** Root-caused further: the model was never told
+what its turn budget *was*, so "more turns" didn't change behavior --
+`AGENT_SYSTEM_PROMPT` was rewritten (`agent_loop.py`'s
+`_agent_system_prompt(max_turns)`) to state the real budget explicitly
+("you have N turns total... by turn N-2 you must have written a complete
+answer to OUTPUT_PATH"), plus a live per-turn "Turn K of N" reminder on
+every observation. Re-ran the same 5-task Luna gate: 4 of 5 tasks still
+never emit `FINAL:` at all (still writing/refining code turn 10 of 10);
+the 5th now emits `FINAL:` on the last turn, but as prose describing an
+Excel formula rather than a call to `wb.save(OUTPUT_PATH)` -- a different
+failure (answering in the chat instead of committing the file) than the
+turn-limit exhaustion this specific fix targeted. Net: the WORKBOOK_PATH
+fix and the retry logic were real, confirmed bugs with confirmed fixes;
+turn budget and turn-budget-awareness were reasonable hypotheses, tested
+live, and didn't move Luna's accuracy -- at `reasoning_effort="low"` /
+`max_tokens=2048`, this increasingly looks like genuine task difficulty
+against this model's cheap-tier settings on this 5-task sample, not a
+remaining harness bug. Left in (it's a legitimate improvement in its own
+right and cost nothing extra), but not a fix that should be assumed to
+generalize to the other 3 models without checking them too.
+
+**DeepSeek/Qwen model-staleness audit, prompted by the user asking
+whether the pinned versions were actually current.** Checked OpenRouter's
+live `/api/v1/models` catalog directly (not assumed): `qwen/qwen3.8-flash`
+and `deepseek/deepseek-v4.1-flash` are each the newest-`created` entry in
+their respective flash-tier family (qwen3.5/3.6/3.7/3.8-flash;
+deepseek-v4-flash/-0731/-vision-exp/v4.1-flash) -- both roster pins were
+already on the latest available snapshot. But `deepseek/deepseek-v4.1-flash`
+itself turned out to be a very recent same-day release, and re-verifying
+its pin live surfaced a real, different bug: its first-party "DeepSeek"
+endpoint exists in the catalog but a live call against it returns **HTTP
+404**, "Paid model training violation (account settings)... configurable
+at https://openrouter.ai/settings/privacy" -- this OpenRouter account's own
+privacy/data-policy guardrails exclude that specific endpoint. Not a
+capacity problem (correctly not retried -- 404 is deliberately excluded
+from `RETRYABLE_STATUS_CODES`) and not fixable in harness code at all; the
+remedy is either changing that account setting, or pinning elsewhere. Of
+the other 3 live-listed providers for this model_id (Io Net 73.4% uptime,
+Novita 100% uptime + real fp8, DeepInfra 98.2% uptime -- the same
+congested pool that caused this investigation's original 429s), re-pinned
+to **Novita**. Live-verified: `study2 pilot --models deepseek-current
+--n-tasks 1 --n-trials 1 --single-round` hit Novita's own transient 429
+three times in a row and the harness's retry logic (added earlier this
+round) correctly backed off and succeeded on the 4th attempt -- no 404,
+7/7 trajectories logged. (The 7 trajectories themselves all failed
+grading -- "output workbook failed to load/parse" -- which reads as the
+same genuine-task-difficulty pattern as Luna's 0/5 above, not a provider
+or pinning issue.) See `harness/config.py`'s module docstring footnote (f)
+and "Prior DeepSeek verification trail" step 4 for the full trail.
+**Flagging for the repo owner**: if DeepSeek's first-party endpoint is
+preferred over Novita, relaxing this OpenRouter account's privacy
+settings at the URL above would make the original pin usable again.
 
 Per-call spend logging (`results/raw/*.jsonl`) and a running total
 (`results/spend_log.jsonl`) are wired up and budget-capped
