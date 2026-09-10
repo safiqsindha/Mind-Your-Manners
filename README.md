@@ -103,17 +103,33 @@ length/wording changes.
   `compare_workbooks()` function directly, confirmed against a real sample
   task: grading the answer file against itself passes, grading the
   unmodified input against the answer fails, exactly as expected.
-  **Known gap:** SpreadsheetBench grades *generalization* -- one agent
-  solution is checked against 3 test-case variants per task -- and
-  comparison requires formulas to be recalculated first (LibreOffice
-  headless conversion, same as their own `open_spreadsheet.py`). LibreOffice
-  is installed but **headless conversion fails in this build's own
-  environment** ("Error: source file could not be loaded", reproduces even
-  on the benchmark's own known-good sample files) -- looks like a broken
-  LibreOffice install in this specific container, not a bug in the
-  integration. Verify `harness/study2/grader.py:recalculate_with_libreoffice()`
-  actually works wherever a live batch runs before trusting graded results
-  on any formula-based task. **SpreadsheetBench 2** (end-to-end business
+  **Gating check (see RESULTS.md for the full write-up):** ran
+  `compare_workbooks(answer, answer)` -- gold vs. itself -- across all 200
+  tasks in the sample set. 199/200 passed outright; the one failure is a bug
+  in the *authors'* own `evaluation.py` (their `answer_position.split(',')`
+  doesn't strip whitespace, so a multi-range position like
+  `"B12:B110, C12:C23, ..."` -- space after the comma -- resolves to a
+  malformed cell reference), not something to patch in their code, and this
+  harness's grader wrapper already fails that one test case gracefully
+  rather than crashing the batch.
+  LibreOffice's headless formula recalculation (required before grading any
+  formula-bearing task, same as their own `open_spreadsheet.py`) was
+  **broken and is now fixed**: `libreoffice-calc`/`libreoffice-writer` were
+  never actually installed in this build's container (only
+  `libreoffice-core` was -- confirmed via `strace`, a document-loader
+  shared library was missing) -- installing them fixed it. A second, real
+  bug in this repo's own `recalculate_with_libreoffice()` was found and
+  fixed at the same time: converting a file to itself (same source and
+  output directory) makes LibreOffice silently fail the write to stderr
+  with exit code 0, which the old success check missed entirely; fixed by
+  converting into a temp directory and moving the result back, matching
+  their own `open_spreadsheet.py:just_open_libreoffice()`. A third bug
+  found via the same check: the grader only recalculated the *model's*
+  output, never the ground-truth answer file, and SpreadsheetBench's own
+  answer files can themselves contain uncached formulas -- confirmed on a
+  real task (99-24), where a correct answer's own cell read `None` unless
+  recalculated. Fixed by recalculating answer files too (memoized once per
+  file, not per grading call). **SpreadsheetBench 2** (end-to-end business
   workflow tasks, `github.com/RUCKBReasoning/SpreadsheetBench-2`) has not
   been schema-verified this way -- treat `dataset.py`'s `v2=True` path as
   unverified.
@@ -154,27 +170,28 @@ pip install -r requirements.txt
 # Dry-run smoke test (free, no keys needed)
 python -m harness.cli study1 validation-gate --model gemini-flash --n-items 10
 
-# Live validation gate -- must pass before spending on the full Part B run
+# Live validation gate -- must pass before spending on the full Part B run.
+# --live prints a rough spend projection and asks for confirmation before
+# the first paid call; pass --yes to skip the prompt for scripted use.
 python -m harness.cli --live study1 validation-gate \
   --model gemini-flash --benchmark mmlu_pro --n-items 100 \
   --expected-accuracy <current published figure> --tolerance 0.05
 
-python -m harness.cli --live study1 part-b \
-  --benchmark mmlu_pro --models gemini-flash,deepseek-v3,qwen2.5-72b,llama-3.3-70b \
-  --n-items 100 --budget-cap 50
+# Defaults to all 5 Study 1 models (STUDY1_MODELS -- includes the Gemini
+# Lite tier); override --models to run a subset.
+python -m harness.cli --live study1 part-b --benchmark mmlu_pro --n-items 100
 
 # Part A: clones the Mind Your Tone dataset automatically (no --dataset-path
 # needed), reproduces their exact protocol including NUM_RUNS=10 repeats --
 # 250 prompts x 10 runs x n models adds up fast, size --budget-cap accordingly
-python -m harness.cli --live study1 part-a \
-  --models gemini-flash --n-runs 10 --budget-cap 20
+python -m harness.cli --live study1 part-a --models gemini-flash --n-runs 10
 
 python -m harness.cli --live study2 validation-gate \
   --model gemini-flash --repo-dir data/spreadsheetbench \
   --expected-accuracy <current published figure>
 
-python -m harness.cli --live study2 pilot \
-  --models gemini-flash,deepseek-v3,qwen2.5-72b --n-tasks 30
+# Study 2 defaults to CORE_MODELS (4 models -- no Gemini Lite tier)
+python -m harness.cli --live study2 pilot --n-tasks 30
 ```
 
 Run `pytest` for the test suite (all pass against the mock provider, no
@@ -242,14 +259,20 @@ documented request/response schema (checked directly against
 
 ## Before spending real money
 
-1. Re-verify every `model_id` in `harness/config.py` against the provider's
-   current model list and pricing page -- these are a best-effort snapshot,
-   flagged inline with `VERIFY` comments, not a guarantee.
+1. Re-verify every `model_id` in `harness/config.py` against OpenRouter's
+   current model list and pricing (`GET https://openrouter.ai/api/v1/models`,
+   no auth required) -- the ones there now were checked on 2026-09-10 (see
+   the module docstring's verification table) but OpenRouter's catalog and
+   pricing move fast; don't assume they're still current.
 2. Run the validation gate for each study and confirm it passes against a
    currently-published baseline figure before running any tone condition.
 3. Watch `results/spend_log.jsonl` / the CLI's printed spend summaries
-   against the caps in `harness/config.py` (Study 1: $50; Study 2 pilot/core/
-   frontier: $15/$40/$150).
+   against the caps in `harness/config.py`: Study 1 has a two-tier cap
+   (soft warning at $50, hard stop at $75); Study 2 is a hard $90 across its
+   four core models (pilot $20 + core $70), with an independent $150 cap for
+   the optional frontier spot-check; Study 3 is a hard $100. `--live` prints
+   a rough projection and asks for confirmation before the first paid call
+   in every run (pass `--yes` to skip the prompt for scripted/CI use).
 4. For Study 2 specifically: the sandbox (`harness/study2/sandbox.py`) now
    runs model-generated code inside a Linux user+network namespace
    (`unshare --net --user --map-root-user`) when `unshare` is available --
@@ -264,9 +287,12 @@ documented request/response schema (checked directly against
    tested in a typical Claude Code remote session, where a Docker daemon is
    usually not running (confirmed in this build: `docker info` has no
    server to talk to).
-5. Verify LibreOffice's headless formula recalculation actually works in
-   your run environment (see "Dataset availability" above) -- it's broken
-   in this build's own container.
+5. Verify `libreoffice-calc` and `libreoffice-writer` (not just
+   `libreoffice-core`) are actually installed wherever a live batch runs --
+   see "Dataset availability" above for how this build's container had
+   `soffice` on PATH but was still missing them, and confirm
+   `recalculate_with_libreoffice()` against a real formula before trusting
+   any formula-based Study 2 grade.
 
 ## License note
 

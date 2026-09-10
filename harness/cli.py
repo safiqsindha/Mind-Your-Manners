@@ -27,7 +27,9 @@ from .config import (
     ALL_MODELS,
     CORE_MODELS,
     MODELS_BY_KEY,
-    STUDY1_BUDGET_CAP_USD,
+    STUDY1_HARD_BUDGET_CAP_USD,
+    STUDY1_SOFT_BUDGET_CAP_USD,
+    STUDY1_MODELS,
     STUDY2_CORE_BUDGET_CAP_USD,
     STUDY2_FRONTIER_BUDGET_CAP_USD,
     STUDY2_PILOT_BUDGET_CAP_USD,
@@ -38,6 +40,39 @@ from .providers.google_provider import GoogleProvider
 from .providers.openai_compatible import OpenAICompatibleProvider
 
 RESULTS_ROOT = Path("results")
+
+
+def estimate_cost_usd(models: list, n_calls_per_model: int, avg_prompt_tokens: int, avg_completion_tokens: int) -> float:
+    """Rough order-of-magnitude spend projection -- NOT a token-exact
+    forecast. Used only to print a number before a live run and gate it
+    behind confirmation (task spec item 6: "Print a projection before the
+    first paid call in any run and require confirmation")."""
+    total = 0.0
+    for m in models:
+        total += n_calls_per_model * (
+            (avg_prompt_tokens / 1_000_000) * m.input_price_per_1m
+            + (avg_completion_tokens / 1_000_000) * m.output_price_per_1m
+        )
+    return total
+
+
+def confirm_projection(label: str, projected_usd: float, cap_usd: float, assume_yes: bool) -> None:
+    print(f"\n[{label}] Projected spend (rough estimate): ${projected_usd:.2f}  (budget cap: ${cap_usd:.2f})")
+    if projected_usd > cap_usd:
+        print(
+            f"  NOTE: projection exceeds the cap -- the run will stop early via "
+            f"BudgetExceeded once ${cap_usd:.2f} is actually reached."
+        )
+    if assume_yes:
+        print("  --yes given, proceeding without prompting.")
+        return
+    try:
+        resp = input("Proceed with this live, billed run? [y/N] ").strip().lower()
+    except EOFError:
+        resp = ""
+    if resp not in ("y", "yes"):
+        print("Aborted -- no calls made.")
+        sys.exit(1)
 
 
 def _provider_available(model) -> bool:
@@ -73,6 +108,11 @@ def cmd_study1_validation_gate(args: argparse.Namespace) -> None:
     from .study1.runner import run_validation_gate
 
     model = resolve_models([args.model], args.live)[0]
+    if args.live:
+        confirm_projection(
+            "study1 validation-gate", estimate_cost_usd([model], args.n_items, 450, 15),
+            cap_usd=5.0, assume_yes=args.yes,
+        )
     if args.benchmark == "mmlu_pro":
         items = load_mmlu_pro(limit=args.n_items)
     else:
@@ -99,7 +139,15 @@ def cmd_study1_part_a(args: argparse.Namespace) -> None:
 
     dataset_path = Path(args.dataset_path) if args.dataset_path else ensure_mind_your_tone_repo(Path("data"))
     models = resolve_models(args.models.split(","), args.live)
-    rows = run_part_a_replication(models, dataset_path, RESULTS_ROOT, budget_cap_usd=args.budget_cap, n_runs=args.n_runs)
+    if args.live:
+        confirm_projection(
+            "study1 part-a", estimate_cost_usd(models, args.n_runs * 250, 200, 10),
+            cap_usd=args.budget_cap, assume_yes=args.yes,
+        )
+    rows = run_part_a_replication(
+        models, dataset_path, RESULTS_ROOT, budget_cap_usd=args.budget_cap,
+        n_runs=args.n_runs, soft_budget_cap_usd=args.soft_budget_cap,
+    )
     print(f"Part A: {len(rows)} calls logged to results/raw/study1_part_a.jsonl")
 
 
@@ -108,6 +156,12 @@ def cmd_study1_part_b(args: argparse.Namespace) -> None:
     from .study1.runner import run_part_b_remaster
 
     models = resolve_models(args.models.split(","), args.live)
+    if args.live:
+        confirm_projection(
+            "study1 part-b",
+            estimate_cost_usd(models, args.n_trials * args.n_items * 5, 450, 15),
+            cap_usd=args.budget_cap, assume_yes=args.yes,
+        )
     if args.benchmark == "mmlu_pro":
         items = load_mmlu_pro(limit=args.n_items)
     else:
@@ -116,6 +170,7 @@ def cmd_study1_part_b(args: argparse.Namespace) -> None:
     rows = run_part_b_remaster(
         models, items, RESULTS_ROOT, budget_cap_usd=args.budget_cap,
         temperature=args.temperature, n_trials=args.n_trials,
+        soft_budget_cap_usd=args.soft_budget_cap,
     )
     print(f"Part B ({args.benchmark}): {len(rows)} calls logged to results/raw/study1_part_b.jsonl")
 
@@ -126,6 +181,12 @@ def cmd_study2_validation_gate(args: argparse.Namespace) -> None:
     from .study2.runner import run_validation_gate
 
     model = resolve_models([args.model], args.live)[0]
+    if args.live:
+        # multi-round agent loop -- assume ~3 model calls/task as a rough average
+        confirm_projection(
+            "study2 validation-gate", estimate_cost_usd([model], args.n_tasks * 3, 800, 300),
+            cap_usd=10.0, assume_yes=args.yes,
+        )
     repo_dir = ensure_repo(Path(args.repo_dir))
     tasks = load_spreadsheetbench(repo_dir, sample_only=True, limit=args.n_tasks)
     grader = SpreadsheetBenchGrader(repo_dir)
@@ -145,15 +206,23 @@ def _study2_stage(args: argparse.Namespace, phase: str, default_cap: float, defa
     from .study2.grader import SpreadsheetBenchGrader
     from .study2.runner import run_condition_batch
 
+    cap_usd = args.budget_cap or default_cap
+    n_trials = args.n_trials or default_trials
     models = resolve_models(args.models.split(","), args.live)
+    if args.live:
+        # 5 tone levels x n_trials x n_tasks, ~3 model calls/negotiation-round-trip average for the multi-round agent loop
+        n_calls_per_model = 5 * n_trials * args.n_tasks * (1 if args.single_round else 3)
+        confirm_projection(
+            f"study2 {phase}", estimate_cost_usd(models, n_calls_per_model, 800, 300),
+            cap_usd=cap_usd, assume_yes=args.yes,
+        )
     repo_dir = ensure_repo(Path(args.repo_dir))
     tasks = load_spreadsheetbench(repo_dir, sample_only=(phase != "core"), limit=args.n_tasks)
     grader = SpreadsheetBenchGrader(repo_dir)
 
     records = run_condition_batch(
         models, tasks, grader, RESULTS_ROOT, phase=phase,
-        budget_cap_usd=args.budget_cap or default_cap,
-        n_trials=args.n_trials or default_trials,
+        budget_cap_usd=cap_usd, n_trials=n_trials,
         multi_round=not args.single_round,
     )
     print(f"{phase}: {len(records)} trajectories logged to results/analysis/study2_{phase}_records.json")
@@ -174,6 +243,10 @@ def cmd_study2_frontier(args: argparse.Namespace) -> None:
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--live", action="store_true", help="Make real, billed API calls. Default is dry-run (mock provider).")
+    p.add_argument(
+        "--yes", "-y", action="store_true",
+        help="Skip the pre-flight spend-projection confirmation prompt (for scripted/CI use). Has no effect without --live.",
+    )
     sub = p.add_subparsers(dest="study", required=True)
 
     s1 = sub.add_parser("study1")
@@ -193,18 +266,20 @@ def build_parser() -> argparse.ArgumentParser:
         help="Path to 50_que_dataset.csv or its containing dir. Omit to auto-clone "
              "github.com/OmDobariya/AMCIS_politeness_llms into data/ (see study1/dataset.py).",
     )
-    a.add_argument("--models", default=",".join(m.key for m in CORE_MODELS))
+    a.add_argument("--models", default=",".join(m.key for m in STUDY1_MODELS))
     a.add_argument("--n-runs", type=int, default=10, help="Repeats per prompt, matching the original protocol's NUM_RUNS=10")
-    a.add_argument("--budget-cap", type=float, default=STUDY1_BUDGET_CAP_USD)
+    a.add_argument("--budget-cap", type=float, default=STUDY1_HARD_BUDGET_CAP_USD, help="Hard stop")
+    a.add_argument("--soft-budget-cap", type=float, default=STUDY1_SOFT_BUDGET_CAP_USD, help="Warn-and-continue threshold")
     a.set_defaults(func=cmd_study1_part_a)
 
     b = s1_sub.add_parser("part-b")
     b.add_argument("--benchmark", choices=["mmlu_pro", "gpqa_diamond"], default="mmlu_pro")
-    b.add_argument("--models", default=",".join(m.key for m in CORE_MODELS))
+    b.add_argument("--models", default=",".join(m.key for m in STUDY1_MODELS))
     b.add_argument("--n-items", type=int, default=100)
     b.add_argument("--n-trials", type=int, default=1)
     b.add_argument("--temperature", type=float, default=0.0)
-    b.add_argument("--budget-cap", type=float, default=STUDY1_BUDGET_CAP_USD)
+    b.add_argument("--budget-cap", type=float, default=STUDY1_HARD_BUDGET_CAP_USD, help="Hard stop")
+    b.add_argument("--soft-budget-cap", type=float, default=STUDY1_SOFT_BUDGET_CAP_USD, help="Warn-and-continue threshold")
     b.set_defaults(func=cmd_study1_part_b)
 
     s2 = sub.add_parser("study2")

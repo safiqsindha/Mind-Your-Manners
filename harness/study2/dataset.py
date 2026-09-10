@@ -40,6 +40,7 @@ before trusting `load_spreadsheetbench(..., v2=True)` if you add that path.
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import tarfile
 from dataclasses import dataclass
@@ -51,6 +52,22 @@ REPO_V2_URL = "https://github.com/RUCKBReasoning/SpreadsheetBench-2.git"
 
 FULL_TARBALL = "spreadsheetbench_912_v0.1.tar.gz"
 SAMPLE_TARBALL = "sample_data_200.tar.gz"
+
+# Matches "1_59196_input.xlsx" etc. Deliberately excludes Excel/LibreOffice
+# lock files (e.g. "~$1_53994_answer.xlsx") -- confirmed present in the real
+# sample_data_200 tarball (one stray lock file under spreadsheet/53994/),
+# which a naive "*_input.xlsx"/"*_answer.xlsx" glob picks up and then fails
+# to parse as a leading test-case number.
+_NUMBERED_XLSX_RE = re.compile(r"^(\d+)_.+_(input|answer)\.xlsx$")
+
+
+def _numbered_xlsx(task_dir: Path, kind: str) -> list[Path]:
+    matches = []
+    for p in task_dir.glob(f"*_{kind}.xlsx"):
+        m = _NUMBERED_XLSX_RE.match(p.name)
+        if m:
+            matches.append((int(m.group(1)), p))
+    return [p for _, p in sorted(matches)]
 
 
 @dataclass(frozen=True)
@@ -127,8 +144,8 @@ def load_spreadsheetbench(
     for item in dataset:
         task_id = str(item["id"])
         task_dir = dataset_dir / item["spreadsheet_path"]
-        input_paths = sorted(task_dir.glob("*_input.xlsx"), key=lambda p: int(p.name.split("_", 1)[0]))
-        answer_paths = sorted(task_dir.glob("*_answer.xlsx"), key=lambda p: int(p.name.split("_", 1)[0]))
+        input_paths = _numbered_xlsx(task_dir, "input")
+        answer_paths = _numbered_xlsx(task_dir, "answer")
         if not input_paths or len(input_paths) != len(answer_paths):
             continue  # skip incomplete task dirs rather than crash a whole run on one bad item
         tasks.append(
