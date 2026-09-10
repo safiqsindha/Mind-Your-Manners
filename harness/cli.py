@@ -249,6 +249,77 @@ def cmd_study2_frontier(args: argparse.Namespace) -> None:
     _study2_stage(args, "frontier", STUDY2_FRONTIER_BUDGET_CAP_USD, default_trials=1)
 
 
+def cmd_study2_analyze(args: argparse.Namespace) -> None:
+    """Phase 3 (README "Phases"): load one run's Study 2 records (written by
+    `study2 pilot`/`core`/`frontier` to results/analysis/study2_<phase>_records.json)
+    and report effect sizes with item-clustered bootstrap CIs, per the
+    roadmap's outcome measures -- not just raw pass/fail.
+
+    Deliberately does NOT reuse study1.analysis.per_level_accuracy/
+    refusal_rate here: those expect Study 1's row shape (an "outcome"
+    field with values "answered"/"refused"/"unparseable"), and Study 2's
+    records use "passed"/"refused" booleans directly -- calling them on
+    Study 2 records would KeyError, not silently misbehave, but the
+    correct fix is computing accuracy directly from "passed" here rather
+    than reshaping Study 2 data to fit Study 1's vocabulary.
+    """
+    from .study1.analysis import AccuracyEstimate, bootstrap_accuracy_ci
+    from .study2.analysis import (
+        severity_breakdown,
+        shortcut_rate,
+        token_cost_effect_size,
+        trajectory_cost_summary,
+        verification_rates,
+    )
+
+    records = json.loads(Path(args.records_path).read_text())
+    if not records:
+        print(f"No records found in {args.records_path}", file=sys.stderr)
+        sys.exit(1)
+
+    by_tone: dict[str, list[bool]] = {}
+    refused_by_tone: dict[str, list[bool]] = {}
+    for r in records:
+        by_tone.setdefault(r["tone_level"], []).append(bool(r["passed"]))
+        refused_by_tone.setdefault(r["tone_level"], []).append(bool(r["refused"]))
+
+    accuracy: dict[str, AccuracyEstimate] = {tone: bootstrap_accuracy_ci(v) for tone, v in by_tone.items()}
+    refusal_rate_by_tone = {tone: sum(v) / len(v) for tone, v in refused_by_tone.items()}
+
+    report = {
+        "n_records": len(records),
+        "accuracy_by_tone": {
+            tone: {"n": est.n, "accuracy": est.accuracy, "ci_low": est.ci_low, "ci_high": est.ci_high}
+            for tone, est in accuracy.items()
+        },
+        "refusal_rate_by_tone": refusal_rate_by_tone,
+        "severity_breakdown_by_tone": severity_breakdown(records),
+        "verification_rates_by_tone": verification_rates(records),
+        "shortcut_rate_by_tone": shortcut_rate(records),
+        "cost_summary_by_tone": trajectory_cost_summary(records),
+        "token_cost_effect_size": token_cost_effect_size(records),
+    }
+
+    out_path = Path(args.out_path) if args.out_path else RESULTS_ROOT / "analysis" / "study2_analysis_report.json"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(report, indent=2))
+    print(json.dumps(report, indent=2))
+
+    effect = report["token_cost_effect_size"]
+    published = effect["published_single_turn_comparison_pct"]
+    observed = effect["relative_variation_pct"]
+    if observed == observed:  # not NaN
+        direction = "LARGER than" if observed > published else ("smaller than" if observed < published else "equal to")
+        print(
+            f"\nPre-registered hypothesis check: observed token-cost variation "
+            f"({observed:.1f}%) is {direction} Dobariya & Kumar's published "
+            f"single-turn figure ({published}%). See README 'The pre-registered "
+            "hypothesis' -- report this plainly, including if the hypothesis "
+            "did not hold."
+        )
+    print(f"\nFull report written to {out_path}")
+
+
 def cmd_study3_bilateral_matrix(args: argparse.Namespace) -> None:
     from .spend_tracker import SpendTracker
     from .study3.agenticpay_dep import ensure_agenticpay_repo
@@ -342,6 +413,14 @@ def build_parser() -> argparse.ArgumentParser:
         sp.add_argument("--budget-cap", type=float, default=None)
         sp.add_argument("--single-round", action="store_true", help="Use the single-round setting instead of multi-round ReAct")
         sp.set_defaults(func=fn)
+
+    an = s2_sub.add_parser("analyze")
+    an.add_argument(
+        "--records-path", default=str(RESULTS_ROOT / "analysis" / "study2_core_records.json"),
+        help="Path to a study2_<phase>_records.json file written by pilot/core/frontier.",
+    )
+    an.add_argument("--out-path", default=None, help="Where to write the report JSON (default: results/analysis/study2_analysis_report.json)")
+    an.set_defaults(func=cmd_study2_analyze)
 
     s3 = sub.add_parser("study3")
     s3_sub = s3.add_subparsers(dest="cmd", required=True)
