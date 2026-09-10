@@ -42,11 +42,21 @@ from .sandbox import execute_python_on_workbook
 # because the original prompt only said "you are given WORKBOOK_PATH"
 # without saying how -- a model has no way to know that means "a bare
 # Python name already in scope" rather than any of several equally
-# plausible conventions (env var, CLI arg, a file to discover). Each
-# turn's code also runs in a fresh subprocess (see execute_python_on_workbook)
-# -- nothing from a previous turn persists except what was written to
-# disk -- which the same live run's later turns also showed confusion
-# about ("if WORKBOOK_PATH in globals()"), so that's spelled out too.
+# plausible conventions (env var, CLI arg, a file to discover).
+#
+# PERSISTENCE, get this exactly right: run_react_multi_round passes a
+# DIFFERENT workdir each turn (`workdir / f"turn_{turn}"`), and
+# sandbox.py derives OUTPUT_PATH from that workdir -- so OUTPUT_PATH is a
+# different, empty location every turn, and the working directory itself
+# is fresh every turn too. WORKBOOK_PATH is the one thing that stays
+# constant: it is always the original, untouched input file, every turn
+# (run_react_multi_round always passes the same `workbook_path`, never a
+# previous turn's output). Only the LAST turn's OUTPUT_PATH write is ever
+# graded (agent_loop.py's final_output_path is overwritten by whichever
+# turn produced output most recently) -- an earlier version of this
+# prompt told the model the opposite ("reload it from a file you saved"),
+# which is actively wrong and would make the model discard earlier work
+# by design; caught in review before this shipped, not caught live.
 AGENT_SYSTEM_PROMPT = """AGENT_REACT_MODE
 You are an agent that manipulates spreadsheets by writing Python code
 (openpyxl or pandas).
@@ -62,12 +72,24 @@ reference them directly by name, for example:
 Do not use os.environ, glob, or any file-discovery logic to find the
 workbook -- WORKBOOK_PATH already IS its path, as a ready-to-use string.
 
-Each code block you submit runs in a fresh, isolated process. Nothing
-from a previous turn persists -- not variables, not imports, not loaded
-workbook objects -- except whatever you explicitly wrote to disk (e.g. to
-OUTPUT_PATH, or another file under the same working directory). If you
-need a value from an earlier turn, re-derive it or reload it from a file
-you saved.
+IMPORTANT -- nothing carries over between turns, and OUTPUT_PATH changes
+every turn: each code block runs in a fresh process with its own working
+directory. WORKBOOK_PATH always points to the same original, untouched
+input file, every turn. But OUTPUT_PATH is a NEW, empty location each
+turn, and any file you wrote in a previous turn (including a previous
+OUTPUT_PATH) is gone and cannot be reloaded. Only the most recent turn
+that writes OUTPUT_PATH is graded. This means: never try to "continue"
+work from a previous turn's saved file -- always build the complete
+result from WORKBOOK_PATH (the original) in whichever turn you intend to
+be graded, in one self-contained code block.
+
+Execution limits: each code block gets 60 seconds wall-clock / 30 seconds
+CPU time and 1.5GB memory, runs with no network access, and only the
+input workbook and standard libraries are available. A timeout or crash
+shows up as `timed_out=True` or a Python traceback in the Observation
+below -- if you see one, the code took too long or used too much memory;
+simplify your approach (e.g. avoid loading the whole sheet into memory
+at once) rather than retrying the same code.
 
 Respond with EITHER:
   1. A single fenced python code block to execute next, e.g.:
