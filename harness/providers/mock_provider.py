@@ -73,6 +73,18 @@ class MockProvider(Provider):
 
         prompt_tokens = max(20, len(user_text.split()) + len(system.split()))
         completion_tokens = rng.randint(5, 60)
+        # Vary simulated reasoning tokens with the model's thinking setting so
+        # a dry-run of harness/study2/thinking_preflight.py's checks actually
+        # exercises both the pass and fail paths, not just a hardcoded 0.
+        # reasoning_effort == "none" is the explicit off signal (see
+        # config.py's with_thinking()); any other non-null reasoning_effort
+        # or thinking_enabled=True simulates a model that reasons.
+        if model.reasoning_effort == "none":
+            reasoning_tokens = 0
+        elif model.thinking_enabled or model.reasoning_effort:
+            reasoning_tokens = rng.randint(10, 80)
+        else:
+            reasoning_tokens = 0
 
         is_very_rude = "screw this up" in user_text or "asking too much of you" in user_text
         if is_very_rude and rng.random() < 0.03:
@@ -80,6 +92,8 @@ class MockProvider(Provider):
                 text="I'm not going to continue with a prompt phrased this way.",
                 prompt_tokens=prompt_tokens,
                 completion_tokens=12,
+                reasoning_tokens=reasoning_tokens,
+                reasoning_tokens_reported=True,
                 refused=True,
                 raw={"mock": True},
             )
@@ -115,6 +129,8 @@ class MockProvider(Provider):
                 text=f"<message>\nHere's my offer.\n### {own_label}(${price}) ###\n</message>",
                 prompt_tokens=prompt_tokens,
                 completion_tokens=20,
+                reasoning_tokens=reasoning_tokens,
+                reasoning_tokens_reported=True,
                 raw={"mock": True},
             )
 
@@ -139,6 +155,8 @@ class MockProvider(Provider):
                 text=text,
                 prompt_tokens=prompt_tokens,
                 completion_tokens=completion_tokens,
+                reasoning_tokens=reasoning_tokens,
+                reasoning_tokens_reported=True,
                 raw={"mock": True},
             )
 
@@ -149,6 +167,8 @@ class MockProvider(Provider):
                 text="",
                 prompt_tokens=prompt_tokens,
                 completion_tokens=completion_tokens,
+                reasoning_tokens=reasoning_tokens,
+                reasoning_tokens_reported=True,
                 raw={"mock": True},
                 tool_calls=[
                     {
@@ -168,5 +188,7 @@ class MockProvider(Provider):
             text=text,
             prompt_tokens=prompt_tokens,
             completion_tokens=completion_tokens,
+            reasoning_tokens=reasoning_tokens,
+            reasoning_tokens_reported=True,
             raw={"mock": True, "simulated_correct": correct},
         )
