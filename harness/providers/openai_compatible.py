@@ -16,9 +16,17 @@ a priority hint (OpenRouter can still fall back elsewhere), not a pin:
   - `provider.quantizations`   locks precision, so a provider can't quietly
                                 serve a lower-precision variant of the model
 
-See `ModelConfig.provider_pin` / `ModelConfig.quantization_pin`. When both
-are set, `complete()` also asserts -- rather than assumes -- that the
-provider OpenRouter actually used matches the pin, via the
+See `ModelConfig.provider_pin` / `ModelConfig.quantization_pin`. The one
+exception: `quantization_pin` is not required for a provider that
+genuinely doesn't expose a discrete quantization at all (checked live
+against `GET /api/v1/models/{id}/endpoints` -- true for every first-party
+API provider checked so far: OpenAI, Google AI Studio, Alibaba's own
+endpoint). There, `provider.only` is already maximally specific -- one
+provider, one variant, nothing for `quantizations` to disambiguate -- so
+`ModelConfig.quantization_not_exposed=True` is an explicit, audited
+opt-out rather than a silently-missing field. When `provider_pin` is set,
+`complete()` also asserts -- rather than assumes -- that the provider
+OpenRouter actually used matches the pin, via the
 `X-OpenRouter-Metadata: enabled` request header and the resulting
 `openrouter_metadata.endpoints.endpoints[].selected` response field (there
 is no such field in the plain chat-completion response body; verified
@@ -111,18 +119,19 @@ class OpenAICompatibleProvider(Provider):
             # docstring. Applies regardless of whether a provider is pinned.
             headers["X-OpenRouter-Cache"] = "false"
             if model.provider_pin:
-                if not model.quantization_pin:
+                if not model.quantization_pin and not model.quantization_not_exposed:
                     raise ProviderError(
                         f"{model.key}: provider_pin={model.provider_pin!r} is set but "
-                        "quantization_pin is not. OpenRouter pinning requires provider.only, "
-                        "allow_fallbacks:false, AND provider.quantizations together -- see "
-                        "this module's docstring and README 'Single provider path'."
+                        "quantization_pin is not, and quantization_not_exposed is not True. "
+                        "OpenRouter pinning requires provider.only, allow_fallbacks:false, AND "
+                        "provider.quantizations together UNLESS the pinned provider genuinely "
+                        "doesn't expose a discrete quantization (checked live, then "
+                        "quantization_not_exposed=True) -- see this module's docstring and "
+                        "README 'Single provider path'."
                     )
-                body["provider"] = {
-                    "only": [model.provider_pin],
-                    "allow_fallbacks": False,
-                    "quantizations": model.quantization_pin,
-                }
+                body["provider"] = {"only": [model.provider_pin], "allow_fallbacks": False}
+                if model.quantization_pin:
+                    body["provider"]["quantizations"] = model.quantization_pin
                 # Needed to get openrouter_metadata.endpoints back in the
                 # response body so the served-provider assertion below has
                 # something to check against.

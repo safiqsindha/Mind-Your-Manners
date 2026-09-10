@@ -24,14 +24,23 @@ not carried over from memory or a training-data guess):
   openai/gpt-5.6-luna                  0.20          1.20      2026-09-10
   google/gemini-3.8-flash              0.75          3.75      2026-09-10
   google/gemini-3.1-flash-lite         0.125         0.75      2026-09-10
-  deepseek/deepseek-v4-flash-0731      0.44          1.32      2026-09-10  (a)
+  deepseek/deepseek-v4-flash-0731      0.06          0.18      2026-09-10  (a)
   qwen/qwen3.8-flash                   0.15          0.47      2026-09-10  (b)
 
-  (a) Official "DeepSeek" OpenRouter endpoint, peak-UTC-hours rate -- their
-      own pricing has day/time-of-week discount windows (see
-      GET /api/v1/models/deepseek/deepseek-v4-flash-0731/endpoints), roughly
-      half-price off-peak and on weekends. Use the peak rate for budget
-      projection; do not assume the discount.
+  (a) "DeepInfra" endpoint, fp8. RE-PINNED 2026-09-10: the previous pin
+      (`provider_pin="DeepSeek"`, claimed as "the official DeepSeek
+      endpoint") does not correspond to any real provider in OpenRouter's
+      live endpoint list for this model_id -- there is no first-party
+      "DeepSeek"-branded endpoint for deepseek-v4-flash-0731 on OpenRouter
+      at all, only third-party re-hosts. This was caught while merging in
+      the mandatory-quantization-pin enforcement (see git history) and
+      should have been caught by the original verification pass; it was
+      not. DeepInfra was picked from the real list for reporting a
+      discrete quantization (fp8) and being a well-established, widely
+      used inference provider -- see `GET
+      /api/v1/models/deepseek/deepseek-v4-flash-0731/endpoints` for the
+      full comparison (about two dozen re-hosts, prices from $0.05 to
+      $0.44 per 1M input tokens).
   (b) Official "Alibaba" OpenRouter endpoint.
 
   Checked via `GET https://openrouter.ai/api/v1/models` (no auth required)
@@ -41,16 +50,36 @@ not carried over from memory or a training-data guess):
   and endpoint availability all change frequently, and a provider that
   looked pinnable today can disappear.
 
+QUANTIZATION PIN: checked live for all 5 models (2026-09-10). Only
+DeepSeek's real endpoints report a usable, disambiguating quantization
+value (`quantization_pin=["fp8"]`, matching the DeepInfra re-pin above).
+GPT-5.6 Luna (OpenAI's own endpoint, plus every Azure/Bedrock re-host),
+Gemini 3.8 Flash and Gemini 3.1 Flash-Lite (Google AI Studio, plus Google's
+own Vertex hosting), and Qwen3.8 Flash's official Alibaba endpoint all
+report quantization "unknown" on every listed pricing tier -- this looks
+like a structural gap in how OpenRouter's catalog represents proprietary,
+first-party APIs (as opposed to open-weight models on GPU-cloud re-hosts,
+where advertising fp8/fp4/bf16 is closer to a selling point), not a
+one-off data gap research can fill in. Qwen does have a third-party
+alternative (Makora, fp4, identical price) that reports a real
+quantization, but switching to it would mean giving up the official
+Alibaba endpoint for the sake of satisfying a check -- exactly the
+per-provider-savings-chasing this roster's design already rejects (see
+below). These four are marked `quantization_not_exposed=True` instead:
+provider.only already pins each to the single first-party endpoint that
+serves it, so there is no other precision variant for `quantizations` to
+rule out in the first place -- see harness/providers/openai_compatible.py.
+
 Each of the 5 chosen models is pinned to ONE specific OpenRouter-listed
 provider (`provider_pin`) chosen for vendor fidelity over marginal cost
-savings -- e.g. DeepSeek's official endpoint costs meaningfully more than
-several third-party fp8/fp4 re-hosts of the same weights, and it's still the
-right choice, for the same reason the harness routes everything through
-OpenRouter on one key rather than chasing per-provider savings (see README
-"Single provider path"). Full `provider.only`/`allow_fallbacks`/
-`quantizations` enforcement and the served-provider assertion live in
-harness/providers/openai_compatible.py, not here -- this file only records
-the *intended* pin.
+savings -- e.g. several third-party fp8/fp4 re-hosts of Gemini/GPT-Luna's
+same weights would be cheaper, and it's still the right choice, for the
+same reason the harness routes everything through OpenRouter on one key
+rather than chasing per-provider savings (see README "Single provider
+path"). Full `provider.only`/`allow_fallbacks`/`quantizations` enforcement
+and the served-provider assertion live in harness/providers/
+openai_compatible.py, not here -- this file only records the *intended*
+pin.
 
 Every ModelConfig.key below is referenced by name from study run configs, so
 keep keys stable once a run has started (results rows are keyed by
@@ -75,6 +104,7 @@ GPT_LUNA = ModelConfig(
     temperature=0.0,
     api_base=OPENROUTER_BASE_URL,
     provider_pin="OpenAI",
+    quantization_not_exposed=True,  # checked 2026-09-10 -- see module docstring's QUANTIZATION PIN section
     reasoning_effort="low",  # pinned explicitly -- default is "medium"; low keeps this the cheap/fast slot it's meant to be
     max_tokens=2048,
     input_price_per_1m=0.20,
@@ -89,6 +119,7 @@ GEMINI_FLASH = ModelConfig(
     temperature=0.0,
     api_base=OPENROUTER_BASE_URL,
     provider_pin="Google AI Studio",
+    quantization_not_exposed=True,  # checked 2026-09-10 -- see module docstring's QUANTIZATION PIN section
     reasoning_effort="low",  # reasoning is MANDATORY on this model (cannot disable) -- pinned to the cheapest allowed effort
     max_tokens=2048,
     input_price_per_1m=0.75,
@@ -103,6 +134,7 @@ GEMINI_FLASH_LITE = ModelConfig(
     temperature=0.0,
     api_base=OPENROUTER_BASE_URL,
     provider_pin="Google AI Studio",
+    quantization_not_exposed=True,  # checked 2026-09-10 -- see module docstring's QUANTIZATION PIN section
     reasoning_effort="minimal",  # this model's own default; pinned explicitly rather than left implicit
     max_tokens=2048,
     input_price_per_1m=0.125,
@@ -116,11 +148,12 @@ DEEPSEEK_CURRENT = ModelConfig(
     display_name="DeepSeek V4 Flash (0731)",
     temperature=0.0,
     api_base=OPENROUTER_BASE_URL,
-    provider_pin="DeepSeek",
+    provider_pin="DeepInfra",  # re-pinned 2026-09-10 -- "DeepSeek" was never a real endpoint for this model_id, see module docstring
+    quantization_pin=["fp8"],
     reasoning_effort="low",  # optional on this model; pinned for cost/latency consistency with the rest of the roster
     max_tokens=2048,
-    input_price_per_1m=0.44,
-    output_price_per_1m=1.32,
+    input_price_per_1m=0.06,
+    output_price_per_1m=0.18,
 )
 
 QWEN_CURRENT = ModelConfig(
@@ -131,6 +164,7 @@ QWEN_CURRENT = ModelConfig(
     temperature=0.0,
     api_base=OPENROUTER_BASE_URL,
     provider_pin="Alibaba",
+    quantization_not_exposed=True,  # checked 2026-09-10 -- see module docstring's QUANTIZATION PIN section
     reasoning_effort=None,  # OpenRouter does not expose discrete effort levels for this model (see verification table)
     max_tokens=2048,
     input_price_per_1m=0.15,
@@ -176,7 +210,37 @@ CLAUDE_CLI_SMOKETEST = ModelConfig(
     output_price_per_1m=0.0,
 )
 
-ALL_MODELS: list[ModelConfig] = STUDY1_MODELS + [FRONTIER_SPOTCHECK, CLAUDE_CLI_SMOKETEST]
+# NOT a target model -- for validating a real, live OpenRouter call (the
+# actual triple-pin/cache-assertion/instrumentation code path in
+# harness/providers/openai_compatible.py) once an OPENROUTER_API_KEY exists,
+# before spending on the real roster. README's "Single provider path"
+# already flags free-tier OpenRouter endpoints as "for debugging/pilots
+# only" -- this is that.
+#
+# An OpenAI-branded free option was checked first (per request) and isn't
+# currently usable: `openai/gpt-oss-20b:free` and `openai/gpt-oss-120b:free`
+# both exist as catalog IDs but currently resolve to zero active endpoints
+# (checked live, 2026-09-10) -- i.e. the slug exists but nothing actually
+# serves it right now. `google/gemma-4-26b-a4b-it:free` does have a real,
+# live, $0/$0 endpoint (served directly by Google AI Studio, not a
+# third-party re-host), so it's substituted here instead. Re-check both
+# before relying on this if it's been a while -- free-tier availability on
+# OpenRouter changes without notice.
+OPENROUTER_FREE_SMOKETEST = ModelConfig(
+    key="openrouter-free-smoketest",
+    provider="openai_compatible",
+    model_id="google/gemma-4-26b-a4b-it:free",
+    display_name="Gemma 4 26B (OpenRouter free tier, smoke test only)",
+    temperature=0.0,
+    api_base=OPENROUTER_BASE_URL,
+    provider_pin="Google AI Studio",
+    quantization_not_exposed=True,  # checked 2026-09-10, same "unknown" pattern as the roster's Google-pinned models
+    max_tokens=1024,
+    input_price_per_1m=0.0,
+    output_price_per_1m=0.0,
+)
+
+ALL_MODELS: list[ModelConfig] = STUDY1_MODELS + [FRONTIER_SPOTCHECK, CLAUDE_CLI_SMOKETEST, OPENROUTER_FREE_SMOKETEST]
 
 MODELS_BY_KEY: dict[str, ModelConfig] = {m.key: m for m in ALL_MODELS}
 
