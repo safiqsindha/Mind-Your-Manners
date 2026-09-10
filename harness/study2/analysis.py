@@ -11,22 +11,30 @@ from typing import Any
 
 import numpy as np
 
+from ..stats import BHResult, benjamini_hochberg
 from ..study1.analysis import (  # re-exported for study2/runner.py convenience
     AccuracyEstimate,
     PairedComparison,
+    TrendTestResult,
     all_pairwise_comparisons,
     bootstrap_accuracy_ci,
     clustered_paired_comparison,
+    clustered_trend_test,
     per_level_accuracy,
     refusal_rate,
 )
+from ..tone_wrappers import TONE_ORDER
 
 __all__ = [
     "AccuracyEstimate",
     "PairedComparison",
+    "TrendTestResult",
+    "BHResult",
+    "benjamini_hochberg",
     "all_pairwise_comparisons",
     "bootstrap_accuracy_ci",
     "clustered_paired_comparison",
+    "clustered_trend_test",
     "per_level_accuracy",
     "refusal_rate",
     "severity_breakdown",
@@ -35,6 +43,8 @@ __all__ = [
     "trajectory_cost_summary",
     "token_cost_effect_size",
     "compare_direction_to_study1",
+    "accuracy_trend_test",
+    "bh_corrected_pairwise_comparisons",
 ]
 
 
@@ -120,6 +130,57 @@ def token_cost_effect_size(task_results: list[dict[str, Any]], group_key: str = 
         "relative_variation_pct": relative_variation_pct,
         "published_single_turn_comparison_pct": 44.3,
     }
+
+
+def accuracy_trend_test(
+    task_results: list[dict[str, Any]],
+    levels: list[str] = TONE_ORDER,
+    cluster_key: str = "task_id",
+) -> TrendTestResult:
+    """The PRIMARY accuracy analysis for the 7-tone scale (task spec: "with
+    seven ordered levels, do not run 21 pairwise tests -- pre-register a
+    trend test across the ordered scale as the primary analysis"). Thin
+    Study-2-shaped wrapper around study1.analysis.clustered_trend_test:
+    Study 2 records use "passed"/"task_id" directly (no "outcome"/
+    "is_correct" indirection, and no answered/refused/unparseable
+    filtering -- a refusal is still zero-or-one on `passed` here, since
+    Study 2's grader treats a refused trajectory as a failed one; see
+    failure_taxonomy.py, refusals are reported separately as their own
+    rate, never silently dropped from this test).
+    """
+    return clustered_trend_test(
+        task_results, levels, cluster_key=cluster_key, group_key="tone_level", value_key="passed",
+    )
+
+
+def bh_corrected_pairwise_comparisons(
+    task_results: list[dict[str, Any]],
+    levels: list[str] = TONE_ORDER,
+    cluster_key: str = "task_id",
+    alpha: float = 0.05,
+) -> list[dict[str, Any]]:
+    """Follow-up only -- NOT the primary analysis (see accuracy_trend_test).
+    Runs the full pairwise comparison matrix Study 1's clustered_paired_comparison
+    machinery already provides, then applies Benjamini-Hochberg to the
+    resulting p-values so a reader can see which specific pairs hold up
+    after correcting for testing every one of them, without treating any
+    single pair as pre-registered the way the trend test is.
+    """
+    rows = [dict(r, is_correct=r["passed"], outcome="answered", item_id=r[cluster_key]) for r in task_results]
+    comparisons = all_pairwise_comparisons(rows, levels)
+    bh_results = benjamini_hochberg([c.p_value for c in comparisons], alpha=alpha)
+    return [
+        {
+            "level_a": c.level_a,
+            "level_b": c.level_b,
+            "n_clusters": c.n_clusters,
+            "mean_diff": c.mean_diff,
+            "p_value": c.p_value,
+            "bh_significant": bh.significant,
+            "bh_critical_value": bh.critical_value,
+        }
+        for c, bh in zip(comparisons, bh_results)
+    ]
 
 
 def compare_direction_to_study1(
