@@ -207,7 +207,20 @@ def cmd_study2_validation_gate(args: argparse.Namespace) -> None:
     out_path = RESULTS_ROOT / "analysis" / "study2_validation_gate.json"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(result, indent=2))
-    print(json.dumps(result, indent=2))
+    # The file keeps everything (per-task turn diagnostics included, for
+    # post-hoc diagnosis); stdout keeps only what a human reads at a glance,
+    # since the diagnostics are hundreds of lines of captured stderr.
+    summary = {k: v for k, v in result.items() if k != "per_task"}
+    print(json.dumps(summary, indent=2))
+    for t in result.get("per_task", []):
+        mark = "PASS" if t["passed"] else "FAIL"
+        limit = " [hit turn limit]" if t["hit_turn_limit"] else ""
+        print(
+            f"  {mark}  {t['task_id']:<10} {t['instruction_type']:<28} "
+            f"cases {t['n_test_cases_passed']}/{t['n_test_cases']}  "
+            f"turns {t['n_turns']}{limit}"
+        )
+    print(f"\nFull per-task detail (incl. turn diagnostics): {out_path}")
     if not result["passed"]:
         print("\nVALIDATION GATE FAILED (or --expected-accuracy not given). Do not proceed.", file=sys.stderr)
         sys.exit(2)

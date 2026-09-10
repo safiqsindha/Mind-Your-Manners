@@ -75,8 +75,13 @@ def run_validation_gate(
     before running any tone conditions")."""
     tracker = SpendTracker(out_dir / "raw" / "study2_validation_gate.jsonl", phase="validation_gate", cap_usd=10.0)
     n_passed = 0
+    per_task: list[dict] = []
     for task in tasks:
-        workdir = out_dir / "scratch" / "validation_gate" / task.task_id
+        # model.key is in the path because otherwise a second model's gate run
+        # overwrites the first's outputs -- the scores stay correct (each task
+        # is graded before the next model runs) but every artifact needed to
+        # explain them is destroyed.
+        workdir = out_dir / "scratch" / "validation_gate" / model.key / task.task_id
         input_path = task.input_spreadsheet_paths[0]
         traj = run_react_multi_round(
             tracker, model, task.task_id, task.instruction, input_path, workdir,
@@ -84,6 +89,24 @@ def run_validation_gate(
         )
         grade = _grade_trajectory(grader, task, traj, workdir)
         n_passed += int(grade.passed)
+        # Which tasks failed, not just how many: an aggregate alone can't
+        # distinguish "these models have similar overall skill" from "every
+        # model fails the same two tasks", and those imply very different
+        # things about the roster, the task sample, and the grader.
+        per_task.append(
+            {
+                "task_id": task.task_id,
+                "instruction_type": task.instruction_type,
+                "passed": grade.passed,
+                "soft_restriction": grade.soft_restriction,
+                "n_test_cases_passed": grade.n_test_cases_passed,
+                "n_test_cases": grade.n_test_cases,
+                "hit_turn_limit": traj.hit_turn_limit,
+                "n_turns": len(traj.steps),
+                "error": grade.error,
+                "turn_diagnostics": _turn_diagnostics(traj),
+            }
+        )
     tracker.close()
 
     observed = n_passed / len(tasks) if tasks else float("nan")
@@ -96,6 +119,7 @@ def run_validation_gate(
         "tolerance": tolerance,
         "passed": expected_accuracy is not None and abs(observed - expected_accuracy) <= tolerance,
         "spend_usd": tracker.total_usd,
+        "per_task": per_task,
     }
 
 
