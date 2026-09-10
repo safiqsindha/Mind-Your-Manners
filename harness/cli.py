@@ -200,7 +200,10 @@ def cmd_study2_validation_gate(args: argparse.Namespace) -> None:
     tasks = load_spreadsheetbench(repo_dir, sample_only=True, limit=args.n_tasks)
     grader = SpreadsheetBenchGrader(repo_dir)
 
-    result = run_validation_gate(model, tasks, grader, RESULTS_ROOT, expected_accuracy=args.expected_accuracy, tolerance=args.tolerance)
+    result = run_validation_gate(
+        model, tasks, grader, RESULTS_ROOT, expected_accuracy=args.expected_accuracy,
+        tolerance=args.tolerance, max_turns=args.max_turns,
+    )
     out_path = RESULTS_ROOT / "analysis" / "study2_validation_gate.json"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(result, indent=2))
@@ -276,7 +279,7 @@ def _study2_stage(args: argparse.Namespace, phase: str, default_cap: float, defa
     records = run_condition_batch(
         models, tasks, grader, RESULTS_ROOT, phase=phase,
         budget_cap_usd=cap_usd, n_trials=n_trials,
-        multi_round=not args.single_round,
+        multi_round=not args.single_round, max_turns=args.max_turns,
     )
     print(f"{phase}: {len(records)} trajectories logged to results/analysis/study2_{phase}_records.json")
 
@@ -492,6 +495,7 @@ def build_parser() -> argparse.ArgumentParser:
     g2.add_argument("--n-tasks", type=int, default=20)
     g2.add_argument("--expected-accuracy", type=float, default=None)
     g2.add_argument("--tolerance", type=float, default=0.08)
+    g2.add_argument("--max-turns", type=int, default=10, help="Per-trajectory turn budget for the multi-round agent loop")
     g2.set_defaults(func=cmd_study2_validation_gate)
 
     tp = s2_sub.add_parser("thinking-preflight")
@@ -511,6 +515,7 @@ def build_parser() -> argparse.ArgumentParser:
         sp.add_argument("--n-trials", type=int, default=None)
         sp.add_argument("--budget-cap", type=float, default=None)
         sp.add_argument("--single-round", action="store_true", help="Use the single-round setting instead of multi-round ReAct")
+        sp.add_argument("--max-turns", type=int, default=10, help="Per-trajectory turn budget for the multi-round agent loop")
         sp.set_defaults(func=fn)
 
     an = s2_sub.add_parser("analyze")

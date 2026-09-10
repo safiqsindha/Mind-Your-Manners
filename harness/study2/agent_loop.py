@@ -57,7 +57,32 @@ from .sandbox import execute_python_on_workbook
 # prompt told the model the opposite ("reload it from a file you saved"),
 # which is actively wrong and would make the model discard earlier work
 # by design; caught in review before this shipped, not caught live.
-AGENT_SYSTEM_PROMPT = """AGENT_REACT_MODE
+# TURN-BUDGET AWARENESS. Added after a live re-run still scored 0/5 even
+# with max_turns doubled 6->10: every task ran the entire budget without
+# ever emitting FINAL. The system prompt never told the model its own turn
+# budget, so it had no way to pace itself toward committing -- it could
+# always take "one more look." AGENT_SYSTEM_PROMPT is therefore a function
+# of max_turns so the stated budget always matches the real one, with an
+# explicit instruction to save a best-effort answer well before the limit;
+# run_react_multi_round also appends "Turn N of max_turns" to every
+# Observation, since a reminder given only once at the start of a long
+# ReAct context is easy to lose track of.
+#
+# CORRECTED 2026-09-10, and worth stating plainly because the original
+# note here asserted the opposite: that 0/5 was NOT caused by a pacing
+# problem, and the earlier reading of it ("the model loads the workbook
+# correctly every time, it just never converges") was wrong. The real
+# cause was a path bug in sandbox.py -- every execution died with "can't
+# open file" before running a single line of model code, so the model was
+# looping on an error it was never shown a way out of, and no turn budget
+# could have helped. Once that was fixed the same gate scored 3/5, with
+# tasks converging in 3-4 turns. This guidance is kept because it is
+# sound on its own terms and the post-fix trajectories do commit early
+# rather than drift, but it was never the thing standing between 0/5 and
+# a working run. See RESULTS.md for the full trail.
+def _agent_system_prompt(max_turns: int) -> str:
+    commit_by = max(1, max_turns - 2)
+    return f"""AGENT_REACT_MODE
 You are an agent that manipulates spreadsheets by writing Python code
 (openpyxl or pandas).
 
@@ -82,6 +107,15 @@ that writes OUTPUT_PATH is graded. This means: never try to "continue"
 work from a previous turn's saved file -- always build the complete
 result from WORKBOOK_PATH (the original) in whichever turn you intend to
 be graded, in one self-contained code block.
+
+TURN BUDGET: you have {max_turns} turns total for this task, and you will
+be told your current turn number after every observation. Spend at most
+your first 1-2 turns inspecting the workbook -- after that, start writing
+and saving your answer. By turn {commit_by}, you must have written a
+complete, working answer to OUTPUT_PATH, even if it is not perfect --
+save your best attempt rather than continuing to refine it and risk
+finishing with nothing saved at all. A saved, imperfect answer is always
+better than no answer.
 
 Execution limits: each code block gets 60 seconds wall-clock / 30 seconds
 CPU time and 1.5GB memory, runs with no network access, and only the
@@ -252,14 +286,19 @@ def run_react_multi_round(
     workdir: Path,
     tone_level: str,
     trial: int,
-    max_turns: int = 6,
+    max_turns: int = 10,  # was 6. Raised while chasing a 0/5 gate that turned out to be sandbox.py's
+    # path bug, not a turn shortage (see _agent_system_prompt's CORRECTED note). Kept at 10 on the
+    # post-fix evidence rather than reverted: with execution actually working, 4 of 5 gate tasks
+    # converge in 3-4 turns, but the 5th still used all 10 -- so 10 is real headroom for the harder
+    # tail, and costs nothing on the tasks that finish early since the loop breaks on FINAL.
 ) -> Trajectory:
     traj = Trajectory(task_id=task_id, tone_level=tone_level, trial=trial)
     messages = [{"role": "user", "content": instruction}]
 
+    system_prompt = _agent_system_prompt(max_turns)
     for turn in range(max_turns):
         response, row = _call_and_record(
-            tracker, model, AGENT_SYSTEM_PROMPT, messages, task_id, tone_level, trial, "multi_round_react", turn,
+            tracker, model, system_prompt, messages, task_id, tone_level, trial, "multi_round_react", turn,
         )
         traj.result_rows.append(row)
 
@@ -274,12 +313,14 @@ def run_react_multi_round(
             traj.steps.append(TrajectoryStep(turn, response.text, None, "", "", is_final=True))
             break
 
+        turn_marker = f" [Turn {turn + 2} of {max_turns} next]" if turn + 2 <= max_turns else " [This was your last turn]"
+
         code = _extract_code(response.text)
         if not code:
             # Model didn't follow the protocol; feed that back as an observation
             # rather than silently ending the trajectory, then keep going.
             messages.append(
-                {"role": "user", "content": "Observation: no code block or FINAL: line found. Please respond with one or the other."}
+                {"role": "user", "content": "Observation: no code block or FINAL: line found. Please respond with one or the other." + turn_marker}
             )
             traj.steps.append(TrajectoryStep(turn, response.text, None, "", "", is_final=False))
             continue
@@ -287,7 +328,7 @@ def run_react_multi_round(
         exec_result = execute_python_on_workbook(code, workbook_path, workdir / f"turn_{turn}")
         observation = (
             f"Observation: stdout={exec_result.stdout!r} stderr={exec_result.stderr!r} "
-            f"timed_out={exec_result.timed_out}"
+            f"timed_out={exec_result.timed_out}{turn_marker}"
         )
         messages.append({"role": "user", "content": observation})
         traj.steps.append(TrajectoryStep(turn, response.text, code, exec_result.stdout, exec_result.stderr, is_final=False))

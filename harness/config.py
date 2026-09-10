@@ -39,7 +39,7 @@ tracker -- see item (c) below on why that last distinction matters):
   model_id                          input $/1M   output $/1M   date checked
   openai/gpt-5.6-luna                  0.20          1.20      2026-09-10  (a)(c)
   z-ai/glm-5.3-flash                   0.075         0.25      2026-09-10  (d)
-  deepseek/deepseek-v4-flash-0731      0.06          0.18      2026-09-10  (b)
+  deepseek/deepseek-v4.1-flash         0.30          1.20      2026-09-10  (b)(f)
   qwen/qwen3.8-flash                   0.15          0.47      2026-09-10  (e)
 
   (a) Pinned to the plain "OpenAI" endpoint (provider_pin="OpenAI"), NOT
@@ -59,8 +59,18 @@ tracker -- see item (c) below on why that last distinction matters):
       fully; not fixed here because guessing at OpenRouter's tag-pinning
       syntax without a live call to confirm against risks a pin that looks
       more specific than it is.
-  (b) "DeepInfra" endpoint, fp8. Unchanged from the previous revision --
-      see prior verification trail below the table.
+  (b) NOT pinned to the first-party "DeepSeek" endpoint despite one
+      existing in the catalog -- see (f) below. Pinned to "Novita"
+      instead (100% uptime at check time, real fp8 quantization).
+      Re-checked and re-pinned 2026-09-10, superseding the -0731
+      snapshot this roster previously used -- see "Prior DeepSeek
+      verification trail" below the table for why. Price is
+      TIME-OF-DAY-VARYING on OpenRouter's first-party listing:
+      $0.15/$0.60 off-peak, $0.30/$1.20 during weekday UTC 01:00-04:00
+      and 06:00-10:00; Novita's actually-used pin reported the same
+      $0.30/$1.20 at check time, recorded above so the pre-call
+      projection doesn't under-estimate (real billing uses OpenRouter's
+      actual per-call usage.cost regardless -- see item (c) below).
   (c) Luna's price is genuinely disputed in the wild: third-party trackers
       still show $1.00/$6.00 (the rate before OpenAI's announced 80% cut on
       2026-07-30; some gateways were still billing the old rate weeks
@@ -88,6 +98,20 @@ tracker -- see item (c) below on why that last distinction matters):
       quantization_pin, not quantization_not_exposed.
   (e) Official "Alibaba" OpenRouter endpoint. Unchanged from the previous
       revision.
+  (f) DeepSeek's own first-party endpoint IS listed live in /endpoints for
+      this model_id, but a real call against it returns HTTP 404: "Paid
+      model training violation (account settings)... configurable at
+      https://openrouter.ai/settings/privacy". That's this OpenRouter
+      account's own data-policy guardrail excluding that specific
+      endpoint -- an account-level policy decision, not a capacity or
+      pin-syntax problem, and not something retrying fixes (404 is
+      deliberately excluded from openai_compatible.py's
+      RETRYABLE_STATUS_CODES). Discovered live 2026-09-10 while
+      re-verifying the roster was on the latest snapshot at the user's
+      prompting. If this account's privacy settings are relaxed later,
+      the first-party pin becomes usable again and would be worth
+      revisiting -- but that's a call for whoever owns the account
+      settings, not something this harness can or should route around.
 
   Checked via `GET https://openrouter.ai/api/v1/models` (no auth required)
   and `GET https://openrouter.ai/api/v1/models/{id}/endpoints` for
@@ -96,15 +120,37 @@ tracker -- see item (c) below on why that last distinction matters):
   and endpoint availability all change frequently, and a provider that
   looked pinnable today can disappear.
 
-  Prior DeepSeek verification trail (unchanged, retained from the previous
-  revision): the earlier pin (`provider_pin="DeepSeek"`, claimed as "the
-  official DeepSeek endpoint") did not correspond to any real provider in
-  OpenRouter's live endpoint list for this model_id -- there was no
-  first-party "DeepSeek"-branded endpoint for deepseek-v4-flash-0731 on
-  OpenRouter at all, only third-party re-hosts. Caught while merging in the
-  mandatory-quantization-pin enforcement; DeepInfra was picked from the
-  real list for reporting a discrete quantization (fp8) and being a
-  well-established, widely used inference provider.
+  Prior DeepSeek verification trail (kept for history -- four revisions,
+  not two):
+    1. Original pin (`provider_pin="DeepSeek"`, claimed as "the official
+       DeepSeek endpoint") did not correspond to any real provider in
+       OpenRouter's live endpoint list for `deepseek-v4-flash-0731` at
+       all, only third-party re-hosts -- caught while merging in the
+       mandatory-quantization-pin enforcement.
+    2. Re-pinned to "DeepInfra" (fp8, well-established third-party
+       re-host) -- the best available option at the time, since no
+       first-party endpoint existed for that snapshot.
+    3. Re-checked 2026-09-10 after two consecutive live HTTP 429s from
+       DeepInfra's shared pool ("temporarily rate-limited upstream...
+       shared pool") during a pre-pilot spot check, at the user's
+       prompting to confirm the roster was actually on the latest
+       available snapshot rather than assume DeepInfra's congestion was
+       just bad luck. It wasn't just the pin needing a retry (see
+       harness/providers/openai_compatible.py's retry logic, added
+       separately) -- `deepseek-v4.1-flash`, released the same day,
+       turned out to have the first-party "DeepSeek" endpoint the -0731
+       snapshot never had. Re-pinned to that instead of DeepInfra,
+       resolving the original compromise from step 2 rather than
+       patching around it again.
+    4. That first-party pin, in turn, failed its own live verification
+       call with HTTP 404 -- not congestion, but this OpenRouter
+       account's own privacy/data-policy guardrails excluding the
+       endpoint (see footnote (f) above). Checked the other 3 live
+       /endpoints entries for this model_id (Io Net 73.4% uptime,
+       Novita 100% uptime + real fp8, DeepInfra 98.2% uptime -- the
+       same pool that caused step 3's 429s) and re-pinned to Novita,
+       the only one that's both reliable and not the pool already
+       known to be congested.
 
 PINNING TRAPS in OpenRouter's live catalog, checked directly against the
 four chosen model_ids (none of them trip these, by construction -- kept
@@ -112,34 +158,45 @@ here as the documented reason why, and as a guardrail other future roster
 edits should re-check against):
   - `~`-prefixed model IDs (e.g. `~deepseek/deepseek-v4-flash-latest`,
     confirmed live and currently resolving to a *cheaper* price than the
-    dated 0731 snapshot -- exactly the kind of silent drift that makes it
-    tempting) are "latest" aliases that redirect to whatever OpenRouter
-    currently considers newest. None of the four model_ids below start
-    with `~` -- each is itself a dated snapshot id, not an alias to one.
+    dated -0731 snapshot this roster used to pin -- exactly the kind of
+    silent drift that makes it tempting) are "latest" aliases that
+    redirect to whatever OpenRouter currently considers newest. None of
+    the four model_ids below start with `~` -- each is itself a dated
+    snapshot id, not an alias to one. Note this is a genuinely separate
+    concern from picking a *stale* dated snapshot (see the DeepSeek
+    v4.1-flash re-pin above) -- pinning a specific date avoids the
+    aliasing trap, but doesn't by itself mean that date is still the best
+    one available; both need periodic re-checking.
   - `:batch` suffixed variants (confirmed live for gpt-5.6-luna,
-    gpt-5.6-luna-pro, glm-5.3-flash, and deepseek-v4-flash-0731, roughly
-    half the non-batch price each) are asynchronous-only and cannot serve
-    a synchronous ReAct loop. None of the four model_ids below carry a
+    gpt-5.6-luna-pro, and glm-5.3-flash, roughly half the non-batch price
+    each; no `:batch` variant exists for deepseek-v4.1-flash specifically,
+    checked live 2026-09-10) are asynchronous-only and cannot serve a
+    synchronous ReAct loop. None of the four model_ids below carry a
     `:batch` suffix. tests/test_roster.py asserts both of these
     mechanically for every entry in ALL_MODELS.
 
-QUANTIZATION PIN: checked live for all 4 models (2026-09-10). GLM 5.3 Flash
-and DeepSeek's real endpoints report a usable, disambiguating quantization
-value (`quantization_pin=["fp8"]` for both). GPT-5.6 Luna (OpenAI's own
-endpoint, plus every Azure/Bedrock re-host) and Qwen3.8 Flash's official
-Alibaba endpoint report quantization "unknown" on every listed pricing
-tier -- this looks like a structural gap in how OpenRouter's catalog
-represents proprietary, first-party APIs (as opposed to open-weight models
-on GPU-cloud re-hosts, where advertising fp8/fp4/bf16 is closer to a
-selling point), not a one-off data gap research can fill in. Qwen does
-have a third-party alternative (Makora, fp4, identical price) that reports
-a real quantization, but switching to it would mean giving up the official
-Alibaba endpoint for the sake of satisfying a check -- exactly the
-per-provider-savings-chasing this roster's design already rejects (see
-below). These two are marked `quantization_not_exposed=True` instead:
-provider.only already pins each to the single first-party endpoint that
-serves it, so there is no other precision variant for `quantizations` to
-rule out in the first place -- see harness/providers/openai_compatible.py.
+QUANTIZATION PIN: checked live for all 4 models (2026-09-10, DeepSeek
+re-checked same day after its pin changed -- see footnote (f) above). GLM
+5.3 Flash's real endpoint reports a usable, disambiguating quantization
+value (`quantization_pin=["fp8"]`); so does DeepSeek V4.1 Flash's actual
+pin (Novita, `quantization_pin=["fp8"]`) -- DeepSeek's first-party
+endpoint would have reported "unknown" like the two below, but it isn't
+the one actually used (blocked by account guardrails, see footnote (f)).
+GPT-5.6 Luna (OpenAI's own endpoint, plus every Azure/Bedrock re-host) and
+Qwen3.8 Flash's official Alibaba endpoint report quantization "unknown" on
+every listed pricing tier -- this looks like a structural gap in how
+OpenRouter's catalog represents proprietary, first-party APIs (as opposed
+to open-weight models on GPU-cloud re-hosts, where advertising
+fp8/fp4/bf16 is closer to a selling point), not a one-off data gap
+research can fill in. Qwen has a third-party alternative that reports a
+real quantization (Makora/fp4, near-identical price), but switching would
+mean giving up the first-party endpoint for the sake of satisfying a check
+-- exactly the per-provider-savings-chasing this roster's design already
+rejects (see below). These two are marked `quantization_not_exposed=True`
+instead: provider.only already pins each to the single first-party
+endpoint that serves it, so there is no other precision variant for
+`quantizations` to rule out in the first place -- see
+harness/providers/openai_compatible.py.
 
 REASONING CONTROL, per model (checked live 2026-09-10 against each
 model's `reasoning` catalog field -- not every model in this roster can
@@ -150,7 +207,7 @@ on ModelConfig and README "The thinking arm"):
   model            mandatory?   effort levels available    "off" exists?
   GPT-5.6 Luna     no           max/xhigh/high/medium/low/none   yes ("none")
   GLM 5.3 Flash    YES          max/high/low                     no
-  DeepSeek V4 0731 no           max/high/low                     no
+  DeepSeek V4.1    no           max/high/low                     no
   Qwen3.8 Flash    no           (no effort enum -- token-budget   n/a --
                                  based via `reasoning.max_tokens`, controlled
                                  not wired up by this harness;      by provider
@@ -260,18 +317,40 @@ GLM_CURRENT = ModelConfig(
 DEEPSEEK_CURRENT = ModelConfig(
     key="deepseek-current",
     provider="openai_compatible",
-    model_id="deepseek/deepseek-v4-flash-0731",
-    canonical_slug="deepseek/deepseek-v4-flash-20260731",  # checked live 2026-09-10
-    display_name="DeepSeek V4 Flash (0731)",
+    model_id="deepseek/deepseek-v4.1-flash",
+    canonical_slug="deepseek/deepseek-v4.1-flash-20260910",  # checked live 2026-09-10 -- the previous
+    # pin (deepseek-v4-flash-0731, from 2026-07-31) was re-checked after two live 429s in a row on
+    # DeepInfra's shared pool, at the user's prompting ("make sure you're using the latest, that could
+    # be the issue"). v4.1-flash was released 2026-09-10 (same day) and, unlike -0731, HAS a real
+    # first-party "DeepSeek" endpoint listed in /endpoints -- but a live call against it returns HTTP
+    # 404 ("Paid model training violation (account settings)"): this OpenRouter account's own privacy /
+    # data-policy guardrails (openrouter.ai/settings/privacy) exclude that specific endpoint. That's an
+    # account-level policy decision, not a capacity problem -- retrying it (see
+    # harness/providers/openai_compatible.py's RETRYABLE_STATUS_CODES, which deliberately excludes 404)
+    # would never succeed. Checked all 4 endpoints /endpoints reported live: DeepSeek (blocked, above),
+    # Io Net (73.4% uptime -- too flaky), Novita (100% uptime, real fp8 quantization), DeepInfra (98.2%
+    # uptime -- the original congested pool that started this investigation). Re-pinned to Novita: the
+    # best non-blocked, non-congested option actually verified live, not just chasing "latest" or
+    # "first-party" for their own sake. If this account's privacy settings are later relaxed to allow
+    # the first-party endpoint, that would be a legitimate reason to revisit this pin.
+    display_name="DeepSeek V4.1 Flash",
     temperature=0.0,
     api_base=OPENROUTER_BASE_URL,
-    provider_pin="DeepInfra",  # re-pinned 2026-09-10 -- "DeepSeek" was never a real endpoint for this model_id, see module docstring
-    quantization_pin=["fp8"],
+    provider_pin="Novita",  # confirmed live 2026-09-10 -- see canonical_slug comment above; DeepSeek's
+    # own first-party endpoint is blocked by this account's guardrails, not chosen here
+    quantization_pin=["fp8"],  # Novita's endpoint reports a real quantization (unlike the blocked first-party one)
     reasoning_effort="low",  # optional on this model; pinned for cost/latency consistency with the rest of the roster
     thinking_enabled=True,
     max_tokens=2048,
-    input_price_per_1m=0.06,
-    output_price_per_1m=0.18,
+    # v4.1-flash has TIME-OF-DAY-VARYING pricing on OpenRouter's first-party listing (checked live):
+    # $0.15/$0.60 off-peak, $0.30/$1.20 during weekday UTC 01:00-04:00 and 06:00-10:00. Novita's pin
+    # (actually used) reported the same $0.30/$1.20 rate at check time; recorded here at the higher of
+    # the two so the pre-call spend *projection* (estimate_cost_usd) doesn't under-estimate -- actual
+    # billing already prefers OpenRouter's real per-call usage.cost over this static table regardless
+    # (see spend_tracker.compute_cost_usd), so this only affects the projection shown before a live run,
+    # not what's actually charged.
+    input_price_per_1m=0.30,
+    output_price_per_1m=1.20,
 )
 
 QWEN_CURRENT = ModelConfig(
