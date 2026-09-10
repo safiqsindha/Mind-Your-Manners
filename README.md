@@ -72,6 +72,31 @@ so per-call cost is higher than a normal API call to the same model --
 keep smoke tests small (a handful of items, not the full n-items count for
 a real run).
 
+### Smoke-testing the real OpenRouter pinning path, once you have a key
+
+Once an `OPENROUTER_API_KEY` exists, the cheapest way to validate the
+*actual* triple-pin/cache-assertion/instrumentation code path (not just the
+mock provider) before spending on the real roster is
+`harness/config.py:OPENROUTER_FREE_SMOKETEST` -- a genuinely free ($0/$0),
+currently-live OpenRouter endpoint:
+
+```bash
+python -m harness.cli --live study1 validation-gate \
+  --model openrouter-free-smoketest --n-items 5
+```
+
+An OpenAI-branded free model was checked first and isn't usable: OpenAI's
+open-weight `openai/gpt-oss-20b:free` and `openai/gpt-oss-120b:free` both
+exist as catalog IDs but currently resolve to zero active endpoints
+(checked live) -- the slug exists, nothing actually serves it right now.
+`OPENROUTER_FREE_SMOKETEST` points at `google/gemma-4-26b-a4b-it:free`
+instead, served directly by Google AI Studio with real, live pricing of
+$0/$0. Like `CLAUDE_CLI_SMOKETEST`, this is excluded from `CORE_MODELS` /
+`STUDY1_MODELS` and is for pipeline validation only, per this file's
+"Single provider path" section on free-tier endpoints -- re-check both
+before relying on this if it's been a while, since free-tier availability
+on OpenRouter changes without notice.
+
 ## Layout
 
 ```
@@ -274,18 +299,20 @@ hint, not a pin, since OpenRouter can still fall back elsewhere:
 
 Set both `ModelConfig.provider_pin` and `ModelConfig.quantization_pin` for
 any OpenRouter-routed model -- the provider layer raises `ProviderError`
-before making a call if only one is set. **This roster does not satisfy
-that yet** (see RESULTS.md item 5): none of the 5 current models have
-`quantization_pin` set, and checking live endpoint data while merging the
-enforcement code in found that several of their pinned providers
-(OpenAI's own endpoint, Google AI Studio, Alibaba) report an "unknown"
-quantization rather than a discrete one -- meaning `quantizations` may not
-be meaningful to set for a first-party/proprietary endpoint at all, since
-`provider.only` already pins to the one and only variant that provider
-serves. `DEEPSEEK_CURRENT`'s pin (`provider_pin="DeepSeek"`) is a separate,
-more basic problem: no provider by that name appears in OpenRouter's live
-endpoint list for `deepseek/deepseek-v4-flash-0731` at all. Fixing both is
-a follow-up before any live run -- see RESULTS.md.
+before making a call if only one is set. **One exception, checked live and
+audited rather than assumed:** a provider that genuinely doesn't expose a
+discrete quantization at all can set `ModelConfig.quantization_not_exposed
+= True` instead of `quantization_pin`. This is true of every first-party
+API endpoint checked so far -- OpenAI's own endpoint, Google AI Studio, and
+Alibaba's official Qwen endpoint all report quantization `"unknown"` on
+every pricing tier they offer, for this reason: `provider.only` already
+pins to the single variant that provider serves, so there's no ambiguity
+for `quantizations` to resolve. This was caught (along with a real bug --
+`DEEPSEEK_CURRENT`'s old pin, `provider_pin="DeepSeek"`, didn't correspond
+to any real provider in OpenRouter's endpoint list for that model_id at
+all) while merging the enforcement code into the roster; both are fixed
+now -- see `harness/config.py`'s module docstring for the full verification
+trail and RESULTS.md for what changed.
 
 **The pin is asserted, not assumed.** Every OpenRouter call requests
 `X-OpenRouter-Metadata: enabled` and reads the actual serving provider back
