@@ -130,6 +130,17 @@ def execute_python_on_workbook(code: str, workbook_path: Path, workdir: Path) ->
     workbook_path = Path(workbook_path).resolve()
     workdir.mkdir(parents=True, exist_ok=True)
     output_path = workdir / "output.xlsx"
+    # Success is reported below as output_path.exists(), which is only a claim
+    # about THIS execution if nothing was there beforehand. Left in place, a
+    # stale file from an earlier run means code that crashes without writing
+    # anything is still reported as having produced output -- and the grader
+    # then scores the previous run's answer. That is not hypothetical: it
+    # silently inflated a roster-wide gate baseline, where every model shared
+    # one scratch directory and later models inherited earlier ones' passing
+    # outputs (all four scored an identical 3/5; with the reuse removed, two
+    # of them scored 2/5). Deleting it first makes existence afterwards mean
+    # what the rest of this function assumes it means.
+    output_path.unlink(missing_ok=True)
 
     script = _RUNNER_TEMPLATE.format(
         cpu=CPU_TIME_LIMIT_S,
