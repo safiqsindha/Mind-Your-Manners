@@ -408,7 +408,7 @@ def build_parser() -> argparse.ArgumentParser:
         sp = s2_sub.add_parser(name)
         sp.add_argument("--models", default=",".join(m.key for m in CORE_MODELS))
         sp.add_argument("--repo-dir", default="data/spreadsheetbench")
-        sp.add_argument("--n-tasks", type=int, default=30 if name != "core" else 100)
+        sp.add_argument("--n-tasks", type=int, default=30 if name != "core" else 50)
         sp.add_argument("--n-trials", type=int, default=None)
         sp.add_argument("--budget-cap", type=float, default=None)
         sp.add_argument("--single-round", action="store_true", help="Use the single-round setting instead of multi-round ReAct")
