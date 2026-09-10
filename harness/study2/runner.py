@@ -66,7 +66,7 @@ def run_validation_gate(
     out_dir: Path,
     expected_accuracy: Optional[float] = None,
     tolerance: float = 0.08,
-    max_turns: int = 6,
+    max_turns: int = 10,
 ) -> dict:
     """Run the unmodified benchmark instruction (no tone wrapper) through
     the multi-round agent and grade with the authors' own evaluator, before
@@ -122,7 +122,7 @@ def run_condition_batch(
     budget_cap_usd: float,
     n_trials: int = 3,
     multi_round: bool = True,
-    max_turns: int = 6,
+    max_turns: int = 10,
 ) -> list[dict]:
     """Runs every (model, task, tone, trial) combination, grades each, and
     returns one flat record per trajectory ready for study2/analysis.py.

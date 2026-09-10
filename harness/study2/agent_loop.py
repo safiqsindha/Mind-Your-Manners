@@ -252,7 +252,11 @@ def run_react_multi_round(
     workdir: Path,
     tone_level: str,
     trial: int,
-    max_turns: int = 6,
+    max_turns: int = 10,  # was 6 -- see RESULTS.md "First live gates run against the real roster": after
+    # fixing the WORKBOOK_PATH prompt bug, Luna's live 5-task gate still scored 0/5, now hitting the
+    # turn limit mid-refinement rather than failing to find the file at all. Loosened as a deliberate
+    # tradeoff (more cost per trajectory) rather than assumed to be the fix -- re-verify against a real
+    # run before trusting this number; SpreadsheetBench tasks vary a lot in how many turns they need.
 ) -> Trajectory:
     traj = Trajectory(task_id=task_id, tone_level=tone_level, trial=trial)
     messages = [{"role": "user", "content": instruction}]
