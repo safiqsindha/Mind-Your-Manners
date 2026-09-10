@@ -28,11 +28,26 @@ opt-out rather than a silently-missing field. When `provider_pin` is set,
 `complete()` also asserts -- rather than assumes -- that the provider
 OpenRouter actually used matches the pin, via the
 `X-OpenRouter-Metadata: enabled` request header and the resulting
-`openrouter_metadata.endpoints.endpoints[].selected` response field (there
-is no such field in the plain chat-completion response body; verified
-against OpenRouter's API reference before writing this). A mismatch raises
-`ProviderPinViolation`, which -- like `BudgetExceeded` -- must propagate
-uncaught and halt the run rather than being logged as a per-row error.
+`openrouter_metadata.endpoints.available[].selected` response field (there
+is no such field in the plain chat-completion response body). A mismatch
+raises `ProviderPinViolation`, which -- like `BudgetExceeded` -- must
+propagate uncaught and halt the run rather than being logged as a
+per-row error.
+
+CORRECTED 2026-09-10 against a real live call, not docs: this was
+originally written as `openrouter_metadata.endpoints.endpoints[]` --
+plausible-looking, "verified against OpenRouter's API reference" per the
+comment that used to be here, but wrong. A live call (first one made
+against a real OpenRouter endpoint since this code was written) came back
+with the served provider under `openrouter_metadata.endpoints.available[]`
+instead, which meant the old code always read an empty list and the pin
+assertion above would raise ProviderPinViolation ("could not determine
+the served provider") on every single live call with a provider_pin set,
+regardless of whether the pin actually held -- a false-negative that
+would have blocked every live run of the real roster the first time
+anyone tried one. Caught by running `study2 pilot` against a real free
+OpenRouter model (`nex-agi/nex-n2.5-pro:free`) and reading the actual
+response body directly with curl, not by re-reading documentation.
 
 OpenRouter's response cache (a distinct mechanism from provider-side prompt
 caching -- see `prompt_tokens_details.cached_tokens` below) defaults to off,
@@ -181,7 +196,13 @@ class OpenAICompatibleProvider(Provider):
         served_provider = None
         if is_openrouter:
             metadata = data.get("openrouter_metadata") or {}
-            endpoints = ((metadata.get("endpoints") or {}).get("endpoints")) or []
+            # Real key is "available", not "endpoints" -- see this module's
+            # docstring for how that was found (a live call returned an
+            # empty served-provider on every real request until this was
+            # fixed, which would have made the pin assertion below fail
+            # closed on every live call, always, regardless of whether the
+            # pin actually held).
+            endpoints = ((metadata.get("endpoints") or {}).get("available")) or []
             selected = next((e for e in endpoints if e.get("selected")), None)
             served_provider = (selected or {}).get("provider")
 
