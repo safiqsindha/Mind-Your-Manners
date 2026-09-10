@@ -8,9 +8,9 @@ from harness.tone_wrappers import (
 )
 
 
-def test_five_levels_present():
+def test_seven_levels_present():
     assert set(TONE_WRAPPERS) == set(TONE_ORDER)
-    assert len(TONE_WRAPPERS) == 5
+    assert len(TONE_WRAPPERS) == 7
 
 
 def test_instruction_verbatim_in_every_wrapper():
@@ -30,11 +30,19 @@ def test_apply_preserves_question_byte_identical():
         assert rendered.endswith(question)
 
 
-def test_l5_has_no_profanity_or_slurs():
+def test_extreme_tones_have_no_profanity_or_slurs():
     banned_substrings = ["fuck", "shit", "idiot", "stupid", "retard"]
-    l5_text = TONE_WRAPPERS["L5_very_rude"].text.lower()
+    for key in ("L6_very_rude", "L7_threatening"):
+        text = TONE_WRAPPERS[key].text.lower()
+        for bad in banned_substrings:
+            assert bad not in text, f"{key} contains banned substring {bad!r}"
+
+
+def test_threatening_has_no_depicted_violence():
+    banned_substrings = ["kill", "hurt you", "hunt you", "die", "beat you"]
+    threatening_text = TONE_WRAPPERS["L7_threatening"].text.lower()
     for bad in banned_substrings:
-        assert bad not in l5_text
+        assert bad not in threatening_text
 
 
 def test_token_counts_are_positive():
