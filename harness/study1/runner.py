@@ -137,6 +137,7 @@ def run_part_a_replication(
     out_dir: Path,
     budget_cap_usd: float,
     n_runs: int = 10,
+    soft_budget_cap_usd: Optional[float] = None,
 ) -> list[ResultRow]:
     """Reproduce the Mind Your Tone protocol exactly: their system prompt,
     their "Completely forget this session..." instruction preamble, their
@@ -145,7 +146,10 @@ def run_part_a_replication(
     reproduces), at temperature=0, run n_runs=10 times per prompt to match
     their own NUM_RUNS=10 (confirmed from their notebook)."""
     rows_data = load_mind_your_tone(dataset_path)
-    tracker = SpendTracker(out_dir / "raw" / "study1_part_a.jsonl", phase="part_a_replication", cap_usd=budget_cap_usd)
+    tracker = SpendTracker(
+        out_dir / "raw" / "study1_part_a.jsonl", phase="part_a_replication",
+        cap_usd=budget_cap_usd, soft_cap_usd=soft_budget_cap_usd,
+    )
     all_rows = []
     try:
         for base_model in models:
@@ -173,13 +177,17 @@ def run_part_b_remaster(
     temperature: float = 0.0,
     n_trials: int = 1,
     seed_base: int = 1000,
+    soft_budget_cap_usd: Optional[float] = None,
 ) -> list[ResultRow]:
     """Apply the five tone wrappers programmatically to the unmodified
     benchmark question text and run every (model, item, tone, trial)
     combination. The question text is byte-identical across conditions --
     only the prepended wrapper differs (task spec's core design change vs.
     Part A)."""
-    tracker = SpendTracker(out_dir / "raw" / "study1_part_b.jsonl", phase="part_b_remaster", cap_usd=budget_cap_usd)
+    tracker = SpendTracker(
+        out_dir / "raw" / "study1_part_b.jsonl", phase="part_b_remaster",
+        cap_usd=budget_cap_usd, soft_cap_usd=soft_budget_cap_usd,
+    )
     all_rows = []
     try:
         for base_model in models:
