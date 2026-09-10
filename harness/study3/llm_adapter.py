@@ -13,13 +13,6 @@ AgenticPay actually passes for the real API call (and records that in
 ResultRow), rather than silently overriding it with the harness's
 per-model config -- ModelConfig.temperature is still logged for
 provenance, but callers should know it does not control what was sent.
-
-NOTE: this PR is branched from master independently of the OpenRouter
-provider-pinning PR, so ResultRow here only carries the fields that exist
-on master today. Once that PR merges, thread its
-cached_tokens/served_provider fields through the ResultRow built below too
--- Study 3 calls should get the same caching/pin instrumentation as
-Studies 1 and 2, this just isn't in scope for this PR's diff.
 """
 from __future__ import annotations
 
@@ -100,6 +93,8 @@ class HarnessLLM:
             extracted_answer=None,
             is_correct=None,
             timestamp=time.time(),
+            cached_tokens=response.cached_tokens,
+            served_provider=response.served_provider,
             raw_response=response.raw,
             extra={"role": self.role, "call_index": self.n_calls},
         )

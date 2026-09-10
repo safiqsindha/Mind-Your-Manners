@@ -56,6 +56,8 @@ class ResultRow:
     extracted_answer: Optional[str]
     is_correct: Optional[bool]
     timestamp: float
+    cached_tokens: int = 0  # usage.prompt_tokens_details.cached_tokens -- measure only, see config.py
+    served_provider: Optional[str] = None  # actual OpenRouter backend that served this call
     raw_response: dict[str, Any] = field(default_factory=dict)
     extra: dict[str, Any] = field(default_factory=dict)
 
@@ -69,18 +71,32 @@ def compute_cost_usd(model: ModelConfig, response: ProviderResponse) -> float:
     reported = response.raw.get("total_cost_usd")
     if reported is not None:
         return float(reported)
+    # OpenRouter reports its own actually-billed cost per call
+    # (usage.cost) -- prefer that over our static price table too, since
+    # it reflects what was really charged rather than a snapshot that can
+    # drift (see harness/config.py's VERIFY-table caveat).
+    usage = response.raw.get("usage") or {}
+    if isinstance(usage, dict) and usage.get("cost") is not None:
+        return float(usage["cost"])
     input_cost = (response.prompt_tokens / 1_000_000) * model.input_price_per_1m
     output_cost = ((response.completion_tokens + response.reasoning_tokens) / 1_000_000) * model.output_price_per_1m
     return input_cost + output_cost
 
 
 class SpendTracker:
-    def __init__(self, out_path: Path, phase: str, cap_usd: float):
+    def __init__(self, out_path: Path, phase: str, cap_usd: float, soft_cap_usd: Optional[float] = None):
+        """`cap_usd` is a hard stop (raises BudgetExceeded). `soft_cap_usd`,
+        if given, is a warn-and-continue threshold below the hard cap --
+        crossing it prints a warning once but does not stop the run. Used
+        for Study 1's two-tier cap ($50 soft / $75 hard); pass None (the
+        default) for a single-cap phase."""
         self.out_path = out_path
         self.phase = phase
         self.cap_usd = cap_usd
+        self.soft_cap_usd = soft_cap_usd
         self.total_usd = 0.0
         self.n_calls = 0
+        self._soft_cap_warned = False
         self.out_path.parent.mkdir(parents=True, exist_ok=True)
         self._fh = open(self.out_path, "a", encoding="utf-8")
 
@@ -94,6 +110,16 @@ class SpendTracker:
         self.n_calls += 1
         self._fh.write(json.dumps(asdict(row), default=str) + "\n")
         self._fh.flush()
+        if (
+            self.soft_cap_usd is not None
+            and not self._soft_cap_warned
+            and self.total_usd > self.soft_cap_usd
+        ):
+            print(
+                f"WARNING: [{self.phase}] spend ${self.total_usd:.2f} has crossed the soft "
+                f"cap ${self.soft_cap_usd:.2f} -- continuing; hard stop at ${self.cap_usd:.2f}."
+            )
+            self._soft_cap_warned = True
         if self.total_usd > self.cap_usd:
             raise BudgetExceeded(self.phase, self.cap_usd, self.total_usd)
 
@@ -103,6 +129,7 @@ class SpendTracker:
             "n_calls": self.n_calls,
             "total_usd": round(self.total_usd, 4),
             "cap_usd": self.cap_usd,
+            "soft_cap_usd": self.soft_cap_usd,
         }
 
     def close(self) -> None:
