@@ -219,6 +219,63 @@ counts per tone -- the full pinning/cache-disable/cost-instrumentation
 path confirmed working end-to-end against a live call for the first time
 in this project. Still zero dollars against a real *target*-model call.
 
+**First live gates run against the real roster, 2026-09-10 -- a prompt
+bug and a retry gap, both fixed and re-verified.** With the pin bug fixed,
+`study2 validation-gate` was run live against GPT-5.6 Luna (5 real
+SpreadsheetBench tasks, multi-round, cost $0.02) as a pre-pilot spot
+check, plus `study2 thinking-preflight` (Luna on/off) and one
+single-round call each against GLM, DeepSeek, and Qwen.
+
+- **`thinking-preflight` passed cleanly**: reasoning tokens present on
+  both conditions, off=0/on=30, on/off token counts differ (194 vs 134) --
+  the calibration arm's reasoning-token accounting works against a real
+  call.
+- **GLM's pin worked live** (7/7 trajectories, single-round). **DeepSeek
+  and Qwen both returned HTTP 429** ("temporarily rate-limited
+  upstream... shared pool") on essentially the first call, with the
+  harness's only response being an immediate crash -- no retry logic
+  existed at all.
+- **Luna scored 0/5** on the validation gate, and the raw trajectories
+  showed a clear, consistent cause: `AGENT_SYSTEM_PROMPT`/
+  `SINGLE_ROUND_SYSTEM_PROMPT` said "you are given WORKBOOK_PATH" without
+  saying *how* -- the model guessed `os.environ.get("WORKBOOK_PATH")` or
+  globbed `/mnt/data/*` on 4 of 5 tasks, never finding the real file
+  (which the sandbox actually injects as a bare Python variable). Not a
+  harness bug in the pinning/execution path -- a genuine prompt-clarity
+  bug that would have depressed accuracy across the whole study,
+  confounding nothing about tone (it would affect every tone condition
+  equally) but wasting the real-run budget on an uninformative floor
+  effect.
+
+Both fixed (`harness/study2/agent_loop.py` rewrote both system prompts to
+state the real mechanism explicitly, with a usage example and the
+sandbox's actual resource limits; `harness/providers/openai_compatible.py`
+added `_post_with_retry`, retrying 408/429/502/503/504 and network-level
+exceptions with exponential backoff or a clamped `Retry-After`). An Opus
+review of the first version of these fixes caught a real, blocking bug in
+the fix itself before it shipped: the first draft of the persistence
+guidance ("reload it from a file you saved") was factually wrong for
+multi-round -- `OUTPUT_PATH` is a *different, empty* location every turn,
+so that advice would have told the model to do exactly the thing that
+silently discards earlier work. Corrected and re-verified.
+
+**Re-ran the same 5-task Luna gate after the fix: the WORKBOOK_PATH
+confusion is completely gone** -- all 30 turns across the 5 tasks now
+correctly call `openpyxl.load_workbook(WORKBOOK_PATH)` directly, zero
+`os.environ`/`glob` guesses, confirmed by re-reading every raw turn.
+**Still 0/5, but for a different and much more mundane reason**: every
+task now correctly loads and inspects the real workbook, then runs out of
+the 6-turn budget refining an approach (or, in one case, writes invalid
+Python -- `from openpyxl.load_workbook import load_workbook`) without
+ever calling `wb.save(OUTPUT_PATH)`. This looks like genuine task
+difficulty against Luna's configured cheap-tier settings
+(`reasoning_effort="low"`, `max_tokens=2048`, 6-turn cap) on a small,
+possibly-unrepresentative 5-task sample -- not a lingering harness bug --
+but it's flagged here rather than assumed: whether `max_turns`/
+`max_tokens` need loosening for the real roster is an open question for
+the pilot to actually characterize, not something adjusted unilaterally
+here just to make a gate number look better.
+
 Per-call spend logging (`results/raw/*.jsonl`) and a running total
 (`results/spend_log.jsonl`) are wired up and budget-capped
 (`harness/spend_tracker.py:BudgetExceeded`) for whenever a live
