@@ -293,11 +293,44 @@ def cmd_study2_frontier(args: argparse.Namespace) -> None:
     _study2_stage(args, "frontier", STUDY2_FRONTIER_BUDGET_CAP_USD, default_trials=1)
 
 
+SPREADSHEETBENCH_BASE_RATE_PCT = 18.5  # midpoint of the 17-20% range cited in README "Outcome measures"
+
+
+def _underpowered_accuracy_note(n_per_level: dict[str, int]) -> str:
+    """Task spec: "accuracy is reported and explicitly flagged as
+    underpowered." At SpreadsheetBench's ~17-20% base rate, detecting even
+    a large tone difference in a binary outcome needs on the order of a
+    thousand-plus observations per condition; a 50-task/3-trial main run
+    gives at most 150 per tone per model. This is a plain arithmetic
+    statement of that gap, not a formal power calculation -- printed so a
+    reader can't miss it, per README "Outcome measures"."""
+    smallest_n = min(n_per_level.values()) if n_per_level else 0
+    return (
+        f"Accuracy is reported per tone (n={smallest_n}-{max(n_per_level.values()) if n_per_level else 0} "
+        f"per condition here) but is UNDERPOWERED at SpreadsheetBench's ~{SPREADSHEETBENCH_BASE_RATE_PCT:.0f}% "
+        "base rate: detecting even a large tone effect in a binary pass/fail outcome at that base "
+        "rate needs on the order of a thousand-plus observations per condition, not a few hundred. "
+        "Treat accuracy_trend_test and accuracy_by_tone as descriptive, not confirmatory -- cost "
+        "(token_cost_effect_size) is the primary, adequately-powered outcome for this study. See "
+        "README 'Outcome measures'."
+    )
+
+
 def cmd_study2_analyze(args: argparse.Namespace) -> None:
     """Phase 3 (README "Phases"): load one run's Study 2 records (written by
     `study2 pilot`/`core`/`frontier` to results/analysis/study2_<phase>_records.json)
     and report effect sizes with item-clustered bootstrap CIs, per the
     roadmap's outcome measures -- not just raw pass/fail.
+
+    Report ordering follows the task spec's outcome priority: cost first
+    (the primary, adequately-powered outcome), then trajectory-level
+    behavior, then accuracy last and explicitly flagged as underpowered
+    (see _underpowered_accuracy_note). Accuracy's primary statistical test
+    is accuracy_trend_test -- an item-clustered permutation trend test
+    across the 7 ordered tone levels, not a full 21-pairwise-comparison
+    matrix (task spec: "with seven ordered levels, do not run 21 pairwise
+    tests"). bh_corrected_pairwise_comparisons is included as a labeled
+    follow-up only, BH-corrected, not the primary analysis.
 
     Deliberately does NOT reuse study1.analysis.per_level_accuracy/
     refusal_rate here: those expect Study 1's row shape (an "outcome"
@@ -309,6 +342,8 @@ def cmd_study2_analyze(args: argparse.Namespace) -> None:
     """
     from .study1.analysis import AccuracyEstimate, bootstrap_accuracy_ci
     from .study2.analysis import (
+        accuracy_trend_test,
+        bh_corrected_pairwise_comparisons,
         severity_breakdown,
         shortcut_rate,
         token_cost_effect_size,
@@ -329,19 +364,33 @@ def cmd_study2_analyze(args: argparse.Namespace) -> None:
 
     accuracy: dict[str, AccuracyEstimate] = {tone: bootstrap_accuracy_ci(v) for tone, v in by_tone.items()}
     refusal_rate_by_tone = {tone: sum(v) / len(v) for tone, v in refused_by_tone.items()}
+    trend = accuracy_trend_test(records)
 
     report = {
         "n_records": len(records),
+        # Primary outcome (task spec item 6: "Primary: cost").
+        "token_cost_effect_size": token_cost_effect_size(records),
+        "cost_summary_by_tone": trajectory_cost_summary(records),
+        # Trajectory-level behavior.
+        "severity_breakdown_by_tone": severity_breakdown(records),
+        "verification_rates_by_tone": verification_rates(records),
+        "shortcut_rate_by_tone": shortcut_rate(records),
+        "refusal_rate_by_tone": refusal_rate_by_tone,
+        # Accuracy last, explicitly flagged underpowered -- see
+        # _underpowered_accuracy_note and README "Outcome measures".
+        "accuracy_underpowered_note": _underpowered_accuracy_note({t: e.n for t, e in accuracy.items()}),
+        "accuracy_trend_test": {
+            "n_clusters": trend.n_clusters,
+            "observed_slope": trend.observed_slope,
+            "p_value": trend.p_value,
+            "ci_low": trend.ci_low,
+            "ci_high": trend.ci_high,
+        },
         "accuracy_by_tone": {
             tone: {"n": est.n, "accuracy": est.accuracy, "ci_low": est.ci_low, "ci_high": est.ci_high}
             for tone, est in accuracy.items()
         },
-        "refusal_rate_by_tone": refusal_rate_by_tone,
-        "severity_breakdown_by_tone": severity_breakdown(records),
-        "verification_rates_by_tone": verification_rates(records),
-        "shortcut_rate_by_tone": shortcut_rate(records),
-        "cost_summary_by_tone": trajectory_cost_summary(records),
-        "token_cost_effect_size": token_cost_effect_size(records),
+        "bh_corrected_pairwise_comparisons_followup": bh_corrected_pairwise_comparisons(records),
     }
 
     out_path = Path(args.out_path) if args.out_path else RESULTS_ROOT / "analysis" / "study2_analysis_report.json"
@@ -361,6 +410,7 @@ def cmd_study2_analyze(args: argparse.Namespace) -> None:
             "hypothesis' -- report this plainly, including if the hypothesis "
             "did not hold."
         )
+    print(f"\n{report['accuracy_underpowered_note']}")
     print(f"\nFull report written to {out_path}")
 
 

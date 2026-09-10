@@ -30,13 +30,20 @@ deleted, since the crossed buyer-tone x seller-tone matrix here is called
 out as unclaimed future work; it now inherits the 7-tone scale
 automatically via harness/tone_wrappers.py, consistent with "the wrapper
 module ... any future benchmark inherits the same methodology."
+
+BHResult/benjamini_hochberg moved to harness/stats.py and are re-exported
+here unchanged, so this module's existing imports keep working -- moved
+because Study 2's trend-test analysis (harness/study1/analysis.py,
+reused by study2/analysis.py) needed the same implementation, and an
+active study importing from a shelved one is the wrong dependency
+direction.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Optional
-
+from ..stats import BHResult, benjamini_hochberg
 from ..tone_wrappers import TONE_ORDER
+
+__all__ = ["BASELINE_TONE", "PREREGISTERED_COMPARISONS", "BHResult", "benjamini_hochberg"]
 
 BASELINE_TONE = "L4_neutral"
 
@@ -47,44 +54,3 @@ PREREGISTERED_COMPARISONS: list[tuple[str, str]] = [
     if not (buyer_tone == BASELINE_TONE and seller_tone == BASELINE_TONE)
 ]
 assert len(PREREGISTERED_COMPARISONS) == len(TONE_ORDER) ** 2 - 1
-
-
-@dataclass(frozen=True)
-class BHResult:
-    p_value: float
-    rank: int  # 1-indexed rank among the sorted p-values
-    critical_value: float
-    significant: bool
-
-
-def benjamini_hochberg(p_values: list[float], alpha: float = 0.05) -> list[BHResult]:
-    """Standard Benjamini-Hochberg step-up procedure.
-
-    Returns one BHResult per input p-value, in the SAME order as the input
-    list (not sorted by p-value) -- so callers can zip the result back
-    against PREREGISTERED_COMPARISONS (or whatever ordered list of tests
-    produced `p_values`) directly.
-    """
-    n = len(p_values)
-    if n == 0:
-        return []
-
-    order = sorted(range(n), key=lambda i: p_values[i])
-    critical = [(rank + 1) / n * alpha for rank in range(n)]
-
-    # Step-up: find the largest rank k where p_(k) <= critical_(k); every
-    # test at or below that rank is significant.
-    largest_significant_step = -1
-    for step, i in enumerate(order):
-        if p_values[i] <= critical[step]:
-            largest_significant_step = step
-
-    results: list[Optional[BHResult]] = [None] * n
-    for step, i in enumerate(order):
-        results[i] = BHResult(
-            p_value=p_values[i],
-            rank=step + 1,
-            critical_value=critical[step],
-            significant=step <= largest_significant_step,
-        )
-    return results  # type: ignore[return-value]
