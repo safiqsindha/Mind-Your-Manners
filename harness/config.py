@@ -185,9 +185,31 @@ silently fragment the dataset).
 """
 from __future__ import annotations
 
+from dataclasses import replace
+
 from .providers.base import ModelConfig
 
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+
+
+def with_thinking(model: ModelConfig, enabled: bool, key: str | None = None) -> ModelConfig:
+    """Return a copy of `model` with reasoning explicitly turned on/off.
+
+    Only meaningful for a model with a real "none" effort level in
+    OpenRouter's own `reasoning.supported_efforts` (see this module's
+    REASONING CONTROL table) -- GPT-5.6 Luna is the only roster model that
+    has one today, which is why it's the one that carries the on/off
+    thinking arm. Calling this with enabled=False on a model without a
+    real "none" level (e.g. GLM, whose reasoning is mandatory) would just
+    send an effort value the API doesn't accept -- check the REASONING
+    CONTROL table before using this on anything but Luna.
+    """
+    return replace(
+        model,
+        reasoning_effort="none" if not enabled else model.reasoning_effort,
+        thinking_enabled=enabled,
+        key=key or model.key,
+    )
 
 # ---------------------------------------------------------------------------
 # Target model set -- see module docstring for the verification table and
@@ -209,6 +231,14 @@ GPT_LUNA = ModelConfig(
     input_price_per_1m=0.20,
     output_price_per_1m=1.20,
 )
+
+# The calibration arm (README "The thinking arm"): same model, same tasks,
+# same tones as GPT_LUNA's main-run condition, but with reasoning turned
+# off via its real "none" effort level -- not a different model pinned
+# for the "on" state (e.g. gpt-5.6-luna-pro), since that would bake the
+# comparison into a model-choice difference rather than a single parameter.
+# Not in CORE_MODELS -- it's a separate arm, not part of the main run.
+GPT_LUNA_CALIBRATION = with_thinking(GPT_LUNA, enabled=False, key="gpt-luna-calibration")
 
 GLM_CURRENT = ModelConfig(
     key="glm-current",
@@ -330,7 +360,9 @@ OPENROUTER_FREE_SMOKETEST = ModelConfig(
     output_price_per_1m=0.0,
 )
 
-ALL_MODELS: list[ModelConfig] = STUDY1_MODELS + [FRONTIER_SPOTCHECK, CLAUDE_CLI_SMOKETEST, OPENROUTER_FREE_SMOKETEST]
+ALL_MODELS: list[ModelConfig] = STUDY1_MODELS + [
+    GPT_LUNA_CALIBRATION, FRONTIER_SPOTCHECK, CLAUDE_CLI_SMOKETEST, OPENROUTER_FREE_SMOKETEST,
+]
 
 MODELS_BY_KEY: dict[str, ModelConfig] = {m.key: m for m in ALL_MODELS}
 
@@ -342,8 +374,6 @@ def with_temperature(model: ModelConfig, temperature: float, seed: int | None = 
     run from the same base model configs used for the temperature-0 primary
     run, without duplicating the model registry.
     """
-    from dataclasses import replace
-
     return replace(model, temperature=temperature, seed=seed)
 
 

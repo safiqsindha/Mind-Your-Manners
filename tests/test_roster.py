@@ -8,9 +8,13 @@ import pytest
 from harness.config import (
     ALL_MODELS,
     CORE_MODELS,
+    GPT_LUNA,
+    GPT_LUNA_CALIBRATION,
+    MODELS_BY_KEY,
     STUDY1_HARD_BUDGET_CAP_USD,
     STUDY1_MODELS,
     STUDY1_SOFT_BUDGET_CAP_USD,
+    with_thinking,
 )
 from harness.spend_tracker import BudgetExceeded, ResultRow, SpendTracker
 
@@ -109,6 +113,34 @@ def test_core_models_have_a_recorded_canonical_slug():
     for m in CORE_MODELS:
         assert m.canonical_slug, f"{m.key} has no canonical_slug recorded"
         assert not m.canonical_slug.startswith("~")
+
+
+def test_calibration_arm_is_luna_with_reasoning_off_not_a_different_model():
+    """The thinking arm compares one model at two reasoning settings, not
+    two different models -- GPT_LUNA_CALIBRATION must share model_id with
+    GPT_LUNA (not e.g. gpt-5.6-luna-pro), differing only in the reasoning
+    parameter and thinking_enabled."""
+    assert GPT_LUNA_CALIBRATION.model_id == GPT_LUNA.model_id
+    assert GPT_LUNA_CALIBRATION.key != GPT_LUNA.key
+    assert GPT_LUNA_CALIBRATION.thinking_enabled is False
+    assert GPT_LUNA_CALIBRATION.reasoning_effort == "none"
+    assert GPT_LUNA.thinking_enabled is True
+    assert GPT_LUNA.reasoning_effort != "none"
+
+
+def test_calibration_arm_not_in_core_models_but_addressable_by_key():
+    assert GPT_LUNA_CALIBRATION not in CORE_MODELS
+    assert MODELS_BY_KEY["gpt-luna-calibration"] is GPT_LUNA_CALIBRATION
+
+
+def test_with_thinking_enabled_true_is_a_no_op_on_reasoning_effort():
+    """enabled=True only re-affirms thinking_enabled -- it does not invert
+    an enabled=False call, since it passes the model's current
+    reasoning_effort through unchanged. Applying it to GPT_LUNA (already
+    "on") is the well-defined case; it must not silently change the effort."""
+    on = with_thinking(GPT_LUNA, enabled=True)
+    assert on.reasoning_effort == GPT_LUNA.reasoning_effort
+    assert on.thinking_enabled is True
 
 
 def _make_row(cost_usd: float) -> ResultRow:
