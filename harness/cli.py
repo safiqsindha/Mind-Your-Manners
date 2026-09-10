@@ -215,11 +215,27 @@ def cmd_study2_validation_gate(args: argparse.Namespace) -> None:
     for t in result.get("per_task", []):
         mark = "PASS" if t["passed"] else "FAIL"
         limit = " [hit turn limit]" if t["hit_turn_limit"] else ""
+        free = "  <- FREE: passes by doing nothing" if t.get("no_op_passes") else ""
         print(
             f"  {mark}  {t['task_id']:<10} {t['instruction_type']:<28} "
             f"cases {t['n_test_cases_passed']}/{t['n_test_cases']}  "
-            f"turns {t['n_turns']}{limit}"
+            f"turns {t['n_turns']}{limit}{free}"
         )
+    if "no_op_accuracy" in result:
+        # Printed next to the score, not buried in the JSON: an accuracy
+        # figure is not a capability measure until you know what handing the
+        # input straight back would have scored.
+        print(
+            f"\n  no-op floor: {result['no_op_n_passed']}/{result['n_tasks']} "
+            f"({result['no_op_accuracy']:.0%}) -- tasks passed without doing any work"
+            + (f" {result['free_task_ids']}" if result["free_task_ids"] else "")
+        )
+        print(
+            f"  discriminating tasks: {result['n_discriminating_tasks']}/{result['n_tasks']};  "
+            f"this model beat the floor on {result['n_passed_beating_no_op']} of them"
+        )
+        if result["n_passed"] <= result["no_op_n_passed"]:
+            print("  WARNING: this model scored no better than doing nothing on this task sample.")
     print(f"\nFull per-task detail (incl. turn diagnostics): {out_path}")
     if not result["passed"]:
         print("\nVALIDATION GATE FAILED (or --expected-accuracy not given). Do not proceed.", file=sys.stderr)

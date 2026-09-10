@@ -17,6 +17,7 @@ test cases 2 and 3's inputs, and all 3 outputs are graded together via
 from __future__ import annotations
 
 import json
+import shutil
 from pathlib import Path
 from typing import Optional
 
@@ -47,6 +48,36 @@ def _generalize_to_other_test_cases(traj: Trajectory, task: SpreadsheetTask, wor
     return outputs
 
 
+def no_op_passes(grader: SpreadsheetBenchGrader, task: SpreadsheetTask, workdir: Path) -> bool:
+    """Does this task pass when the agent does NOTHING -- i.e. when each
+    input workbook is handed back unmodified?
+
+    Some SpreadsheetBench tasks grade a cell range that already holds the
+    expected values in the input, so a copy scores a full pass. Measured
+    over the first 40 tasks of the 200-task sample: 4 of them (10%) are
+    free this way. That is survivable spread across a large run, but the
+    gate takes the first 5 tasks in file order, and 2 of those 5 happen to
+    be free -- so a model that does nothing scores 2/5, exactly what three
+    of the four roster models scored.
+
+    An accuracy number is uninterpretable without this comparison, so the
+    gate reports it alongside every result rather than silently dropping
+    the tasks: dropping them would quietly redefine which benchmark subset
+    is being run, and the point here is to make the baseline legible, not
+    to make the number look better.
+    """
+    outputs: list[Optional[Path]] = []
+    for idx, src in enumerate(task.input_spreadsheet_paths, start=1):
+        dst = workdir / f"no_op_case{idx}{src.suffix}"
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(src, dst)
+        outputs.append(dst)
+    return grader.evaluate_task(
+        task.task_id, task.instruction_type, task.answer_position,
+        outputs, task.answer_spreadsheet_paths,
+    ).passed
+
+
 def _grade_trajectory(grader: SpreadsheetBenchGrader, task: SpreadsheetTask, traj: Trajectory, workdir: Path) -> GradeResult:
     n_cases = len(task.answer_spreadsheet_paths)
     if traj.refused or traj.final_output_path is None:
@@ -67,6 +98,7 @@ def run_validation_gate(
     expected_accuracy: Optional[float] = None,
     tolerance: float = 0.08,
     max_turns: int = 10,
+    check_no_op: bool = True,
 ) -> dict:
     """Run the unmodified benchmark instruction (no tone wrapper) through
     the multi-round agent and grade with the authors' own evaluator, before
@@ -89,6 +121,7 @@ def run_validation_gate(
         )
         grade = _grade_trajectory(grader, task, traj, workdir)
         n_passed += int(grade.passed)
+        free = no_op_passes(grader, task, workdir / "_no_op") if check_no_op else None
         # Which tasks failed, not just how many: an aggregate alone can't
         # distinguish "these models have similar overall skill" from "every
         # model fails the same two tasks", and those imply very different
@@ -98,6 +131,8 @@ def run_validation_gate(
                 "task_id": task.task_id,
                 "instruction_type": task.instruction_type,
                 "passed": grade.passed,
+                "no_op_passes": free,  # True => this task is passed by doing nothing
+                "beat_no_op": (grade.passed and not free) if free is not None else None,
                 "soft_restriction": grade.soft_restriction,
                 "n_test_cases_passed": grade.n_test_cases_passed,
                 "n_test_cases": grade.n_test_cases,
@@ -110,7 +145,7 @@ def run_validation_gate(
     tracker.close()
 
     observed = n_passed / len(tasks) if tasks else float("nan")
-    return {
+    result = {
         "model_key": model.key,
         "n_tasks": len(tasks),
         "n_passed": n_passed,
@@ -121,6 +156,23 @@ def run_validation_gate(
         "spend_usd": tracker.total_usd,
         "per_task": per_task,
     }
+    if check_no_op:
+        # The floor this accuracy has to be read against. n_passed alone is
+        # not a capability measure when some tasks pass without any work:
+        # on the gate's default 5 tasks the no-op floor is 2/5, which is
+        # exactly what three of the four roster models scored.
+        n_free = sum(1 for t in per_task if t["no_op_passes"])
+        n_beat = sum(1 for t in per_task if t["beat_no_op"])
+        result.update(
+            {
+                "no_op_n_passed": n_free,
+                "no_op_accuracy": n_free / len(tasks) if tasks else float("nan"),
+                "n_discriminating_tasks": len(tasks) - n_free,
+                "n_passed_beating_no_op": n_beat,
+                "free_task_ids": [t["task_id"] for t in per_task if t["no_op_passes"]],
+            }
+        )
+    return result
 
 
 def _has_formula(path: Optional[Path]) -> bool:

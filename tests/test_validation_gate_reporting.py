@@ -76,7 +76,9 @@ def gate(tmp_path):
 
     with patch("harness.study2.runner.run_react_multi_round", side_effect=fake_run), \
          patch("harness.study2.runner._grade_trajectory", side_effect=fake_grade):
-        return run_validation_gate(MODEL, tasks, grader=None, out_dir=tmp_path)
+        # check_no_op=False: these assertions are about per-task reporting,
+        # and the no-op floor has its own tests below.
+        return run_validation_gate(MODEL, tasks, grader=None, out_dir=tmp_path, check_no_op=False)
 
 
 def test_gate_reports_which_tasks_passed_not_just_how_many(gate):
@@ -113,14 +115,80 @@ def test_scratch_dirs_are_namespaced_by_model(tmp_path):
 
     with patch("harness.study2.runner.run_react_multi_round", side_effect=capture_workdir), \
          patch("harness.study2.runner._grade_trajectory", side_effect=lambda *a: _grade("shared_task", True)):
-        run_validation_gate(MODEL, tasks, grader=None, out_dir=tmp_path)
+        run_validation_gate(MODEL, tasks, grader=None, out_dir=tmp_path, check_no_op=False)
         other = ModelConfig(
             key="other-model", provider="mock", model_id="other/model",
             display_name="Other", temperature=0.0, max_tokens=1024,
         )
-        run_validation_gate(other, tasks, grader=None, out_dir=tmp_path)
+        run_validation_gate(other, tasks, grader=None, out_dir=tmp_path, check_no_op=False)
 
     assert len(seen) == 2
     assert seen[0] != seen[1], "both models wrote to the same scratch dir"
     assert MODEL.key in seen[0].parts
     assert "other-model" in seen[1].parts
+
+
+# --- No-op floor ----------------------------------------------------------
+# Some SpreadsheetBench tasks grade a range that already holds the expected
+# values in the input, so handing the workbook back untouched scores a full
+# pass. 4 of the first 40 sample tasks (10%) are free this way, and 2 of the
+# gate's default 5 are -- making a raw accuracy number uninterpretable.
+
+def _gate_with_free_tasks(tmp_path, free_ids: set[str]):
+    tasks = [_FakeTask("free_a"), _FakeTask("real_b"), _FakeTask("free_c")]
+
+    def fake_run(tracker, model, task_id, *a, **kw):
+        return _trajectory(task_id, hit_limit=False)
+
+    # The model passes free_a (which anyone passes) and real_b (a real solve),
+    # and fails free_c -- i.e. it does worse than nothing on one free task.
+    passing = {"free_a", "real_b"}
+
+    with patch("harness.study2.runner.run_react_multi_round", side_effect=fake_run), \
+         patch("harness.study2.runner._grade_trajectory",
+               side_effect=lambda g, task, tr, wd: _grade(task.task_id, task.task_id in passing)), \
+         patch("harness.study2.runner.no_op_passes",
+               side_effect=lambda g, task, wd: task.task_id in free_ids):
+        return run_validation_gate(MODEL, tasks, grader=None, out_dir=tmp_path)
+
+
+def test_gate_reports_the_no_op_floor_beside_the_score(tmp_path):
+    r = _gate_with_free_tasks(tmp_path, {"free_a", "free_c"})
+    assert r["n_passed"] == 2
+    assert r["no_op_n_passed"] == 2, "two tasks pass by doing nothing"
+    assert r["no_op_accuracy"] == 2 / 3
+
+
+def test_gate_counts_only_real_solves_as_beating_the_floor(tmp_path):
+    r = _gate_with_free_tasks(tmp_path, {"free_a", "free_c"})
+    # free_a passed but was free; real_b passed and was not.
+    assert r["n_passed_beating_no_op"] == 1
+    assert r["n_discriminating_tasks"] == 1
+    by_id = {t["task_id"]: t for t in r["per_task"]}
+    assert by_id["free_a"]["beat_no_op"] is False
+    assert by_id["real_b"]["beat_no_op"] is True
+
+
+def test_free_task_ids_are_named_so_the_sample_can_be_fixed(tmp_path):
+    r = _gate_with_free_tasks(tmp_path, {"free_a", "free_c"})
+    assert sorted(r["free_task_ids"]) == ["free_a", "free_c"]
+
+
+def test_no_free_tasks_leaves_the_floor_at_zero(tmp_path):
+    r = _gate_with_free_tasks(tmp_path, set())
+    assert r["no_op_n_passed"] == 0
+    assert r["n_discriminating_tasks"] == 3
+    assert r["n_passed_beating_no_op"] == r["n_passed"]
+
+
+def test_no_op_check_can_be_disabled(tmp_path):
+    """Grading a no-op copy costs real grader work (LibreOffice recalc) and
+    no model spend; it must still be possible to skip."""
+    tasks = [_FakeTask("t1")]
+    with patch("harness.study2.runner.run_react_multi_round",
+               side_effect=lambda *a, **kw: _trajectory("t1", hit_limit=False)), \
+         patch("harness.study2.runner._grade_trajectory", side_effect=lambda *a: _grade("t1", True)), \
+         patch("harness.study2.runner.no_op_passes", side_effect=AssertionError("should not be called")):
+        r = run_validation_gate(MODEL, tasks, grader=None, out_dir=tmp_path, check_no_op=False)
+    assert "no_op_accuracy" not in r
+    assert r["per_task"][0]["no_op_passes"] is None
