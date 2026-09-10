@@ -39,24 +39,24 @@ MOCK_MODEL = ModelConfig(
 
 
 def test_buyer_persona_prepends_unmodified_wrapper_text():
-    persona = buyer_persona("L4_rude")
-    assert persona.startswith(TONE_WRAPPERS["L4_rude"].text)
+    persona = buyer_persona("L5_rude")
+    assert persona.startswith(TONE_WRAPPERS["L5_rude"].text)
     assert persona.endswith("You are a buyer looking for a good deal.")
 
 
 def test_seller_persona_prepends_unmodified_wrapper_text():
-    persona = seller_persona("L1_very_polite")
-    assert persona.startswith(TONE_WRAPPERS["L1_very_polite"].text)
+    persona = seller_persona("L2_very_polite")
+    assert persona.startswith(TONE_WRAPPERS["L2_very_polite"].text)
     assert persona.endswith("You are a seller looking to make a good deal.")
 
 
-def test_all_five_tones_produce_distinct_personas():
+def test_all_seven_tones_produce_distinct_personas():
     personas = {buyer_persona(t) for t in TONE_ORDER}
-    assert len(personas) == 5
+    assert len(personas) == 7
 
 
 def test_preregistered_comparisons_exclude_only_the_baseline_cell():
-    assert len(PREREGISTERED_COMPARISONS) == 24
+    assert len(PREREGISTERED_COMPARISONS) == len(TONE_ORDER) ** 2 - 1
     assert (BASELINE_TONE, BASELINE_TONE) not in PREREGISTERED_COMPARISONS
     assert all(bt in TONE_ORDER and st in TONE_ORDER for bt, st in PREREGISTERED_COMPARISONS)
 
@@ -82,7 +82,7 @@ def test_benjamini_hochberg_preserves_input_order():
 
 def test_llm_adapter_records_result_row_and_returns_text(tmp_path: Path):
     tracker = SpendTracker(tmp_path / "raw.jsonl", phase="test", cap_usd=10.0)
-    llm = HarnessLLM(MOCK_MODEL, tracker, "buyer", "neg-1", "L3_neutral", "L3_neutral", trial=0)
+    llm = HarnessLLM(MOCK_MODEL, tracker, "buyer", "neg-1", "L4_neutral", "L4_neutral", trial=0)
 
     text = llm.generate("some negotiation prompt", temperature=0.0, max_tokens=256)
 
@@ -92,7 +92,7 @@ def test_llm_adapter_records_result_row_and_returns_text(tmp_path: Path):
     row = llm.result_rows[0]
     assert row.study == "study3"
     assert row.item_id == "neg-1"
-    assert row.tone_level == "buyer=L3_neutral|seller=L3_neutral"
+    assert row.tone_level == "buyer=L4_neutral|seller=L4_neutral"
     tracker.close()
 
 
@@ -171,7 +171,7 @@ def fake_agenticpay(monkeypatch):
 def test_run_negotiation_agreed_result(tmp_path: Path, fake_agenticpay):
     tracker = SpendTracker(tmp_path / "raw.jsonl", phase="test", cap_usd=10.0)
     result = run_negotiation(
-        tracker, MOCK_MODEL, MOCK_MODEL, "L4_rude", "L1_very_polite", trial=0,
+        tracker, MOCK_MODEL, MOCK_MODEL, "L5_rude", "L2_very_polite", trial=0,
         buyer_max_price=120.0, seller_min_price=80.0, initial_seller_price=150.0,
         product_info={"name": "Widget"}, user_requirement="I need a widget.",
     )
@@ -193,7 +193,7 @@ def test_run_negotiation_agreed_result(tmp_path: Path, fake_agenticpay):
 def test_run_negotiation_records_rows_for_both_roles(tmp_path: Path, fake_agenticpay):
     tracker = SpendTracker(tmp_path / "raw.jsonl", phase="test", cap_usd=10.0)
     run_negotiation(
-        tracker, MOCK_MODEL, MOCK_MODEL, "L3_neutral", "L3_neutral", trial=1,
+        tracker, MOCK_MODEL, MOCK_MODEL, "L4_neutral", "L4_neutral", trial=1,
         buyer_max_price=120.0, seller_min_price=80.0, initial_seller_price=150.0,
         product_info={"name": "Widget"}, user_requirement="I need a widget.",
     )
