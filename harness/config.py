@@ -213,4 +213,4 @@ STUDY2_PILOT_BUDGET_CAP_USD = 20.0
 STUDY2_CORE_BUDGET_CAP_USD = 70.0
 STUDY2_FRONTIER_BUDGET_CAP_USD = 150.0
 
-STUDY3_BUDGET_CAP_USD = 100.0  # at 100 negotiations per cell, bilateral subset
+STUDY3_BUDGET_CAP_USD = 100.0  # at 100 negotiations per cell, bilateral subset (harness/study3/)
