@@ -269,6 +269,12 @@ python -m harness.cli --live study2 pilot \
 
 # Phase 2: main run -- four models, multi-round agentic, 3 trials/task/tone
 python -m harness.cli --live study2 core --n-trials 3
+
+# Phase 3: analysis -- bootstrapped accuracy CI, severity breakdown,
+# verification/shortcut rates, cost summary, and the pre-registered
+# token-cost-effect-size check against paper 3's 44.3% figure
+python -m harness.cli study2 analyze \
+  --records-path results/analysis/study2_core_records.json
 ```
 
 Run `pytest` for the test suite (all pass against the mock provider, no
@@ -340,8 +346,15 @@ table).
 Task accuracy is the least interesting one. Also scored, per (model,
 task, tone, trial):
 
-- **Failure severity**, using SpreadsheetBench 2's published taxonomy --
-  their claim, cited, not invented here.
+- **Failure severity**, using SpreadsheetBench 2's published taxonomy
+  (arXiv 2606.29955, Table 7's six benchmark-wide failure modes: Task
+  Misunderstanding, Insufficient Inspection, Wrong Target Selection, Turn
+  Limit Exceeded, Format/Output Error, Other) -- their claim, cited, not
+  invented here. Task Misunderstanding and Wrong Target Selection need
+  semantic/cell-diff judgment this harness's classifier doesn't attempt;
+  failures that belong there land in Other instead of being force-fit --
+  see `harness/study2/failure_taxonomy.py`'s module docstring for the
+  documented scope limit.
 - **Verification behavior** -- did the agent inspect the sheet before
   acting, and check its own output afterward (the single-turn precursor
   for this is paper 2's traced 25-case reasoning-shortcut finding, above).
@@ -368,7 +381,13 @@ not results.
 code execution feedback, three trials per task per tone.
 
 **Phase 3 -- analysis and writeup.** Effect sizes with item-clustered
-bootstrap CIs. Report the null plainly if it's a null.
+bootstrap CIs. Report the null plainly if it's a null. `study2 analyze`
+(see "Running it" above) loads a phase's records and reports all of the
+above -- accuracy CI, severity breakdown, verification/shortcut rates,
+cost summary -- plus `token_cost_effect_size`, the same relative-variation
+statistic paper 3 reported as 44.3% for single-turn QA, so the
+pre-registered hypothesis is a plain number-vs-number comparison, not
+something read off a chart.
 
 ## Future work (documented here, not run)
 
