@@ -43,7 +43,7 @@ def aggregate_by_cell(results: list[NegotiationResult]) -> dict[tuple[str, str],
 
 def run_preregistered_tests(results: list[NegotiationResult]) -> list[dict]:
     """Two-sided Welch's t-test of each non-baseline cell's
-    value_given_away_to_buyer_usd against the L3_neutral x L3_neutral
+    value_given_away_to_buyer_usd against the L4_neutral x L4_neutral
     baseline cell, BH-corrected across exactly the 24 pre-registered
     comparisons -- the comparison set is fixed before this function ever
     sees real data (preregistration.py)."""

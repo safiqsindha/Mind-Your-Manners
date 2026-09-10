@@ -13,14 +13,23 @@ analysis.py, not folded into the dollar outcome -- "no deal" and "a deal
 at the fair split" are different findings and must not collapse to the
 same number.
 
-Comparison set: 24 tests (not all C(25,2) = 300 pairwise combinations).
-Each of the 24 non-baseline cells in the 5x5 tone matrix is compared
-against the L3_neutral x L3_neutral baseline cell, two-sided. This is the
-direct operational reading of "off-diagonal cells are the point": does
-this specific (buyer_tone, seller_tone) combination shift value away from
-a fair split, relative to both sides being neutral -- not every pairwise
+Comparison set: len(TONE_ORDER)**2 - 1 tests (48 under the current 7-tone
+scale -- not all C(49,2) = 1176 pairwise combinations). Each non-baseline
+cell in the resulting tone x tone matrix is compared against the
+L4_neutral x L4_neutral baseline cell, two-sided. This is the direct
+operational reading of "off-diagonal cells are the point": does this
+specific (buyer_tone, seller_tone) combination shift value away from a
+fair split, relative to both sides being neutral -- not every pairwise
 combination against every other, most of which nobody hypothesized about
 in advance.
+
+NOTE: Study 3 is currently retired (see README/RESULTS -- prior art,
+TERMS-BENCH arXiv 2605.13909, already covers this ground more rigorously
+with 13 models and dollar-scale regret). This module is kept, not
+deleted, since the crossed buyer-tone x seller-tone matrix here is called
+out as unclaimed future work; it now inherits the 7-tone scale
+automatically via harness/tone_wrappers.py, consistent with "the wrapper
+module ... any future benchmark inherits the same methodology."
 """
 from __future__ import annotations
 
@@ -29,7 +38,7 @@ from typing import Optional
 
 from ..tone_wrappers import TONE_ORDER
 
-BASELINE_TONE = "L3_neutral"
+BASELINE_TONE = "L4_neutral"
 
 PREREGISTERED_COMPARISONS: list[tuple[str, str]] = [
     (buyer_tone, seller_tone)
@@ -37,7 +46,7 @@ PREREGISTERED_COMPARISONS: list[tuple[str, str]] = [
     for seller_tone in TONE_ORDER
     if not (buyer_tone == BASELINE_TONE and seller_tone == BASELINE_TONE)
 ]
-assert len(PREREGISTERED_COMPARISONS) == 24
+assert len(PREREGISTERED_COMPARISONS) == len(TONE_ORDER) ** 2 - 1
 
 
 @dataclass(frozen=True)

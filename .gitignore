@@ -9,6 +9,8 @@ __pycache__/
 # never commit their contents.
 results/raw/*.jsonl
 results/analysis/*.json
+results/spend_log.jsonl
+results/scratch/
 !results/raw/.gitkeep
 !results/analysis/.gitkeep
 
