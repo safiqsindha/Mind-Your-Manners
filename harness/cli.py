@@ -1,4 +1,9 @@
-"""Command-line entrypoint for both studies.
+"""Command-line entrypoint.
+
+Study 2 (agentic SpreadsheetBench) is the active study -- see README.md
+"Why this is one study now, not three". Study 1 and Study 3 subcommands
+still work (their harnesses are kept, not deleted) but are retired/shelved
+respectively and not part of any scheduled run.
 
 SAFETY DEFAULT: every subcommand runs in --dry-run mode unless you pass
 --live explicitly. In dry-run mode every model is forced onto the mock
@@ -8,11 +13,13 @@ dry-run. --live additionally requires the relevant API key env vars to be
 set for every model in the run; missing keys fail loudly rather than
 silently skipping a model.
 
-Usage:
-  python -m harness.cli study1 validation-gate --model gemini-flash --benchmark mmlu_pro --n-items 30
-  python -m harness.cli study1 part-b --benchmark mmlu_pro --models gemini-flash,deepseek-v3 --n-items 50
+Usage (Study 2 -- see README.md "Running it" for the full Phase 0-2 flow):
   python -m harness.cli study2 validation-gate --model gemini-flash --repo-dir ./data/spreadsheetbench
-  python -m harness.cli study2 pilot --models gemini-flash,deepseek-v3,qwen2.5-72b --repo-dir ./data/spreadsheetbench
+  python -m harness.cli study2 pilot --models gemini-flash --repo-dir ./data/spreadsheetbench --single-round
+  python -m harness.cli study2 core --n-trials 3
+
+Retired/shelved (kept working, not part of any active run):
+  python -m harness.cli study1 validation-gate --model gemini-flash --benchmark mmlu_pro --n-items 30
   python -m harness.cli study3 bilateral-matrix --buyer-model gemini-flash --seller-model gemini-flash --n-trials-per-cell 4
 """
 from __future__ import annotations

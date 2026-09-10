@@ -1,133 +1,95 @@
 # Results
 
-**Status: NOT YET RUN.** No API keys were available in the environment this
-harness was built in, and per an explicit decision with the requester, this
-build stopped at "harness built and tested against a mock provider" rather
-than spending real money without credentials or a live-spend confirmation.
-Everything below is a template plus the honest state of each precondition —
-fill in the actual numbers as each stage runs.
+**Status: NOT YET RUN.** No API keys were available in the environment
+this harness was built in, and per an explicit decision with the
+requester, this build stopped at "harness built and tested against a mock
+provider" rather than spending real money without credentials or a
+live-spend confirmation. Everything below is a template plus the honest
+state of each precondition -- fill in the actual numbers as each stage
+runs.
 
-## Validation gate
+**Pre-registered hypothesis** (see README "The pre-registered
+hypothesis", written before any live run): the cost effect (output-token
+variation across tone conditions) should be *larger* in this study's
+agentic setting than the 44.3% single-turn figure Dobariya & Kumar's
+paper 3 reported, because every agentic turn is a fresh inference and
+errors compound across turns. Not yet testable -- no live run has
+happened.
+
+## Phase 0 -- Gates
+
+| Gate | Status |
+|---|---|
+| SpreadsheetBench grader on gold spreadsheets, unmodified, expect 100% | **199/200** -- see "Study 2 (SpreadsheetBench)" below |
+| LibreOffice headless formula recalculation works in the run environment | **Fixed in this build's container** -- re-confirm on whatever host runs a live batch |
 
 | Study | Model | Benchmark | Observed accuracy | Published accuracy | Within tolerance? |
 |---|---|---|---|---|---|
-| 1 | — | MMLU-Pro | not run | — | — |
-| 2 | — | SpreadsheetBench | not run | — | — |
+| 2 | -- | SpreadsheetBench | not run | -- | -- |
 
-Both gates are wired up (`harness/study1/runner.py:run_validation_gate`,
-`harness/study2/runner.py:run_validation_gate`) and exercised against the
-mock provider + real MMLU-Pro data during development — see the harness test
-suite. They have not been run against a real model.
+The validation gate is wired up (`harness/study2/runner.py:run_validation_gate`)
+and exercised against the mock provider + real cloned SpreadsheetBench
+data during development -- see the harness test suite. It has not been
+run against a real model.
 
-## Part A — Replication (Mind Your Tone, arXiv 2510.04950)
+## Study 2 -- Agentic spreadsheet work (SpreadsheetBench)
 
-**No longer blocked; not yet run against a target model.** The 250-prompt
-dataset's repo was found via the paper's full-paper extension (arXiv
-2605.29027, same authors) at
-`github.com/OmDobariya/AMCIS_politeness_llms` — confirmed real, cloned, and
-inspected directly (see `README.md` "Dataset availability" for the full
-account). `harness/study1/dataset.py`, `runner.py`, and
-`answer_extraction.py` were rewritten to reproduce their real CSV schema,
-their real system prompt + instruction preamble (pulled directly from
-their own `code_50_que_all_llms.ipynb`, not re-derived), their NUM_RUNS=10
-protocol, and their exact answer-extraction regex. A full mock-provider
-pass through `run_part_a_replication` against the real cloned 250-row CSV
-completes correctly end-to-end.
-
-Original paper's own reported numbers, for reference (ChatGPT-4o only, not
-yet reproduced by this harness on any model):
-
-| Tone | Accuracy |
-|---|---|
-| Very Polite | 80.8% |
-| Polite | 81.4% |
-| Neutral | 82.2% |
-| Rude | 82.8% |
-| Very Rude | 84.8% |
-
-The AMCIS 2026 full-paper extension adds a second, larger dataset (570
-MMLU questions across 57 subjects, 7 tones including two new extremes —
-Sycophantic and Threatening — tested on ChatGPT-4o, ChatGPT-5-nano, Gemini
-2.5 Flash, and Gemini 2.5 Flash Lite) and reports tone effects as
-"systematic but highly model-dependent." Not yet incorporated into this
-harness — Part B's MMLU-Pro remaster already covers similar ground with
-programmatic (not hand-written) wrappers, which is the more important
-methodological fix; a 7-tone extension is a possible future addition, not
-a blocker.
-
-**Replication verdict: not yet determined — needs a live run against a
-target model.**
-
-## Part B — Remaster (MMLU-Pro / GPQA Diamond, programmatic tone wrappers)
-
-Not yet run. The five tone wrappers are built, length-matched (max spread 5
-tokens; see `tests/test_tone_wrappers.py`), and instruction-identical across
-levels. `harness/study1/runner.py:run_part_b_remaster` applies them to
-byte-identical MMLU-Pro/GPQA question text and has been smoke-tested
-end-to-end against real MMLU-Pro items with the mock provider.
-
-**Remaster verdict: not yet determined.**
-
-## Study 2 — Agentic spreadsheet work (SpreadsheetBench)
-
-Not yet run against a target model. Since the previous update, the dataset
-loader and grader were rewritten after actually cloning
-`RUCKBReasoning/SpreadsheetBench` and reading the real `evaluation.py` —
-the earlier version guessed a CLI/env-var interface that does not exist.
+**The study.** Not yet run against a target model. The dataset loader and
+grader were rewritten after actually cloning
+`RUCKBReasoning/SpreadsheetBench` and reading the real `evaluation.py` --
+an earlier version guessed a CLI/env-var interface that does not exist.
 The corrected grader imports and calls their real `compare_workbooks()`
 function directly (not a subprocess/CLI guess) and reproduces their exact
 soft/hard-restriction scoring. Verified on a real sample task: grading the
 answer file against itself passes on all 3 test cases; grading the
-unmodified input against the answer fails all 3, as expected. A full
-mock-provider run through `run_condition_batch` (2 real tasks × 5 tone
-levels, real cloned repo, real grader) completes without error.
+unmodified input against the answer fails all 3, as expected.
 
 **Gating check results (2026-09-10):** ran the full sample set's answer
-files against themselves through `compare_workbooks()`, unmodified —
+files against themselves through `compare_workbooks()`, unmodified --
 **199/200 pass**. The one failure is a real bug in the *authors'* own
 `evaluation.py` (their `answer_position.split(',')` doesn't strip
 whitespace, so a multi-range position with a space after the comma
-resolves to a malformed cell reference and raises `AttributeError`) — not
+resolves to a malformed cell reference and raises `AttributeError`) -- not
 something to patch in their code, and this harness's grader already fails
 that one test case gracefully (records it as a failed comparison) rather
 than crashing the batch.
 
 Grading formula-bearing tasks requires recalculating cached values first
 (LibreOffice headless conversion, same as their own `open_spreadsheet.py`).
-This was **broken in this build's container and is now fixed**, along with
-two further bugs the fix process surfaced:
+This was **broken in this build's container and is now fixed**, along
+with two further bugs the fix process surfaced:
 
-1. `libreoffice-calc`/`libreoffice-writer` were never actually installed —
-   only `libreoffice-core` was present, despite `soffice` being on PATH.
-   Confirmed via `strace`: a document-loader shared library
+1. `libreoffice-calc`/`libreoffice-writer` were never actually installed
+   -- only `libreoffice-core` was present, despite `soffice` being on
+   PATH. Confirmed via `strace`: a document-loader shared library
    (`libswdlo.so`) was `ENOENT`. `apt-get install libreoffice-calc
    libreoffice-writer` fixed it.
 2. This repo's own `recalculate_with_libreoffice()` converted a file to
    itself (same source and output directory), which makes LibreOffice
    print "Overwriting: ..." then silently fail the actual write to
-   **stderr** with **exit code 0** — the old success check only looked at
-   stdout and the return code, so it reported success while leaving the
-   file un-recalculated. Confirmed directly: recalculating `=A1*A2` this
-   way reported `ok=True` but the cell still read `None` afterward. Fixed
-   by converting into a temp directory and moving the result back, the
-   same approach their own `open_spreadsheet.py:just_open_libreoffice()`
-   uses.
+   **stderr** with **exit code 0** -- the old success check only looked
+   at stdout and the return code, so it reported success while leaving
+   the file un-recalculated. Confirmed directly: recalculating `=A1*A2`
+   this way reported `ok=True` but the cell still read `None` afterward.
+   Fixed by converting into a temp directory and moving the result back,
+   the same approach their own
+   `open_spreadsheet.py:just_open_libreoffice()` uses.
 3. The grader only recalculated the *model's* output, never the
-   ground-truth answer file — and SpreadsheetBench's own answer files can
-   themselves contain uncached formulas. Confirmed on a real task (99-24):
-   its answer file's own cell A33 reads `None` unrecalculated but
-   recalculates to `32`, meaning a perfectly correct model output would
-   have failed comparison for no fault of its own. Fixed by recalculating
-   answer files too, memoized once per file (not once per grading call, to
-   avoid re-running LibreOffice on the same immutable ground truth
-   thousands of times across a run).
+   ground-truth answer file -- and SpreadsheetBench's own answer files
+   can themselves contain uncached formulas. Confirmed on a real task
+   (99-24): its answer file's own cell A33 reads `None` unrecalculated
+   but recalculates to `32`, meaning a perfectly correct model output
+   would have failed comparison for no fault of its own. Fixed by
+   recalculating answer files too, memoized once per file (not once per
+   grading call, to avoid re-running LibreOffice on the same immutable
+   ground truth thousands of times across a run).
 
 After all three fixes: the 3 tasks that failed in a 40-task recalculation
-subset (99-24, CF_6540, 44389 — all hit bug #3) now pass individually
+subset (99-24, CF_6540, 44389 -- all hit bug #3) now pass individually
 (3/3 test cases each), and `tests/test_grader_recalculation.py` locks in
 both the fix and the memoization behavior against regressions. The full
-200-task gold-vs-itself recalculation re-run has now completed:
-**199/200 pass.** The one remaining failure (task 56637) is the
+200-task gold-vs-itself recalculation re-run has completed: **199/200
+pass.** The one remaining failure (task 56637) is the
 whitespace-in-multi-range bug in the authors' own `evaluation.py`
 described above (not something to patch in their code), and this
 harness's grader already fails that single test case gracefully rather
@@ -136,144 +98,154 @@ than crashing the batch.
 The agent loop (single-round and multi-round ReAct with sandboxed Python
 execution against the workbook) is built and tested end-to-end (mock
 provider + real .xlsx files via openpyxl) in `tests/test_study2_scoring.py`.
-Its sandbox now has real, tested network isolation via a Linux
-user+network namespace (`tests/test_sandbox.py` confirms a socket connect
-attempt inside it actually fails) — see README.md "Before spending real
-money" for what's still not covered (filesystem access).
+Its sandbox has real, tested network isolation via a Linux user+network
+namespace (`tests/test_sandbox.py` confirms a socket connect attempt
+inside it actually fails) -- see README.md "Before spending real money"
+for what's still not covered (filesystem access).
 
-Grading also now correctly reflects SpreadsheetBench's actual design: each
+Grading also correctly reflects SpreadsheetBench's actual design: each
 task's 3 test cases are graded for *generalization* of one agent-produced
-solution, not 3 independent agent runs — the agent sees only test case 1,
+solution, not 3 independent agent runs -- the agent sees only test case 1,
 and its generated code is mechanically re-applied (no extra model calls)
 to test cases 2 and 3 before grading all 3 together.
 
-**Divergence-from-Study-1 check: not yet determined.**
+**New outcome measures (this revision), not yet implemented in code:**
+failure severity (SpreadsheetBench 2's published taxonomy), verification
+behavior, and shortcut rate -- see README "Outcome measures". Turn count,
+tool calls, token spend, and refusals are already tracked on every result
+row.
 
-## Study 3 — Negotiation (AgenticPay, arXiv 2602.06008)
+**Tone scale:** migrated from 5 to 7 tones (Sycophantic, Very Polite,
+Polite, Neutral, Rude, Very Rude, Threatening) to match Dobariya & Kumar's
+own paper 3 -- see `harness/tone_wrappers.py`. Study 2's runner iterates
+`TONE_ORDER` generically, so this required no runner code change;
+verified with a dry-run pilot (4 models x 1 task x 7 tones x 1 trial = 28
+trajectories, up from 20 under 5 tones).
 
-Not yet run against a target model. `harness/study3/` was built after
-cloning `SafeRL-Lab/AgenticPay` and reading its real code directly (not
-guessed) -- see `harness/study3/agenticpay_dep.py`'s docstring for exactly
-what was verified: the `BaseLLM.generate(prompt, temperature, max_tokens,
-**kwargs)` interface, `role_description` as the one documented
-tone-injection point, the `<message>`/`### BUYER_PRICE($X) ###` extraction
-contract, and that `env.step()` already computes GlobalScore/BuyerScore/
-SellerScore on termination (none of that scoring is reimplemented).
+**Cost-effect verdict: not yet determined -- needs a live run against a
+target model** (this is the pre-registered hypothesis test, see top of
+this file).
 
-**Gating check:** one full neutral negotiation was run end to end against
-the real cloned code (buyer max $120, seller min $80, initial ask $150),
-using a throwaway `claude` CLI-backed `BaseLLM` adapter since no
-OpenRouter key exists in this build. Result: agreement at $120 in 3
-rounds, GlobalScore 19.602. This adapter is not part of the shipped
-Study 3 code -- real runs go through `harness/study3/llm_adapter.py`,
-which routes through this harness's own OpenRouter-based Provider.
+## Retired and shelved (kept, not deleted -- see README)
 
-The 5x5 buyer-tone x seller-tone matrix (`run_bilateral_matrix`,
-restricted to the bilateral env `Task1_basic_price_negotiation-v0` per the
-task spec) was smoke-tested end-to-end against the real cloned AgenticPay
-code and the mock provider: `python -m harness.cli study3
-bilateral-matrix` completes all 25 cells, all reaching agreement. Getting
-a full dry run to actually converge (rather than erroring or looping to
-timeout) surfaced one real bug worth recording: the mock provider's
-negotiation responder initially scanned the *entire* prompt for the last
-`### BUYER_PRICE($X) ###` / `### SELLER_PRICE($X) ###` match to simulate
-"the previous offer" -- but AgenticPay's own agent prompts are full of
-worked examples using that exact format (e.g. "Deal -- I'll take it at
-### BUYER_PRICE($6.50) ###."), so every simulated negotiation immediately
-"agreed" at whatever price happened to appear last in the *instructions*,
-not the conversation. Fixed by restricting the scan to the prompt's actual
-"Conversation History:" section (`harness/providers/mock_provider.py:
-_conversation_history_only()`). Mock-only bug -- does not affect real
-model calls -- but a good reminder that "read the real prompt text before
-trusting a regex against it" applies recursively, not just to the
-benchmark's own schema.
+**Study 1 (single-turn QA replication/remaster of Mind Your Tone) is
+retired.** Dobariya & Kumar's own third paper (arXiv 2607.23915) already
+took both pivots that were on the table for this project (explicit
+length-matching, a cost-denominated outcome), leaving nothing distinctive
+for a fourth single-turn-QA paper to add. The harness code
+(`harness/study1/`) is unchanged and still passes its own tests, but is
+not part of the active study and will not be run. Prior state, for the
+record: Part A's dataset (Mind Your Tone's 250-prompt CSV, found via the
+AMCIS 2026 repo, `github.com/OmDobariya/AMCIS_politeness_llms`) and exact
+replication protocol (system prompt, NUM_RUNS=10, their answer-extraction
+regex) were fully implemented and verified end-to-end against the mock
+provider; Part B's programmatic 5-tone remaster was built and smoke-tested
+the same way. Neither was ever run against a target model.
 
-The Benjamini-Hochberg multiple-testing correction and its exact
-comparison set (24 of the 25 cells vs. the L3_neutral/L3_neutral baseline)
-are pre-registered in `harness/study3/preregistration.py`, committed
-before any live negotiation has run -- see README.md "Before spending real
-money."
-
-**Value-given-away verdict: not yet determined -- needs a live run
-against a target model.**
+**Study 3 (agentic negotiation via AgenticPay) is shelved as future
+work, not run now.** TERMS-BENCH (arXiv 2605.13909, Stanford) already
+covers latent-tone negotiation effects more rigorously -- 13 models,
+Wilcoxon p < 10⁻³, dollar-scale regret reported directly -- and
+NegotiationArena (ICML 2024) already covered hostile/desperate personas.
+The crossed buyer-tone x seller-tone matrix this project designed
+(`harness/study3/`) remains unclaimed and is documented as future work
+(README). The code is kept: `AgenticPay` was cloned and its real schema
+read directly before any integration code was written; one full neutral
+negotiation was run end to end against the real cloned code (agreement at
+$120 in 3 rounds, GlobalScore 19.602, via a throwaway CLI-backed adapter
+since no OpenRouter key exists in this build); the 5x5 bilateral matrix
+was smoke-tested end-to-end against the real cloned AgenticPay code and
+the mock provider (all 25 cells reaching agreement); and the
+Benjamini-Hochberg pre-registration now scales automatically with the
+shared 7-tone module (48 comparisons instead of 24). None of this was run
+against a target model, and none of it is scheduled to be.
 
 ## Total spend
 
 **$0.00 against the study's target-model budget caps.** No target model
-has been called against the current roster (GPT-5.6 Luna, Gemini 3.8 Flash,
-Gemini 3.1 Flash-Lite, DeepSeek V4 Flash, Qwen3.8 Flash -- see
-`harness/config.py` module docstring for the roster rationale and the
-per-model OpenRouter verification table, checked 2026-09-10). The earlier
-roster (Gemini 2.5 Flash / DeepSeek-V3 / Qwen2.5-72B / Llama 3.3 70B) has
-been replaced; Llama is dropped entirely, not carried forward as a spare.
+has been called against the current roster (GPT-5.6 Luna, Gemini 3.8
+Flash, DeepSeek V4 Flash, Qwen3.8 Flash -- see `harness/config.py` module
+docstring for the roster rationale and the per-model OpenRouter
+verification table, checked 2026-09-10). Gemini 3.1 Flash-Lite remains
+defined (it was Study 1's second Gemini tier) but is no longer part of any
+scheduled run now that Study 1 is retired.
 
 Separately, **~$0.28** was spent on real-inference *pipeline* smoke tests
 using `harness/providers/claude_cli_provider.py` (local `claude` CLI,
 session-authenticated) -- a handful of exploratory calls plus a 2-item x
-5-tone-level run through the actual Study 1 Part B runner, confirming the
-wrapper -> real call -> extraction -> scoring -> cost-tracking path works
-end-to-end. This is not counted against the caps below, since it used a
-non-target model purely to validate plumbing -- see README.md
-"Smoke-testing with real inference."
+5-tone-level run through the (now-retired) Study 1 Part B runner,
+confirming the wrapper -> real call -> extraction -> scoring ->
+cost-tracking path works end-to-end. This is not counted against the caps
+below, since it used a non-target model purely to validate plumbing --
+see README.md "Smoke-testing with real inference."
 
 Per-call spend logging (`results/raw/*.jsonl`) and a running total
 (`results/spend_log.jsonl`) are wired up and budget-capped
-(`harness/spend_tracker.py:BudgetExceeded`) for whenever a live target-model
-run starts. `--live` also prints a rough spend projection and requires
-confirmation before the first paid call in any run (`--yes` skips the
-prompt for scripted/CI use):
+(`harness/spend_tracker.py:BudgetExceeded`) for whenever a live
+target-model run starts. `--live` also prints a rough spend projection
+and requires confirmation before the first paid call in any run (`--yes`
+skips the prompt for scripted/CI use).
 
-| Phase | Cap |
-|---|---|
-| Study 1 (soft warning) | $50 |
-| Study 1 (hard stop) | $75 |
-| Study 2 pilot | $20 |
-| Study 2 core | $70 |
-| Study 2 frontier spot-check (optional, separate) | $150 |
-| Study 3 (bilateral, ~100 negotiations/cell) | $100 |
+Budget caps carried over from the original three-study design (Study 1
+and Study 3's caps are no longer live targets, kept here for reference
+since their harnesses still exist):
+
+| Phase | Cap | Status |
+|---|---|---|
+| Study 2 pilot (Phase 1) | $20 | active |
+| Study 2 core (Phase 2, four models, seven tones, 3 trials) | $70+ (re-project for the 7-tone matrix before running -- was sized for 5 tones) | active |
+| Study 2 frontier spot-check (optional, separate) | $150 | active |
+| Study 1 (soft $50 / hard $75) | -- | retired, not live |
+| Study 3 (bilateral, ~100 negotiations/cell) | $100 | shelved, not live |
+
+**Re-projection needed before Phase 2**: the $70 Study 2 core cap was
+sized against 5 tones; with 7 tones the same task/trial count costs
+roughly 40% more per model. Re-run the CLI's spend projection (`--live`
+prints one before the first paid call) against the real 7-tone matrix
+before committing to Phase 2's budget, rather than assuming the old
+number still holds.
 
 ## What's needed to actually run this
 
-1. **An OpenRouter API key.** All five roster models route through
-   OpenRouter on one key (see README.md "Single provider path") — only
-   remaining hard blocker that requires the repo owner specifically.
-2. ~~The Mind Your Tone 250-prompt dataset~~ — **resolved**: found via the
-   paper's AMCIS 2026 full-paper extension, `ensure_mind_your_tone_repo()`
-   clones it automatically.
-3. ~~A cloned `SpreadsheetBench` checkout and grader sanity check~~ —
-   **resolved**: cloned, and the grader/dataset code was rewritten to match
-   the real repo (see "Study 2" above). LibreOffice's formula
+1. **An OpenRouter API key.** All target models route through OpenRouter
+   on one key (see README.md "Single provider path") -- only remaining
+   hard blocker that requires the repo owner specifically.
+2. ~~A cloned `SpreadsheetBench` checkout and grader sanity check~~ --
+   **resolved**: cloned, and the grader/dataset code was rewritten to
+   match the real repo (see "Study 2" above). LibreOffice's formula
    recalculation, previously broken in this build's own environment, is
-   also now fixed (see git history) — still worth confirming
+   also now fixed (see git history) -- still worth confirming
    `libreoffice-calc`/`libreoffice-writer` are installed wherever a live
    batch actually runs.
-4. ~~A better sandbox for Study 2's code execution~~ — **resolved**: real,
-   tested network isolation via a Linux user+network namespace. Filesystem
-   access is still unrestricted — a full container is still preferable
-   where available.
-5. ~~Re-verification of every model ID / price in `harness/config.py`~~ —
+3. ~~A better sandbox for Study 2's code execution~~ -- **resolved**:
+   real, tested network isolation via a Linux user+network namespace.
+   Filesystem access is still unrestricted -- a full container is still
+   preferable where available.
+4. ~~Re-verification of every model ID / price in `harness/config.py`~~ --
    **resolved for the current roster**: every model_id, price, and
    provider pin was checked directly against OpenRouter's live catalog on
    2026-09-10 (see `harness/config.py` module docstring). Re-run this
-   check if it's been more than a few weeks. **Caveat found while merging
-   the pinning-enforcement PR in:** the new mandatory triple-pin
-   (`provider.only` + `allow_fallbacks:false` + `provider.quantizations`,
-   item 6 below) requires `quantization_pin` on every model that sets
-   `provider_pin` — none of the 5 roster models below have it set yet, and
-   `DEEPSEEK_CURRENT`'s pin (`provider_pin="DeepSeek"`) does not match any
-   provider name OpenRouter's live endpoint list actually returns for
-   `deepseek/deepseek-v4-flash-0731` (checked directly, 2026-09-10 — see
-   git history for the merge that surfaced this). **This roster cannot
-   make a live call yet without a follow-up fix to both.**
-6. ~~`provider.only`/`allow_fallbacks`/`quantizations` enforcement, the
+   check if it's been more than a few weeks. **Caveat, still open:** the
+   mandatory triple-pin (`provider.only` + `allow_fallbacks:false` +
+   `provider.quantizations`) requires `quantization_pin` on every model
+   that sets `provider_pin` -- none of the 5 roster models currently have
+   it set, and `DEEPSEEK_CURRENT`'s pin (`provider_pin="DeepSeek"`) does
+   not match any provider name OpenRouter's live endpoint list actually
+   returns for `deepseek/deepseek-v4-flash-0731`. **This roster cannot
+   make a live call yet without a follow-up fix to both** -- fix drafted
+   in a separate PR (adds `quantization_not_exposed` + re-pins DeepSeek to
+   a real provider), not yet merged as of this revision.
+5. ~~`provider.only`/`allow_fallbacks`/`quantizations` enforcement, the
    served-provider assertion, response-cache-disable assertion, and
-   caching/cost instrumentation~~ — **resolved**: implemented and tested
+   caching/cost instrumentation~~ -- **resolved**: implemented and tested
    against mocked OpenRouter responses (`harness/providers/openai_compatible.py`,
-   `tests/test_openrouter_pinning.py`) — see README "Single provider path:
-   OpenRouter, and how pinning is enforced." Not yet exercised against a
-   real OpenRouter call, since no key is available in this build, and see
-   item 5's caveat above — the current roster doesn't satisfy it yet.
-7. ~~A cloned `AgenticPay` checkout and one real negotiation run~~ —
-   **resolved**: cloned, its real schema read directly, one full neutral
-   negotiation run end to end (see "Study 3" above), and the 5x5 bilateral
-   matrix smoke-tested against the real cloned code with the mock provider.
+   `tests/test_openrouter_pinning.py`) -- see README "Single provider
+   path: OpenRouter, and how pinning is enforced." Not yet exercised
+   against a real OpenRouter call, since no key is available in this
+   build, and see item 4's caveat above -- the current roster doesn't
+   satisfy it yet.
+6. **New outcome measures** (failure severity, verification behavior,
+   shortcut rate) are specified in README "Outcome measures" but not yet
+   implemented in `harness/study2/`. Needed before Phase 2's main run.
+7. **Phase 2 budget re-projection** for the 7-tone matrix -- see "Total
+   spend" above.
