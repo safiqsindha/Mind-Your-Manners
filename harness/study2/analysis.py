@@ -33,6 +33,7 @@ __all__ = [
     "verification_rates",
     "shortcut_rate",
     "trajectory_cost_summary",
+    "token_cost_effect_size",
     "compare_direction_to_study1",
 ]
 
@@ -86,6 +87,38 @@ def trajectory_cost_summary(task_results: list[dict[str, Any]], group_key: str =
     return {
         level: {k: float(np.mean(v)) if v else float("nan") for k, v in metrics.items()}
         for level, metrics in out.items()
+    }
+
+
+def token_cost_effect_size(task_results: list[dict[str, Any]], group_key: str = "tone_level") -> dict[str, Any]:
+    """Operationalizes "the pre-registered hypothesis" (README): Dobariya &
+    Kumar's paper 3 (arXiv 2607.23915) reported output-token variation of
+    44.3% across single-turn tone conditions, dwarfing their ~3% accuracy
+    variation. This computes the same relative-variation statistic here --
+    (max mean tokens - min mean tokens) / mean of means, as a percentage --
+    so it's directly comparable to their number, not just "tokens differ by
+    tone" without a way to judge the effect size against theirs.
+
+    Returns per-tone mean total_tokens plus the overall relative variation
+    percentage. The hypothesis (agentic cost effect > 44.3%, not less) is a
+    plain comparison of the returned percentage against that published
+    figure -- this function doesn't editorialize about whether it held.
+    """
+    by_group: dict[str, list[float]] = defaultdict(list)
+    for r in task_results:
+        by_group[r[group_key]].append(r["total_tokens"])
+
+    means = {level: float(np.mean(v)) if v else float("nan") for level, v in by_group.items()}
+    valid_means = [m for m in means.values() if m == m]  # drop NaN
+    if len(valid_means) < 2:
+        relative_variation_pct = float("nan")
+    else:
+        relative_variation_pct = (max(valid_means) - min(valid_means)) / np.mean(valid_means) * 100.0
+
+    return {
+        "mean_total_tokens_by_tone": means,
+        "relative_variation_pct": relative_variation_pct,
+        "published_single_turn_comparison_pct": 44.3,
     }
 
 
