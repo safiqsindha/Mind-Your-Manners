@@ -207,17 +207,24 @@ since their harnesses still exist):
 | Phase | Cap | Status |
 |---|---|---|
 | Study 2 pilot (Phase 1) | $20 | active |
-| Study 2 core (Phase 2, four models, seven tones, 3 trials) | $70+ (re-project for the 7-tone matrix before running -- was sized for 5 tones) | active |
+| Study 2 core (Phase 2, four models, seven tones, 3 trials, 50 tasks) | $150 | active |
 | Study 2 frontier spot-check (optional, separate) | $150 | active |
 | Study 1 (soft $50 / hard $75) | -- | retired, not live |
 | Study 3 (bilateral, ~100 negotiations/cell) | $100 | shelved, not live |
 
-**Re-projection needed before Phase 2**: the $70 Study 2 core cap was
-sized against 5 tones; with 7 tones the same task/trial count costs
-roughly 40% more per model. Re-run the CLI's spend projection (`--live`
-prints one before the first paid call) against the real 7-tone matrix
-before committing to Phase 2's budget, rather than assuming the old
-number still holds.
+**How the $150 core cap was set**: at Luna's live-verified price
+($0.20/$1.20 -- see `harness/config.py`'s VERIFICATION table), the main
+run's Luna share lands near $35 and the other three models (GLM, DeepSeek,
+Qwen) combined near $17, roughly $52 total. The cap is set well above that
+point estimate ($150, not ~$55) because Luna's price is genuinely
+contested in the wild -- third-party trackers were still showing its
+pre-price-cut rate ($1.00/$6.00) as recently as this revision, which would
+put the same run near $100 -- and because `spend_tracker.compute_cost_usd()`
+prefers OpenRouter's actually-billed `usage.cost` per call over this
+static estimate anyway. The cap is a circuit breaker against that price
+uncertainty, not a number the run is expected to actually spend; `--live`
+still prints a real projection and requires confirmation before the first
+paid call (see `confirm_projection()` in `cli.py`).
 
 ## What's needed to actually run this
 
@@ -285,5 +292,7 @@ number still holds.
    `study2 analyze` (Phase 3) reports all of them plus
    `token_cost_effect_size` -- see README "Outcome measures" and
    "Phases".
-9. **Phase 2 budget re-projection** for the 7-tone matrix -- see "Total
-   spend" above.
+9. ~~Phase 2 budget re-projection~~ -- **resolved**: the core cap is now
+   $150, set against Luna's live-verified price with headroom for the
+   price-tracker discrepancy noted in "Total spend" above, rather than
+   the old $70 figure sized for a 5-tone, different-roster run.
