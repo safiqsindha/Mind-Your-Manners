@@ -256,16 +256,16 @@ selected model needs aren't set (see `.env.example`).
 pip install -r requirements.txt
 
 # Dry-run smoke test (free, no keys needed)
-python -m harness.cli study2 validation-gate --model gemini-flash --repo-dir data/spreadsheetbench --n-tasks 10
+python -m harness.cli study2 validation-gate --model gpt-luna --repo-dir data/spreadsheetbench --n-tasks 10
 
 # Phase 0: gates -- must pass before spending on Phase 1
 python -m harness.cli --live study2 validation-gate \
-  --model gemini-flash --repo-dir data/spreadsheetbench \
+  --model gpt-luna --repo-dir data/spreadsheetbench \
   --expected-accuracy <current published figure>
 
 # Phase 1: pilot -- one model, small task subset, all 7 tones, single-round
 python -m harness.cli --live study2 pilot \
-  --models gemini-flash --n-tasks 30 --single-round
+  --models gpt-luna --n-tasks 30 --single-round
 
 # Phase 2: main run -- four models, multi-round agentic, 3 trials/task/tone
 python -m harness.cli --live study2 core --n-trials 3

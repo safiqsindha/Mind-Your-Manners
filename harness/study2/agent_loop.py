@@ -134,6 +134,8 @@ def _call_and_record(
         timestamp=time.time(),
         cached_tokens=response.cached_tokens,
         served_provider=response.served_provider,
+        thinking_enabled=model.thinking_enabled,
+        canonical_slug=model.canonical_slug,
         raw_response=response.raw,
         extra={"turn": turn},
     )

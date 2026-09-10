@@ -58,6 +58,8 @@ class ResultRow:
     timestamp: float
     cached_tokens: int = 0  # usage.prompt_tokens_details.cached_tokens -- measure only, see config.py
     served_provider: Optional[str] = None  # actual OpenRouter backend that served this call
+    thinking_enabled: Optional[bool] = None  # see providers/base.py:ModelConfig.thinking_enabled
+    canonical_slug: Optional[str] = None  # see providers/base.py:ModelConfig.canonical_slug
     raw_response: dict[str, Any] = field(default_factory=dict)
     extra: dict[str, Any] = field(default_factory=dict)
 
