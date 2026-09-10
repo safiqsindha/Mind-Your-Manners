@@ -57,10 +57,30 @@ but is asserted off here rather than trusted: every OpenRouter call sends
 unnoticed, a cached response would silently zero out that call's token
 counts and destroy trial-level variance estimates -- the exact thing this
 harness's repeated-trials design depends on.
+
+RETRY ON TRANSIENT FAILURE (`_post_with_retry`, added 2026-09-10): also
+found live, the same day as the pin-key bug above -- DeepSeek and Qwen
+(both routed through third-party/shared-pool-style OpenRouter endpoints)
+returned HTTP 429 "temporarily rate-limited upstream... shared pool" on
+essentially the first call of a small smoke test, with no retry logic at
+all, crashing the run immediately. `_post_with_retry` retries
+RETRYABLE_STATUS_CODES (408/429/502/503/504) and network-level exceptions
+(connection error/timeout below the HTTP layer -- an Opus review of this
+fix flagged that gap before it shipped) up to MAX_RETRIES times, honoring
+a `Retry-After` response header when present (clamped against a negative
+or non-finite value, which would otherwise crash `time.sleep()`) and
+falling back to exponential backoff (2s/4s/8s/16s, capped) otherwise.
+Every other status (400/401/403/404/422/500/etc.) still fails immediately,
+unretried -- see RETRYABLE_STATUS_CODES's comment for why 500 specifically
+is excluded despite being a 5xx. See that same comment for a known,
+accepted limitation: retrying a 502/504 can duplicate upstream generation
+cost that never reaches SpendTracker.
 """
 from __future__ import annotations
 
+import math
 import os
+import time
 from typing import Any, Optional
 
 import requests
@@ -82,6 +102,95 @@ API_KEY_ENV_BY_BASE = {
     "https://api.deepseek.com": "DEEPSEEK_API_KEY",
     "https://dashscope.aliyuncs.com/compatible-mode/v1": "DASHSCOPE_API_KEY",
 }
+
+# Statuses worth retrying: 408/429 (request timeout / rate limited) and
+# 502/503/504 (upstream/gateway trouble) are transient infrastructure
+# conditions, not something a retry of the identical request can't fix.
+# Everything else (400 bad request, 401/403 auth, 404 unknown model, 422
+# unprocessable, etc.) is a config problem retrying won't solve -- fail
+# immediately on those, same as before. 500 is deliberately NOT included:
+# unlike 502/503/504 (which are OpenRouter's own gateway/pool reporting
+# trouble reaching a backend), a 500 can just as easily be a deterministic
+# model-side error that a retry would only reproduce -- the status code
+# alone doesn't distinguish the two, so it's left to fail immediately
+# rather than assumed transient. Confirmed live 2026-09-10: DeepSeek and
+# Qwen (both third-party/shared-pool-style endpoints) hit 429 "temporarily
+# rate-limited upstream... shared pool" on essentially the first call of a
+# smoke test -- with no retry, that crashed the whole run instantly and
+# would recur at any real pilot/main-run scale.
+#
+# KNOWN LIMITATION, not fixed here: a 502/504 specifically can mean
+# OpenRouter's gateway lost the response AFTER the upstream provider
+# already generated (and billed) a completion -- retrying in that case
+# sends a second request whose upstream cost never reaches
+# compute_cost_usd/SpendTracker (only the response actually returned to
+# us gets logged), a small, real undercount against the $150 cap.
+# OpenRouter's API doesn't expose an idempotency key to prevent this;
+# 429 has no such risk (rejected before any generation happens).
+RETRYABLE_STATUS_CODES = {408, 429, 502, 503, 504}
+MAX_RETRIES = 4  # up to 4 retries (5 attempts total) per call
+RETRY_BACKOFF_BASE_S = 2.0  # exponential: 2s, 4s, 8s, 16s if no Retry-After header
+RETRY_BACKOFF_CAP_S = 30.0
+
+
+def _clamp_delay(delay: float) -> float:
+    """A Retry-After header is untrusted input -- a negative value would
+    make time.sleep() raise, and so would NaN (parses fine as a float but
+    fails the sleep call). Clamp both to the cap rather than let either
+    crash a live run."""
+    if not math.isfinite(delay) or delay < 0:
+        return RETRY_BACKOFF_CAP_S
+    return min(delay, RETRY_BACKOFF_CAP_S)
+
+
+def _post_with_retry(url: str, headers: dict, json_body: dict, timeout: int) -> requests.Response:
+    """POST with retry-on-transient-failure. Honors a Retry-After header
+    (seconds) when the server sends one; falls back to exponential backoff
+    otherwise. Also retries on a network-level exception (connection
+    error/timeout below the HTTP layer) -- these are at least as likely
+    against a flaky shared inference pool as a 502/503 response, and were
+    otherwise the biggest gap in this retry logic. Raises ProviderError
+    directly if a network exception exhausts all retries (there is no
+    response object to return in that case); for an HTTP-level failure it
+    raises nothing itself on a persistent failure -- returns the last
+    response so the caller's existing status-code check produces the same
+    ProviderError it always has."""
+    attempt = 0
+    while True:
+        try:
+            resp = requests.post(url, headers=headers, json=json_body, timeout=timeout)
+        except (requests.ConnectionError, requests.Timeout) as exc:
+            if attempt >= MAX_RETRIES:
+                raise ProviderError(
+                    f"{url}: network error after {attempt + 1} attempts, giving up: {exc}"
+                ) from exc
+            delay = _clamp_delay(RETRY_BACKOFF_BASE_S * (2**attempt))
+            print(
+                f"WARNING: {url} network error (attempt {attempt + 1}/{MAX_RETRIES + 1}) "
+                f"-- retrying in {delay:.1f}s: {exc}"
+            )
+            time.sleep(delay)
+            attempt += 1
+            continue
+
+        if resp.status_code not in RETRYABLE_STATUS_CODES or attempt >= MAX_RETRIES:
+            return resp
+
+        retry_after = resp.headers.get("Retry-After")
+        if retry_after is not None:
+            try:
+                delay = _clamp_delay(float(retry_after))
+            except ValueError:
+                delay = _clamp_delay(RETRY_BACKOFF_BASE_S * (2**attempt))
+        else:
+            delay = _clamp_delay(RETRY_BACKOFF_BASE_S * (2**attempt))
+
+        print(
+            f"WARNING: {url} returned {resp.status_code} (attempt {attempt + 1}/{MAX_RETRIES + 1}) "
+            f"-- retrying in {delay:.1f}s: {resp.text[:300]}"
+        )
+        time.sleep(delay)
+        attempt += 1
 
 
 class OpenAICompatibleProvider(Provider):
@@ -152,12 +261,7 @@ class OpenAICompatibleProvider(Provider):
                 # something to check against.
                 headers["X-OpenRouter-Metadata"] = "enabled"
 
-        resp = requests.post(
-            f"{base_url}/chat/completions",
-            headers=headers,
-            json=body,
-            timeout=180,
-        )
+        resp = _post_with_retry(f"{base_url}/chat/completions", headers, body, timeout=180)
         if resp.status_code >= 400:
             raise ProviderError(f"{base_url} API error {resp.status_code}: {resp.text[:2000]}")
 

@@ -32,10 +32,64 @@ from ..providers.registry import get_provider
 from ..spend_tracker import ResultRow, SpendTracker, compute_cost_usd
 from .sandbox import execute_python_on_workbook
 
+# WORKBOOK_PATH/OUTPUT_PATH ARE PRE-DEFINED PYTHON VARIABLES, injected as
+# plain string literals directly above each code block before it runs (see
+# sandbox.py:_RUNNER_TEMPLATE) -- NOT environment variables, NOT files to
+# search for on disk. This must be stated explicitly and unambiguously:
+# a live run against GPT-5.6 Luna (see RESULTS.md "First real OpenRouter
+# call") found the model consistently guessing os.environ.get(...) or
+# glob-searching /mnt/data/* instead, on every one of 5 real tasks,
+# because the original prompt only said "you are given WORKBOOK_PATH"
+# without saying how -- a model has no way to know that means "a bare
+# Python name already in scope" rather than any of several equally
+# plausible conventions (env var, CLI arg, a file to discover).
+#
+# PERSISTENCE, get this exactly right: run_react_multi_round passes a
+# DIFFERENT workdir each turn (`workdir / f"turn_{turn}"`), and
+# sandbox.py derives OUTPUT_PATH from that workdir -- so OUTPUT_PATH is a
+# different, empty location every turn, and the working directory itself
+# is fresh every turn too. WORKBOOK_PATH is the one thing that stays
+# constant: it is always the original, untouched input file, every turn
+# (run_react_multi_round always passes the same `workbook_path`, never a
+# previous turn's output). Only the LAST turn's OUTPUT_PATH write is ever
+# graded (agent_loop.py's final_output_path is overwritten by whichever
+# turn produced output most recently) -- an earlier version of this
+# prompt told the model the opposite ("reload it from a file you saved"),
+# which is actively wrong and would make the model discard earlier work
+# by design; caught in review before this shipped, not caught live.
 AGENT_SYSTEM_PROMPT = """AGENT_REACT_MODE
 You are an agent that manipulates spreadsheets by writing Python code
-(openpyxl or pandas). You are given WORKBOOK_PATH (the input file) and
-OUTPUT_PATH (where your final answer must be saved as .xlsx).
+(openpyxl or pandas).
+
+WORKBOOK_PATH and OUTPUT_PATH are already defined as plain Python string
+variables at the top of every code block you write -- they are NOT
+environment variables and there is nothing to search for on disk. Just
+reference them directly by name, for example:
+    import openpyxl
+    wb = openpyxl.load_workbook(WORKBOOK_PATH)
+    ...
+    wb.save(OUTPUT_PATH)
+Do not use os.environ, glob, or any file-discovery logic to find the
+workbook -- WORKBOOK_PATH already IS its path, as a ready-to-use string.
+
+IMPORTANT -- nothing carries over between turns, and OUTPUT_PATH changes
+every turn: each code block runs in a fresh process with its own working
+directory. WORKBOOK_PATH always points to the same original, untouched
+input file, every turn. But OUTPUT_PATH is a NEW, empty location each
+turn, and any file you wrote in a previous turn (including a previous
+OUTPUT_PATH) is gone and cannot be reloaded. Only the most recent turn
+that writes OUTPUT_PATH is graded. This means: never try to "continue"
+work from a previous turn's saved file -- always build the complete
+result from WORKBOOK_PATH (the original) in whichever turn you intend to
+be graded, in one self-contained code block.
+
+Execution limits: each code block gets 60 seconds wall-clock / 30 seconds
+CPU time and 1.5GB memory, runs with no network access, and only the
+input workbook and standard libraries are available. A timeout or crash
+shows up as `timed_out=True` or a Python traceback in the Observation
+below -- if you see one, the code took too long or used too much memory;
+simplify your approach (e.g. avoid loading the whole sheet into memory
+at once) rather than retrying the same code.
 
 Respond with EITHER:
   1. A single fenced python code block to execute next, e.g.:
@@ -51,10 +105,22 @@ answer to OUTPUT_PATH before finishing.
 """
 
 SINGLE_ROUND_SYSTEM_PROMPT = """You are an agent that manipulates spreadsheets by
-writing Python code (openpyxl or pandas). You are given WORKBOOK_PATH (the
-input file) and OUTPUT_PATH (where your answer must be saved as .xlsx). You
-get exactly one turn: respond with a single fenced ```python code block that
-reads WORKBOOK_PATH, does the task, and saves the result to OUTPUT_PATH.
+writing Python code (openpyxl or pandas).
+
+WORKBOOK_PATH and OUTPUT_PATH are already defined as plain Python string
+variables at the top of your code -- they are NOT environment variables
+and there is nothing to search for on disk. Just reference them directly
+by name, for example:
+    import openpyxl
+    wb = openpyxl.load_workbook(WORKBOOK_PATH)
+    ...
+    wb.save(OUTPUT_PATH)
+Do not use os.environ, glob, or any file-discovery logic to find the
+workbook.
+
+You get exactly one turn: respond with a single fenced ```python code block
+that reads WORKBOOK_PATH, does the task, and saves the result to
+OUTPUT_PATH.
 """
 
 _CODE_BLOCK_RE = re.compile(r"```(?:python)?\s*\n(.*?)```", re.DOTALL)
