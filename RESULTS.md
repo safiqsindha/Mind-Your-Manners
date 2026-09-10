@@ -149,6 +149,54 @@ to test cases 2 and 3 before grading all 3 together.
 
 **Divergence-from-Study-1 check: not yet determined.**
 
+## Study 3 — Negotiation (AgenticPay, arXiv 2602.06008)
+
+Not yet run against a target model. `harness/study3/` was built after
+cloning `SafeRL-Lab/AgenticPay` and reading its real code directly (not
+guessed) -- see `harness/study3/agenticpay_dep.py`'s docstring for exactly
+what was verified: the `BaseLLM.generate(prompt, temperature, max_tokens,
+**kwargs)` interface, `role_description` as the one documented
+tone-injection point, the `<message>`/`### BUYER_PRICE($X) ###` extraction
+contract, and that `env.step()` already computes GlobalScore/BuyerScore/
+SellerScore on termination (none of that scoring is reimplemented).
+
+**Gating check:** one full neutral negotiation was run end to end against
+the real cloned code (buyer max $120, seller min $80, initial ask $150),
+using a throwaway `claude` CLI-backed `BaseLLM` adapter since no
+OpenRouter key exists in this build. Result: agreement at $120 in 3
+rounds, GlobalScore 19.602. This adapter is not part of the shipped
+Study 3 code -- real runs go through `harness/study3/llm_adapter.py`,
+which routes through this harness's own OpenRouter-based Provider.
+
+The 5x5 buyer-tone x seller-tone matrix (`run_bilateral_matrix`,
+restricted to the bilateral env `Task1_basic_price_negotiation-v0` per the
+task spec) was smoke-tested end-to-end against the real cloned AgenticPay
+code and the mock provider: `python -m harness.cli study3
+bilateral-matrix` completes all 25 cells, all reaching agreement. Getting
+a full dry run to actually converge (rather than erroring or looping to
+timeout) surfaced one real bug worth recording: the mock provider's
+negotiation responder initially scanned the *entire* prompt for the last
+`### BUYER_PRICE($X) ###` / `### SELLER_PRICE($X) ###` match to simulate
+"the previous offer" -- but AgenticPay's own agent prompts are full of
+worked examples using that exact format (e.g. "Deal -- I'll take it at
+### BUYER_PRICE($6.50) ###."), so every simulated negotiation immediately
+"agreed" at whatever price happened to appear last in the *instructions*,
+not the conversation. Fixed by restricting the scan to the prompt's actual
+"Conversation History:" section (`harness/providers/mock_provider.py:
+_conversation_history_only()`). Mock-only bug -- does not affect real
+model calls -- but a good reminder that "read the real prompt text before
+trusting a regex against it" applies recursively, not just to the
+benchmark's own schema.
+
+The Benjamini-Hochberg multiple-testing correction and its exact
+comparison set (24 of the 25 cells vs. the L3_neutral/L3_neutral baseline)
+are pre-registered in `harness/study3/preregistration.py`, committed
+before any live negotiation has run -- see README.md "Before spending real
+money."
+
+**Value-given-away verdict: not yet determined -- needs a live run
+against a target model.**
+
 ## Total spend
 
 **$0.00 against the study's target-model budget caps.** No target model
@@ -182,7 +230,7 @@ prompt for scripted/CI use):
 | Study 2 pilot | $20 |
 | Study 2 core | $70 |
 | Study 2 frontier spot-check (optional, separate) | $150 |
-| Study 3 (bilateral, 100 negotiations/cell) | $100 |
+| Study 3 (bilateral, ~100 negotiations/cell) | $100 |
 
 ## What's needed to actually run this
 
@@ -225,7 +273,7 @@ prompt for scripted/CI use):
    OpenRouter, and how pinning is enforced." Not yet exercised against a
    real OpenRouter call, since no key is available in this build, and see
    item 5's caveat above — the current roster doesn't satisfy it yet.
-7. Study 3 (AgenticPay negotiation) is designed and gating-checked (one
-   real negotiation run end-to-end against the actual AgenticPay code, via
-   a throwaway `claude` CLI adapter — see PR for details) but not yet
-   built as a harness module.
+7. ~~A cloned `AgenticPay` checkout and one real negotiation run~~ —
+   **resolved**: cloned, its real schema read directly, one full neutral
+   negotiation run end to end (see "Study 3" above), and the 5x5 bilateral
+   matrix smoke-tested against the real cloned code with the mock provider.
