@@ -210,6 +210,50 @@ def cmd_study2_validation_gate(args: argparse.Namespace) -> None:
         sys.exit(2)
 
 
+def cmd_study2_thinking_preflight(args: argparse.Namespace) -> None:
+    """Phase 0.5 gate (README "The thinking arm"): three cheap probe checks
+    that must pass before the calibration arm gets real spend -- see
+    harness/study2/thinking_preflight.py's module docstring."""
+    from .spend_tracker import SpendTracker
+    from .study2.thinking_preflight import run_thinking_preflight
+
+    on_model, off_model = resolve_models([args.on_model, args.off_model], args.live)
+    if args.live:
+        confirm_projection(
+            "study2 thinking-preflight", estimate_cost_usd([on_model, off_model], 1, 100, 200),
+            cap_usd=1.0, assume_yes=args.yes,
+        )
+
+    out_path = RESULTS_ROOT / "raw" / "study2_thinking_preflight.jsonl"
+    tracker = SpendTracker(out_path, phase="thinking_preflight", cap_usd=1.0)
+    try:
+        report = run_thinking_preflight(tracker, on_model, off_model)
+    finally:
+        tracker.close()
+
+    result = {
+        "on_model_key": report.on_model_key,
+        "off_model_key": report.off_model_key,
+        "on_reasoning_tokens": report.on_reasoning_tokens,
+        "off_reasoning_tokens": report.off_reasoning_tokens,
+        "on_total_tokens": report.on_total_tokens,
+        "off_total_tokens": report.off_total_tokens,
+        "checks": [{"name": c.name, "passed": c.passed, "detail": c.detail} for c in report.checks],
+        "passed": report.passed,
+    }
+    out_json_path = RESULTS_ROOT / "analysis" / "study2_thinking_preflight.json"
+    out_json_path.parent.mkdir(parents=True, exist_ok=True)
+    out_json_path.write_text(json.dumps(result, indent=2))
+    print(json.dumps(result, indent=2))
+    if not report.passed:
+        print(
+            "\nTHINKING PREFLIGHT FAILED -- do not spend on the calibration arm until every "
+            "check above passes. See README 'The thinking arm'.",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+
+
 def _study2_stage(args: argparse.Namespace, phase: str, default_cap: float, default_trials: int) -> None:
     from .study2.dataset import ensure_repo, load_spreadsheetbench
     from .study2.grader import SpreadsheetBenchGrader
@@ -399,6 +443,11 @@ def build_parser() -> argparse.ArgumentParser:
     g2.add_argument("--expected-accuracy", type=float, default=None)
     g2.add_argument("--tolerance", type=float, default=0.08)
     g2.set_defaults(func=cmd_study2_validation_gate)
+
+    tp = s2_sub.add_parser("thinking-preflight")
+    tp.add_argument("--on-model", default="gpt-luna", choices=list(MODELS_BY_KEY))
+    tp.add_argument("--off-model", default="gpt-luna-calibration", choices=list(MODELS_BY_KEY))
+    tp.set_defaults(func=cmd_study2_thinking_preflight)
 
     for name, fn, default_cap, default_trials in [
         ("pilot", cmd_study2_pilot, STUDY2_PILOT_BUDGET_CAP_USD, 3),

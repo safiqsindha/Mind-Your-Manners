@@ -65,6 +65,14 @@ class ProviderResponse:
     prompt_tokens: int
     completion_tokens: int
     reasoning_tokens: int = 0
+    # Whether the provider's raw response actually included a
+    # reasoning_tokens field at all, distinct from reasoning_tokens being
+    # legitimately 0 -- a *missing* field (not a reported zero) means
+    # reasoning-token accounting can't be trusted at all through this
+    # route. See harness/study2/thinking_preflight.py check 1 and arXiv
+    # 2608.01347 (reasoning-token reporting found inconsistent across
+    # serving/protocol-translation layers, sometimes silently dropped).
+    reasoning_tokens_reported: bool = True
     cached_tokens: int = 0  # provider-side prompt-cache hits (usage.prompt_tokens_details.cached_tokens);
     # measure only -- see harness/config.py module docstring on caching instrumentation.
     served_provider: Optional[str] = None  # actual backend that served this call, when reported

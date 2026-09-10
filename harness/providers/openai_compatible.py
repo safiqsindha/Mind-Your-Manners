@@ -167,8 +167,9 @@ class OpenAICompatibleProvider(Provider):
             tool_calls.append({"id": tc.get("id"), "name": fn.get("name"), "arguments": fn.get("arguments")})
 
         usage = data.get("usage", {})
-        reasoning_tokens = 0
         completion_details = usage.get("completion_tokens_details") or {}
+        reasoning_tokens_reported = isinstance(completion_details, dict) and "reasoning_tokens" in completion_details
+        reasoning_tokens = 0
         if isinstance(completion_details, dict):
             reasoning_tokens = completion_details.get("reasoning_tokens", 0) or 0
 
@@ -205,6 +206,7 @@ class OpenAICompatibleProvider(Provider):
             prompt_tokens=usage.get("prompt_tokens", 0),
             completion_tokens=usage.get("completion_tokens", 0),
             reasoning_tokens=reasoning_tokens,
+            reasoning_tokens_reported=reasoning_tokens_reported,
             cached_tokens=cached_tokens,
             served_provider=served_provider,
             refused=refused,
