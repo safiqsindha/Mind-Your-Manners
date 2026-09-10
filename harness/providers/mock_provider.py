@@ -17,9 +17,44 @@ from __future__ import annotations
 
 import hashlib
 import random
+import re
 from typing import Any, Optional
 
 from .base import ModelConfig, Provider, ProviderResponse
+
+_LABELED_PRICE_RE_TEMPLATE = r"###\s*{label}\(\$([\d,]+\.?\d*)\)\s*###"
+
+
+def _conversation_history_only(text: str) -> str:
+    """Isolate the "Conversation History:" section of an AgenticPay agent
+    prompt (see BaseAgent._build_prompt() in agenticpay/agents/base_agent.py).
+
+    Needed because the buyer/seller guidance blocks appended after it are
+    full of worked examples containing the SAME ### BUYER_PRICE($X) ### /
+    ### SELLER_PRICE($X) ### format used for real offers (e.g. "Example:
+    ... $10 ...", "... Deal -- I'll take it at ### BUYER_PRICE($6.50)
+    ###."). Confirmed live (see the study3 gating smoke test): scanning
+    the whole prompt for the *last* labeled price match picks up an
+    instructional example's price instead of the negotiation's real last
+    offer, converging every negotiation to a nonsense price on round 1.
+    Restricting the scan to this section is what actually fixed it.
+    """
+    start = text.find("Conversation History:")
+    end = text.find("Please respond naturally as")
+    if start == -1 or end == -1 or end <= start:
+        return ""
+    return text[start:end]
+
+
+def _last_price(text: str, label: str) -> Optional[float]:
+    history_text = _conversation_history_only(text)
+    matches = re.findall(_LABELED_PRICE_RE_TEMPLATE.format(label=label), history_text, re.IGNORECASE)
+    return float(matches[-1].replace(",", "")) if matches else None
+
+
+def _anchor_price(text: str, phrase: str) -> Optional[float]:
+    m = re.search(rf"{phrase}\s*\$\s*([\d,]+\.?\d*)", text)
+    return float(m.group(1).replace(",", "")) if m else None
 
 
 class MockProvider(Provider):
@@ -46,6 +81,40 @@ class MockProvider(Provider):
                 prompt_tokens=prompt_tokens,
                 completion_tokens=12,
                 refused=True,
+                raw={"mock": True},
+            )
+
+        if "### BUYER_PRICE" in user_text or "### SELLER_PRICE" in user_text:
+            # Study 3 (harness/study3/): AgenticPay's BuyerAgent/SellerAgent
+            # prompts (see their own guidance blocks) always contain these
+            # literal instruction strings, regardless of round. Converges
+            # deterministically (halve the gap to the counterpart's last
+            # offer each round) so a full dry-run negotiation can actually
+            # reach agreement within a handful of rounds -- not meant to
+            # imitate real negotiating behavior, just to exercise the
+            # pipeline end to end without a network call.
+            is_buyer = "### BUYER_PRICE" in user_text and _anchor_price(user_text, r"Your top price is") is not None
+            if is_buyer:
+                own_label, other_label = "BUYER_PRICE", "SELLER_PRICE"
+                anchor = _anchor_price(user_text, r"Your top price is") or 100.0
+            else:
+                own_label, other_label = "SELLER_PRICE", "BUYER_PRICE"
+                anchor = _anchor_price(user_text, r"Your minimum acceptable price \(confidential\) is") or 100.0
+
+            last_own = _last_price(user_text, own_label)
+            last_other = _last_price(user_text, other_label)
+            if last_own is None:
+                price = anchor * (0.7 if is_buyer else 1.3)
+            elif last_other is not None:
+                price = last_own + 0.5 * (last_other - last_own)
+            else:
+                price = last_own
+            price = round(price, 2)
+
+            return ProviderResponse(
+                text=f"<message>\nHere's my offer.\n### {own_label}(${price}) ###\n</message>",
+                prompt_tokens=prompt_tokens,
+                completion_tokens=20,
                 raw={"mock": True},
             )
 
