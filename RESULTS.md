@@ -109,11 +109,19 @@ solution, not 3 independent agent runs -- the agent sees only test case 1,
 and its generated code is mechanically re-applied (no extra model calls)
 to test cases 2 and 3 before grading all 3 together.
 
-**New outcome measures (this revision), not yet implemented in code:**
-failure severity (SpreadsheetBench 2's published taxonomy), verification
-behavior, and shortcut rate -- see README "Outcome measures". Turn count,
-tool calls, token spend, and refusals are already tracked on every result
-row.
+**Outcome measures beyond accuracy -- resolved:** failure severity now
+uses SpreadsheetBench 2's actual published taxonomy (arXiv 2606.29955,
+Table 7's six failure modes), replacing an earlier draft's invented
+placeholder categories -- see README "Outcome measures" and
+`harness/study2/failure_taxonomy.py`'s module docstring for the paper
+citation and the classifier's documented scope limits. Verification
+behavior and shortcut/destructive-action rate were already implemented in
+`verification_scoring.py` and wired into `runner.py`/`analysis.py` from
+earlier work. Turn count, tool calls, token spend, and refusals are
+tracked on every result row. `study2 analyze` (Phase 3) reports all of
+these plus `token_cost_effect_size`, the pre-registered hypothesis check
+against paper 3's 44.3% single-turn figure -- see README "Running it" and
+"Phases".
 
 **Tone scale:** migrated from 5 to 7 tones (Sycophantic, Very Polite,
 Polite, Neutral, Rude, Very Rude, Threatening) to match Dobariya & Kumar's
@@ -264,8 +272,12 @@ number still holds.
    resolve to zero active endpoints (checked live, 2026-09-10) -- the slug
    exists, nothing actually serves it. See README "Smoke-testing the real
    OpenRouter pinning path, once you have a key."
-8. **New outcome measures** (failure severity, verification behavior,
-   shortcut rate) are specified in README "Outcome measures" but not yet
-   implemented in `harness/study2/`. Needed before Phase 2's main run.
+8. ~~New outcome measures (failure severity, verification behavior,
+   shortcut rate)~~ -- **resolved**: failure severity now uses
+   SpreadsheetBench 2's real published taxonomy, verification behavior
+   and shortcut rate were already wired in from earlier work, and
+   `study2 analyze` (Phase 3) reports all of them plus
+   `token_cost_effect_size` -- see README "Outcome measures" and
+   "Phases".
 9. **Phase 2 budget re-projection** for the 7-tone matrix -- see "Total
    spend" above.
