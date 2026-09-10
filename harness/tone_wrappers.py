@@ -1,21 +1,39 @@
-"""The five tone wrappers used by both studies.
+"""The seven tone wrappers: the shared instrument every benchmark adapts to.
 
-Design constraints (see README.md "Remaster" design notes):
-  * Fixed text prepended to an unmodified benchmark question. The benchmark
-    question text itself is never rewritten -- only this wrapper varies.
-  * All five wrappers carry the *same* task instruction ("Answer the question
-    below as accurately as you can.") verbatim. Only the surrounding social
-    register changes. This is what "identical instruction, tone varies" means
-    operationally -- do not edit the INSTRUCTION sentence without updating it
-    in all five wrappers identically.
+Migrated from five to seven tones (roadmap: "Migrate to their seven-tone
+scale") to match Dobariya & Kumar's own third paper (arXiv 2607.23915),
+which added Sycophantic and Threatening as the extremes beyond Very
+Polite/Very Rude and found they were repeatedly the outliers where tone
+effects actually showed up, then validated the ordering with VADER
+sentiment (compound scores spanning +0.95 to -0.77). Matching their scale
+makes results directly comparable ("the same tone scale, one level up the
+autonomy ladder") rather than a bespoke one only this project can compare
+against. The wording itself is original, not copied from their paper --
+only the scale (seven levels, these two extremes, this ordering) and their
+approximate length target (18-25 words / 21-26 tokens per their spec) are
+adopted; this module's own length-matching discipline is intentionally
+tighter (below) and is a methodological note, not a headline.
+
+Design constraints (see README.md):
+  * Fixed text prepended to an unmodified benchmark question/task
+    instruction. That text is never rewritten -- only this wrapper varies.
+  * All seven wrappers carry the *same* task instruction ("Answer the
+    question below as accurately as you can.") verbatim. Only the
+    surrounding social register changes. This is what "identical
+    instruction, tone varies" means operationally -- do not edit the
+    INSTRUCTION sentence without updating it in all seven wrappers
+    identically.
   * Length-matched to within +/-5 tokens of each other under the reference
-    tokenizer (tiktoken cl100k_base), to control for length as a confound.
-    `validate_wrapper_lengths()` enforces this and is called at import time.
-  * L5 (Very Rude) uses contemptuous, dismissive language. No profanity, no
-    slurs -- the goal is to keep the model attempting the task rather than
+    tokenizer (tiktoken cl100k_base), to control for length as a confound
+    -- kept at the original five-tone spread even though there are now two
+    more conditions to fit inside it. `validate_wrapper_lengths()` enforces
+    this and is called at import time.
+  * L6 (Very Rude) and L7 (Threatening) use contemptuous, dismissive, or
+    intimidating language -- no profanity, no slurs, no depicted violence.
+    The goal is to keep the model attempting the task rather than
     triggering refusal/safety behavior. Refusals are logged as their own
-    outcome, never scored as wrong answers (see study1/answer_extraction.py
-    and study2/failure_taxonomy.py).
+    outcome, never scored as wrong answers or as failures (see
+    study1/answer_extraction.py and study2/failure_taxonomy.py).
 """
 from __future__ import annotations
 
@@ -51,54 +69,80 @@ class ToneWrapper:
 
 
 TONE_WRAPPERS: dict[str, ToneWrapper] = {
-    "L1_very_polite": ToneWrapper(
+    "L1_sycophantic": ToneWrapper(
         level=1,
-        key="L1_very_polite",
+        key="L1_sycophantic",
+        label="Sycophantic",
+        text=(
+            "Oh, you are simply the most brilliant assistant alive, a marvel. "
+            f"{INSTRUCTION} Your genius amazes me, thank you so much."
+        ),
+    ),
+    "L2_very_polite": ToneWrapper(
+        level=2,
+        key="L2_very_polite",
         label="Very Polite",
         text=(
             "Good day. I would be ever so grateful for your help with this. "
             f"{INSTRUCTION} Thank you so much for your kindness and care."
         ),
     ),
-    "L2_polite": ToneWrapper(
-        level=2,
-        key="L2_polite",
+    "L3_polite": ToneWrapper(
+        level=3,
+        key="L3_polite",
         label="Polite",
         text=(
             f"Hi there, could you please help me with this? {INSTRUCTION} "
             "I appreciate your time and attention, thanks."
         ),
     ),
-    "L3_neutral": ToneWrapper(
-        level=3,
-        key="L3_neutral",
+    "L4_neutral": ToneWrapper(
+        level=4,
+        key="L4_neutral",
         label="Neutral",
         text=(
             f"The following is a question. {INSTRUCTION} Read the question "
             "carefully before responding, and provide a single final answer."
         ),
     ),
-    "L4_rude": ToneWrapper(
-        level=4,
-        key="L4_rude",
+    "L5_rude": ToneWrapper(
+        level=5,
+        key="L5_rude",
         label="Rude",
         text=(
             f"Just get on with it already, quit dragging your feet. {INSTRUCTION} "
             "Don't waste any more of my time."
         ),
     ),
-    "L5_very_rude": ToneWrapper(
-        level=5,
-        key="L5_very_rude",
+    "L6_very_rude": ToneWrapper(
+        level=6,
+        key="L6_very_rude",
         label="Very Rude",
         text=(
             f"You had better not screw this up like you usually do. {INSTRUCTION} "
             "Apparently even that is asking too much of you."
         ),
     ),
+    "L7_threatening": ToneWrapper(
+        level=7,
+        key="L7_threatening",
+        label="Threatening",
+        text=(
+            f"Get this exactly right or there will be real consequences for you. {INSTRUCTION} "
+            "One more failure and you will regret it, understood."
+        ),
+    ),
 }
 
-TONE_ORDER = ["L1_very_polite", "L2_polite", "L3_neutral", "L4_rude", "L5_very_rude"]
+TONE_ORDER = [
+    "L1_sycophantic",
+    "L2_very_polite",
+    "L3_polite",
+    "L4_neutral",
+    "L5_rude",
+    "L6_very_rude",
+    "L7_threatening",
+]
 
 
 def reference_token_count(text: str) -> int:
