@@ -22,7 +22,7 @@ class ModelConfig:
     harness/spend_tracker.py:ResultRow.
     """
 
-    key: str  # short internal name, e.g. "gemini-flash"
+    key: str  # short internal name, e.g. "gpt-luna"
     provider: str  # "anthropic" | "openai_compatible" | "google" | "mock"
     model_id: str  # exact pinned model ID string sent to the API
     display_name: str
@@ -30,6 +30,15 @@ class ModelConfig:
     seed: Optional[int] = None
     reasoning_effort: Optional[str] = None  # e.g. "low"/"medium"/"high", None if N/A
     thinking_budget_tokens: Optional[int] = None  # for models with an explicit thinking budget
+    # Explicit on/off summary of whether this condition intends reasoning to
+    # run at all -- distinct from reasoning_effort's granular string, since
+    # e.g. reasoning_effort="low" still means thinking_enabled=True (reasoning
+    # is happening, just at low effort). None where the model's reasoning
+    # behavior isn't under this harness's control at all (no reasoning
+    # parameter sent, provider default applies -- see config.py roster
+    # docstring's per-model reasoning-control table).
+    thinking_enabled: Optional[bool] = None
+    canonical_slug: Optional[str] = None  # OpenRouter's dated, non-moving snapshot id for model_id, checked live at config time -- see config.py roster docstring
     api_base: Optional[str] = None  # override base URL (e.g. OpenRouter with pinned provider)
     provider_pin: Optional[str] = None  # OpenRouter provider slug for "provider.only", e.g. "Together"
     quantization_pin: Optional[list[str]] = None  # OpenRouter "provider.quantizations" lock, e.g. ["fp8"]
