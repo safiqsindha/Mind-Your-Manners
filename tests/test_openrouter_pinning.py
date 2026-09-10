@@ -4,11 +4,14 @@ with a served-provider assertion; item 4: response-cache disabled and
 asserted off; item 5: caching/latency instrumentation on every call).
 
 All HTTP is mocked -- no network, no API key needed. Verified request/response
-field names (provider.only/quantizations, openrouter_metadata.endpoints,
-X-OpenRouter-Cache*, usage.prompt_tokens_details.cached_tokens, usage.cost)
-came from OpenRouter's own docs, not guessed -- see
-harness/providers/openai_compatible.py's module docstring and
-harness/config.py's QUANTIZATION PIN section for the verification trail.
+field names (provider.only/quantizations, X-OpenRouter-Cache*,
+usage.prompt_tokens_details.cached_tokens, usage.cost) came from
+OpenRouter's own docs. `openrouter_metadata.endpoints.available` (NOT
+`.endpoints`, despite what an earlier version of this file and of
+openai_compatible.py assumed from docs) was corrected against a real
+live response instead -- see openai_compatible.py's module docstring
+"CORRECTED 2026-09-10" note and test_matches_real_live_response_shape
+below, which pins the actual captured JSON so this can't silently regress.
 """
 from __future__ import annotations
 
@@ -57,7 +60,11 @@ def _ok_body(served_provider="Nebius", cached_tokens=0, reasoning_tokens=0, cost
         "usage": usage,
         "openrouter_metadata": {
             "endpoints": {
-                "endpoints": [
+                # Real key, confirmed live 2026-09-10 -- see
+                # openai_compatible.py's module docstring "CORRECTED"
+                # note. Was wrongly "endpoints" here (and in the code)
+                # before that.
+                "available": [
                     {"provider": "DeepInfra", "selected": False},
                     {"provider": served_provider, "selected": True},
                 ]
@@ -156,6 +163,49 @@ def test_served_provider_match_succeeds_and_is_recorded(mock_post):
     provider = OpenAICompatibleProvider(api_key="k")
     response = provider.complete(PINNED_MODEL, "sys", [{"role": "user", "content": "hi"}])
     assert response.served_provider == "Nebius"
+
+
+# Real response body, captured live 2026-09-10 via a direct curl replicating
+# this harness's exact pinned request against nex-agi/nex-n2.5-pro:free
+# (trimmed to the fields this code path reads). This is what caught the
+# "endpoints.endpoints" vs "endpoints.available" bug -- pinned here as a
+# literal fixture, not reconstructed by hand, so a regression to the wrong
+# key shape fails this test against the actual shape OpenRouter sends,
+# not against a mock built from the same wrong assumption as the bug.
+REAL_LIVE_PINNED_RESPONSE_BODY = {
+    "id": "gen-1789054151-qshwPuRko7zoc8YozB1U",
+    "model": "nex-agi/nex-n2.5-pro:free",
+    "provider": "Nex AGI",
+    "choices": [{"finish_reason": "stop", "message": {"role": "assistant", "content": "OK"}}],
+    "usage": {
+        "prompt_tokens": 15,
+        "completion_tokens": 5,
+        "total_tokens": 20,
+        "cost": 0,
+        "prompt_tokens_details": {"cached_tokens": 0},
+        "completion_tokens_details": {"reasoning_tokens": 1},
+    },
+    "openrouter_metadata": {
+        "requested": "nex-agi/nex-n2.5-pro:free",
+        "strategy": "direct",
+        "summary": "available=1, selected=Nex AGI",
+        "endpoints": {
+            "total": 1,
+            "available": [
+                {"provider": "Nex AGI", "model": "nex-agi/nex-n2.5-pro-20260907:free", "selected": True}
+            ],
+        },
+    },
+}
+
+
+@patch("harness.providers.openai_compatible.requests.post")
+def test_matches_real_live_response_shape(mock_post):
+    model = replace(PINNED_MODEL, provider_pin="Nex AGI")
+    mock_post.return_value = _fake_response(json_body=REAL_LIVE_PINNED_RESPONSE_BODY)
+    provider = OpenAICompatibleProvider(api_key="k")
+    response = provider.complete(model, "sys", [{"role": "user", "content": "hi"}])
+    assert response.served_provider == "Nex AGI"
 
 
 @patch("harness.providers.openai_compatible.requests.post")
