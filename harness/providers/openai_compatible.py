@@ -128,8 +128,17 @@ API_KEY_ENV_BY_BASE = {
 # OpenRouter's API doesn't expose an idempotency key to prevent this;
 # 429 has no such risk (rejected before any generation happens).
 RETRYABLE_STATUS_CODES = {408, 429, 502, 503, 504}
-MAX_RETRIES = 4  # up to 4 retries (5 attempts total) per call
-RETRY_BACKOFF_BASE_S = 2.0  # exponential: 2s, 4s, 8s, 16s if no Retry-After header
+# Raised 4 -> 6 on evidence, not preference: Qwen's validation gate died twice
+# in a row on HTTP 429 from Alibaba's shared pool, having spent its whole
+# backoff budget (2+4+8+16 = 30s). OpenRouter's own remedy text for that error
+# is "retry shortly", and Qwen is pinned to a single available endpoint, so
+# there is nothing to fail over to -- 30s was simply mis-sized for the
+# condition. Six retries give 2+4+8+16+30+30 = 90s. Deliberately not larger:
+# past roughly a minute and a half a saturated pool is not going to clear
+# within one call, and the run should surface that rather than hide it in
+# latency.
+MAX_RETRIES = 6  # up to 6 retries (7 attempts total) per call
+RETRY_BACKOFF_BASE_S = 2.0  # exponential: 2s, 4s, 8s, 16s, then capped at 30s
 RETRY_BACKOFF_CAP_S = 30.0
 
 
