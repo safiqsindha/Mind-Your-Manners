@@ -33,6 +33,17 @@ class ModelConfig:
     api_base: Optional[str] = None  # override base URL (e.g. OpenRouter with pinned provider)
     provider_pin: Optional[str] = None  # OpenRouter provider slug for "provider.only", e.g. "Together"
     quantization_pin: Optional[list[str]] = None  # OpenRouter "provider.quantizations" lock, e.g. ["fp8"]
+    # Explicit, auditable escape hatch from the "quantization_pin is
+    # mandatory whenever provider_pin is set" rule -- set True ONLY after
+    # checking the pinned provider's real endpoint entry (GET
+    # /api/v1/models/{id}/endpoints) and confirming it reports no discrete
+    # "quantization" value. Verified true for every first-party/proprietary
+    # API provider checked so far (OpenAI, Google AI Studio, Alibaba) --
+    # they simply don't expose this field, on any of their listed pricing
+    # tiers, so there is no ambiguity for provider.only to leave unresolved
+    # in the first place. Never set this to unblock a model you haven't
+    # actually checked.
+    quantization_not_exposed: bool = False
     input_price_per_1m: float = 0.0  # USD, for spend tracking
     output_price_per_1m: float = 0.0  # USD, for spend tracking
     max_tokens: int = 1024
