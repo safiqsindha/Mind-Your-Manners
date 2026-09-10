@@ -300,7 +300,8 @@ python -m harness.cli --live study2 validation-gate \
 python -m harness.cli --live study2 pilot \
   --models gpt-luna --n-tasks 30 --single-round
 
-# Phase 2: main run -- four models, multi-round agentic, 3 trials/task/tone
+# Phase 2: main run -- four models, 50 tasks, 7 tones, 3 trials/task/tone,
+# multi-round agentic with execution feedback, thinking enabled, temperature 0
 python -m harness.cli --live study2 core --n-trials 3
 
 # Phase 3: analysis -- bootstrapped accuracy CI, severity breakdown,
@@ -410,8 +411,12 @@ batch).
 single-round setting. Purpose is pipeline validation and real token logs,
 not results.
 
-**Phase 2 -- main run.** Four models, multi-round agentic setting with
-code execution feedback, three trials per task per tone.
+**Phase 2 -- main run.** Four models, 50 tasks, all seven tones, three
+trials per task per tone, multi-round agentic setting with code execution
+feedback, thinking enabled (per model -- see "The thinking arm"),
+temperature 0 (CLI default `study2 core --n-tasks 50` matches this; see
+"The thinking arm" above for the separate Luna-only calibration arm run
+alongside it, not instead of it).
 
 **Phase 3 -- analysis and writeup.** Effect sizes with item-clustered
 bootstrap CIs. Report the null plainly if it's a null. `study2 analyze`
