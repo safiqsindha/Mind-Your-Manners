@@ -198,6 +198,65 @@ Run `pytest` for the test suite (all pass against the mock provider, no
 network/keys required beyond `datasets`' HF pull in a couple of dataset
 tests being skippable offline).
 
+## Single provider path: OpenRouter, and how pinning is enforced
+
+Every target model routes through OpenRouter on one API key -- no
+direct-provider integrations (`harness/providers/openai_compatible.py`'s
+`API_KEY_ENV_BY_BASE` still lists DeepSeek/DashScope's direct endpoints, but
+nothing in the roster points `api_base` at them anymore). Free-tier
+OpenRouter endpoints (`:free` model slugs) are for debugging/pilots only --
+never route a real study rollout through one, and never route rollouts
+through a flat-rate coding-agent subscription (a fixed monthly plan has no
+meaningful per-call cost to log against the budget caps below).
+
+Pinning a model to a specific backend requires all three of the following
+together, sent as one `provider` object -- `order` alone is a priority
+hint, not a pin, since OpenRouter can still fall back elsewhere:
+
+- `provider.only` -- hard allow-list, exactly the pinned provider
+- `provider.allow_fallbacks: false` -- forbids falling back off that list
+- `provider.quantizations` -- locks precision, so the pinned provider can't
+  quietly serve a lower-precision variant of the model
+
+Set both `ModelConfig.provider_pin` and `ModelConfig.quantization_pin` for
+any OpenRouter-routed model -- the provider layer raises `ProviderError`
+before making a call if only one is set (see `harness/config.py`'s
+`LLAMA_70B` for a worked example, including the endpoint-verification trail
+for why it's pinned to Nebius rather than Together: Together's OpenRouter
+endpoint doesn't report a discrete quantization, so it can't satisfy the
+`quantizations` lock).
+
+**The pin is asserted, not assumed.** Every OpenRouter call requests
+`X-OpenRouter-Metadata: enabled` and reads the actual serving provider back
+from `openrouter_metadata.endpoints.endpoints[].selected` (there is no
+provider field on the plain chat-completion response) -- a mismatch, or a
+response with no metadata to check, raises `ProviderPinViolation` and halts
+the run rather than silently mixing backends. The served provider is
+recorded on every result row (`ResultRow.served_provider`).
+
+**OpenRouter's response cache is disabled and asserted off, not just left
+at its default.** This is a separate mechanism from provider-side prompt
+caching (`usage.prompt_tokens_details.cached_tokens`, see below) -- it can
+return a complete previously-computed response for an identical request,
+zeroing out that call's token counts. Every OpenRouter call sends
+`X-OpenRouter-Cache: false`; a response carrying
+`X-OpenRouter-Cache-Status: HIT` raises `ResponseCacheViolation` and halts
+the run, since a cached hit would silently destroy the trial-level variance
+estimates this harness's repeated-trials design depends on.
+
+**Caching and cost instrumentation is recorded on every result row**
+(`harness/spend_tracker.py:ResultRow`): `prompt_tokens`, `completion_tokens`,
+`reasoning_tokens`, `cached_tokens` (provider-side prompt-cache hits --
+measured, not designed around; Study 1's prompts are short enough that this
+is expected to read zero throughout, but it's reported either way rather
+than assumed), wall-clock `latency_s`, and `cost_usd` (prefers OpenRouter's
+own billed `usage.cost` when present, since it reflects what was actually
+charged rather than this file's static price table). See
+`tests/test_openrouter_pinning.py` for the enforcement behavior above,
+verified against mocked HTTP responses shaped like OpenRouter's own
+documented request/response schema (checked directly against
+`openrouter.ai/docs`, not guessed, before writing the code).
+
 ## Before spending real money
 
 1. Re-verify every `model_id` in `harness/config.py` against OpenRouter's

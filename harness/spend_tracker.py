@@ -56,6 +56,8 @@ class ResultRow:
     extracted_answer: Optional[str]
     is_correct: Optional[bool]
     timestamp: float
+    cached_tokens: int = 0  # usage.prompt_tokens_details.cached_tokens -- measure only, see config.py
+    served_provider: Optional[str] = None  # actual OpenRouter backend that served this call
     raw_response: dict[str, Any] = field(default_factory=dict)
     extra: dict[str, Any] = field(default_factory=dict)
 
@@ -69,6 +71,13 @@ def compute_cost_usd(model: ModelConfig, response: ProviderResponse) -> float:
     reported = response.raw.get("total_cost_usd")
     if reported is not None:
         return float(reported)
+    # OpenRouter reports its own actually-billed cost per call
+    # (usage.cost) -- prefer that over our static price table too, since
+    # it reflects what was really charged rather than a snapshot that can
+    # drift (see harness/config.py's VERIFY-table caveat).
+    usage = response.raw.get("usage") or {}
+    if isinstance(usage, dict) and usage.get("cost") is not None:
+        return float(usage["cost"])
     input_cost = (response.prompt_tokens / 1_000_000) * model.input_price_per_1m
     output_cost = ((response.completion_tokens + response.reasoning_tokens) / 1_000_000) * model.output_price_per_1m
     return input_cost + output_cost
