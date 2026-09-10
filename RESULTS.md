@@ -82,12 +82,56 @@ unmodified input against the answer fails all 3, as expected. A full
 mock-provider run through `run_condition_batch` (2 real tasks × 5 tone
 levels, real cloned repo, real grader) completes without error.
 
-**Known gap, discovered while verifying:** grading requires formulas to be
-recalculated first (LibreOffice headless conversion), and LibreOffice's
-headless conversion is broken in this build's own container — it fails
-even on the benchmark's own known-good sample files. This must be
-confirmed working in whatever environment runs a live batch before any
-formula-based task's grade can be trusted.
+**Gating check results (2026-09-10):** ran the full sample set's answer
+files against themselves through `compare_workbooks()`, unmodified —
+**199/200 pass**. The one failure is a real bug in the *authors'* own
+`evaluation.py` (their `answer_position.split(',')` doesn't strip
+whitespace, so a multi-range position with a space after the comma
+resolves to a malformed cell reference and raises `AttributeError`) — not
+something to patch in their code, and this harness's grader already fails
+that one test case gracefully (records it as a failed comparison) rather
+than crashing the batch.
+
+Grading formula-bearing tasks requires recalculating cached values first
+(LibreOffice headless conversion, same as their own `open_spreadsheet.py`).
+This was **broken in this build's container and is now fixed**, along with
+two further bugs the fix process surfaced:
+
+1. `libreoffice-calc`/`libreoffice-writer` were never actually installed —
+   only `libreoffice-core` was present, despite `soffice` being on PATH.
+   Confirmed via `strace`: a document-loader shared library
+   (`libswdlo.so`) was `ENOENT`. `apt-get install libreoffice-calc
+   libreoffice-writer` fixed it.
+2. This repo's own `recalculate_with_libreoffice()` converted a file to
+   itself (same source and output directory), which makes LibreOffice
+   print "Overwriting: ..." then silently fail the actual write to
+   **stderr** with **exit code 0** — the old success check only looked at
+   stdout and the return code, so it reported success while leaving the
+   file un-recalculated. Confirmed directly: recalculating `=A1*A2` this
+   way reported `ok=True` but the cell still read `None` afterward. Fixed
+   by converting into a temp directory and moving the result back, the
+   same approach their own `open_spreadsheet.py:just_open_libreoffice()`
+   uses.
+3. The grader only recalculated the *model's* output, never the
+   ground-truth answer file — and SpreadsheetBench's own answer files can
+   themselves contain uncached formulas. Confirmed on a real task (99-24):
+   its answer file's own cell A33 reads `None` unrecalculated but
+   recalculates to `32`, meaning a perfectly correct model output would
+   have failed comparison for no fault of its own. Fixed by recalculating
+   answer files too, memoized once per file (not once per grading call, to
+   avoid re-running LibreOffice on the same immutable ground truth
+   thousands of times across a run).
+
+After all three fixes: the 3 tasks that failed in a 40-task recalculation
+subset (99-24, CF_6540, 44389 — all hit bug #3) now pass individually
+(3/3 test cases each), and `tests/test_grader_recalculation.py` locks in
+both the fix and the memoization behavior against regressions. The full
+200-task gold-vs-itself recalculation re-run has now completed:
+**199/200 pass.** The one remaining failure (task 56637) is the
+whitespace-in-multi-range bug in the authors' own `evaluation.py`
+described above (not something to patch in their code), and this
+harness's grader already fails that single test case gracefully rather
+than crashing the batch.
 
 The agent loop (single-round and multi-round ReAct with sandboxed Python
 execution against the workbook) is built and tested end-to-end (mock
@@ -108,53 +152,80 @@ to test cases 2 and 3 before grading all 3 together.
 ## Total spend
 
 **$0.00 against the study's target-model budget caps.** No target model
-(Gemini/DeepSeek/Qwen/Llama/frontier spot-check) has been called.
+has been called against the current roster (GPT-5.6 Luna, Gemini 3.8 Flash,
+Gemini 3.1 Flash-Lite, DeepSeek V4 Flash, Qwen3.8 Flash -- see
+`harness/config.py` module docstring for the roster rationale and the
+per-model OpenRouter verification table, checked 2026-09-10). The earlier
+roster (Gemini 2.5 Flash / DeepSeek-V3 / Qwen2.5-72B / Llama 3.3 70B) has
+been replaced; Llama is dropped entirely, not carried forward as a spare.
 
 Separately, **~$0.28** was spent on real-inference *pipeline* smoke tests
 using `harness/providers/claude_cli_provider.py` (local `claude` CLI,
 session-authenticated) -- a handful of exploratory calls plus a 2-item x
 5-tone-level run through the actual Study 1 Part B runner, confirming the
 wrapper -> real call -> extraction -> scoring -> cost-tracking path works
-end-to-end. This is not counted against the $50/$15/$40/$150 caps below,
-since it used a non-target model purely to validate plumbing -- see
-README.md "Smoke-testing with real inference."
+end-to-end. This is not counted against the caps below, since it used a
+non-target model purely to validate plumbing -- see README.md
+"Smoke-testing with real inference."
 
 Per-call spend logging (`results/raw/*.jsonl`) and a running total
 (`results/spend_log.jsonl`) are wired up and budget-capped
 (`harness/spend_tracker.py:BudgetExceeded`) for whenever a live target-model
-run starts:
+run starts. `--live` also prints a rough spend projection and requires
+confirmation before the first paid call in any run (`--yes` skips the
+prompt for scripted/CI use):
 
 | Phase | Cap |
 |---|---|
-| Study 1 (Part A + Part B combined) | $50 |
-| Study 2 pilot | $15 |
-| Study 2 core | $40 |
-| Study 2 frontier spot-check | $150 |
+| Study 1 (soft warning) | $50 |
+| Study 1 (hard stop) | $75 |
+| Study 2 pilot | $20 |
+| Study 2 core | $70 |
+| Study 2 frontier spot-check (optional, separate) | $150 |
+| Study 3 (bilateral, 100 negotiations/cell) | $100 |
 
 ## What's needed to actually run this
 
-1. **API keys** for at least: Google (Gemini Flash-tier), DeepSeek, Qwen
-   (DashScope), OpenRouter (Llama/Gemma-tier) — see `.env.example`. Only
+1. **An OpenRouter API key.** All five roster models route through
+   OpenRouter on one key (see README.md "Single provider path") — only
    remaining hard blocker that requires the repo owner specifically.
 2. ~~The Mind Your Tone 250-prompt dataset~~ — **resolved**: found via the
    paper's AMCIS 2026 full-paper extension, `ensure_mind_your_tone_repo()`
    clones it automatically.
 3. ~~A cloned `SpreadsheetBench` checkout and grader sanity check~~ —
    **resolved**: cloned, and the grader/dataset code was rewritten to match
-   the real repo (see "Study 2" above). One gap remains: LibreOffice's
-   formula recalculation is broken in this build's own environment —
-   confirm it works wherever a live batch actually runs.
+   the real repo (see "Study 2" above). LibreOffice's formula
+   recalculation, previously broken in this build's own environment, is
+   also now fixed (see git history) — still worth confirming
+   `libreoffice-calc`/`libreoffice-writer` are installed wherever a live
+   batch actually runs.
 4. ~~A better sandbox for Study 2's code execution~~ — **resolved**: real,
    tested network isolation via a Linux user+network namespace. Filesystem
    access is still unrestricted — a full container is still preferable
    where available.
-5. Re-verification of every model ID / price in `harness/config.py` against
-   current provider docs (flagged inline with `VERIFY` comments) — not yet
-   done.
+5. ~~Re-verification of every model ID / price in `harness/config.py`~~ —
+   **resolved for the current roster**: every model_id, price, and
+   provider pin was checked directly against OpenRouter's live catalog on
+   2026-09-10 (see `harness/config.py` module docstring). Re-run this
+   check if it's been more than a few weeks. **Caveat found while merging
+   the pinning-enforcement PR in:** the new mandatory triple-pin
+   (`provider.only` + `allow_fallbacks:false` + `provider.quantizations`,
+   item 6 below) requires `quantization_pin` on every model that sets
+   `provider_pin` — none of the 5 roster models below have it set yet, and
+   `DEEPSEEK_CURRENT`'s pin (`provider_pin="DeepSeek"`) does not match any
+   provider name OpenRouter's live endpoint list actually returns for
+   `deepseek/deepseek-v4-flash-0731` (checked directly, 2026-09-10 — see
+   git history for the merge that surfaced this). **This roster cannot
+   make a live call yet without a follow-up fix to both.**
 6. ~~`provider.only`/`allow_fallbacks`/`quantizations` enforcement, the
    served-provider assertion, response-cache-disable assertion, and
    caching/cost instrumentation~~ — **resolved**: implemented and tested
    against mocked OpenRouter responses (`harness/providers/openai_compatible.py`,
    `tests/test_openrouter_pinning.py`) — see README "Single provider path:
    OpenRouter, and how pinning is enforced." Not yet exercised against a
-   real OpenRouter call, since no key is available in this build.
+   real OpenRouter call, since no key is available in this build, and see
+   item 5's caveat above — the current roster doesn't satisfy it yet.
+7. Study 3 (AgenticPay negotiation) is designed and gating-checked (one
+   real negotiation run end-to-end against the actual AgenticPay code, via
+   a throwaway `claude` CLI adapter — see PR for details) but not yet
+   built as a harness module.
