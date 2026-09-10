@@ -339,6 +339,63 @@ and "Prior DeepSeek verification trail" step 4 for the full trail.
 preferred over Novita, relaxing this OpenRouter account's privacy
 settings at the URL above would make the original pin usable again.
 
+**THE ACTUAL BUG, found 2026-09-10 -- and a correction to everything
+above.** Every "genuine task difficulty" conclusion in the three entries
+above is **wrong**, and is retained rather than deleted because the way it
+went wrong is the useful part. The real cause was a path bug in
+`harness/study2/sandbox.py`: `execute_python_on_workbook()` launches its
+subprocess with `cwd=workdir`, but built the script path as
+`workdir / "_agent_code.py"` and passed it through *relative* when
+`workdir` was relative. The child then re-resolved that relative path
+against its own new cwd, producing a doubled path
+(`.../59196_t0/results/scratch/.../59196_t0/_agent_code.py`) that cannot
+exist. **Every sandbox execution in every Study 2 run failed with "can't
+open file" before executing a single line of model code.** The models were
+looping on an error they were never shown a way out of.
+
+Why it hid for so long, which is the transferable lesson: every test in
+the suite passed an absolute pytest `tmp_path`, while every real CLI run
+passes a relative `out_dir` (`results/...`). The tests and the real runs
+never exercised the same path shape, so a total, 100%-reproducible failure
+of the core execution path sat behind a fully green test suite. It also
+survived three rounds of *plausible* model-side explanations (turn budget
+too small, turn budget not communicated, reasoning effort too low), each
+of which fit the symptom well enough to be worth testing and none of which
+was the cause.
+
+What actually found it: adding `turn_diagnostics` to the persisted records
+(`runner.py`), so the stdout/stderr the model actually saw survives the
+run. Before that, those streams lived only in the in-memory `Trajectory`
+and were discarded on exit, which is why two prior live investigations
+could see *that* no output appeared but never *why*. The sandbox itself
+was first verified healthy in isolation (openpyxl and pandas both import,
+load, and save correctly under its resource limits) to rule it out as a
+whole before instrumenting -- the bug was in how it was *called*, not what
+it could do.
+
+**Result after the one-line fix** (`workdir`/`workbook_path` resolved to
+absolute; `tests/test_sandbox_paths.py` pins it with 5 regression tests
+that fail without it, deliberately in a separate file from
+`tests/test_sandbox.py` because that module is skipped wholesale when
+`unshare` is unavailable -- including on CI):
+
+| | before fix | after fix |
+|---|---|---|
+| Luna 5-task gate | **0/5** | **3/5 (60%)** |
+| Model calls consumed | 50 | 24 |
+| Tasks emitting `FINAL` | 1/5 (as prose) | 5/5 |
+| Turns to converge | never (hit limit) | 3-4 typical, 10 worst |
+| Gate cost | $0.043 | $0.029 |
+
+Cost fell 33% *while* accuracy rose, because trajectories now finish on
+success instead of burning the full budget on a dead end. Whether 60% is
+the right expected accuracy for `--expected-accuracy` is a question for
+the pilot; the point here is only that the floor effect was an artifact,
+not a finding. The `max_turns` 6->10 change is kept on post-fix evidence
+(4 of 5 tasks converge in 3-4 turns, but the 5th still uses all 10), and
+the turn-budget-awareness prompt is kept as sound on its own terms -- but
+neither was the fix, and RESULTS.md should not have implied otherwise.
+
 Per-call spend logging (`results/raw/*.jsonl`) and a running total
 (`results/spend_log.jsonl`) are wired up and budget-capped
 (`harness/spend_tracker.py:BudgetExceeded`) for whenever a live

@@ -115,7 +115,19 @@ def execute_python_on_workbook(code: str, workbook_path: Path, workdir: Path) ->
     """Runs `code` in a subprocess with WORKBOOK_PATH and OUTPUT_PATH
     pre-bound as variables. Convention: the agent's code should read
     WORKBOOK_PATH (openpyxl/pandas) and write its result to OUTPUT_PATH."""
-    workdir = Path(workdir)
+    # Both paths MUST be absolute before anything below uses them. The
+    # subprocess is launched with cwd=workdir, so any relative path handed to
+    # it is re-resolved against that new cwd rather than the harness's own.
+    # That silently doubled the script path (".../59196_t0/results/scratch/
+    # .../59196_t0/_agent_code.py") and made every single execution fail with
+    # "can't open file" before running one line of model code -- in every
+    # real run, since the CLI's out_dir is relative, while every test passed
+    # an absolute tmp_path and so never reproduced it. WORKBOOK_PATH is
+    # resolved for the same reason: it's injected into the child as a literal
+    # and read after the cwd change. See tests/test_sandbox.py's
+    # relative-path regression tests.
+    workdir = Path(workdir).resolve()
+    workbook_path = Path(workbook_path).resolve()
     workdir.mkdir(parents=True, exist_ok=True)
     output_path = workdir / "output.xlsx"
 

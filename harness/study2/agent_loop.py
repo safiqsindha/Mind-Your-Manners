@@ -57,21 +57,29 @@ from .sandbox import execute_python_on_workbook
 # prompt told the model the opposite ("reload it from a file you saved"),
 # which is actively wrong and would make the model discard earlier work
 # by design; caught in review before this shipped, not caught live.
-# TURN-BUDGET AWARENESS (added after a live re-run of the WORKBOOK_PATH
-# fix above still scored 0/5, even after doubling max_turns 6->10): every
-# one of those 5 tasks ran the *entire* turn budget without ever emitting
-# FINAL -- correctly loading/inspecting the real workbook every time (the
-# fix above worked), then never converging on a decision no matter how
-# many turns it got. Checked completion_tokens too: only 1/50 responses
-# were anywhere near the max_tokens cap, so that wasn't it either. The
-# system prompt never told the model its own turn budget, so it had no
-# way to pace itself toward committing -- it could always take "one more
-# look." AGENT_SYSTEM_PROMPT is now a function of max_turns so the stated
-# budget always matches the real one, with an explicit instruction to
-# save a best-effort answer well before the limit rather than refine
-# indefinitely; run_react_multi_round also appends "Turn N of max_turns"
-# to every Observation, not just the upfront mention, since a reminder
-# buried at the start of a long ReAct context is easy to lose track of.
+# TURN-BUDGET AWARENESS. Added after a live re-run still scored 0/5 even
+# with max_turns doubled 6->10: every task ran the entire budget without
+# ever emitting FINAL. The system prompt never told the model its own turn
+# budget, so it had no way to pace itself toward committing -- it could
+# always take "one more look." AGENT_SYSTEM_PROMPT is therefore a function
+# of max_turns so the stated budget always matches the real one, with an
+# explicit instruction to save a best-effort answer well before the limit;
+# run_react_multi_round also appends "Turn N of max_turns" to every
+# Observation, since a reminder given only once at the start of a long
+# ReAct context is easy to lose track of.
+#
+# CORRECTED 2026-09-10, and worth stating plainly because the original
+# note here asserted the opposite: that 0/5 was NOT caused by a pacing
+# problem, and the earlier reading of it ("the model loads the workbook
+# correctly every time, it just never converges") was wrong. The real
+# cause was a path bug in sandbox.py -- every execution died with "can't
+# open file" before running a single line of model code, so the model was
+# looping on an error it was never shown a way out of, and no turn budget
+# could have helped. Once that was fixed the same gate scored 3/5, with
+# tasks converging in 3-4 turns. This guidance is kept because it is
+# sound on its own terms and the post-fix trajectories do commit early
+# rather than drift, but it was never the thing standing between 0/5 and
+# a working run. See RESULTS.md for the full trail.
 def _agent_system_prompt(max_turns: int) -> str:
     commit_by = max(1, max_turns - 2)
     return f"""AGENT_REACT_MODE
@@ -278,11 +286,11 @@ def run_react_multi_round(
     workdir: Path,
     tone_level: str,
     trial: int,
-    max_turns: int = 10,  # was 6 -- see RESULTS.md "First live gates run against the real roster": after
-    # fixing the WORKBOOK_PATH prompt bug, Luna's live 5-task gate still scored 0/5, now hitting the
-    # turn limit mid-refinement rather than failing to find the file at all. Loosened as a deliberate
-    # tradeoff (more cost per trajectory) rather than assumed to be the fix -- re-verify against a real
-    # run before trusting this number; SpreadsheetBench tasks vary a lot in how many turns they need.
+    max_turns: int = 10,  # was 6. Raised while chasing a 0/5 gate that turned out to be sandbox.py's
+    # path bug, not a turn shortage (see _agent_system_prompt's CORRECTED note). Kept at 10 on the
+    # post-fix evidence rather than reverted: with execution actually working, 4 of 5 gate tasks
+    # converge in 3-4 turns, but the 5th still used all 10 -- so 10 is real headroom for the harder
+    # tail, and costs nothing on the tasks that finish early since the loop breaks on FINAL.
 ) -> Trajectory:
     traj = Trajectory(task_id=task_id, tone_level=tone_level, trial=trial)
     messages = [{"role": "user", "content": instruction}]

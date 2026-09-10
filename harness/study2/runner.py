@@ -113,6 +113,35 @@ def _has_formula(path: Optional[Path]) -> bool:
     return False
 
 
+# Truncated from the END: a Python traceback puts the actual exception type
+# and message on its last line, which is exactly the part worth keeping.
+_DIAG_TRUNCATE_CHARS = 800
+
+
+def _turn_diagnostics(traj: Trajectory) -> list[dict]:
+    """Per-turn execution outcome, persisted into the records file so a
+    failed trajectory can be diagnosed without re-running it.
+
+    Without this, the stdout/stderr the model actually saw exists only in
+    the in-memory Trajectory and is discarded when the process exits --
+    which is how two separate live investigations (Luna's 0/5 gate,
+    DeepSeek's 0/7 pilot) both ended up unable to explain *why* the
+    generated code never produced an output file without paying for the
+    whole run a second time. The sandbox itself was verified healthy
+    (openpyxl and pandas both import, load, and save correctly under its
+    resource limits), so the answer has to be in these streams.
+    """
+    return [
+        {
+            "turn": s.turn,
+            "had_code": s.code is not None,
+            "stdout": s.stdout[-_DIAG_TRUNCATE_CHARS:],
+            "stderr": s.stderr[-_DIAG_TRUNCATE_CHARS:],
+        }
+        for s in traj.steps
+    ]
+
+
 def run_condition_batch(
     models: list[ModelConfig],
     tasks: list[SpreadsheetTask],
@@ -190,6 +219,7 @@ def run_condition_batch(
                                 "n_turns": behavior.n_code_turns,
                                 "cost_usd": total_cost,
                                 "total_tokens": total_tokens,
+                                "turn_diagnostics": _turn_diagnostics(traj),
                             }
                         )
                         append_spend_log(
