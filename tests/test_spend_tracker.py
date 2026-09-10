@@ -45,7 +45,7 @@ def test_check_before_call_raises_before_spending(tmp_path: Path):
 
 
 def test_compute_cost_usd_matches_manual_calc():
-    model = MODELS_BY_KEY["gemini-flash"]
+    model = MODELS_BY_KEY["gpt-luna"]
     response = MockProvider().complete(model, "sys", [{"role": "user", "content": "2+2? (A) 3 (B) 4"}])
     cost = compute_cost_usd(model, response)
     expected = (response.prompt_tokens / 1_000_000) * model.input_price_per_1m + (
