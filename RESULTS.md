@@ -456,6 +456,40 @@ or re-pinning to Makora (fp4) -- the latter trades away the first-party
 endpoint this roster chose on vendor-fidelity grounds, so it is a design
 decision, not a fix to apply automatically.
 
+**200-task pipeline soak, 2026-09-10 -- clean, and it settles the no-op
+rate.** Every one of the 200 sample tasks was run end to end through the
+real CLI with the mock provider (no network, no spend, a few minutes).
+Purpose was not accuracy but survival: does the pipeline carry every task
+in the sample to a graded result?
+
+- **200/200 tasks completed, 0 crashes.** Dataset loading, sandbox
+  execution, generalization to test cases 2-3, and grading all held up
+  across the full diversity of real workbooks (including `.xlsm`, charts,
+  and files with unparseable headers).
+- **Only 8 turns produced any stderr at all, and all 8 were benign
+  `openpyxl` warnings** (unsupported extensions; "Cannot parse header or
+  footer so it will be ignored") -- not errors.
+- **17 of 200 tasks (8.5%) are passed by doing nothing**, confirming the
+  10% estimate taken from the first 40. The rate is not uniform: 11/77
+  (14%) of Sheet-Level Manipulation tasks are free versus 6/123 (5%) of
+  Cell-Level. Free ids: CF_6540, CF_8830, 532-3, CF_28766, CF_9945,
+  488-29, CF_13984, 48357, CF_11072, 31184, 58114, 53062, 48378, 534-40,
+  575-15, 494-13, 48608.
+- **183 tasks discriminate**, which is the pool a real gate sample should
+  be drawn from. The current gate takes the first 5 in file order, 2 of
+  which are free.
+- Sanity check on the measure itself: the mock provider passed 15 tasks
+  and beat the no-op floor on **0** of them. Its canned code writes
+  `'mock_result'` into A1 and saves, so it scores slightly *worse* than
+  doing nothing -- exactly what a no-op floor should show.
+
+This run was only possible after adding per-task error isolation: a single
+raised exception used to abort the whole gate and discard every completed
+task with it (Qwen's 5-task gate died that way twice). Over 200 tasks, or
+over a paid run, that converts a recoverable hiccup into total loss of
+work already paid for. `BudgetExceeded` is still re-raised, since a cap is
+a stop signal rather than a task-level failure.
+
 Per-call spend logging (`results/raw/*.jsonl`) and a running total
 (`results/spend_log.jsonl`) are wired up and budget-capped
 (`harness/spend_tracker.py:BudgetExceeded`) for whenever a live
