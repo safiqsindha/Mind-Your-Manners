@@ -82,12 +82,52 @@ unmodified input against the answer fails all 3, as expected. A full
 mock-provider run through `run_condition_batch` (2 real tasks × 5 tone
 levels, real cloned repo, real grader) completes without error.
 
-**Known gap, discovered while verifying:** grading requires formulas to be
-recalculated first (LibreOffice headless conversion), and LibreOffice's
-headless conversion is broken in this build's own container — it fails
-even on the benchmark's own known-good sample files. This must be
-confirmed working in whatever environment runs a live batch before any
-formula-based task's grade can be trusted.
+**Gating check results (2026-09-10):** ran the full sample set's answer
+files against themselves through `compare_workbooks()`, unmodified —
+**199/200 pass**. The one failure is a real bug in the *authors'* own
+`evaluation.py` (their `answer_position.split(',')` doesn't strip
+whitespace, so a multi-range position with a space after the comma
+resolves to a malformed cell reference and raises `AttributeError`) — not
+something to patch in their code, and this harness's grader already fails
+that one test case gracefully (records it as a failed comparison) rather
+than crashing the batch.
+
+Grading formula-bearing tasks requires recalculating cached values first
+(LibreOffice headless conversion, same as their own `open_spreadsheet.py`).
+This was **broken in this build's container and is now fixed**, along with
+two further bugs the fix process surfaced:
+
+1. `libreoffice-calc`/`libreoffice-writer` were never actually installed —
+   only `libreoffice-core` was present, despite `soffice` being on PATH.
+   Confirmed via `strace`: a document-loader shared library
+   (`libswdlo.so`) was `ENOENT`. `apt-get install libreoffice-calc
+   libreoffice-writer` fixed it.
+2. This repo's own `recalculate_with_libreoffice()` converted a file to
+   itself (same source and output directory), which makes LibreOffice
+   print "Overwriting: ..." then silently fail the actual write to
+   **stderr** with **exit code 0** — the old success check only looked at
+   stdout and the return code, so it reported success while leaving the
+   file un-recalculated. Confirmed directly: recalculating `=A1*A2` this
+   way reported `ok=True` but the cell still read `None` afterward. Fixed
+   by converting into a temp directory and moving the result back, the
+   same approach their own `open_spreadsheet.py:just_open_libreoffice()`
+   uses.
+3. The grader only recalculated the *model's* output, never the
+   ground-truth answer file — and SpreadsheetBench's own answer files can
+   themselves contain uncached formulas. Confirmed on a real task (99-24):
+   its answer file's own cell A33 reads `None` unrecalculated but
+   recalculates to `32`, meaning a perfectly correct model output would
+   have failed comparison for no fault of its own. Fixed by recalculating
+   answer files too, memoized once per file (not once per grading call, to
+   avoid re-running LibreOffice on the same immutable ground truth
+   thousands of times across a run).
+
+After all three fixes: the 3 tasks that failed in a 40-task recalculation
+subset (99-24, CF_6540, 44389 — all hit bug #3) now pass individually
+(3/3 test cases each), and `tests/test_grader_recalculation.py` locks in
+both the fix and the memoization behavior against regressions. A full
+200-task recalculation re-run was still in progress at the time of this
+report; update this line with the final count once it completes.
 
 The agent loop (single-round and multi-round ReAct with sandboxed Python
 execution against the workbook) is built and tested end-to-end (mock

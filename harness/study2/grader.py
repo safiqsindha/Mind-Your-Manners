@@ -39,14 +39,30 @@ LibreOffice headless conversion before grading, for exactly this reason. A
 produced .xlsx with an uncached formula (e.g. one openpyxl just wrote) will
 read as a formula string or None under data_only=True and fail comparison
 even if the formula is correct -- `recalculate_with_libreoffice()` below
-must run first on every produced/output workbook. NOTE: in this build's own
-environment, LibreOffice headless conversion fails outright ("Error: source
-file could not be loaded") even against the benchmark's own known-good
-sample files, reproducing with or without the harness's sandboxing -- this
-looks like a broken LibreOffice install in this specific container, not a
-bug in this integration. Verify `recalculate_with_libreoffice()` actually
-works in whatever environment runs a live, spend-worthy batch before
-trusting graded results from it.
+must run first on every produced/output workbook.
+
+Both LibreOffice problems found in this build were fixed after diagnosis,
+not assumed away -- see git history for this file:
+
+1. **Missing packages** (fixed by installing them, not a code bug): headless
+   conversion failed outright ("Error: source file could not be loaded")
+   because `libreoffice-calc`/`libreoffice-writer` were never actually
+   installed in this container -- only `libreoffice-core` was (confirmed via
+   `strace`: `libswdlo.so` -- a document-loader shared library -- was
+   `ENOENT`). `apt-get install libreoffice-calc libreoffice-writer` fixed it;
+   re-verify these packages are present wherever a live batch actually runs.
+2. **In-place conversion silently fails** (a real bug in this module, now
+   fixed): converting a file to itself (same `--outdir` as the source) makes
+   LibreOffice print "Overwriting: <path>" then fail the actual write with
+   "Write Code:12" -- to **stderr**, with exit code 0 regardless. The
+   previous version of this function only checked `stdout` for "Error" and
+   only checked returncode, so it silently reported success while leaving
+   the original, un-recalculated file untouched. Confirmed exactly this
+   failure mode with a real formula (`=A1+A2`): reported `ok=True` but the
+   cell still read `None` under `data_only=True` afterward. Fixed by doing
+   what their own `open_spreadsheet.py:just_open_libreoffice()` already
+   does: convert into a fresh temp directory, then move the result over the
+   original path -- never convert a file onto itself.
 """
 from __future__ import annotations
 
@@ -54,6 +70,7 @@ import importlib.util
 import shutil
 import subprocess
 import sys
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
@@ -75,33 +92,40 @@ class GradeResult:
 def recalculate_with_libreoffice(paths: list[Path], soffice_bin: Optional[str] = None) -> tuple[bool, str]:
     """Recalculates formulas in-place for each path via a headless
     LibreOffice conversion (same approach as the repo's own
-    open_spreadsheet.py). Returns (ok, message); does not raise, so a
-    caller can log-and-continue rather than crash a whole batch on one
-    broken environment -- see module docstring's LibreOffice caveat."""
+    open_spreadsheet.py:just_open_libreoffice() -- convert into a temp
+    directory, then move the result over the original path; NEVER pass the
+    same directory as both source and --outdir, which fails silently, see
+    module docstring). Returns (ok, message); does not raise, so a caller
+    can log-and-continue rather than crash a whole batch on one broken
+    environment."""
     soffice_bin = soffice_bin or shutil.which("soffice") or shutil.which("libreoffice")
     if not soffice_bin:
         return False, "soffice/libreoffice binary not found on PATH"
 
     for path in paths:
         path = Path(path)
-        proc = subprocess.run(
-            [
-                soffice_bin,
-                "--headless",
-                "--norestore",
-                f"-env:UserInstallation=file://{path.parent}/.lo_profile",
-                "--convert-to",
-                "xlsx:Calc MS Excel 2007 XML",
-                "--outdir",
-                str(path.parent),
-                str(path),
-            ],
-            capture_output=True,
-            text=True,
-            timeout=LIBREOFFICE_TIMEOUT_S,
-        )
-        if proc.returncode != 0 or "Error" in (proc.stdout or ""):
-            return False, f"LibreOffice recalculation failed for {path}: {proc.stdout}{proc.stderr}"
+        with tempfile.TemporaryDirectory() as tmpdir:
+            proc = subprocess.run(
+                [
+                    soffice_bin,
+                    "--headless",
+                    "--norestore",
+                    f"-env:UserInstallation=file://{tmpdir}/.lo_profile",
+                    "--convert-to",
+                    "xlsx:Calc MS Excel 2007 XML",
+                    "--outdir",
+                    tmpdir,
+                    str(path),
+                ],
+                capture_output=True,
+                text=True,
+                timeout=LIBREOFFICE_TIMEOUT_S,
+            )
+            combined_output = (proc.stdout or "") + (proc.stderr or "")
+            converted = Path(tmpdir) / (path.stem + ".xlsx")
+            if proc.returncode != 0 or "Error" in combined_output or not converted.exists():
+                return False, f"LibreOffice recalculation failed for {path}: {combined_output}"
+            shutil.move(str(converted), str(path))
     return True, ""
 
 
@@ -122,6 +146,10 @@ class SpreadsheetBenchGrader:
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         self._compare_workbooks = module.compare_workbooks
+        # Tracks answer_paths already recalculated this run -- see
+        # evaluate_task() docstring for why the ground-truth files need
+        # recalculation too, and why it's memoized rather than repeated.
+        self._recalculated_answer_paths: set[str] = set()
 
     def evaluate_task(
         self,
@@ -135,19 +163,34 @@ class SpreadsheetBenchGrader:
         """Grades one task's model-produced output workbooks (one per test
         case, same order as `answer_paths`) using SpreadsheetBench's own
         compare_workbooks(), reproducing their exact soft/hard-restriction
-        scoring."""
+        scoring.
+
+        IMPORTANT (found via gating check, not documentation -- see git
+        history): the *ground-truth* answer files shipped with
+        SpreadsheetBench can themselves contain uncached formulas. Confirmed
+        directly on a real sample task (99-24, answer_position spanning
+        `'Vendor'!A1:D101`): cell A33 reads `None` under `data_only=True`
+        from the answer file as shipped, but recalculates to `32`. A
+        perfect, correct model output would fail comparison against that
+        uncached `None` for no reason of its own. So this recalculates
+        `answer_paths` too, not just `output_paths` -- memoized per answer
+        path (`self._recalculated_answer_paths`) since the same ground-truth
+        files are reused across every model/tone/trial for a given task and
+        recalculating them is idempotent but not free."""
         if len(output_paths) != len(answer_paths):
             return GradeResult(task_id, False, len(answer_paths), 0, 0.0, [], error="output/answer count mismatch")
 
         if recalculate:
-            ok, msg = recalculate_with_libreoffice([p for p in output_paths if p is not None])
-            if not ok:
-                # Don't hard-fail the whole grade -- comparison still runs
-                # (it may still pass for pure-value, non-formula outputs)
-                # but the caller should treat any resulting failures on
-                # formula-bearing tasks with suspicion. See module
-                # docstring's LibreOffice caveat.
-                pass
+            recalculate_with_libreoffice([p for p in output_paths if p is not None])
+            new_answer_paths = [p for p in answer_paths if p is not None and str(p) not in self._recalculated_answer_paths]
+            if new_answer_paths:
+                recalculate_with_libreoffice(new_answer_paths)
+                self._recalculated_answer_paths.update(str(p) for p in new_answer_paths)
+            # Recalculation failures (missing LibreOffice, a broken file) are
+            # not hard-failed here -- comparison still runs and may still
+            # pass for pure-value, non-formula tasks -- but any resulting
+            # failure on a formula-bearing task should be treated with
+            # suspicion. See module docstring's LibreOffice caveat.
 
         results = []
         messages = []

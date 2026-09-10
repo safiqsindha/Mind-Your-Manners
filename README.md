@@ -103,17 +103,33 @@ length/wording changes.
   `compare_workbooks()` function directly, confirmed against a real sample
   task: grading the answer file against itself passes, grading the
   unmodified input against the answer fails, exactly as expected.
-  **Known gap:** SpreadsheetBench grades *generalization* -- one agent
-  solution is checked against 3 test-case variants per task -- and
-  comparison requires formulas to be recalculated first (LibreOffice
-  headless conversion, same as their own `open_spreadsheet.py`). LibreOffice
-  is installed but **headless conversion fails in this build's own
-  environment** ("Error: source file could not be loaded", reproduces even
-  on the benchmark's own known-good sample files) -- looks like a broken
-  LibreOffice install in this specific container, not a bug in the
-  integration. Verify `harness/study2/grader.py:recalculate_with_libreoffice()`
-  actually works wherever a live batch runs before trusting graded results
-  on any formula-based task. **SpreadsheetBench 2** (end-to-end business
+  **Gating check (see RESULTS.md for the full write-up):** ran
+  `compare_workbooks(answer, answer)` -- gold vs. itself -- across all 200
+  tasks in the sample set. 199/200 passed outright; the one failure is a bug
+  in the *authors'* own `evaluation.py` (their `answer_position.split(',')`
+  doesn't strip whitespace, so a multi-range position like
+  `"B12:B110, C12:C23, ..."` -- space after the comma -- resolves to a
+  malformed cell reference), not something to patch in their code, and this
+  harness's grader wrapper already fails that one test case gracefully
+  rather than crashing the batch.
+  LibreOffice's headless formula recalculation (required before grading any
+  formula-bearing task, same as their own `open_spreadsheet.py`) was
+  **broken and is now fixed**: `libreoffice-calc`/`libreoffice-writer` were
+  never actually installed in this build's container (only
+  `libreoffice-core` was -- confirmed via `strace`, a document-loader
+  shared library was missing) -- installing them fixed it. A second, real
+  bug in this repo's own `recalculate_with_libreoffice()` was found and
+  fixed at the same time: converting a file to itself (same source and
+  output directory) makes LibreOffice silently fail the write to stderr
+  with exit code 0, which the old success check missed entirely; fixed by
+  converting into a temp directory and moving the result back, matching
+  their own `open_spreadsheet.py:just_open_libreoffice()`. A third bug
+  found via the same check: the grader only recalculated the *model's*
+  output, never the ground-truth answer file, and SpreadsheetBench's own
+  answer files can themselves contain uncached formulas -- confirmed on a
+  real task (99-24), where a correct answer's own cell read `None` unless
+  recalculated. Fixed by recalculating answer files too (memoized once per
+  file, not per grading call). **SpreadsheetBench 2** (end-to-end business
   workflow tasks, `github.com/RUCKBReasoning/SpreadsheetBench-2`) has not
   been schema-verified this way -- treat `dataset.py`'s `v2=True` path as
   unverified.
@@ -205,9 +221,12 @@ tests being skippable offline).
    tested in a typical Claude Code remote session, where a Docker daemon is
    usually not running (confirmed in this build: `docker info` has no
    server to talk to).
-5. Verify LibreOffice's headless formula recalculation actually works in
-   your run environment (see "Dataset availability" above) -- it's broken
-   in this build's own container.
+5. Verify `libreoffice-calc` and `libreoffice-writer` (not just
+   `libreoffice-core`) are actually installed wherever a live batch runs --
+   see "Dataset availability" above for how this build's container had
+   `soffice` on PATH but was still missing them, and confirm
+   `recalculate_with_libreoffice()` against a real formula before trusting
+   any formula-based Study 2 grade.
 
 ## License note
 
