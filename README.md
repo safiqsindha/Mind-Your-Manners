@@ -170,27 +170,28 @@ pip install -r requirements.txt
 # Dry-run smoke test (free, no keys needed)
 python -m harness.cli study1 validation-gate --model gemini-flash --n-items 10
 
-# Live validation gate -- must pass before spending on the full Part B run
+# Live validation gate -- must pass before spending on the full Part B run.
+# --live prints a rough spend projection and asks for confirmation before
+# the first paid call; pass --yes to skip the prompt for scripted use.
 python -m harness.cli --live study1 validation-gate \
   --model gemini-flash --benchmark mmlu_pro --n-items 100 \
   --expected-accuracy <current published figure> --tolerance 0.05
 
-python -m harness.cli --live study1 part-b \
-  --benchmark mmlu_pro --models gemini-flash,deepseek-v3,qwen2.5-72b,llama-3.3-70b \
-  --n-items 100 --budget-cap 50
+# Defaults to all 5 Study 1 models (STUDY1_MODELS -- includes the Gemini
+# Lite tier); override --models to run a subset.
+python -m harness.cli --live study1 part-b --benchmark mmlu_pro --n-items 100
 
 # Part A: clones the Mind Your Tone dataset automatically (no --dataset-path
 # needed), reproduces their exact protocol including NUM_RUNS=10 repeats --
 # 250 prompts x 10 runs x n models adds up fast, size --budget-cap accordingly
-python -m harness.cli --live study1 part-a \
-  --models gemini-flash --n-runs 10 --budget-cap 20
+python -m harness.cli --live study1 part-a --models gemini-flash --n-runs 10
 
 python -m harness.cli --live study2 validation-gate \
   --model gemini-flash --repo-dir data/spreadsheetbench \
   --expected-accuracy <current published figure>
 
-python -m harness.cli --live study2 pilot \
-  --models gemini-flash,deepseek-v3,qwen2.5-72b --n-tasks 30
+# Study 2 defaults to CORE_MODELS (4 models -- no Gemini Lite tier)
+python -m harness.cli --live study2 pilot --n-tasks 30
 ```
 
 Run `pytest` for the test suite (all pass against the mock provider, no
@@ -199,14 +200,20 @@ tests being skippable offline).
 
 ## Before spending real money
 
-1. Re-verify every `model_id` in `harness/config.py` against the provider's
-   current model list and pricing page -- these are a best-effort snapshot,
-   flagged inline with `VERIFY` comments, not a guarantee.
+1. Re-verify every `model_id` in `harness/config.py` against OpenRouter's
+   current model list and pricing (`GET https://openrouter.ai/api/v1/models`,
+   no auth required) -- the ones there now were checked on 2026-09-10 (see
+   the module docstring's verification table) but OpenRouter's catalog and
+   pricing move fast; don't assume they're still current.
 2. Run the validation gate for each study and confirm it passes against a
    currently-published baseline figure before running any tone condition.
 3. Watch `results/spend_log.jsonl` / the CLI's printed spend summaries
-   against the caps in `harness/config.py` (Study 1: $50; Study 2 pilot/core/
-   frontier: $15/$40/$150).
+   against the caps in `harness/config.py`: Study 1 has a two-tier cap
+   (soft warning at $50, hard stop at $75); Study 2 is a hard $90 across its
+   four core models (pilot $20 + core $70), with an independent $150 cap for
+   the optional frontier spot-check; Study 3 is a hard $100. `--live` prints
+   a rough projection and asks for confirmation before the first paid call
+   in every run (pass `--yes` to skip the prompt for scripted/CI use).
 4. For Study 2 specifically: the sandbox (`harness/study2/sandbox.py`) now
    runs model-generated code inside a Linux user+network namespace
    (`unshare --net --user --map-root-user`) when `unshare` is available --

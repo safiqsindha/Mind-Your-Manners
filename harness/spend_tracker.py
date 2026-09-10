@@ -75,12 +75,19 @@ def compute_cost_usd(model: ModelConfig, response: ProviderResponse) -> float:
 
 
 class SpendTracker:
-    def __init__(self, out_path: Path, phase: str, cap_usd: float):
+    def __init__(self, out_path: Path, phase: str, cap_usd: float, soft_cap_usd: Optional[float] = None):
+        """`cap_usd` is a hard stop (raises BudgetExceeded). `soft_cap_usd`,
+        if given, is a warn-and-continue threshold below the hard cap --
+        crossing it prints a warning once but does not stop the run. Used
+        for Study 1's two-tier cap ($50 soft / $75 hard); pass None (the
+        default) for a single-cap phase."""
         self.out_path = out_path
         self.phase = phase
         self.cap_usd = cap_usd
+        self.soft_cap_usd = soft_cap_usd
         self.total_usd = 0.0
         self.n_calls = 0
+        self._soft_cap_warned = False
         self.out_path.parent.mkdir(parents=True, exist_ok=True)
         self._fh = open(self.out_path, "a", encoding="utf-8")
 
@@ -94,6 +101,16 @@ class SpendTracker:
         self.n_calls += 1
         self._fh.write(json.dumps(asdict(row), default=str) + "\n")
         self._fh.flush()
+        if (
+            self.soft_cap_usd is not None
+            and not self._soft_cap_warned
+            and self.total_usd > self.soft_cap_usd
+        ):
+            print(
+                f"WARNING: [{self.phase}] spend ${self.total_usd:.2f} has crossed the soft "
+                f"cap ${self.soft_cap_usd:.2f} -- continuing; hard stop at ${self.cap_usd:.2f}."
+            )
+            self._soft_cap_warned = True
         if self.total_usd > self.cap_usd:
             raise BudgetExceeded(self.phase, self.cap_usd, self.total_usd)
 
@@ -103,6 +120,7 @@ class SpendTracker:
             "n_calls": self.n_calls,
             "total_usd": round(self.total_usd, 4),
             "cap_usd": self.cap_usd,
+            "soft_cap_usd": self.soft_cap_usd,
         }
 
     def close(self) -> None:
