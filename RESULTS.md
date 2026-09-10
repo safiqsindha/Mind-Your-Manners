@@ -207,12 +207,24 @@ prompt for scripted/CI use):
    **resolved for the current roster**: every model_id, price, and
    provider pin was checked directly against OpenRouter's live catalog on
    2026-09-10 (see `harness/config.py` module docstring). Re-run this
-   check if it's been more than a few weeks.
-6. Full `provider.only`/`allow_fallbacks`/`quantizations` enforcement, the
+   check if it's been more than a few weeks. **Caveat found while merging
+   the pinning-enforcement PR in:** the new mandatory triple-pin
+   (`provider.only` + `allow_fallbacks:false` + `provider.quantizations`,
+   item 6 below) requires `quantization_pin` on every model that sets
+   `provider_pin` — none of the 5 roster models below have it set yet, and
+   `DEEPSEEK_CURRENT`'s pin (`provider_pin="DeepSeek"`) does not match any
+   provider name OpenRouter's live endpoint list actually returns for
+   `deepseek/deepseek-v4-flash-0731` (checked directly, 2026-09-10 — see
+   git history for the merge that surfaced this). **This roster cannot
+   make a live call yet without a follow-up fix to both.**
+6. ~~`provider.only`/`allow_fallbacks`/`quantizations` enforcement, the
    served-provider assertion, response-cache-disable assertion, and
-   caching instrumentation are designed and verified against OpenRouter's
-   documented API (see `harness/config.py`) but not yet implemented in the
-   provider layer itself — that's the next PR.
+   caching/cost instrumentation~~ — **resolved**: implemented and tested
+   against mocked OpenRouter responses (`harness/providers/openai_compatible.py`,
+   `tests/test_openrouter_pinning.py`) — see README "Single provider path:
+   OpenRouter, and how pinning is enforced." Not yet exercised against a
+   real OpenRouter call, since no key is available in this build, and see
+   item 5's caveat above — the current roster doesn't satisfy it yet.
 7. Study 3 (AgenticPay negotiation) is designed and gating-checked (one
    real negotiation run end-to-end against the actual AgenticPay code, via
    a throwaway `claude` CLI adapter — see PR for details) but not yet
