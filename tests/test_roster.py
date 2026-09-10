@@ -65,13 +65,22 @@ def test_every_pinned_model_satisfies_the_quantization_requirement():
             )
 
 
-def test_deepseek_is_not_pinned_to_the_nonexistent_deepseek_provider():
-    """Regression test for the bug caught while merging the pinning PR in:
-    provider_pin="DeepSeek" doesn't correspond to any real OpenRouter
-    endpoint for this model_id."""
+def test_deepseek_is_pinned_to_novita_not_the_guardrail_blocked_first_party_endpoint():
+    """Regression test, updated 2026-09-10 (DeepSeek has now been re-pinned
+    four times -- see config.py's "Prior DeepSeek verification trail"):
+    a real first-party "DeepSeek" endpoint DOES exist for
+    deepseek-v4.1-flash (checked live), but a live call against it returns
+    HTTP 404 -- this OpenRouter account's own privacy/data-policy
+    guardrails exclude it (not a capacity issue, not fixed by retrying).
+    Re-pinned to "Novita" instead: 100% uptime, real fp8 quantization,
+    verified live as a non-blocked alternative. Guards against silently
+    reverting to the blocked first-party pin, and against reverting
+    model_id without also reverting provider_pin, or vice versa."""
     deepseek = next(m for m in CORE_MODELS if m.key == "deepseek-current")
-    assert deepseek.provider_pin != "DeepSeek"
-    assert deepseek.quantization_pin  # DeepInfra's fp8 pin should still be set explicitly
+    assert deepseek.model_id == "deepseek/deepseek-v4.1-flash"
+    assert deepseek.provider_pin == "Novita"
+    assert deepseek.quantization_pin == ["fp8"]  # Novita reports a real quantization
+    assert not deepseek.quantization_not_exposed
 
 
 def test_glm_has_a_real_quantization_pin_not_the_not_exposed_escape_hatch():
