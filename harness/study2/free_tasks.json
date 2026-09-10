@@ -1,0 +1,44 @@
+{
+  "_comment": [
+    "SpreadsheetBench tasks that PASS WHEN THE AGENT DOES NOTHING -- handing",
+    "each input workbook back unmodified scores a full pass, because the graded",
+    "cell range already holds the expected values in the input.",
+    "",
+    "Such a task cannot distinguish a capable model from an inert one, so it is",
+    "excluded when building a gate sample (see runner.select_gate_tasks). This",
+    "manifest is a cache, not a source of truth: run_validation_gate still",
+    "grades a no-op copy of every task it actually runs (check_no_op=True), so a",
+    "stale or incomplete manifest is caught at run time rather than silently",
+    "trusted.",
+    "",
+    "Regenerate with: python -m harness.cli study2 find-free-tasks"
+  ],
+  "dataset": "sample_data_200",
+  "measured_on": "2026-09-10",
+  "method": "graded an unmodified copy of every input workbook with SpreadsheetBenchGrader.evaluate_task",
+  "n_tasks_checked": 200,
+  "n_free": 17,
+  "free_rate_by_instruction_type": {
+    "Cell-Level Manipulation": "6/123",
+    "Sheet-Level Manipulation": "11/77"
+  },
+  "free_task_ids": [
+    "31184",
+    "48357",
+    "48378",
+    "48608",
+    "488-29",
+    "494-13",
+    "532-3",
+    "534-40",
+    "53062",
+    "575-15",
+    "58114",
+    "CF_11072",
+    "CF_13984",
+    "CF_28766",
+    "CF_6540",
+    "CF_8830",
+    "CF_9945"
+  ]
+}

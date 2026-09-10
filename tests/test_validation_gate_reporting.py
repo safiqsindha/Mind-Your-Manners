@@ -10,6 +10,7 @@ artifacts.
 """
 from __future__ import annotations
 
+import collections
 from pathlib import Path
 from unittest.mock import patch
 
@@ -245,3 +246,81 @@ def test_budget_exceeded_still_stops_the_run(tmp_path):
         _gate_where_one_task_raises(
             tmp_path, BudgetExceeded(phase="test", cap_usd=1.0, projected_usd=2.0)
         )
+
+
+# --- Gate sample selection -------------------------------------------------
+# The gate used to take the first n tasks in dataset file order. That drew 2
+# of the 17 no-op-passable tasks into a 5-task sample (a 40% floor against an
+# 8.5% base rate), which is why three roster models scored exactly what doing
+# nothing scores.
+
+from harness.study2.runner import (  # noqa: E402
+    MIN_USEFUL_GATE_TASKS,
+    load_free_task_ids,
+    select_gate_tasks,
+)
+
+
+def _corpus(n_cell: int = 60, n_sheet: int = 40, free: set[str] = frozenset()):
+    tasks = [_FakeTask(f"cell_{i}", "Cell-Level Manipulation") for i in range(n_cell)]
+    tasks += [_FakeTask(f"sheet_{i}", "Sheet-Level Manipulation") for i in range(n_sheet)]
+    return tasks
+
+
+def test_free_tasks_are_never_selected():
+    free = {"cell_0", "cell_1", "sheet_0"}
+    picked = select_gate_tasks(_corpus(), n=20, seed=0, free_ids=free)
+    assert not (set(t.task_id for t in picked) & free)
+
+
+def test_selection_is_deterministic_for_a_seed():
+    a = [t.task_id for t in select_gate_tasks(_corpus(), n=20, seed=7, free_ids=set())]
+    b = [t.task_id for t in select_gate_tasks(_corpus(), n=20, seed=7, free_ids=set())]
+    assert a == b, "an --expected-accuracy value is only comparable if the draw is stable"
+
+
+def test_different_seeds_give_different_samples():
+    a = [t.task_id for t in select_gate_tasks(_corpus(), n=20, seed=1, free_ids=set())]
+    b = [t.task_id for t in select_gate_tasks(_corpus(), n=20, seed=2, free_ids=set())]
+    assert a != b
+
+
+def test_sample_is_stratified_by_instruction_type():
+    """60 Cell / 40 Sheet in, so a 20-task draw should be about 12/8 rather
+    than whichever type happens to sort first."""
+    picked = select_gate_tasks(_corpus(60, 40), n=20, seed=0, free_ids=set())
+    types = collections.Counter(t.instruction_type for t in picked)
+    assert types["Cell-Level Manipulation"] == 12
+    assert types["Sheet-Level Manipulation"] == 8
+
+
+def test_returns_exactly_n_tasks():
+    for n in (5, 20, 33):
+        assert len(select_gate_tasks(_corpus(), n=n, seed=0, free_ids=set())) == n
+
+
+def test_asking_for_more_than_exist_returns_all_eligible():
+    picked = select_gate_tasks(_corpus(3, 2), n=99, seed=0, free_ids={"cell_0"})
+    assert len(picked) == 4  # 5 tasks, 1 free
+
+
+def test_output_is_in_dataset_order_not_shuffled_order():
+    corpus = _corpus()
+    picked = select_gate_tasks(corpus, n=20, seed=3, free_ids=set())
+    order = {t.task_id: i for i, t in enumerate(corpus)}
+    positions = [order[t.task_id] for t in picked]
+    assert positions == sorted(positions)
+
+
+def test_free_task_manifest_loads_and_matches_the_measured_run():
+    """The shipped manifest should carry the 17 ids the 200-task soak found."""
+    ids = load_free_task_ids()
+    assert len(ids) == 17
+    assert {"CF_6540", "CF_8830"} <= ids, "the two that polluted the original 5-task gate"
+
+
+def test_min_useful_gate_tasks_resolves_finer_than_the_default_tolerance():
+    """The gate's default tolerance is 0.08; a sample of MIN_USEFUL_GATE_TASKS
+    must resolve accuracy at least that finely, or pass/fail is decided by
+    rounding rather than by the model."""
+    assert 1 / MIN_USEFUL_GATE_TASKS <= 0.08

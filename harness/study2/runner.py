@@ -17,6 +17,7 @@ test cases 2 and 3's inputs, and all 3 outputs are graded together via
 from __future__ import annotations
 
 import json
+import random
 import shutil
 from pathlib import Path
 from typing import Optional
@@ -76,6 +77,92 @@ def no_op_passes(grader: SpreadsheetBenchGrader, task: SpreadsheetTask, workdir:
         task.task_id, task.instruction_type, task.answer_position,
         outputs, task.answer_spreadsheet_paths,
     ).passed
+
+
+FREE_TASKS_MANIFEST = Path(__file__).parent / "free_tasks.json"
+
+# Below this, the gate's own tolerance is finer than the sample can resolve:
+# with n tasks the observed accuracy can only land on multiples of 1/n, so a
+# 0.08 tolerance against a 5-task sample (steps of 0.20) is decided by
+# rounding rather than by the model. See select_gate_tasks' docstring.
+MIN_USEFUL_GATE_TASKS = 20
+
+
+def load_free_task_ids(manifest: Path = FREE_TASKS_MANIFEST) -> set[str]:
+    """Task ids known to pass when the agent does nothing -- see the
+    manifest's own _comment. A cache, not a source of truth: the gate
+    re-checks every task it runs."""
+    if not manifest.exists():
+        return set()
+    return set(json.loads(manifest.read_text()).get("free_task_ids", []))
+
+
+def select_gate_tasks(
+    tasks: list[SpreadsheetTask],
+    n: int,
+    seed: int = 0,
+    free_ids: Optional[set[str]] = None,
+) -> list[SpreadsheetTask]:
+    """Choose `n` tasks for the validation gate: only tasks that actually
+    discriminate, stratified by instruction type, deterministic for a given
+    seed.
+
+    Three things this fixes about taking the first `n` tasks in file order:
+
+    1. File order is not a sample. The first 5 tasks happened to include 2
+       of the 17 (8.5%) tasks in the 200-task set that pass when the agent
+       does nothing -- a 40% no-op floor against an 8.5% base rate, which
+       is why three roster models "scored" exactly what doing nothing
+       scores.
+    2. Instruction types are not evenly free. 14% of Sheet-Level tasks are
+       free versus 5% of Cell-Level, so an unstratified draw skews the
+       floor as well as the difficulty.
+    3. The gate compares observed accuracy to an expected value within a
+       tolerance (default 0.08), but an n-task sample can only produce
+       multiples of 1/n. At n=5 the steps are 0.20, so that comparison is
+       decided by rounding. n >= MIN_USEFUL_GATE_TASKS keeps the step size
+       at or below the tolerance.
+
+    Selection is seeded so a gate result is reproducible: the same seed and
+    dataset always yield the same tasks, which is what makes an
+    --expected-accuracy value meaningful across runs.
+    """
+    free = load_free_task_ids() if free_ids is None else free_ids
+    eligible = [t for t in tasks if t.task_id not in free]
+    if not eligible:
+        return []
+
+    by_type: dict[str, list[SpreadsheetTask]] = {}
+    for t in eligible:
+        by_type.setdefault(t.instruction_type, []).append(t)
+
+    rng = random.Random(seed)
+    for group in by_type.values():
+        rng.shuffle(group)
+
+    # Largest-remainder allocation, so the sample keeps the dataset's own
+    # instruction-type proportions instead of over-weighting whichever type
+    # happens to sort first.
+    total = len(eligible)
+    quotas: dict[str, int] = {}
+    remainders: list[tuple[float, str]] = []
+    for itype, group in by_type.items():
+        exact = n * len(group) / total
+        quotas[itype] = min(len(group), int(exact))
+        remainders.append((exact - int(exact), itype))
+    for _, itype in sorted(remainders, reverse=True):
+        if sum(quotas.values()) >= min(n, total):
+            break
+        if quotas[itype] < len(by_type[itype]):
+            quotas[itype] += 1
+
+    selected: list[SpreadsheetTask] = []
+    for itype, count in quotas.items():
+        selected.extend(by_type[itype][:count])
+    # Stable, dataset-order output so logs and per-task tables read the same
+    # way regardless of how the draw shuffled things.
+    order = {t.task_id: i for i, t in enumerate(tasks)}
+    return sorted(selected, key=lambda t: order[t.task_id])
 
 
 def _grade_trajectory(grader: SpreadsheetBenchGrader, task: SpreadsheetTask, traj: Trajectory, workdir: Path) -> GradeResult:

@@ -187,7 +187,12 @@ def cmd_study1_part_b(args: argparse.Namespace) -> None:
 def cmd_study2_validation_gate(args: argparse.Namespace) -> None:
     from .study2.dataset import ensure_repo, load_spreadsheetbench
     from .study2.grader import SpreadsheetBenchGrader
-    from .study2.runner import run_validation_gate
+    from .study2.runner import (
+        MIN_USEFUL_GATE_TASKS,
+        load_free_task_ids,
+        run_validation_gate,
+        select_gate_tasks,
+    )
 
     model = resolve_models([args.model], args.live)[0]
     if args.live:
@@ -197,8 +202,27 @@ def cmd_study2_validation_gate(args: argparse.Namespace) -> None:
             cap_usd=10.0, assume_yes=args.yes,
         )
     repo_dir = ensure_repo(Path(args.repo_dir))
-    tasks = load_spreadsheetbench(repo_dir, sample_only=True, limit=args.n_tasks)
     grader = SpreadsheetBenchGrader(repo_dir)
+    if args.task_order:
+        # Escape hatch for reproducing an older result: the first n tasks in
+        # file order, free ones included.
+        tasks = load_spreadsheetbench(repo_dir, sample_only=True, limit=args.n_tasks)
+        print(f"[validation-gate] file-order sample: {args.n_tasks} tasks (may include no-op-passable tasks)")
+    else:
+        all_tasks = load_spreadsheetbench(repo_dir, sample_only=True)
+        tasks = select_gate_tasks(all_tasks, n=args.n_tasks, seed=args.sample_seed)
+        print(
+            f"[validation-gate] discriminating sample: {len(tasks)} of {len(all_tasks)} tasks "
+            f"(seed={args.sample_seed}, {len(load_free_task_ids())} known no-op-passable tasks excluded)"
+        )
+    if len(tasks) < MIN_USEFUL_GATE_TASKS and args.expected_accuracy is not None:
+        # With n tasks the observed accuracy can only land on multiples of
+        # 1/n, so a tolerance finer than that step is decided by rounding.
+        print(
+            f"  WARNING: {len(tasks)} tasks resolve accuracy only to steps of "
+            f"{1 / max(1, len(tasks)):.2f}, coarser than --tolerance {args.tolerance}. "
+            f"Use --n-tasks {MIN_USEFUL_GATE_TASKS}+ for the comparison to mean anything."
+        )
 
     result = run_validation_gate(
         model, tasks, grader, RESULTS_ROOT, expected_accuracy=args.expected_accuracy,
@@ -529,6 +553,17 @@ def build_parser() -> argparse.ArgumentParser:
     g2.add_argument("--model", required=True, choices=list(MODELS_BY_KEY))
     g2.add_argument("--repo-dir", default="data/spreadsheetbench")
     g2.add_argument("--n-tasks", type=int, default=20)
+    g2.add_argument(
+        "--sample-seed", type=int, default=0,
+        help="Seed for the discriminating-task draw. Same seed + dataset => same tasks, "
+             "which is what makes an --expected-accuracy value comparable across runs.",
+    )
+    g2.add_argument(
+        "--task-order", action="store_true",
+        help="Use the first --n-tasks in dataset file order instead of a discriminating "
+             "sample. Includes tasks that pass when the agent does nothing; for "
+             "reproducing older results only.",
+    )
     g2.add_argument("--expected-accuracy", type=float, default=None)
     g2.add_argument("--tolerance", type=float, default=0.08)
     g2.add_argument("--max-turns", type=int, default=10, help="Per-trajectory turn budget for the multi-round agent loop")
