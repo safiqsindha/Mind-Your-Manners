@@ -14,6 +14,8 @@ from harness.config import (
     STUDY1_HARD_BUDGET_CAP_USD,
     STUDY1_MODELS,
     STUDY1_SOFT_BUDGET_CAP_USD,
+    STUDY2_CORE_BUDGET_CAP_USD,
+    STUDY2_PILOT_BUDGET_CAP_USD,
     with_thinking,
 )
 from harness.spend_tracker import BudgetExceeded, ResultRow, SpendTracker
@@ -182,3 +184,12 @@ def test_soft_cap_warning_fires_only_once(tmp_path: Path, capsys):
 
 def test_study1_soft_cap_below_hard_cap():
     assert STUDY1_SOFT_BUDGET_CAP_USD < STUDY1_HARD_BUDGET_CAP_USD
+
+
+def test_study2_core_budget_cap_is_150_and_above_the_pilot_cap():
+    """Set generously against Luna's price uncertainty (see config.py's
+    budget-cap comment) rather than tightly against a single point
+    estimate -- $150, not the old $70 sized for a different roster/tone
+    count."""
+    assert STUDY2_CORE_BUDGET_CAP_USD == 150.0
+    assert STUDY2_CORE_BUDGET_CAP_USD > STUDY2_PILOT_BUDGET_CAP_USD
