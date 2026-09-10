@@ -360,8 +360,36 @@ OPENROUTER_FREE_SMOKETEST = ModelConfig(
     output_price_per_1m=0.0,
 )
 
+# NOT a target model -- second free smoke-test option, requested by name
+# for a live pipeline test. Checked live 2026-09-10: `nex-agi/nex-n2.5-pro:free`
+# has exactly one real, active endpoint (`GET
+# /api/v1/models/nex-agi/nex-n2.5-pro:free/endpoints` -- the plain
+# catalog `id`, NOT the canonical_slug alone, which returns a
+# zero-endpoint listing for this model the same way the rejected
+# openai/gpt-oss free models did above; a real trap, not a typo),
+# provider_name "Nex AGI" (first-party), tag "nex-agi/fp8", quantization
+# "fp8" -- a REAL disambiguating value, unlike every other smoke-test/
+# roster model pinned to a first-party endpoint so far, so this one uses
+# quantization_pin rather than the quantization_not_exposed escape hatch.
+# $0/$0, 262144 context, 99.6% uptime over the last 30 min at check time.
+NEX_FREE_SMOKETEST = ModelConfig(
+    key="nex-free-smoketest",
+    provider="openai_compatible",
+    model_id="nex-agi/nex-n2.5-pro:free",
+    canonical_slug="nex-agi/nex-n2.5-pro-20260907",
+    display_name="Nex-N2.5-Pro (OpenRouter free tier, smoke test only)",
+    temperature=0.0,
+    api_base=OPENROUTER_BASE_URL,
+    provider_pin="Nex AGI",
+    quantization_pin=["fp8"],
+    max_tokens=1024,
+    input_price_per_1m=0.0,
+    output_price_per_1m=0.0,
+)
+
 ALL_MODELS: list[ModelConfig] = STUDY1_MODELS + [
-    GPT_LUNA_CALIBRATION, FRONTIER_SPOTCHECK, CLAUDE_CLI_SMOKETEST, OPENROUTER_FREE_SMOKETEST,
+    GPT_LUNA_CALIBRATION, FRONTIER_SPOTCHECK, CLAUDE_CLI_SMOKETEST,
+    OPENROUTER_FREE_SMOKETEST, NEX_FREE_SMOKETEST,
 ]
 
 MODELS_BY_KEY: dict[str, ModelConfig] = {m.key: m for m in ALL_MODELS}

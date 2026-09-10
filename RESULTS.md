@@ -193,6 +193,32 @@ cost-tracking path works end-to-end. This is not counted against the caps
 below, since it used a non-target model purely to validate plumbing --
 see README.md "Smoke-testing with real inference."
 
+**First real OpenRouter call, 2026-09-10 -- and a real bug it caught.**
+Once `OPENROUTER_API_KEY` became available, `study2 pilot` was run live
+(`--n-tasks 1 --n-trials 1 --single-round`) against a third free-tier
+smoke-test model, `NEX_FREE_SMOKETEST` (`nex-agi/nex-n2.5-pro:free`,
+provider "Nex AGI", real `fp8` quantization pin -- see `harness/config.py`).
+**The very first attempt failed**: `ProviderPinViolation`, "could not
+determine the served provider from the response" -- on a call that had
+actually succeeded and actually been served by the pinned provider. The
+served-provider check (`harness/providers/openai_compatible.py`) was
+reading `openrouter_metadata.endpoints.endpoints[]`, a field name
+"verified against OpenRouter's API reference" per the code's own
+docstring, but the real live response puts the served-endpoint list
+under `openrouter_metadata.endpoints.available[]` instead. Confirmed by
+replicating the exact request with `curl` and reading the real response
+body directly. **This would have blocked the first live call against
+every roster model** (all four have `provider_pin` set) the moment a
+real run started, not just this smoke test. Fixed, and pinned as a
+literal captured-JSON regression test
+(`tests/test_openrouter_pinning.py::test_matches_real_live_response_shape`)
+so it can't silently regress back to the wrong assumption. Re-ran after
+the fix: 7 trajectories (1 task x 7 tones), all served by "Nex AGI" as
+pinned, `$0.00` cost (free tier), real varying prompt/reasoning token
+counts per tone -- the full pinning/cache-disable/cost-instrumentation
+path confirmed working end-to-end against a live call for the first time
+in this project. Still zero dollars against a real *target*-model call.
+
 Per-call spend logging (`results/raw/*.jsonl`) and a running total
 (`results/spend_log.jsonl`) are wired up and budget-capped
 (`harness/spend_tracker.py:BudgetExceeded`) for whenever a live
