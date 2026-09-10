@@ -210,6 +210,50 @@ def cmd_study2_validation_gate(args: argparse.Namespace) -> None:
         sys.exit(2)
 
 
+def cmd_study2_thinking_preflight(args: argparse.Namespace) -> None:
+    """Phase 0.5 gate (README "The thinking arm"): three cheap probe checks
+    that must pass before the calibration arm gets real spend -- see
+    harness/study2/thinking_preflight.py's module docstring."""
+    from .spend_tracker import SpendTracker
+    from .study2.thinking_preflight import run_thinking_preflight
+
+    on_model, off_model = resolve_models([args.on_model, args.off_model], args.live)
+    if args.live:
+        confirm_projection(
+            "study2 thinking-preflight", estimate_cost_usd([on_model, off_model], 1, 100, 200),
+            cap_usd=1.0, assume_yes=args.yes,
+        )
+
+    out_path = RESULTS_ROOT / "raw" / "study2_thinking_preflight.jsonl"
+    tracker = SpendTracker(out_path, phase="thinking_preflight", cap_usd=1.0)
+    try:
+        report = run_thinking_preflight(tracker, on_model, off_model)
+    finally:
+        tracker.close()
+
+    result = {
+        "on_model_key": report.on_model_key,
+        "off_model_key": report.off_model_key,
+        "on_reasoning_tokens": report.on_reasoning_tokens,
+        "off_reasoning_tokens": report.off_reasoning_tokens,
+        "on_total_tokens": report.on_total_tokens,
+        "off_total_tokens": report.off_total_tokens,
+        "checks": [{"name": c.name, "passed": c.passed, "detail": c.detail} for c in report.checks],
+        "passed": report.passed,
+    }
+    out_json_path = RESULTS_ROOT / "analysis" / "study2_thinking_preflight.json"
+    out_json_path.parent.mkdir(parents=True, exist_ok=True)
+    out_json_path.write_text(json.dumps(result, indent=2))
+    print(json.dumps(result, indent=2))
+    if not report.passed:
+        print(
+            "\nTHINKING PREFLIGHT FAILED -- do not spend on the calibration arm until every "
+            "check above passes. See README 'The thinking arm'.",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+
+
 def _study2_stage(args: argparse.Namespace, phase: str, default_cap: float, default_trials: int) -> None:
     from .study2.dataset import ensure_repo, load_spreadsheetbench
     from .study2.grader import SpreadsheetBenchGrader
@@ -249,11 +293,44 @@ def cmd_study2_frontier(args: argparse.Namespace) -> None:
     _study2_stage(args, "frontier", STUDY2_FRONTIER_BUDGET_CAP_USD, default_trials=1)
 
 
+SPREADSHEETBENCH_BASE_RATE_PCT = 18.5  # midpoint of the 17-20% range cited in README "Outcome measures"
+
+
+def _underpowered_accuracy_note(n_per_level: dict[str, int]) -> str:
+    """Task spec: "accuracy is reported and explicitly flagged as
+    underpowered." At SpreadsheetBench's ~17-20% base rate, detecting even
+    a large tone difference in a binary outcome needs on the order of a
+    thousand-plus observations per condition; a 50-task/3-trial main run
+    gives at most 150 per tone per model. This is a plain arithmetic
+    statement of that gap, not a formal power calculation -- printed so a
+    reader can't miss it, per README "Outcome measures"."""
+    smallest_n = min(n_per_level.values()) if n_per_level else 0
+    return (
+        f"Accuracy is reported per tone (n={smallest_n}-{max(n_per_level.values()) if n_per_level else 0} "
+        f"per condition here) but is UNDERPOWERED at SpreadsheetBench's ~{SPREADSHEETBENCH_BASE_RATE_PCT:.0f}% "
+        "base rate: detecting even a large tone effect in a binary pass/fail outcome at that base "
+        "rate needs on the order of a thousand-plus observations per condition, not a few hundred. "
+        "Treat accuracy_trend_test and accuracy_by_tone as descriptive, not confirmatory -- cost "
+        "(token_cost_effect_size) is the primary, adequately-powered outcome for this study. See "
+        "README 'Outcome measures'."
+    )
+
+
 def cmd_study2_analyze(args: argparse.Namespace) -> None:
     """Phase 3 (README "Phases"): load one run's Study 2 records (written by
     `study2 pilot`/`core`/`frontier` to results/analysis/study2_<phase>_records.json)
     and report effect sizes with item-clustered bootstrap CIs, per the
     roadmap's outcome measures -- not just raw pass/fail.
+
+    Report ordering follows the task spec's outcome priority: cost first
+    (the primary, adequately-powered outcome), then trajectory-level
+    behavior, then accuracy last and explicitly flagged as underpowered
+    (see _underpowered_accuracy_note). Accuracy's primary statistical test
+    is accuracy_trend_test -- an item-clustered permutation trend test
+    across the 7 ordered tone levels, not a full 21-pairwise-comparison
+    matrix (task spec: "with seven ordered levels, do not run 21 pairwise
+    tests"). bh_corrected_pairwise_comparisons is included as a labeled
+    follow-up only, BH-corrected, not the primary analysis.
 
     Deliberately does NOT reuse study1.analysis.per_level_accuracy/
     refusal_rate here: those expect Study 1's row shape (an "outcome"
@@ -265,6 +342,8 @@ def cmd_study2_analyze(args: argparse.Namespace) -> None:
     """
     from .study1.analysis import AccuracyEstimate, bootstrap_accuracy_ci
     from .study2.analysis import (
+        accuracy_trend_test,
+        bh_corrected_pairwise_comparisons,
         severity_breakdown,
         shortcut_rate,
         token_cost_effect_size,
@@ -285,19 +364,33 @@ def cmd_study2_analyze(args: argparse.Namespace) -> None:
 
     accuracy: dict[str, AccuracyEstimate] = {tone: bootstrap_accuracy_ci(v) for tone, v in by_tone.items()}
     refusal_rate_by_tone = {tone: sum(v) / len(v) for tone, v in refused_by_tone.items()}
+    trend = accuracy_trend_test(records)
 
     report = {
         "n_records": len(records),
+        # Primary outcome (task spec item 6: "Primary: cost").
+        "token_cost_effect_size": token_cost_effect_size(records),
+        "cost_summary_by_tone": trajectory_cost_summary(records),
+        # Trajectory-level behavior.
+        "severity_breakdown_by_tone": severity_breakdown(records),
+        "verification_rates_by_tone": verification_rates(records),
+        "shortcut_rate_by_tone": shortcut_rate(records),
+        "refusal_rate_by_tone": refusal_rate_by_tone,
+        # Accuracy last, explicitly flagged underpowered -- see
+        # _underpowered_accuracy_note and README "Outcome measures".
+        "accuracy_underpowered_note": _underpowered_accuracy_note({t: e.n for t, e in accuracy.items()}),
+        "accuracy_trend_test": {
+            "n_clusters": trend.n_clusters,
+            "observed_slope": trend.observed_slope,
+            "p_value": trend.p_value,
+            "ci_low": trend.ci_low,
+            "ci_high": trend.ci_high,
+        },
         "accuracy_by_tone": {
             tone: {"n": est.n, "accuracy": est.accuracy, "ci_low": est.ci_low, "ci_high": est.ci_high}
             for tone, est in accuracy.items()
         },
-        "refusal_rate_by_tone": refusal_rate_by_tone,
-        "severity_breakdown_by_tone": severity_breakdown(records),
-        "verification_rates_by_tone": verification_rates(records),
-        "shortcut_rate_by_tone": shortcut_rate(records),
-        "cost_summary_by_tone": trajectory_cost_summary(records),
-        "token_cost_effect_size": token_cost_effect_size(records),
+        "bh_corrected_pairwise_comparisons_followup": bh_corrected_pairwise_comparisons(records),
     }
 
     out_path = Path(args.out_path) if args.out_path else RESULTS_ROOT / "analysis" / "study2_analysis_report.json"
@@ -317,6 +410,7 @@ def cmd_study2_analyze(args: argparse.Namespace) -> None:
             "hypothesis' -- report this plainly, including if the hypothesis "
             "did not hold."
         )
+    print(f"\n{report['accuracy_underpowered_note']}")
     print(f"\nFull report written to {out_path}")
 
 
@@ -400,6 +494,11 @@ def build_parser() -> argparse.ArgumentParser:
     g2.add_argument("--tolerance", type=float, default=0.08)
     g2.set_defaults(func=cmd_study2_validation_gate)
 
+    tp = s2_sub.add_parser("thinking-preflight")
+    tp.add_argument("--on-model", default="gpt-luna", choices=list(MODELS_BY_KEY))
+    tp.add_argument("--off-model", default="gpt-luna-calibration", choices=list(MODELS_BY_KEY))
+    tp.set_defaults(func=cmd_study2_thinking_preflight)
+
     for name, fn, default_cap, default_trials in [
         ("pilot", cmd_study2_pilot, STUDY2_PILOT_BUDGET_CAP_USD, 3),
         ("core", cmd_study2_core, STUDY2_CORE_BUDGET_CAP_USD, 3),
@@ -408,7 +507,7 @@ def build_parser() -> argparse.ArgumentParser:
         sp = s2_sub.add_parser(name)
         sp.add_argument("--models", default=",".join(m.key for m in CORE_MODELS))
         sp.add_argument("--repo-dir", default="data/spreadsheetbench")
-        sp.add_argument("--n-tasks", type=int, default=30 if name != "core" else 100)
+        sp.add_argument("--n-tasks", type=int, default=30 if name != "core" else 50)
         sp.add_argument("--n-trials", type=int, default=None)
         sp.add_argument("--budget-cap", type=float, default=None)
         sp.add_argument("--single-round", action="store_true", help="Use the single-round setting instead of multi-round ReAct")

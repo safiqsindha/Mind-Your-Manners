@@ -300,7 +300,8 @@ python -m harness.cli --live study2 validation-gate \
 python -m harness.cli --live study2 pilot \
   --models gpt-luna --n-tasks 30 --single-round
 
-# Phase 2: main run -- four models, multi-round agentic, 3 trials/task/tone
+# Phase 2: main run -- four models, 50 tasks, 7 tones, 3 trials/task/tone,
+# multi-round agentic with execution feedback, thinking enabled, temperature 0
 python -m harness.cli --live study2 core --n-trials 3
 
 # Phase 3: analysis -- bootstrapped accuracy CI, severity breakdown,
@@ -376,8 +377,14 @@ table).
 
 ## Outcome measures
 
-Task accuracy is the least interesting one. Also scored, per (model,
-task, tone, trial):
+**Primary: cost.** Total tokens per task, per condition, with reasoning
+tokens broken out separately from prompt/completion tokens (see "The
+thinking arm" for why that split matters). `token_cost_effect_size`
+(`harness/study2/analysis.py`, surfaced by `study2 analyze`) is the
+pre-registered hypothesis check against paper 3's 44.3% single-turn
+figure -- see "The pre-registered hypothesis" above.
+
+Also scored, per (model, task, tone, trial):
 
 - **Failure severity**, using SpreadsheetBench 2's published taxonomy
   (arXiv 2606.29955, Table 7's six benchmark-wide failure modes: Task
@@ -398,6 +405,24 @@ task, tone, trial):
 - **Refusals**, logged as their own outcome, never scored as wrong
   answers or as failures.
 
+**Accuracy, last, and explicitly underpowered.** At SpreadsheetBench's
+~17-20% base rate, detecting even a large tone effect in a binary
+pass/fail outcome needs on the order of a thousand-plus observations per
+condition; the 50-task/3-trial main run gives at most 150 per tone per
+model. `study2 analyze` prints this caveat plainly rather than letting a
+reader find it by computing it themselves. With that caveat standing, the
+primary accuracy analysis is still a real, pre-registered one: with seven
+*ordered* tone levels, running all 21 pairwise comparisons and treating
+each as if it were independently hypothesized would be the wrong test to
+lead with. `accuracy_trend_test` (item-clustered permutation test for a
+monotonic trend across the ordered scale -- generalizes the same
+sign-flip permutation logic `clustered_paired_comparison` already used
+for two groups) is the primary accuracy statistic instead.
+`bh_corrected_pairwise_comparisons` still runs the full 21-comparison
+matrix as a labeled follow-up, Benjamini-Hochberg corrected, for a reader
+who wants to see which specific pairs hold up after correcting for
+testing all of them -- never presented as the primary result.
+
 ## Phases
 
 **Phase 0 -- gates.** Confirm LibreOffice headless formula recalculation
@@ -410,8 +435,12 @@ batch).
 single-round setting. Purpose is pipeline validation and real token logs,
 not results.
 
-**Phase 2 -- main run.** Four models, multi-round agentic setting with
-code execution feedback, three trials per task per tone.
+**Phase 2 -- main run.** Four models, 50 tasks, all seven tones, three
+trials per task per tone, multi-round agentic setting with code execution
+feedback, thinking enabled (per model -- see "The thinking arm"),
+temperature 0 (CLI default `study2 core --n-tasks 50` matches this; see
+"The thinking arm" above for the separate Luna-only calibration arm run
+alongside it, not instead of it).
 
 **Phase 3 -- analysis and writeup.** Effect sizes with item-clustered
 bootstrap CIs. Report the null plainly if it's a null. `study2 analyze`

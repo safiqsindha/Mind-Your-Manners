@@ -181,3 +181,107 @@ def all_pairwise_comparisons(rows: list[dict], levels: list[str]) -> list[Paired
         for j in range(i + 1, len(levels)):
             out.append(clustered_paired_comparison(rows, levels[i], levels[j]))
     return out
+
+
+@dataclass(frozen=True)
+class TrendTestResult:
+    n_clusters: int
+    observed_slope: float  # mean per-item least-squares slope of outcome vs. ordinal tone position
+    p_value: float
+    ci_low: float
+    ci_high: float
+
+
+def _cluster_slope(level_values: dict[str, list[float]], levels: list[str], positions: dict[str, int]) -> float:
+    xs, ys = [], []
+    for level in levels:
+        for v in level_values.get(level, []):
+            xs.append(positions[level])
+            ys.append(v)
+    if len(set(xs)) < 2:
+        return 0.0
+    xs_arr, ys_arr = np.array(xs, dtype=float), np.array(ys, dtype=float)
+    x_mean, y_mean = xs_arr.mean(), ys_arr.mean()
+    denom = float(np.sum((xs_arr - x_mean) ** 2))
+    if denom == 0:
+        return 0.0
+    return float(np.sum((xs_arr - x_mean) * (ys_arr - y_mean)) / denom)
+
+
+def clustered_trend_test(
+    rows: list[dict],
+    levels: list[str],
+    cluster_key: str = "item_id",
+    group_key: str = "tone_level",
+    value_key: str = "is_correct",
+    n_perm: int = N_PERMUTATIONS,
+) -> TrendTestResult:
+    """Item-clustered permutation test for a monotonic trend across
+    `levels` (an ORDERED sequence, e.g. the 7-tone scale), replacing a full
+    pairwise comparison matrix as the primary analysis when the conditions
+    are ordered ("with seven ordered levels, do not run 21 pairwise
+    tests -- pre-register a trend test across the ordered scale as the
+    primary analysis").
+
+    For each cluster (e.g. benchmark item / task), computes the
+    least-squares slope of `value_key` against `levels`' ordinal position
+    (0..len(levels)-1) using every observation in that cluster (pooling
+    trials/models if more than one is present under a given
+    cluster+level). The observed statistic is the mean of these per-cluster
+    slopes.
+
+    Null distribution: for each cluster independently, permute WHICH
+    ordinal position its own observed per-level values are assigned to
+    (shuffling within-cluster), preserving each cluster's own value
+    distribution while destroying any real association with tone order --
+    the natural generalization of clustered_paired_comparison's sign-flip
+    permutation (built for exactly two groups) to more than two ordered
+    groups. p-value is the two-sided tail fraction of permuted |mean
+    slope| at least as extreme as the observed one. A cluster contributes
+    to the trend statistic only if it has at least 2 distinct levels
+    observed (a slope needs variation in the x-axis); clusters that don't
+    are silently excluded, not treated as zero-slope evidence.
+
+    Item-clustered bootstrap CI on the mean slope, same convention as
+    clustered_paired_comparison.
+    """
+    positions = {level: i for i, level in enumerate(levels)}
+    by_cluster: dict[str, dict[str, list[float]]] = defaultdict(lambda: defaultdict(list))
+    for r in rows:
+        if r[group_key] not in positions:
+            continue
+        by_cluster[r[cluster_key]][r[group_key]].append(float(r[value_key]))
+
+    cluster_ids = [cid for cid, level_vals in by_cluster.items() if len(level_vals) >= 2]
+    if not cluster_ids:
+        return TrendTestResult(0, float("nan"), float("nan"), float("nan"), float("nan"))
+
+    cluster_level_vals = [by_cluster[cid] for cid in cluster_ids]
+    observed_slopes = np.array([_cluster_slope(lv, levels, positions) for lv in cluster_level_vals])
+    observed_mean_slope = float(observed_slopes.mean())
+
+    n = len(cluster_ids)
+    rng = np.random.default_rng(RNG_SEED)
+    perm_stats = np.empty(n_perm)
+    for p in range(n_perm):
+        slopes = np.empty(n)
+        for idx, level_vals in enumerate(cluster_level_vals):
+            present_levels = [lvl for lvl in levels if lvl in level_vals]
+            shuffled = rng.permutation(present_levels)
+            permuted = {shuffled[i]: level_vals[present_levels[i]] for i in range(len(present_levels))}
+            slopes[idx] = _cluster_slope(permuted, levels, positions)
+        perm_stats[p] = slopes.mean()
+
+    p_value = float(np.mean(np.abs(perm_stats) >= abs(observed_mean_slope)))
+
+    boot_idx = rng.integers(0, n, size=(N_BOOTSTRAP, n))
+    boot_means = observed_slopes[boot_idx].mean(axis=1)
+    ci_low, ci_high = np.quantile(boot_means, [0.025, 0.975])
+
+    return TrendTestResult(
+        n_clusters=n,
+        observed_slope=observed_mean_slope,
+        p_value=p_value,
+        ci_low=float(ci_low),
+        ci_high=float(ci_high),
+    )
