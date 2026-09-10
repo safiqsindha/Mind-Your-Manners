@@ -5,9 +5,10 @@ import pytest
 
 from harness.study2.failure_taxonomy import (
     CORRECT,
-    DROPPED_OR_TRUNCATED_ROWS,
-    HARDCODED_VALUE_WHERE_FORMULA_REQUIRED,
-    STRUCTURALLY_BROKEN_OUTPUT,
+    FORMAT_OUTPUT_ERROR,
+    INSUFFICIENT_INSPECTION,
+    OTHER,
+    TURN_LIMIT_EXCEEDED,
     classify_failure,
 )
 from harness.study2.sandbox import execute_python_on_workbook
@@ -15,23 +16,45 @@ from harness.study2.verification_scoring import score_trajectory
 
 
 def test_classify_correct():
-    label = classify_failure(True, True, True, 10, 10, True)
+    label = classify_failure(
+        passed=True, output_loaded_ok=True, hit_turn_limit=False,
+        inspected_before_acting=True, expected_uses_formula=True, output_has_formula=True,
+    )
     assert label.category == CORRECT
 
 
-def test_classify_broken_output():
-    label = classify_failure(False, True, False, None, 10, output_loaded_ok=False)
-    assert label.category == STRUCTURALLY_BROKEN_OUTPUT
+def test_classify_turn_limit_exceeded():
+    label = classify_failure(
+        passed=False, output_loaded_ok=False, hit_turn_limit=True,
+        inspected_before_acting=True, expected_uses_formula=False, output_has_formula=False,
+    )
+    assert label.category == TURN_LIMIT_EXCEEDED
 
 
-def test_classify_dropped_rows():
-    label = classify_failure(False, False, False, 5, 10, True)
-    assert label.category == DROPPED_OR_TRUNCATED_ROWS
+def test_classify_insufficient_inspection():
+    label = classify_failure(
+        passed=False, output_loaded_ok=True, hit_turn_limit=False,
+        inspected_before_acting=False, expected_uses_formula=False, output_has_formula=False,
+    )
+    assert label.category == INSUFFICIENT_INSPECTION
 
 
-def test_classify_hardcoded_value():
-    label = classify_failure(False, True, False, 10, 10, True)
-    assert label.category == HARDCODED_VALUE_WHERE_FORMULA_REQUIRED
+def test_classify_format_output_error():
+    label = classify_failure(
+        passed=False, output_loaded_ok=True, hit_turn_limit=False,
+        inspected_before_acting=True, expected_uses_formula=True, output_has_formula=False,
+    )
+    assert label.category == FORMAT_OUTPUT_ERROR
+
+
+def test_classify_falls_back_to_other_when_no_signal_fits():
+    label = classify_failure(
+        passed=False, output_loaded_ok=True, hit_turn_limit=False,
+        inspected_before_acting=True, expected_uses_formula=False, output_has_formula=False,
+        grader_stdout="values did not match",
+    )
+    assert label.category == OTHER
+    assert "values did not match" in label.detail
 
 
 def test_score_trajectory_detects_inspection_and_destructive_action():
