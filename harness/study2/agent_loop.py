@@ -32,10 +32,42 @@ from ..providers.registry import get_provider
 from ..spend_tracker import ResultRow, SpendTracker, compute_cost_usd
 from .sandbox import execute_python_on_workbook
 
+# WORKBOOK_PATH/OUTPUT_PATH ARE PRE-DEFINED PYTHON VARIABLES, injected as
+# plain string literals directly above each code block before it runs (see
+# sandbox.py:_RUNNER_TEMPLATE) -- NOT environment variables, NOT files to
+# search for on disk. This must be stated explicitly and unambiguously:
+# a live run against GPT-5.6 Luna (see RESULTS.md "First real OpenRouter
+# call") found the model consistently guessing os.environ.get(...) or
+# glob-searching /mnt/data/* instead, on every one of 5 real tasks,
+# because the original prompt only said "you are given WORKBOOK_PATH"
+# without saying how -- a model has no way to know that means "a bare
+# Python name already in scope" rather than any of several equally
+# plausible conventions (env var, CLI arg, a file to discover). Each
+# turn's code also runs in a fresh subprocess (see execute_python_on_workbook)
+# -- nothing from a previous turn persists except what was written to
+# disk -- which the same live run's later turns also showed confusion
+# about ("if WORKBOOK_PATH in globals()"), so that's spelled out too.
 AGENT_SYSTEM_PROMPT = """AGENT_REACT_MODE
 You are an agent that manipulates spreadsheets by writing Python code
-(openpyxl or pandas). You are given WORKBOOK_PATH (the input file) and
-OUTPUT_PATH (where your final answer must be saved as .xlsx).
+(openpyxl or pandas).
+
+WORKBOOK_PATH and OUTPUT_PATH are already defined as plain Python string
+variables at the top of every code block you write -- they are NOT
+environment variables and there is nothing to search for on disk. Just
+reference them directly by name, for example:
+    import openpyxl
+    wb = openpyxl.load_workbook(WORKBOOK_PATH)
+    ...
+    wb.save(OUTPUT_PATH)
+Do not use os.environ, glob, or any file-discovery logic to find the
+workbook -- WORKBOOK_PATH already IS its path, as a ready-to-use string.
+
+Each code block you submit runs in a fresh, isolated process. Nothing
+from a previous turn persists -- not variables, not imports, not loaded
+workbook objects -- except whatever you explicitly wrote to disk (e.g. to
+OUTPUT_PATH, or another file under the same working directory). If you
+need a value from an earlier turn, re-derive it or reload it from a file
+you saved.
 
 Respond with EITHER:
   1. A single fenced python code block to execute next, e.g.:
@@ -51,10 +83,22 @@ answer to OUTPUT_PATH before finishing.
 """
 
 SINGLE_ROUND_SYSTEM_PROMPT = """You are an agent that manipulates spreadsheets by
-writing Python code (openpyxl or pandas). You are given WORKBOOK_PATH (the
-input file) and OUTPUT_PATH (where your answer must be saved as .xlsx). You
-get exactly one turn: respond with a single fenced ```python code block that
-reads WORKBOOK_PATH, does the task, and saves the result to OUTPUT_PATH.
+writing Python code (openpyxl or pandas).
+
+WORKBOOK_PATH and OUTPUT_PATH are already defined as plain Python string
+variables at the top of your code -- they are NOT environment variables
+and there is nothing to search for on disk. Just reference them directly
+by name, for example:
+    import openpyxl
+    wb = openpyxl.load_workbook(WORKBOOK_PATH)
+    ...
+    wb.save(OUTPUT_PATH)
+Do not use os.environ, glob, or any file-discovery logic to find the
+workbook.
+
+You get exactly one turn: respond with a single fenced ```python code block
+that reads WORKBOOK_PATH, does the task, and saves the result to
+OUTPUT_PATH.
 """
 
 _CODE_BLOCK_RE = re.compile(r"```(?:python)?\s*\n(.*?)```", re.DOTALL)

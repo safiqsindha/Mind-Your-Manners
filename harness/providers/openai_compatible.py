@@ -57,10 +57,23 @@ but is asserted off here rather than trusted: every OpenRouter call sends
 unnoticed, a cached response would silently zero out that call's token
 counts and destroy trial-level variance estimates -- the exact thing this
 harness's repeated-trials design depends on.
+
+RETRY ON TRANSIENT FAILURE (`_post_with_retry`, added 2026-09-10): also
+found live, the same day as the pin-key bug above -- DeepSeek and Qwen
+(both routed through third-party/shared-pool-style OpenRouter endpoints)
+returned HTTP 429 "temporarily rate-limited upstream... shared pool" on
+essentially the first call of a small smoke test, with no retry logic at
+all, crashing the run immediately. `_post_with_retry` retries 429 and
+502/503/504 (RETRYABLE_STATUS_CODES) up to MAX_RETRIES times, honoring a
+`Retry-After` response header when present and falling back to
+exponential backoff (2s/4s/8s/16s, capped) otherwise. Every other status
+(400/401/403/404/422/etc.) still fails immediately, unretried -- those are
+config problems a retry can't fix, not transient infrastructure ones.
 """
 from __future__ import annotations
 
 import os
+import time
 from typing import Any, Optional
 
 import requests
@@ -82,6 +95,51 @@ API_KEY_ENV_BY_BASE = {
     "https://api.deepseek.com": "DEEPSEEK_API_KEY",
     "https://dashscope.aliyuncs.com/compatible-mode/v1": "DASHSCOPE_API_KEY",
 }
+
+# Statuses worth retrying: 429 (rate limited) and 502/503/504 (upstream/
+# gateway trouble) are transient infrastructure conditions, not something a
+# retry of the identical request can't fix. Everything else (400 bad
+# request, 401/403 auth, 404 unknown model, 422 unprocessable, etc.) is a
+# config problem retrying won't solve -- fail immediately on those, same as
+# before. Confirmed live 2026-09-10: DeepSeek and Qwen (both third-party/
+# shared-pool-style endpoints) hit 429 "temporarily rate-limited upstream...
+# shared pool" on essentially the first call of a smoke test -- with no
+# retry, that crashed the whole run instantly and would recur at any real
+# pilot/main-run scale.
+RETRYABLE_STATUS_CODES = {429, 502, 503, 504}
+MAX_RETRIES = 4  # up to 4 retries (5 attempts total) per call
+RETRY_BACKOFF_BASE_S = 2.0  # exponential: 2s, 4s, 8s, 16s if no Retry-After header
+RETRY_BACKOFF_CAP_S = 30.0
+
+
+def _post_with_retry(url: str, headers: dict, json_body: dict, timeout: int) -> requests.Response:
+    """POST with retry-on-transient-failure. Honors a Retry-After header
+    (seconds) when the server sends one; falls back to exponential backoff
+    otherwise. Raises nothing itself on a persistent failure -- returns the
+    last response so the caller's existing status-code check produces the
+    same ProviderError it always has."""
+    attempt = 0
+    while True:
+        resp = requests.post(url, headers=headers, json=json_body, timeout=timeout)
+        if resp.status_code not in RETRYABLE_STATUS_CODES or attempt >= MAX_RETRIES:
+            return resp
+
+        retry_after = resp.headers.get("Retry-After")
+        if retry_after is not None:
+            try:
+                delay = float(retry_after)
+            except ValueError:
+                delay = RETRY_BACKOFF_BASE_S * (2**attempt)
+        else:
+            delay = RETRY_BACKOFF_BASE_S * (2**attempt)
+        delay = min(delay, RETRY_BACKOFF_CAP_S)
+
+        print(
+            f"WARNING: {url} returned {resp.status_code} (attempt {attempt + 1}/{MAX_RETRIES + 1}) "
+            f"-- retrying in {delay:.1f}s: {resp.text[:300]}"
+        )
+        time.sleep(delay)
+        attempt += 1
 
 
 class OpenAICompatibleProvider(Provider):
@@ -152,12 +210,7 @@ class OpenAICompatibleProvider(Provider):
                 # something to check against.
                 headers["X-OpenRouter-Metadata"] = "enabled"
 
-        resp = requests.post(
-            f"{base_url}/chat/completions",
-            headers=headers,
-            json=body,
-            timeout=180,
-        )
+        resp = _post_with_retry(f"{base_url}/chat/completions", headers, body, timeout=180)
         if resp.status_code >= 400:
             raise ProviderError(f"{base_url} API error {resp.status_code}: {resp.text[:2000]}")
 
