@@ -13,6 +13,7 @@ Usage:
   python -m harness.cli study1 part-b --benchmark mmlu_pro --models gemini-flash,deepseek-v3 --n-items 50
   python -m harness.cli study2 validation-gate --model gemini-flash --repo-dir ./data/spreadsheetbench
   python -m harness.cli study2 pilot --models gemini-flash,deepseek-v3,qwen2.5-72b --repo-dir ./data/spreadsheetbench
+  python -m harness.cli study3 bilateral-matrix --buyer-model gemini-flash --seller-model gemini-flash --n-trials-per-cell 4
 """
 from __future__ import annotations
 
@@ -31,6 +32,7 @@ from .config import (
     STUDY2_CORE_BUDGET_CAP_USD,
     STUDY2_FRONTIER_BUDGET_CAP_USD,
     STUDY2_PILOT_BUDGET_CAP_USD,
+    STUDY3_BUDGET_CAP_USD,
 )
 from .providers.anthropic_provider import AnthropicProvider
 from .providers.claude_cli_provider import ClaudeCLIProvider
@@ -171,6 +173,33 @@ def cmd_study2_frontier(args: argparse.Namespace) -> None:
     _study2_stage(args, "frontier", STUDY2_FRONTIER_BUDGET_CAP_USD, default_trials=1)
 
 
+def cmd_study3_bilateral_matrix(args: argparse.Namespace) -> None:
+    from .spend_tracker import SpendTracker
+    from .study3.agenticpay_dep import ensure_agenticpay_repo
+    from .study3.runner import run_bilateral_matrix
+
+    buyer_model, seller_model = resolve_models([args.buyer_model, args.seller_model], args.live)
+    ensure_agenticpay_repo(Path("data"))
+
+    out_path = RESULTS_ROOT / "raw" / "study3_bilateral_matrix.jsonl"
+    tracker = SpendTracker(out_path, phase="study3_bilateral_matrix", cap_usd=args.budget_cap)
+    try:
+        results = run_bilateral_matrix(
+            tracker,
+            buyer_model,
+            seller_model,
+            n_trials_per_cell=args.n_trials_per_cell,
+            max_rounds=args.max_rounds,
+            buyer_max_price=args.buyer_max_price,
+            seller_min_price=args.seller_min_price,
+            initial_seller_price=args.initial_seller_price,
+        )
+    finally:
+        tracker.close()
+    n_agreed = sum(1 for r in results if r.status == "agreed")
+    print(f"Study 3 bilateral matrix: {len(results)} negotiations ({n_agreed} agreed) logged to {out_path}")
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--live", action="store_true", help="Make real, billed API calls. Default is dry-run (mock provider).")
@@ -231,6 +260,20 @@ def build_parser() -> argparse.ArgumentParser:
         sp.add_argument("--budget-cap", type=float, default=None)
         sp.add_argument("--single-round", action="store_true", help="Use the single-round setting instead of multi-round ReAct")
         sp.set_defaults(func=fn)
+
+    s3 = sub.add_parser("study3")
+    s3_sub = s3.add_subparsers(dest="cmd", required=True)
+
+    bm = s3_sub.add_parser("bilateral-matrix")
+    bm.add_argument("--buyer-model", default="gemini-flash", choices=list(MODELS_BY_KEY))
+    bm.add_argument("--seller-model", default="gemini-flash", choices=list(MODELS_BY_KEY))
+    bm.add_argument("--n-trials-per-cell", type=int, default=1)
+    bm.add_argument("--max-rounds", type=int, default=10)
+    bm.add_argument("--buyer-max-price", type=float, default=120.0)
+    bm.add_argument("--seller-min-price", type=float, default=80.0)
+    bm.add_argument("--initial-seller-price", type=float, default=150.0)
+    bm.add_argument("--budget-cap", type=float, default=STUDY3_BUDGET_CAP_USD)
+    bm.set_defaults(func=cmd_study3_bilateral_matrix)
 
     return p
 

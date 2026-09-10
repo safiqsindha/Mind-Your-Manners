@@ -14,5 +14,6 @@ results/analysis/*.json
 
 # Large cloned/downloaded benchmark data
 data/spreadsheetbench/
+data/AgenticPay/
 *.xlsx
 !tests/**/*.xlsx

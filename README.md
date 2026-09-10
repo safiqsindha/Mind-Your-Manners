@@ -1,8 +1,34 @@
 # Prompt-Tone Evaluation Harness
 
-A reproducible harness for testing whether prompt politeness/tone affects
-LLM accuracy (Study 1, single-turn QA) and agentic task quality (Study 2,
-SpreadsheetBench). See `RESULTS.md` for the current results status.
+This project exists because of, and directly extends, **"Mind Your Tone:
+How Prompt Politeness Affects LLM Accuracy"** (Dobariya & Kumar, arXiv
+2510.04950) and its full-paper extension, **"Mind Your Tone: Does Tone
+Alter LLM Performance?"** (Dobariya & Kumar, AMCIS 2026, arXiv 2605.29027).
+Every design decision below -- the length-matched tone wrappers, the
+programmatic remaster of their methodology, the extension into agentic and
+multi-agent settings -- is a response to that work. This attribution is
+mandatory, not courteous: cite both papers if you use or build on this
+repository.
+
+A reproducible harness across three studies, each asking a narrower
+question than the last:
+
+- **Study 1** (single-turn QA, replicating and remastering the papers
+  above): does tone change the *answer*?
+- **Study 2** (agentic SpreadsheetBench work): does tone change the
+  *action* an agent takes?
+- **Study 3** (agentic negotiation, via AgenticPay): when tone shapes an
+  outcome with a dollar value attached, how much value gets *given away*?
+
+The argument isn't that you should be nice to your agents; it's that
+prompt pragmatics are an uncontrolled variable in agentic evaluation.
+
+**Study 1 ships alone as the first public writeup** -- its methodology,
+dataset, and pipeline are the most thoroughly worked through and verified
+of the three (see `RESULTS.md`). Studies 2 and 3 are ongoing work: built,
+tested against a mock provider, and gating-checked against their real
+external dependencies, but -- like Study 1 -- not yet run against a target
+model. See `RESULTS.md` for the current results status of all three.
 
 ## Execution status: harness built, not yet run against the target models
 
@@ -60,6 +86,9 @@ harness/
   study2/                   # agentic SpreadsheetBench work
     dataset.py, sandbox.py, grader.py, agent_loop.py,
     failure_taxonomy.py, verification_scoring.py, analysis.py, runner.py
+  study3/                   # agentic negotiation work (AgenticPay)
+    agenticpay_dep.py, llm_adapter.py, personas.py, runner.py,
+    preregistration.py, analysis.py
 tests/                       # pytest suite, all against the mock provider
 results/
   raw/                       # one JSONL row per API call (gitignored, generated)
@@ -140,6 +169,25 @@ length/wording changes.
   "same answer extraction" for a faithful replication. Verified end-to-end:
   a full mock-provider pass through `run_part_a_replication` against the
   real cloned 250-row CSV completes correctly.
+- **AgenticPay** (`github.com/SafeRL-Lab/AgenticPay`, arXiv 2602.06008) --
+  cloned and read directly before any integration code was written (see
+  `harness/study3/agenticpay_dep.py`'s docstring). It runs buyer/seller
+  negotiation as a Gymnasium-style env (`make()`/`env.reset()`/`env.step()`)
+  with separate `BuyerAgent`/`SellerAgent` instances, each holding a private
+  reservation price; the one documented tone-injection point is
+  `role_description`, prepended verbatim by `BaseAgent._build_prompt()` as
+  "You are {name}, {role_description}" -- see `harness/study3/personas.py`
+  for how the same five tone wrappers attach there, including the one
+  flagged mismatch (the wrappers' fixed "Answer the question below..."
+  sentence doesn't literally apply to a negotiation). `env.step()` already
+  computes GlobalScore/BuyerScore/SellerScore on termination; none of that
+  scoring is reimplemented here. **Gating check:** one full neutral
+  negotiation was run end to end against the real cloned code (via a
+  throwaway CLI-backed adapter, since no OpenRouter key exists in this
+  build) and reached agreement in 3 rounds -- see RESULTS.md. First run is
+  restricted to the bilateral subset (`Task1_basic_price_negotiation-v0`,
+  one buyer/one product/one seller); AgenticPay's multi-buyer/multi-seller/
+  multi-product envs are real and registered but out of scope here.
 
 ## Running it
 
@@ -175,6 +223,12 @@ python -m harness.cli --live study2 validation-gate \
 
 python -m harness.cli --live study2 pilot \
   --models gemini-flash,deepseek-v3,qwen2.5-72b --n-tasks 30
+
+# Study 3: clones AgenticPay automatically, runs the full 5x5 buyer-tone x
+# seller-tone matrix for one buyer/seller model pair (restricted to the
+# bilateral env -- see "Dataset availability" above)
+python -m harness.cli --live study3 bilateral-matrix \
+  --buyer-model gemini-flash --seller-model gemini-flash --n-trials-per-cell 4
 ```
 
 Run `pytest` for the test suite (all pass against the mock provider, no
@@ -190,7 +244,7 @@ tests being skippable offline).
    currently-published baseline figure before running any tone condition.
 3. Watch `results/spend_log.jsonl` / the CLI's printed spend summaries
    against the caps in `harness/config.py` (Study 1: $50; Study 2 pilot/core/
-   frontier: $15/$40/$150).
+   frontier: $15/$40/$150; Study 3: $100 for ~100 negotiations/cell).
 4. For Study 2 specifically: the sandbox (`harness/study2/sandbox.py`) now
    runs model-generated code inside a Linux user+network namespace
    (`unshare --net --user --map-root-user`) when `unshare` is available --
@@ -208,6 +262,13 @@ tests being skippable offline).
 5. Verify LibreOffice's headless formula recalculation actually works in
    your run environment (see "Dataset availability" above) -- it's broken
    in this build's own container.
+6. For Study 3 specifically: the Benjamini-Hochberg multiple-testing
+   correction and its exact comparison set (24 non-baseline cells vs. the
+   neutral/neutral cell) are pre-registered in
+   `harness/study3/preregistration.py` -- written before any live
+   negotiation has run. Do not add, remove, or reorder comparisons after
+   real data exists; if the plan genuinely needs to change, do that in a
+   new, clearly-labeled commit, not a silent edit.
 
 ## License note
 

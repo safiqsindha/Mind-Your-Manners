@@ -131,3 +131,7 @@ STUDY1_BUDGET_CAP_USD = 50.0
 STUDY2_PILOT_BUDGET_CAP_USD = 15.0
 STUDY2_CORE_BUDGET_CAP_USD = 40.0
 STUDY2_FRONTIER_BUDGET_CAP_USD = 150.0
+
+# Study 3 (negotiation, harness/study3/): ~100 negotiations per cell across
+# the 5x5 bilateral tone matrix (task spec item 7).
+STUDY3_BUDGET_CAP_USD = 100.0
