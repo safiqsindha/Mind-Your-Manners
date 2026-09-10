@@ -171,12 +171,18 @@ against a target model, and none of it is scheduled to be.
 ## Total spend
 
 **$0.00 against the study's target-model budget caps.** No target model
-has been called against the current roster (GPT-5.6 Luna, Gemini 3.8
-Flash, DeepSeek V4 Flash, Qwen3.8 Flash -- see `harness/config.py` module
+has been called against the current roster (GPT-5.6 Luna, GLM 5.3 Flash,
+DeepSeek V4 Flash, Qwen3.8 Flash -- see `harness/config.py` module
 docstring for the roster rationale and the per-model OpenRouter
-verification table, checked 2026-09-10). Gemini 3.1 Flash-Lite remains
-defined (it was Study 1's second Gemini tier) but is no longer part of any
-scheduled run now that Study 1 is retired.
+verification table, checked 2026-09-10). Both Gemini tiers were dropped in
+this revision -- Gemini 3.8 Flash on cost-per-capability (roughly 78% of
+projected roster spend for the lowest agentic index in the group) and
+Gemini 3.1 Flash-Lite because it only existed to pair with it for Study
+1's two-Gemini-tier design, and Study 1 is retired. GLM 5.3 Flash replaces
+Gemini Flash's Chinese-open-weight-adjacent slot at roughly an order of
+magnitude lower cost and a higher agentic index; see the module docstring
+for the honest tradeoff this drops (closest cross-paper comparability with
+Dobariya & Kumar, who ran the Gemini family).
 
 Separately, **~$0.28** was spent on real-inference *pipeline* smoke tests
 using `harness/providers/claude_cli_provider.py` (local `claude` CLI,

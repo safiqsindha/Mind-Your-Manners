@@ -14,13 +14,13 @@ set for every model in the run; missing keys fail loudly rather than
 silently skipping a model.
 
 Usage (Study 2 -- see README.md "Running it" for the full Phase 0-2 flow):
-  python -m harness.cli study2 validation-gate --model gemini-flash --repo-dir ./data/spreadsheetbench
-  python -m harness.cli study2 pilot --models gemini-flash --repo-dir ./data/spreadsheetbench --single-round
+  python -m harness.cli study2 validation-gate --model gpt-luna --repo-dir ./data/spreadsheetbench
+  python -m harness.cli study2 pilot --models gpt-luna --repo-dir ./data/spreadsheetbench --single-round
   python -m harness.cli study2 core --n-trials 3
 
 Retired/shelved (kept working, not part of any active run):
-  python -m harness.cli study1 validation-gate --model gemini-flash --benchmark mmlu_pro --n-items 30
-  python -m harness.cli study3 bilateral-matrix --buyer-model gemini-flash --seller-model gemini-flash --n-trials-per-cell 4
+  python -m harness.cli study1 validation-gate --model gpt-luna --benchmark mmlu_pro --n-items 30
+  python -m harness.cli study3 bilateral-matrix --buyer-model gpt-luna --seller-model gpt-luna --n-trials-per-cell 4
 """
 from __future__ import annotations
 
@@ -219,8 +219,8 @@ def _study2_stage(args: argparse.Namespace, phase: str, default_cap: float, defa
     n_trials = args.n_trials or default_trials
     models = resolve_models(args.models.split(","), args.live)
     if args.live:
-        # 5 tone levels x n_trials x n_tasks, ~3 model calls/negotiation-round-trip average for the multi-round agent loop
-        n_calls_per_model = 5 * n_trials * args.n_tasks * (1 if args.single_round else 3)
+        # 7 tone levels x n_trials x n_tasks, ~3 model calls/negotiation-round-trip average for the multi-round agent loop
+        n_calls_per_model = 7 * n_trials * args.n_tasks * (1 if args.single_round else 3)
         confirm_projection(
             f"study2 {phase}", estimate_cost_usd(models, n_calls_per_model, 800, 300),
             cap_usd=cap_usd, assume_yes=args.yes,
@@ -426,8 +426,8 @@ def build_parser() -> argparse.ArgumentParser:
     s3_sub = s3.add_subparsers(dest="cmd", required=True)
 
     bm = s3_sub.add_parser("bilateral-matrix")
-    bm.add_argument("--buyer-model", default="gemini-flash", choices=list(MODELS_BY_KEY))
-    bm.add_argument("--seller-model", default="gemini-flash", choices=list(MODELS_BY_KEY))
+    bm.add_argument("--buyer-model", default="gpt-luna", choices=list(MODELS_BY_KEY))
+    bm.add_argument("--seller-model", default="gpt-luna", choices=list(MODELS_BY_KEY))
     bm.add_argument("--n-trials-per-cell", type=int, default=1)
     bm.add_argument("--max-rounds", type=int, default=10)
     bm.add_argument("--buyer-max-price", type=float, default=120.0)

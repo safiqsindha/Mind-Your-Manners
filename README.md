@@ -70,11 +70,44 @@ before any run. If it's wrong, that's still a result -- see "Report the
 null plainly" under Outcome measures.
 
 Note also: paper 3's whole result is under *extended thinking disabled*.
-Genuine reasoning-model behavior under tone variation is untested by
-anyone, including this project unless the setting is deliberately changed
-(see "Future work" below) -- this study's own thinking-budget setting for
-each model is recorded explicitly in `harness/config.py`, not left
-implicit, precisely so this gap is visible rather than silently inherited.
+Genuine reasoning-model behavior under tone variation was untested by
+anyone -- this study's own reasoning/thinking setting for each model is
+recorded explicitly on every result row (`ModelConfig.reasoning_effort`/
+`thinking_enabled`, `harness/spend_tracker.py:ResultRow`), not left
+implicit, and one model in the roster carries a dedicated on/off
+comparison rather than leaving the question untested here too -- see "The
+thinking arm" below.
+
+## The thinking arm
+
+GPT-5.6 Luna is the only roster model with a real, harness-controllable
+"none" reasoning-effort level (see `harness/config.py`'s REASONING CONTROL
+table -- GLM's reasoning is mandatory, DeepSeek/Qwen have no "none" level
+either). It carries a calibration arm: the same tasks and tones as the
+main run, run twice -- once at the main run's configured reasoning_effort
+("on"), once with reasoning_effort forced to `"none"` ("off").
+
+**Same model ID, one parameter differing, is what makes the comparison
+clean.** `GPT_LUNA_CALIBRATION` (`harness/config.py`) is built from
+`GPT_LUNA` via `with_thinking(GPT_LUNA, enabled=False)`, not by pinning a
+different model like `openai/gpt-5.6-luna-pro` -- Luna Pro is the same
+underlying model with `reasoning.mode` preset, so using it for the "on"
+arm would bake the comparison into a model-choice difference instead of a
+single request parameter.
+
+```bash
+python -m harness.cli --live study2 pilot --models gpt-luna-calibration --n-tasks 30 --single-round
+```
+
+Three pre-flight checks (see "Phases" -- Phase 0) must pass before the
+calibration arm gets real spend: reasoning tokens actually survive the
+OpenRouter route (arXiv 2608.01347 found reasoning-token reporting is
+inconsistent across serving layers and can be silently dropped -- a
+*missing* field, not a zero, makes the primary outcome unmeasurable and
+should stop the run rather than log a zero), the off condition reports
+zero reasoning tokens and the on condition reports non-zero, and the two
+conditions actually differ on a probe task (identical token counts would
+mean the parameter isn't taking effect at all).
 
 ## The gift in paper 2
 
@@ -256,16 +289,16 @@ selected model needs aren't set (see `.env.example`).
 pip install -r requirements.txt
 
 # Dry-run smoke test (free, no keys needed)
-python -m harness.cli study2 validation-gate --model gemini-flash --repo-dir data/spreadsheetbench --n-tasks 10
+python -m harness.cli study2 validation-gate --model gpt-luna --repo-dir data/spreadsheetbench --n-tasks 10
 
 # Phase 0: gates -- must pass before spending on Phase 1
 python -m harness.cli --live study2 validation-gate \
-  --model gemini-flash --repo-dir data/spreadsheetbench \
+  --model gpt-luna --repo-dir data/spreadsheetbench \
   --expected-accuracy <current published figure>
 
 # Phase 1: pilot -- one model, small task subset, all 7 tones, single-round
 python -m harness.cli --live study2 pilot \
-  --models gemini-flash --n-tasks 30 --single-round
+  --models gpt-luna --n-tasks 30 --single-round
 
 # Phase 2: main run -- four models, multi-round agentic, 3 trials/task/tone
 python -m harness.cli --live study2 core --n-trials 3
@@ -395,10 +428,13 @@ something read off a chart.
   TERMS-BENCH. `harness/study3/` already implements this (5x5 in its
   current form, now inheriting the 7-tone scale automatically) against
   AgenticPay -- shelved per "Why this is one study now," not deleted.
-- **Tone effects with extended thinking enabled.** No published work,
-  including this project's own Study 2, has tested this -- see "The
-  pre-registered hypothesis" above for why the setting is recorded
-  explicitly rather than left implicit.
+- **Tone effects with extended thinking enabled, for models beyond Luna.**
+  The calibration arm (see "The thinking arm") covers GPT-5.6 Luna, the
+  one roster model with a real harness-controllable "none" effort level.
+  Whether the same pattern holds under reasoning for GLM, DeepSeek, or
+  Qwen (or with a token-budget-based control instead of an effort string,
+  for Qwen specifically -- see `harness/config.py`'s REASONING CONTROL
+  table) is still untested by anyone, this project included.
 - **The wrapper module as a standalone instrument.** `harness/
   tone_wrappers.py`'s seven tones plus a thin per-benchmark adapter is
   designed so any future benchmark can inherit the same methodology
