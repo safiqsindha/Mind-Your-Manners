@@ -389,14 +389,25 @@ STUDY1_HARD_BUDGET_CAP_USD = 75.0
 # Retained for any caller still importing the old single-cap name.
 STUDY1_BUDGET_CAP_USD = STUDY1_HARD_BUDGET_CAP_USD
 
-# Study 2 keeps its pilot -> core staging. These caps predate the
-# Gemini-Flash-to-GLM roster swap and the 50-task/7-tone/3-trial main-run
-# design (see README "Phases" / "Before spending real money") -- due for a
-# re-projection against the new roster's real prices, tracked separately.
+# Study 2 keeps its pilot -> core staging. STUDY2_CORE_BUDGET_CAP_USD
+# ($150) is set generously against price uncertainty rather than tightly
+# against a single point estimate: Luna's live-verified price ($0.20/$1.20,
+# see config.py's VERIFICATION table) puts the 50-task/7-tone/3-trial main
+# run's Luna share near $35 and the other three (GLM, DeepSeek, Qwen)
+# combined near $17 -- roughly $52 total -- but third-party trackers were
+# still showing Luna's pre-price-cut rate ($1.00/$6.00) as recently as
+# this revision, which would put the same run near $100. $150 covers that
+# spread with headroom rather than needing to be re-tuned if OpenRouter's
+# billed price and this file's static estimate disagree; the CLI still
+# prints a real projection and requires confirmation before the first paid
+# call either way (see confirm_projection() in cli.py), and
+# spend_tracker.compute_cost_usd() prefers OpenRouter's actually-billed
+# usage.cost over this static price table per call, so this cap is a
+# circuit breaker, not the number a run is expected to actually spend.
 # The frontier spot-check is a separate, optional tier with its own
 # independent cap.
 STUDY2_PILOT_BUDGET_CAP_USD = 20.0
-STUDY2_CORE_BUDGET_CAP_USD = 70.0
+STUDY2_CORE_BUDGET_CAP_USD = 150.0
 STUDY2_FRONTIER_BUDGET_CAP_USD = 150.0
 
 STUDY3_BUDGET_CAP_USD = 100.0  # at 100 negotiations per cell, bilateral subset (harness/study3/)
