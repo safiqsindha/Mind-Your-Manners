@@ -99,16 +99,6 @@ def run_validation_gate(
     }
 
 
-def _row_count(path: Optional[Path]) -> Optional[int]:
-    if path is None or not Path(path).exists():
-        return None
-    try:
-        wb = openpyxl.load_workbook(path)
-        return wb.active.max_row
-    except Exception:
-        return None
-
-
 def _has_formula(path: Optional[Path]) -> bool:
     if path is None or not Path(path).exists():
         return False
@@ -157,18 +147,16 @@ def run_condition_batch(
                         )
                         grade = _grade_trajectory(grader, task, traj, workdir)
                         expected_uses_formula = _has_formula(task.answer_spreadsheet_paths[0]) if task.answer_spreadsheet_paths else False
-                        output_row_count = _row_count(traj.final_output_path)
-                        expected_row_count = _row_count(task.answer_spreadsheet_paths[0]) if task.answer_spreadsheet_paths else None
+                        behavior = score_trajectory(traj.code_snippets_in_order)
                         severity = classify_failure(
                             passed=grade.passed,
+                            output_loaded_ok=traj.final_output_path is not None,
+                            hit_turn_limit=traj.hit_turn_limit,
+                            inspected_before_acting=behavior.inspected_before_acting,
                             expected_uses_formula=expected_uses_formula,
                             output_has_formula=_has_formula(traj.final_output_path),
-                            output_row_count=output_row_count,
-                            expected_row_count=expected_row_count,
-                            output_loaded_ok=traj.final_output_path is not None,
                             grader_stdout="; ".join(grade.per_test_case_messages),
                         )
-                        behavior = score_trajectory(traj.code_snippets_in_order)
                         total_tokens = sum(r.prompt_tokens + r.completion_tokens + r.reasoning_tokens for r in traj.result_rows)
                         total_cost = sum(r.cost_usd for r in traj.result_rows)
                         records.append(
