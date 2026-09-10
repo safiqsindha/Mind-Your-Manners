@@ -127,7 +127,19 @@ def run_condition_batch(
     """Runs every (model, task, tone, trial) combination, grades each, and
     returns one flat record per trajectory ready for study2/analysis.py.
     Only the instruction is wrapped -- task.instruction is passed through
-    the tone wrapper, everything else about the task is untouched."""
+    the tone wrapper, everything else about the task is untouched.
+
+    Loop order is deliberately model -> task -> tone -> trial (README "The
+    thinking arm"'s design section: "task-outer, tone-inner"): for a fixed
+    model and task, all 7 tones x n_trials calls happen back to back, so
+    repeated calls sharing a prompt structure (same task, same system
+    prompt, differing only in tone-wrapper prefix or, within one (task,
+    tone) pair across trials, byte-identical prompts) stay close together
+    in time rather than being spread across the whole batch -- closer
+    together means more likely to land inside a provider's prompt-cache
+    retention window. Do not reorder this to model -> tone -> task or
+    similar without re-reading that section.
+    """
     tracker = SpendTracker(out_dir / "raw" / f"study2_{phase}.jsonl", phase=phase, cap_usd=budget_cap_usd)
     records: list[dict] = []
     try:
