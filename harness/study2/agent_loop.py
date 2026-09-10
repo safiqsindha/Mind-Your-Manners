@@ -79,6 +79,7 @@ class Trajectory:
     final_output_path: Optional[Path] = None
     final_code: Optional[str] = None  # the code snippet that produced final_output_path
     refused: bool = False
+    hit_turn_limit: bool = False  # ran out of max_turns without a FINAL response -- see failure_taxonomy.py
     result_rows: list[ResultRow] = field(default_factory=list)
 
     @property
@@ -227,5 +228,6 @@ def run_react_multi_round(
             traj.final_code = code
     else:
         traj.steps.append(TrajectoryStep(max_turns, "", None, "", "[max_turns reached without FINAL]", is_final=True))
+        traj.hit_turn_limit = True
 
     return traj
