@@ -74,6 +74,8 @@ def _call_and_record(
         extracted_answer=extraction.letter,
         is_correct=extraction.is_correct,
         timestamp=time.time(),
+        cached_tokens=response.cached_tokens,
+        served_provider=response.served_provider,
         raw_response=response.raw,
         extra={"outcome": extraction.outcome, "subject": subject},
     )

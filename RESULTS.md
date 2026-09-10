@@ -151,3 +151,10 @@ run starts:
 5. Re-verification of every model ID / price in `harness/config.py` against
    current provider docs (flagged inline with `VERIFY` comments) — not yet
    done.
+6. ~~`provider.only`/`allow_fallbacks`/`quantizations` enforcement, the
+   served-provider assertion, response-cache-disable assertion, and
+   caching/cost instrumentation~~ — **resolved**: implemented and tested
+   against mocked OpenRouter responses (`harness/providers/openai_compatible.py`,
+   `tests/test_openrouter_pinning.py`) — see README "Single provider path:
+   OpenRouter, and how pinning is enforced." Not yet exercised against a
+   real OpenRouter call, since no key is available in this build.
