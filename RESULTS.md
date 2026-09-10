@@ -125,9 +125,13 @@ two further bugs the fix process surfaced:
 After all three fixes: the 3 tasks that failed in a 40-task recalculation
 subset (99-24, CF_6540, 44389 — all hit bug #3) now pass individually
 (3/3 test cases each), and `tests/test_grader_recalculation.py` locks in
-both the fix and the memoization behavior against regressions. A full
-200-task recalculation re-run was still in progress at the time of this
-report; update this line with the final count once it completes.
+both the fix and the memoization behavior against regressions. The full
+200-task gold-vs-itself recalculation re-run has now completed:
+**199/200 pass.** The one remaining failure (task 56637) is the
+whitespace-in-multi-range bug in the authors' own `evaluation.py`
+described above (not something to patch in their code), and this
+harness's grader already fails that single test case gracefully rather
+than crashing the batch.
 
 The agent loop (single-round and multi-round ReAct with sandboxed Python
 execution against the workbook) is built and tested end-to-end (mock
