@@ -213,7 +213,7 @@ def cmd_study2_validation_gate(args: argparse.Namespace) -> None:
     summary = {k: v for k, v in result.items() if k != "per_task"}
     print(json.dumps(summary, indent=2))
     for t in result.get("per_task", []):
-        mark = "PASS" if t["passed"] else "FAIL"
+        mark = "CRSH" if t.get("crashed") else ("PASS" if t["passed"] else "FAIL")
         limit = " [hit turn limit]" if t["hit_turn_limit"] else ""
         free = "  <- FREE: passes by doing nothing" if t.get("no_op_passes") else ""
         print(
@@ -236,6 +236,13 @@ def cmd_study2_validation_gate(args: argparse.Namespace) -> None:
         )
         if result["n_passed"] <= result["no_op_n_passed"]:
             print("  WARNING: this model scored no better than doing nothing on this task sample.")
+    if result.get("n_crashed"):
+        # A soak run's headline number: tasks the pipeline could not carry to
+        # a graded result at all, as distinct from tasks the model got wrong.
+        print(
+            f"\n  CRASHED: {result['n_crashed']}/{result['n_tasks']} tasks raised and were "
+            f"skipped -- {result['crashed_task_ids'][:12]}"
+        )
     print(f"\nFull per-task detail (incl. turn diagnostics): {out_path}")
     if not result["passed"]:
         print("\nVALIDATION GATE FAILED (or --expected-accuracy not given). Do not proceed.", file=sys.stderr)

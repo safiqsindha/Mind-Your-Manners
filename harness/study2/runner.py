@@ -24,7 +24,7 @@ from typing import Optional
 import openpyxl
 
 from ..providers.base import ModelConfig
-from ..spend_tracker import SpendTracker, append_spend_log
+from ..spend_tracker import BudgetExceeded, SpendTracker, append_spend_log
 from ..tone_wrappers import TONE_ORDER, TONE_WRAPPERS
 from .agent_loop import Trajectory, run_react_multi_round, run_single_round
 from .dataset import SpreadsheetTask
@@ -115,13 +115,42 @@ def run_validation_gate(
         # explain them is destroyed.
         workdir = out_dir / "scratch" / "validation_gate" / model.key / task.task_id
         input_path = task.input_spreadsheet_paths[0]
-        traj = run_react_multi_round(
-            tracker, model, task.task_id, task.instruction, input_path, workdir,
-            tone_level="none", trial=0, max_turns=max_turns,
-        )
-        grade = _grade_trajectory(grader, task, traj, workdir)
+        # One task must not be able to discard the whole run. A single
+        # ProviderError used to propagate out and lose every completed task
+        # with it (Qwen's gate died this way on task 1 of 5, twice). Over 200
+        # tasks -- or over a paid run -- that turns a recoverable hiccup into
+        # a total loss of work already paid for. BudgetExceeded is deliberately
+        # NOT caught: that is a stop signal, not a task-level failure.
+        try:
+            traj = run_react_multi_round(
+                tracker, model, task.task_id, task.instruction, input_path, workdir,
+                tone_level="none", trial=0, max_turns=max_turns,
+            )
+            grade = _grade_trajectory(grader, task, traj, workdir)
+            free = no_op_passes(grader, task, workdir / "_no_op") if check_no_op else None
+        except BudgetExceeded:
+            raise
+        except Exception as exc:  # noqa: BLE001 -- deliberately broad; see above
+            print(f"  ERROR on task {task.task_id}: {type(exc).__name__}: {exc}"[:300])
+            per_task.append(
+                {
+                    "task_id": task.task_id,
+                    "instruction_type": task.instruction_type,
+                    "passed": False,
+                    "no_op_passes": None,
+                    "beat_no_op": None,
+                    "soft_restriction": 0.0,
+                    "n_test_cases_passed": 0,
+                    "n_test_cases": len(task.answer_spreadsheet_paths),
+                    "hit_turn_limit": False,
+                    "n_turns": 0,
+                    "error": f"{type(exc).__name__}: {exc}"[:500],
+                    "crashed": True,
+                    "turn_diagnostics": [],
+                }
+            )
+            continue
         n_passed += int(grade.passed)
-        free = no_op_passes(grader, task, workdir / "_no_op") if check_no_op else None
         # Which tasks failed, not just how many: an aggregate alone can't
         # distinguish "these models have similar overall skill" from "every
         # model fails the same two tasks", and those imply very different
@@ -139,6 +168,7 @@ def run_validation_gate(
                 "hit_turn_limit": traj.hit_turn_limit,
                 "n_turns": len(traj.steps),
                 "error": grade.error,
+                "crashed": False,
                 "turn_diagnostics": _turn_diagnostics(traj),
             }
         )
@@ -154,6 +184,8 @@ def run_validation_gate(
         "tolerance": tolerance,
         "passed": expected_accuracy is not None and abs(observed - expected_accuracy) <= tolerance,
         "spend_usd": tracker.total_usd,
+        "n_crashed": sum(1 for t in per_task if t.get("crashed")),
+        "crashed_task_ids": [t["task_id"] for t in per_task if t.get("crashed")],
         "per_task": per_task,
     }
     if check_no_op:

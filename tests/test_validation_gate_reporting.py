@@ -192,3 +192,56 @@ def test_no_op_check_can_be_disabled(tmp_path):
         r = run_validation_gate(MODEL, tasks, grader=None, out_dir=tmp_path, check_no_op=False)
     assert "no_op_accuracy" not in r
     assert r["per_task"][0]["no_op_passes"] is None
+
+
+# --- Per-task error isolation ---------------------------------------------
+# A single ProviderError used to propagate out of the gate and discard every
+# task already completed (Qwen's gate died this way on task 1 of 5, twice).
+# Over 200 tasks, or over a paid run, that turns a recoverable hiccup into a
+# total loss of work already paid for.
+
+from harness.spend_tracker import BudgetExceeded  # noqa: E402
+
+
+def _gate_where_one_task_raises(tmp_path, exc: Exception):
+    tasks = [_FakeTask("ok_1"), _FakeTask("boom"), _FakeTask("ok_2")]
+
+    def fake_run(tracker, model, task_id, *a, **kw):
+        if task_id == "boom":
+            raise exc
+        return _trajectory(task_id, hit_limit=False)
+
+    with patch("harness.study2.runner.run_react_multi_round", side_effect=fake_run), \
+         patch("harness.study2.runner._grade_trajectory",
+               side_effect=lambda g, task, tr, wd: _grade(task.task_id, True)):
+        return run_validation_gate(MODEL, tasks, grader=None, out_dir=tmp_path, check_no_op=False)
+
+
+def test_one_failing_task_does_not_discard_the_whole_run(tmp_path):
+    r = _gate_where_one_task_raises(tmp_path, RuntimeError("provider exploded"))
+    assert len(r["per_task"]) == 3, "every task should be accounted for"
+    assert r["n_passed"] == 2, "the two healthy tasks still count"
+
+
+def test_crashed_task_is_recorded_with_its_error(tmp_path):
+    r = _gate_where_one_task_raises(tmp_path, RuntimeError("provider exploded"))
+    boom = next(t for t in r["per_task"] if t["task_id"] == "boom")
+    assert boom["crashed"] is True
+    assert boom["passed"] is False
+    assert "provider exploded" in boom["error"]
+    assert r["n_crashed"] == 1
+    assert r["crashed_task_ids"] == ["boom"]
+
+
+def test_healthy_tasks_are_not_marked_crashed(tmp_path):
+    r = _gate_where_one_task_raises(tmp_path, RuntimeError("provider exploded"))
+    assert all(not t["crashed"] for t in r["per_task"] if t["task_id"] != "boom")
+
+
+def test_budget_exceeded_still_stops_the_run(tmp_path):
+    """A budget cap is a deliberate stop signal, not a task-level failure --
+    swallowing it would keep spending past the cap."""
+    with pytest.raises(BudgetExceeded):
+        _gate_where_one_task_raises(
+            tmp_path, BudgetExceeded(phase="test", cap_usd=1.0, projected_usd=2.0)
+        )
