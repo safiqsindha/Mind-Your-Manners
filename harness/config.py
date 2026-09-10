@@ -466,9 +466,40 @@ NEX_FREE_SMOKETEST = ModelConfig(
     output_price_per_1m=0.0,
 )
 
+# PIPELINE SOAK MODEL -- for running all 200 tasks live to prove the pipeline
+# survives them, NOT to measure anything. Deliberately not a roster model, so
+# soak output can never be mistaken for a result, and deliberately a vendor
+# absent from the roster (Mistral) so it exercises response-shape handling the
+# four roster models do not.
+#
+# Cheapest option on OpenRouter that clears the bar this actually needs, chosen
+# against measured token use rather than guesswork: the real 5-task gate runs
+# consumed a median 18k prompt / 7.7k output tokens per task, so 200 tasks is
+# ~3.6M/1.5M, costing ~$0.11 here (~$0.29 at the worst-case token rate a weak
+# model that burns its full turn budget would hit). 131k context matters --
+# multi-turn ReAct prompts were measured reaching ~52k tokens.
+#
+# NOT provider-pinned on purpose, unlike every roster model: a soak wants
+# fallbacks available so a single congested provider doesn't stall 200 tasks.
+# Reproducibility of *which* provider served it is irrelevant when the output
+# is discarded. reasoning_effort stays None -- this model's
+# supported_parameters (checked live) has no reasoning field at all.
+PIPELINE_SOAK = ModelConfig(
+    key="pipeline-soak",
+    provider="openai_compatible",
+    model_id="mistralai/mistral-nemo",
+    canonical_slug="mistralai/mistral-nemo",  # OpenRouter reports no dated snapshot for this id
+    display_name="Mistral Nemo (pipeline soak only -- results are not data)",
+    temperature=0.0,
+    api_base=OPENROUTER_BASE_URL,
+    max_tokens=2048,
+    input_price_per_1m=0.019,
+    output_price_per_1m=0.030,
+)
+
 ALL_MODELS: list[ModelConfig] = STUDY1_MODELS + [
     GPT_LUNA_CALIBRATION, FRONTIER_SPOTCHECK, CLAUDE_CLI_SMOKETEST,
-    OPENROUTER_FREE_SMOKETEST, NEX_FREE_SMOKETEST,
+    OPENROUTER_FREE_SMOKETEST, NEX_FREE_SMOKETEST, PIPELINE_SOAK,
 ]
 
 MODELS_BY_KEY: dict[str, ModelConfig] = {m.key: m for m in ALL_MODELS}
