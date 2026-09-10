@@ -42,6 +42,30 @@ def test_every_model_has_a_positive_price():
         assert m.output_price_per_1m > 0
 
 
+def test_every_pinned_model_satisfies_the_quantization_requirement():
+    """Every model with provider_pin set must either have quantization_pin
+    set, or explicitly acknowledge (quantization_not_exposed=True) that its
+    pinned provider's real OpenRouter endpoint doesn't report one -- see
+    harness/config.py's QUANTIZATION PIN section and
+    harness/providers/openai_compatible.py. A model satisfying neither
+    would raise ProviderError on its very first live call."""
+    for m in STUDY1_MODELS:
+        if m.provider_pin:
+            assert m.quantization_pin or m.quantization_not_exposed, (
+                f"{m.key}: provider_pin set but neither quantization_pin nor "
+                "quantization_not_exposed=True -- this model cannot make a live call"
+            )
+
+
+def test_deepseek_is_not_pinned_to_the_nonexistent_deepseek_provider():
+    """Regression test for the bug caught while merging the pinning PR in:
+    provider_pin="DeepSeek" doesn't correspond to any real OpenRouter
+    endpoint for this model_id."""
+    deepseek = next(m for m in STUDY1_MODELS if m.key == "deepseek-current")
+    assert deepseek.provider_pin != "DeepSeek"
+    assert deepseek.quantization_pin  # DeepInfra's fp8 pin should still be set explicitly
+
+
 def _make_row(cost_usd: float) -> ResultRow:
     return ResultRow(
         row_id="r", study="study1", phase="test", item_id="q", tone_level="L3_neutral",

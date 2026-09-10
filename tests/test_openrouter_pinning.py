@@ -8,7 +8,7 @@ field names (provider.only/quantizations, openrouter_metadata.endpoints,
 X-OpenRouter-Cache*, usage.prompt_tokens_details.cached_tokens, usage.cost)
 came from OpenRouter's own docs, not guessed -- see
 harness/providers/openai_compatible.py's module docstring and
-harness/config.py's LLAMA_70B comment for the verification trail.
+harness/config.py's QUANTIZATION PIN section for the verification trail.
 """
 from __future__ import annotations
 
@@ -94,6 +94,22 @@ def test_quantization_pin_is_mandatory_alongside_provider_pin(mock_post):
     with pytest.raises(ProviderError, match="quantization_pin"):
         provider.complete(unquantized, "sys", [{"role": "user", "content": "hi"}])
     mock_post.assert_not_called()
+
+
+@patch("harness.providers.openai_compatible.requests.post")
+def test_quantization_not_exposed_bypasses_the_requirement(mock_post):
+    """A provider that genuinely has no discrete quantization (e.g. a
+    first-party API like OpenAI/Google AI Studio -- see harness/config.py's
+    GPT_LUNA/GEMINI_FLASH) can opt out via quantization_not_exposed=True
+    instead of being permanently uncallable."""
+    not_exposed = replace(PINNED_MODEL, quantization_pin=None, quantization_not_exposed=True)
+    mock_post.return_value = _fake_response(json_body=_ok_body())
+    provider = OpenAICompatibleProvider(api_key="k")
+    provider.complete(not_exposed, "sys", [{"role": "user", "content": "hi"}])
+
+    body = mock_post.call_args.kwargs["json"]
+    assert body["provider"] == {"only": ["Nebius"], "allow_fallbacks": False}
+    assert "quantizations" not in body["provider"]
 
 
 @patch("harness.providers.openai_compatible.requests.post")

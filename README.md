@@ -293,12 +293,22 @@ hint, not a pin, since OpenRouter can still fall back elsewhere:
 - `provider.quantizations` -- locks precision, so the pinned provider
   can't quietly serve a lower-precision variant of the model
 
-One exception, checked live and audited rather than assumed: a provider
-that genuinely doesn't expose a discrete quantization at all can set
-`ModelConfig.quantization_not_exposed=True` instead -- `provider.only`
-already pins to the single variant that provider serves, so there's
-nothing left for `quantizations` to disambiguate. See RESULTS.md for the
-current roster's status against this requirement.
+Set both `ModelConfig.provider_pin` and `ModelConfig.quantization_pin` for
+any OpenRouter-routed model -- the provider layer raises `ProviderError`
+before making a call if only one is set. **One exception, checked live and
+audited rather than assumed:** a provider that genuinely doesn't expose a
+discrete quantization at all can set `ModelConfig.quantization_not_exposed
+= True` instead of `quantization_pin`. This is true of every first-party
+API endpoint checked so far -- OpenAI's own endpoint, Google AI Studio, and
+Alibaba's official Qwen endpoint all report quantization `"unknown"` on
+every pricing tier they offer, for this reason: `provider.only` already
+pins to the single variant that provider serves, so there's no ambiguity
+for `quantizations` to resolve. This was caught (along with a real bug --
+`DEEPSEEK_CURRENT`'s old pin, `provider_pin="DeepSeek"`, didn't correspond
+to any real provider in OpenRouter's endpoint list for that model_id at
+all) while merging the enforcement code into the roster; both are fixed
+now -- see `harness/config.py`'s module docstring for the full verification
+trail and RESULTS.md for what changed.
 
 **The pin is asserted, not assumed.** Every OpenRouter call requests
 `X-OpenRouter-Metadata: enabled` and reads the actual serving provider back

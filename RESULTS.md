@@ -225,27 +225,47 @@ number still holds.
    **resolved for the current roster**: every model_id, price, and
    provider pin was checked directly against OpenRouter's live catalog on
    2026-09-10 (see `harness/config.py` module docstring). Re-run this
-   check if it's been more than a few weeks. **Caveat, still open:** the
-   mandatory triple-pin (`provider.only` + `allow_fallbacks:false` +
-   `provider.quantizations`) requires `quantization_pin` on every model
-   that sets `provider_pin` -- none of the 5 roster models currently have
-   it set, and `DEEPSEEK_CURRENT`'s pin (`provider_pin="DeepSeek"`) does
-   not match any provider name OpenRouter's live endpoint list actually
-   returns for `deepseek/deepseek-v4-flash-0731`. **This roster cannot
-   make a live call yet without a follow-up fix to both** -- fix drafted
-   in a separate PR (adds `quantization_not_exposed` + re-pins DeepSeek to
-   a real provider), not yet merged as of this revision.
+   check if it's been more than a few weeks. **A real gap was found and
+   fixed while merging the pinning-enforcement PR in**, not just a naming
+   mismatch: none of the 5 roster models had `quantization_pin` set, and
+   `DEEPSEEK_CURRENT`'s pin (`provider_pin="DeepSeek"`) didn't match any
+   provider OpenRouter's live endpoint list actually returns for that
+   model_id -- meaning the whole roster would have failed its very first
+   live call. Fixed by (a) re-pinning DeepSeek to a real provider
+   (DeepInfra, fp8, also cheaper -- pricing corrected from $0.44/$1.32 to
+   $0.06/$0.18 per 1M) and (b) adding an explicit, audited
+   `quantization_not_exposed` field for the other four models, whose
+   pinned first-party providers (OpenAI, Google AI Studio, Alibaba)
+   checked out as genuinely not exposing a discrete quantization on any
+   pricing tier -- see `harness/config.py`'s module docstring and
+   `tests/test_roster.py` for the regression tests.
 5. ~~`provider.only`/`allow_fallbacks`/`quantizations` enforcement, the
    served-provider assertion, response-cache-disable assertion, and
    caching/cost instrumentation~~ -- **resolved**: implemented and tested
    against mocked OpenRouter responses (`harness/providers/openai_compatible.py`,
    `tests/test_openrouter_pinning.py`) -- see README "Single provider
-   path: OpenRouter, and how pinning is enforced." Not yet exercised
-   against a real OpenRouter call, since no key is available in this
-   build, and see item 4's caveat above -- the current roster doesn't
-   satisfy it yet.
-6. **New outcome measures** (failure severity, verification behavior,
+   path: OpenRouter, and how pinning is enforced." Every roster model
+   (plus the new `OPENROUTER_FREE_SMOKETEST`, see below) was verified to
+   build a valid, non-raising request against a mocked response before
+   this was called done. **Still not yet exercised against a real
+   OpenRouter call** -- no key is available in this build.
+6. ~~A cloned `AgenticPay` checkout and one real negotiation run~~ --
+   **resolved**: cloned, its real schema read directly, one full neutral
+   negotiation run end to end (see "Study 3" above -- shelved, kept not
+   deleted), and the 5x5 bilateral matrix smoke-tested against the real
+   cloned code with the mock provider.
+7. **New:** `OPENROUTER_FREE_SMOKETEST` (`harness/config.py`) -- a free,
+   currently-live OpenRouter endpoint (`google/gemma-4-26b-a4b-it:free`,
+   served by Google AI Studio, $0/$0) for validating the real pinning/
+   cache-assertion code path once a key exists, before spending on the
+   real roster. An OpenAI-branded free option was checked first, per
+   request, and isn't usable right now: `openai/gpt-oss-20b:free` and
+   `openai/gpt-oss-120b:free` both exist as catalog entries but currently
+   resolve to zero active endpoints (checked live, 2026-09-10) -- the slug
+   exists, nothing actually serves it. See README "Smoke-testing the real
+   OpenRouter pinning path, once you have a key."
+8. **New outcome measures** (failure severity, verification behavior,
    shortcut rate) are specified in README "Outcome measures" but not yet
    implemented in `harness/study2/`. Needed before Phase 2's main run.
-7. **Phase 2 budget re-projection** for the 7-tone matrix -- see "Total
+9. **Phase 2 budget re-projection** for the 7-tone matrix -- see "Total
    spend" above.
