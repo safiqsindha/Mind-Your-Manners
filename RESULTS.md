@@ -525,12 +525,57 @@ the $150 cap -- consistent with the earlier projection, so no budget
 surprise. DeepSeek is 6x Luna's cost per trajectory, driven by its 29%
 turn-limit rate rather than its token price.
 
-**Qwen is the wall-clock constraint, and not because of rate limits.** It
-took only 14 HTTP 429s across the whole run, against DeepSeek's 45. It is
-simply slow: ~2.2 calls/min against DeepSeek's 8, putting a 100-task gate
-at ~5.5 hours where the others took ~70 minutes. A BYOK key on the user's
-own DashScope account moves its rate limits but will not change this, so
-the core run should assume Qwen sets its duration.
+**Qwen is the wall-clock constraint, and the cause is reasoning tokens,
+not rate limits.** It took only 14 HTTP 429s across the whole run, against
+DeepSeek's 45, so throttling is not what slows it. Measured from the run's
+own records:
+
+| model | median latency | throughput | reasoning share of output | avg completion tok | $/call |
+|---|---|---|---|---|---|
+| DeepSeek | 4.7s | 235 tok/s | 74% | 1099 | $0.00155 |
+| Luna | 5.7s | 100 tok/s | 36% | 573 | $0.00095 |
+| GLM | 5.5s | 98 tok/s | 19% | 536 | $0.00048 |
+| **Qwen** | **24.7s** | **53 tok/s** | **80%** | **1305** | $0.00080 |
+
+Qwen emits 1305 completion tokens per call, 80% of them reasoning tokens,
+at ~53 tok/s. That product is ~25s, which is the median latency observed --
+the slowness is fully accounted for by how much it generates and how fast
+it generates it. Nothing is left over for throttling to explain.
+
+**A BYOK DashScope key therefore buys quota, not speed -- verified, not
+assumed** (2026-09-11). The key was tested directly: valid on
+`dashscope-intl.aliyuncs.com` (the China endpoint `dashscope.aliyuncs.com`
+rejects it with `invalid_api_key`), `qwen3.8-flash` present in its catalog,
+and inference succeeds. Throughput measured on identical payloads:
+
+| path | throughput |
+|---|---|
+| DashScope direct (BYOK upstream) | 55-59 tok/s |
+| OpenRouter pinned to Alibaba (what the harness does) | 44-54 tok/s |
+
+Same upstream, same speed within noise. Removing the shared-pool rate limit
+would eliminate 14 retries across a 100-task run and change nothing else,
+so **the core run should still assume Qwen sets its duration** -- but for a
+reason that no key can fix. Reducing Qwen's reasoning output, or dropping
+it from the roster, are the only levers that would.
+
+**A methodological warning found while measuring this.** An *unpinned*
+OpenRouter call to `qwen/qwen3.8-flash` was served by **Makora**, not
+Alibaba, at materially different speed -- the first latency comparison run
+here was invalid for exactly that reason and had to be redone. Any
+throughput, cost, or quality measurement on OpenRouter is meaningless
+without `provider.only` set, which is precisely what the pinning
+enforcement in `harness/providers/openai_compatible.py` exists to
+guarantee. It also means the served-provider assertion is load-bearing for
+the study's validity, not just its reproducibility.
+
+**Reasoning share varies 4x across the roster** (19% GLM to 80% Qwen), and
+it drives cost more than token price does: DeepSeek costs 6x GLM per call
+while being the *fastest* model per token. This is directly relevant to
+`token_cost_effect_size` as an outcome measure -- a tone effect on reasoning
+volume would show up there, and the baseline volume differs enormously by
+model, so that outcome must be read within model and never pooled across
+the roster.
 
 
 **Qwen needed a larger retry budget, not a different pin.** Qwen's gate
