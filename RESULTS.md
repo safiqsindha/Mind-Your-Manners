@@ -542,6 +542,40 @@ category for this model on pass rate -- if the roster models show the same
 pattern, `max_turns` may bind more often than the 3-4 turn median from the
 5-task gate suggested.
 
+**Did the ground-truth mutation actually damage anything? Measured, and
+no.** The pre-fix grader recalculated SpreadsheetBench's shipped answer
+files in place (fixed 2026-09-11). Checking the extracted dataset against
+its own tarball afterwards: **600 of 601 answer files differ on disk**, so
+the mutation was comprehensive and every result produced before the fix was
+graded against modified ground truth.
+
+That sounds worse than it is, and the distinction matters for whether
+earlier results stand. Comparing cell values between the pristine tarball
+copy and the mutated copy across 40 answer files (71,619 cells):
+
+| change | count |
+|---|---|
+| `None` -> computed value (the intended recalculation) | 309 |
+| value -> different value (degradation) | **0** |
+| value -> `None` (data loss) | **0** |
+
+Every single difference is a formula cell that shipped without a cached
+value and now carries the correct computed one -- exactly the condition
+the grader's own docstring documents on task 99-24 (`'Vendor'!A33` reads
+`None` as shipped, recalculates to `32`). So the in-place recalculation was
+doing semantically the right thing; **no pre-fix result is invalidated by
+it**, and the feared compounding degradation from repeated round-trips did
+not materialise even after many runs.
+
+The fix was still necessary, for reasons that are about architecture
+rather than observed damage: the dataset silently stopped matching its own
+tarball (provenance), nothing would ever have restored it since extraction
+is skipped whenever the directory exists, and the compounding risk was
+unbounded even though it happened not to bite. Recalculating a cached copy
+gets the same values with none of that. This entry exists so the record
+does not imply earlier numbers are void -- they are not, and the earlier
+framing of this as "corruption" overstated what was measured.
+
 Per-call spend logging (`results/raw/*.jsonl`) and a running total
 (`results/spend_log.jsonl`) are wired up and budget-capped
 (`harness/spend_tracker.py:BudgetExceeded`) for whenever a live
