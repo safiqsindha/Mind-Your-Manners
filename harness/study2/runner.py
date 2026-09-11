@@ -16,6 +16,7 @@ test cases 2 and 3's inputs, and all 3 outputs are graded together via
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import random
 import shutil
@@ -67,16 +68,52 @@ def no_op_passes(grader: SpreadsheetBenchGrader, task: SpreadsheetTask, workdir:
     is being run, and the point here is to make the baseline legible, not
     to make the number look better.
     """
+    # Whether a task is free is a property of the benchmark, not of a run, so
+    # the verdict is cached on disk. Without this the check re-copies and
+    # re-grades 3 workbooks per task on every run -- measured at roughly a
+    # third of wall-clock time for the fast models, and ~23 min per model at
+    # n=100. Keyed by the input files' size+mtime so a re-extracted or updated
+    # dataset re-checks instead of trusting a stale verdict.
+    cache_file = Path(grader.recalc_cache_dir) / "no_op_verdicts.json"
+    try:
+        fingerprint = hashlib.sha256(
+            "|".join(
+                f"{p}:{p.stat().st_size}:{p.stat().st_mtime_ns}"
+                for p in task.input_spreadsheet_paths
+            ).encode()
+        ).hexdigest()[:20]
+    except OSError:
+        fingerprint = None
+
+    cache: dict[str, dict] = {}
+    if fingerprint and cache_file.exists():
+        try:
+            cache = json.loads(cache_file.read_text())
+        except (json.JSONDecodeError, OSError):
+            cache = {}
+        hit = cache.get(task.task_id)
+        if isinstance(hit, dict) and hit.get("fingerprint") == fingerprint:
+            return bool(hit["passed"])
+
     outputs: list[Optional[Path]] = []
     for idx, src in enumerate(task.input_spreadsheet_paths, start=1):
         dst = workdir / f"no_op_case{idx}{src.suffix}"
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy(src, dst)
         outputs.append(dst)
-    return grader.evaluate_task(
+    passed = grader.evaluate_task(
         task.task_id, task.instruction_type, task.answer_position,
         outputs, task.answer_spreadsheet_paths,
     ).passed
+
+    if fingerprint:
+        try:
+            cache[task.task_id] = {"fingerprint": fingerprint, "passed": bool(passed)}
+            cache_file.parent.mkdir(parents=True, exist_ok=True)
+            cache_file.write_text(json.dumps(cache, indent=2, sort_keys=True))
+        except OSError:
+            pass  # a cache that cannot be written must not fail the run
+    return passed
 
 
 FREE_TASKS_MANIFEST = Path(__file__).parent / "free_tasks.json"

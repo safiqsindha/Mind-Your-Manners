@@ -278,6 +278,45 @@ def cmd_study2_validation_gate(args: argparse.Namespace) -> None:
         sys.exit(2)
 
 
+def cmd_study2_regrade(args: argparse.Namespace) -> None:
+    """Re-grade a completed run from its raw per-call log. Makes NO model
+    calls and costs nothing -- see harness/study2/regrade.py for why this
+    exists and what it can and cannot recover."""
+    from .study2.dataset import ensure_repo, load_spreadsheetbench
+    from .study2.grader import SpreadsheetBenchGrader
+    from .study2.regrade import regrade_run
+
+    raw_path = Path(args.raw)
+    if not raw_path.exists():
+        print(f"ERROR: no such raw log: {raw_path}", file=sys.stderr)
+        sys.exit(1)
+
+    repo_dir = ensure_repo(Path(args.repo_dir))
+    grader = SpreadsheetBenchGrader(repo_dir)
+    tasks = load_spreadsheetbench(repo_dir, sample_only=not args.full_dataset)
+    tasks_by_id = {t.task_id: t for t in tasks}
+
+    print(f"[regrade] {raw_path} against {len(tasks_by_id)} loaded tasks (no model calls)")
+    records = regrade_run(
+        raw_path, tasks_by_id, grader,
+        workdir_root=RESULTS_ROOT / "scratch" / "regrade",
+        max_turns=args.max_turns,
+    )
+
+    out_path = RESULTS_ROOT / "analysis" / f"{raw_path.stem}_regraded.json"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(records, indent=2, default=str))
+
+    graded = [r for r in records if r.get("regraded")]
+    missing = [r for r in records if not r.get("regraded")]
+    n_passed = sum(1 for r in graded if r["passed"])
+    print(f"  trajectories rebuilt : {len(graded)}")
+    print(f"  passed               : {n_passed}/{len(graded)}" + (f"  ({n_passed / len(graded):.0%})" if graded else ""))
+    if missing:
+        print(f"  NOT regraded         : {len(missing)} (task id absent from the loaded dataset -- wrong slice?)")
+    print(f"\n  written to: {out_path}")
+
+
 def cmd_study2_thinking_preflight(args: argparse.Namespace) -> None:
     """Phase 0.5 gate (README "The thinking arm"): three cheap probe checks
     that must pass before the calibration arm gets real spend -- see
@@ -570,7 +609,7 @@ def build_parser() -> argparse.ArgumentParser:
     g2 = s2_sub.add_parser("validation-gate")
     g2.add_argument("--model", required=True, choices=list(MODELS_BY_KEY))
     g2.add_argument("--repo-dir", default="data/spreadsheetbench")
-    g2.add_argument("--n-tasks", type=int, default=20)
+    g2.add_argument("--n-tasks", type=int, default=100)  # see MIN_USEFUL_GATE_TASKS: +/-0.08 tolerance is only ~0.8 SD at n=20, so the gate would fail a healthy harness ~40% of the time
     g2.add_argument(
         "--sample-seed", type=int, default=0,
         help="Seed for the discriminating-task draw. Same seed + dataset => same tasks, "
@@ -586,6 +625,13 @@ def build_parser() -> argparse.ArgumentParser:
     g2.add_argument("--tolerance", type=float, default=0.08)
     g2.add_argument("--max-turns", type=int, default=10, help="Per-trajectory turn budget for the multi-round agent loop")
     g2.set_defaults(func=cmd_study2_validation_gate)
+
+    rg = s2_sub.add_parser("regrade", help="Re-grade a finished run from results/raw/*.jsonl -- no model calls, no spend")
+    rg.add_argument("--raw", required=True, help="Path to a results/raw/*.jsonl log")
+    rg.add_argument("--repo-dir", default="data/spreadsheetbench")
+    rg.add_argument("--full-dataset", action="store_true", help="Load the 912-task set instead of the 200-task sample")
+    rg.add_argument("--max-turns", type=int, default=None, help="Turn budget the original run used (for hit_turn_limit)")
+    rg.set_defaults(func=cmd_study2_regrade)
 
     tp = s2_sub.add_parser("thinking-preflight")
     tp.add_argument("--on-model", default="gpt-luna", choices=list(MODELS_BY_KEY))

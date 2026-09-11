@@ -205,7 +205,16 @@ def _call_and_record(
 ):
     provider = get_provider(model.provider)
     tracker.check_before_call(estimated_cost_usd=0.02)
+    _t0 = time.perf_counter()
     response = provider.complete(model, system, messages)
+    if not response.latency_s:
+        # Provider._timed() exists but OpenAICompatibleProvider.complete()
+        # never calls it, so every row logged latency_s=0.0 and per-call timing
+        # had to be inferred from timestamp gaps. Timed here instead of inside
+        # one provider so it holds for all of them. Note this is wall time for
+        # the whole call INCLUDING retry backoff, which is the number worth
+        # having: it is what made Qwen 3x slower than the rest of the roster.
+        response.latency_s = round(time.perf_counter() - _t0, 3)
     cost = compute_cost_usd(model, response)
     row = ResultRow(
         row_id=str(uuid.uuid4()),
