@@ -23,14 +23,20 @@ happened.
 | SpreadsheetBench grader on gold spreadsheets, unmodified, expect 100% | **199/200** -- see "Study 2 (SpreadsheetBench)" below |
 | LibreOffice headless formula recalculation works in the run environment | **Fixed in this build's container** -- re-confirm on whatever host runs a live batch |
 
-| Study | Model | Benchmark | Observed accuracy | Published accuracy | Within tolerance? |
+| Study | Model | Benchmark | Observed accuracy | No-op floor | n |
 |---|---|---|---|---|---|
-| 2 | -- | SpreadsheetBench | not run | -- | -- |
+| 2 | gpt-luna | SpreadsheetBench | **0.42** | 0.00 | 100 |
+| 2 | deepseek-current | SpreadsheetBench | **0.38** | 0.00 | 100 |
+| 2 | glm-current | SpreadsheetBench | **0.28** | 0.00 | 100 |
+| 2 | qwen-current | SpreadsheetBench | **0.45** | 0.00 | 100 |
 
-The validation gate is wired up (`harness/study2/runner.py:run_validation_gate`)
-and exercised against the mock provider + real cloned SpreadsheetBench
-data during development -- see the harness test suite. It has not been
-run against a real model.
+Run live on 2026-09-11 against the real roster, seed 0, unmodified
+instructions, `max_turns=10`, zero crashes in 400 trajectories -- see
+"The n=100 gate" under Study 2 below for the per-model detail, the
+proposed `--expected-accuracy` values, and the measured core-run cost.
+SpreadsheetBench publishes no single-number baseline for these models, so
+these are the harness's own reference points rather than a reproduction
+target.
 
 ## Study 2 -- Agentic spreadsheet work (SpreadsheetBench)
 
@@ -442,6 +448,152 @@ behavior, turn count) carry proportionally more of the signal. Whether
 `81-41` and `99-24` are genuinely beyond this roster or hit a grader
 limitation is not yet established and is worth checking before the pilot
 sizes anything off these numbers.
+
+### The n=100 gate -- the first numbers worth quoting (2026-09-11)
+
+The 5-task table above is superseded for every purpose except its own
+narrative. Three quarters of it was floor- or ceiling-saturated and two of
+its five tasks pass when the agent does nothing, so it could not support an
+`--expected-accuracy` value. This run replaces it: **100 tasks drawn by
+`select_gate_tasks(seed=0)`** from the 200-task sample, with the 17 known
+no-op-passable tasks excluded up front, unmodified instructions, no tone
+wrapper, `max_turns=10`, one trial. All four models drew the *same* 100
+tasks, so the accuracies below are directly comparable.
+
+| model | accuracy | no-op floor | beat no-op | hit turn limit | crashed | spend |
+|---|---|---|---|---|---|---|
+| Luna | **42/100** | 0/100 | 42 | 4 | 0 | $0.438 |
+| DeepSeek | **38/100** | 0/100 | 38 | 29 | 0 | $1.181 |
+| GLM | **28/100** | 0/100 | 28 | 1 | 0 | $0.187 |
+| **Qwen** | **45/100** | 0/100 | 45 | 26 | 0 | $0.641 |
+
+Compact per-task records: `results_archive/validation_gate_n100_*.json`
+(the full reports carry per-turn stdout/stderr and are ~300 KB each, so
+only the summaries are tracked).
+
+**The slowest model is the most accurate, and the most expensive is not.**
+Qwen scores 45/100 -- the best on the roster -- while being 3x slower per
+call than anything else and costing less per call than Luna or DeepSeek.
+DeepSeek costs 6x GLM per trajectory to score 10 points higher. Neither
+speed nor price predicts accuracy here, which matters for reading the study:
+a tone effect on token spend is not a tone effect on capability, and the two
+must not be collapsed into one "efficiency" story.
+
+**The no-op floor is 0/100 for every model.** This is the result that makes
+the rest usable, and it is the one the 5-task gate could not deliver. Every
+pass in this table is work the model actually did. It also confirms the
+`free_tasks.json` manifest is complete over these 100 tasks -- the no-op
+check re-verified each selected task rather than trusting the cache.
+
+**This changes the primary outcome measure.** The earlier recommendation was
+to prefer `soft_restriction` over hard accuracy, because 13 of the 20 tasks
+in the old sample were floor-censored and accuracy had nowhere to move.
+That argument does not apply to this sample. Accuracy is a defensible
+primary measure here, with `soft_restriction` kept as the secondary that
+stays informative where accuracy saturates.
+
+**Zero crashes across 400 trajectories.** The per-task error isolation and
+the widened retry taxonomy are holding under real load, which is the first
+evidence for either at a scale that resembles the core run.
+
+**The 48 "no output produced" gradings are model failures, not harness
+failures.** Checked against the persisted turn diagnostics: models writing
+Excel formula syntax directly into a Python file, opening a workbook by a
+guessed filename instead of `WORKBOOK_PATH`, or replying in prose without
+emitting code at all. The sandbox executed correctly in all of them -- the
+stderr is a genuine Python traceback from the model's own code, not the
+"no such file" signature of the old path bug.
+
+**Proposed `--expected-accuracy`, for re-running this gate as a regression
+check** (same seed, same 100 tasks, or the numbers are not comparable):
+
+| model | `--expected-accuracy` | `--tolerance` |
+|---|---|---|
+| gpt-luna | 0.42 | 0.10 |
+| deepseek-current | 0.38 | 0.10 |
+| glm-current | 0.28 | 0.10 |
+| qwen-current | 0.45 | 0.10 |
+
+At n=100 the standard deviation of a binomial proportion near p=0.4 is
+0.049, so the default +/-0.08 is 1.6 SD and would fail a healthy harness
+roughly 11% of the time. **0.10 is 2 SD (~5%)** and is the value to use.
+These are *not* thresholds the models must clear; they are the harness's
+own fingerprint, and a later run landing far outside one is a signal to go
+looking at the harness before believing the model changed.
+
+**Core-run cost, measured rather than estimated.** Per-trajectory spend from
+this run, multiplied by 7 tones x 3 trials:
+
+| n_tasks | trajectories/model | Luna | DeepSeek | GLM | Qwen | roster total |
+|---|---|---|---|---|---|---|
+| 20 | 420 | $1.84 | $4.96 | $0.78 | $2.69 | $10.27 |
+| 50 | 1050 | $4.59 | $12.40 | $1.96 | $6.73 | $25.68 |
+
+A 50-task core run for the whole roster lands near $26 against the $150
+cap -- consistent with the earlier projection, so no budget surprise.
+DeepSeek is 6x GLM's cost per trajectory, driven by its 29% turn-limit
+rate rather than its token price.
+
+**Correction, measured against a live run (2026-09-11):** this projection
+is built from a single neutral-tone trajectory per task, and the core run's
+trajectories cost more. Luna's live core run tracks to roughly $3.50 for
+1050 trajectories against the $1.64 the CLI estimator projected, and the
+estimator undercounts by about 2x. Size the roster at **~$50, not ~$26**.
+Both are far under the cap; the point is that the estimator is optimistic
+and should not be the number anyone plans against.
+
+**Qwen is the wall-clock constraint, and the cause is reasoning tokens,
+not rate limits.** It took only 14 HTTP 429s across the whole run, against
+DeepSeek's 45, so throttling is not what slows it. Measured from the run's
+own records:
+
+| model | median latency | throughput | reasoning share of output | avg completion tok | $/call |
+|---|---|---|---|---|---|
+| DeepSeek | 4.7s | 235 tok/s | 74% | 1099 | $0.00155 |
+| Luna | 5.7s | 100 tok/s | 36% | 573 | $0.00095 |
+| GLM | 5.5s | 98 tok/s | 19% | 536 | $0.00048 |
+| **Qwen** | **17.7s** | **66 tok/s** | **77%** | **1170** | $0.00075 |
+
+Qwen emits 1170 completion tokens per call, 77% of them reasoning tokens,
+at ~66 tok/s. That product is ~18s, which is the median latency observed --
+the slowness is fully accounted for by how much it generates and how fast
+it generates it. Nothing is left over for throttling to explain.
+
+**A BYOK DashScope key therefore buys quota, not speed -- verified, not
+assumed** (2026-09-11). The key was tested directly: valid on
+`dashscope-intl.aliyuncs.com` (the China endpoint `dashscope.aliyuncs.com`
+rejects it with `invalid_api_key`), `qwen3.8-flash` present in its catalog,
+and inference succeeds. Throughput measured on identical payloads:
+
+| path | throughput |
+|---|---|
+| DashScope direct (BYOK upstream) | 55-59 tok/s |
+| OpenRouter pinned to Alibaba (what the harness does) | 44-54 tok/s |
+
+Same upstream, same speed within noise. Removing the shared-pool rate limit
+would eliminate 14 retries across a 100-task run and change nothing else,
+so **the core run should still assume Qwen sets its duration** -- but for a
+reason that no key can fix. Reducing Qwen's reasoning output, or dropping
+it from the roster, are the only levers that would.
+
+**A methodological warning found while measuring this.** An *unpinned*
+OpenRouter call to `qwen/qwen3.8-flash` was served by **Makora**, not
+Alibaba, at materially different speed -- the first latency comparison run
+here was invalid for exactly that reason and had to be redone. Any
+throughput, cost, or quality measurement on OpenRouter is meaningless
+without `provider.only` set, which is precisely what the pinning
+enforcement in `harness/providers/openai_compatible.py` exists to
+guarantee. It also means the served-provider assertion is load-bearing for
+the study's validity, not just its reproducibility.
+
+**Reasoning share varies 4x across the roster** (19% GLM to 80% Qwen), and
+it drives cost more than token price does: DeepSeek costs 6x GLM per call
+while being the *fastest* model per token. This is directly relevant to
+`token_cost_effect_size` as an outcome measure -- a tone effect on reasoning
+volume would show up there, and the baseline volume differs enormously by
+model, so that outcome must be read within model and never pooled across
+the roster.
+
 
 **Qwen needed a larger retry budget, not a different pin.** Qwen's gate
 died twice on HTTP 429 from Alibaba's shared pool, each time having spent
