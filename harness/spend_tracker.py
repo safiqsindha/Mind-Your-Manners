@@ -18,6 +18,33 @@ from typing import Any, Optional
 from .providers.base import ModelConfig, ProviderResponse
 
 
+def _prior_spend(path: Path) -> tuple[float, int]:
+    """Total cost and call count already recorded in a results JSONL.
+
+    Best-effort by design: a partially-written final line (the process was
+    killed mid-write) must not stop a run from starting, so unparseable lines
+    are skipped. Under-counting slightly is safe here -- the alternative,
+    treating prior spend as zero, hands out a brand new cap.
+    """
+    if not path.exists():
+        return 0.0, 0
+    total, n = 0.0, 0
+    try:
+        with open(path, encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    total += float(json.loads(line).get("cost_usd") or 0.0)
+                    n += 1
+                except (json.JSONDecodeError, AttributeError, TypeError, ValueError):
+                    continue
+    except OSError:
+        return 0.0, 0
+    return total, n
+
+
 class BudgetExceeded(RuntimeError):
     def __init__(self, phase: str, cap_usd: float, projected_usd: float):
         self.phase = phase
@@ -96,10 +123,22 @@ class SpendTracker:
         self.phase = phase
         self.cap_usd = cap_usd
         self.soft_cap_usd = soft_cap_usd
-        self.total_usd = 0.0
-        self.n_calls = 0
         self._soft_cap_warned = False
         self.out_path.parent.mkdir(parents=True, exist_ok=True)
+        # Resume the running total from what this log already records, rather
+        # than starting at zero. The log is opened in append mode, so a second
+        # run against the same phase is a continuation -- but the cap used to
+        # reset to full on every start. A run that died partway (or ended by
+        # hitting its cap) and was simply restarted, the obvious operator
+        # response, got a fresh $150 allowance each time and could spend
+        # several multiples of the cap it was supposed to enforce.
+        self.total_usd, self.n_calls = _prior_spend(self.out_path)
+        if self.n_calls:
+            print(
+                f"[{phase}] resuming spend accounting from {self.out_path}: "
+                f"${self.total_usd:.2f} already spent over {self.n_calls} calls "
+                f"(cap ${cap_usd:.2f}). Delete or move that file to start a fresh budget."
+            )
         self._fh = open(self.out_path, "a", encoding="utf-8")
 
     def check_before_call(self, estimated_cost_usd: float) -> None:

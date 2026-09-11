@@ -202,3 +202,38 @@ def test_study2_core_budget_cap_is_150_and_above_the_pilot_cap():
     count."""
     assert STUDY2_CORE_BUDGET_CAP_USD == 150.0
     assert STUDY2_CORE_BUDGET_CAP_USD > STUDY2_PILOT_BUDGET_CAP_USD
+
+
+def test_soak_model_is_not_in_the_roster():
+    """PIPELINE_SOAK exists to prove the pipeline survives all 200 tasks, not
+    to measure anything. It must never leak into CORE_MODELS, or its output
+    would be counted as a result -- and it is deliberately un-pinned, which
+    every roster model is forbidden from being."""
+    from harness.config import PIPELINE_SOAK
+
+    assert PIPELINE_SOAK not in CORE_MODELS
+    assert PIPELINE_SOAK.key not in {m.key for m in CORE_MODELS}
+    assert MODELS_BY_KEY["pipeline-soak"] is PIPELINE_SOAK
+
+
+def test_soak_model_is_unpinned_so_it_can_fall_back():
+    """A soak wants provider fallbacks available so one congested provider
+    can't stall 200 tasks; roster models want the opposite. Pinning it would
+    also trip the quantization requirement for no benefit, since which
+    provider served a discarded result does not matter."""
+    from harness.config import PIPELINE_SOAK
+
+    assert not PIPELINE_SOAK.provider_pin
+    assert not PIPELINE_SOAK.quantization_pin
+    # No reasoning parameter: this model's supported_parameters (checked live
+    # 2026-09-10) has no reasoning field, so sending one would be invalid.
+    assert PIPELINE_SOAK.reasoning_effort is None
+
+
+def test_soak_model_is_the_cheap_one_it_claims_to_be():
+    """Guards against someone swapping in an expensive model here: a 200-task
+    soak at roster prices would cost 20-50x what this one does."""
+    from harness.config import PIPELINE_SOAK
+
+    assert PIPELINE_SOAK.input_price_per_1m < 0.05
+    assert PIPELINE_SOAK.output_price_per_1m < 0.05

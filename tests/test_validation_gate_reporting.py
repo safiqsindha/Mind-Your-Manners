@@ -1,0 +1,326 @@
+"""Tests for run_validation_gate()'s per-task reporting.
+
+The gate previously returned only an aggregate n_passed. That is not enough
+to act on: three roster models each scoring 3/5 is consistent both with
+"these models have similar overall skill" and with "every model fails the
+same two tasks", and those imply very different things about the roster,
+the task sample, and the grader. It also placed every model's scratch
+output at the same path, so each gate run destroyed the previous model's
+artifacts.
+"""
+from __future__ import annotations
+
+import collections
+from pathlib import Path
+from unittest.mock import patch
+
+import pytest
+
+from harness.providers.base import ModelConfig
+from harness.study2.agent_loop import Trajectory, TrajectoryStep
+from harness.study2.grader import GradeResult
+from harness.study2.runner import run_validation_gate
+
+MODEL = ModelConfig(
+    key="test-model",
+    provider="mock",
+    model_id="test/model",
+    display_name="Test Model",
+    temperature=0.0,
+    max_tokens=1024,
+)
+
+
+class _FakeTask:
+    def __init__(self, task_id: str, instruction_type: str = "Cell-Level Manipulation"):
+        self.task_id = task_id
+        self.instruction_type = instruction_type
+        self.instruction = "do the thing"
+        self.answer_position = "A1"
+        self.input_spreadsheet_paths = [Path("in.xlsx")]
+        self.answer_spreadsheet_paths = [Path("ans.xlsx")]
+
+
+def _trajectory(task_id: str, *, hit_limit: bool, stderr: str = "") -> Trajectory:
+    traj = Trajectory(task_id=task_id, tone_level="none", trial=0)
+    traj.steps.append(TrajectoryStep(0, "resp", "code", "out", stderr, is_final=True))
+    traj.hit_turn_limit = hit_limit
+    return traj
+
+
+def _grade(task_id: str, passed: bool) -> GradeResult:
+    return GradeResult(
+        task_id=task_id,
+        passed=passed,
+        n_test_cases=3,
+        n_test_cases_passed=3 if passed else 1,
+        soft_restriction=1.0 if passed else 0.33,
+        per_test_case_messages=[],
+    )
+
+
+@pytest.fixture
+def gate(tmp_path):
+    """Runs the gate over two tasks -- one passing, one failing -- with the
+    model call and grader stubbed out, so only the reporting is exercised."""
+    tasks = [_FakeTask("task_pass"), _FakeTask("task_fail", "Chart Generation")]
+    trajectories = {
+        "task_pass": _trajectory("task_pass", hit_limit=False),
+        "task_fail": _trajectory("task_fail", hit_limit=True, stderr="boom: it broke"),
+    }
+
+    def fake_run(tracker, model, task_id, *a, **kw):
+        return trajectories[task_id]
+
+    def fake_grade(grader, task, traj, workdir):
+        return _grade(task.task_id, task.task_id == "task_pass")
+
+    with patch("harness.study2.runner.run_react_multi_round", side_effect=fake_run), \
+         patch("harness.study2.runner._grade_trajectory", side_effect=fake_grade):
+        # check_no_op=False: these assertions are about per-task reporting,
+        # and the no-op floor has its own tests below.
+        return run_validation_gate(MODEL, tasks, grader=None, out_dir=tmp_path, check_no_op=False)
+
+
+def test_gate_reports_which_tasks_passed_not_just_how_many(gate):
+    assert gate["n_passed"] == 1
+    by_id = {t["task_id"]: t for t in gate["per_task"]}
+    assert by_id["task_pass"]["passed"] is True
+    assert by_id["task_fail"]["passed"] is False
+
+
+def test_per_task_carries_the_signals_needed_to_explain_a_failure(gate):
+    fail = next(t for t in gate["per_task"] if t["task_id"] == "task_fail")
+    assert fail["hit_turn_limit"] is True
+    assert fail["instruction_type"] == "Chart Generation"
+    assert fail["n_test_cases_passed"] == 1
+    assert fail["n_test_cases"] == 3
+    # The stderr the model actually saw has to survive into the record.
+    assert "boom: it broke" in fail["turn_diagnostics"][0]["stderr"]
+
+
+def test_aggregate_fields_still_present_and_consistent(gate):
+    assert gate["n_tasks"] == 2
+    assert gate["observed_accuracy"] == 0.5
+    assert gate["n_passed"] == sum(t["passed"] for t in gate["per_task"])
+
+
+def test_scratch_dirs_are_namespaced_by_model(tmp_path):
+    """Two models running the gate must not overwrite each other's output."""
+    seen: list[Path] = []
+    tasks = [_FakeTask("shared_task")]
+
+    def capture_workdir(tracker, model, task_id, instruction, input_path, workdir, **kw):
+        seen.append(Path(workdir))
+        return _trajectory(task_id, hit_limit=False)
+
+    with patch("harness.study2.runner.run_react_multi_round", side_effect=capture_workdir), \
+         patch("harness.study2.runner._grade_trajectory", side_effect=lambda *a: _grade("shared_task", True)):
+        run_validation_gate(MODEL, tasks, grader=None, out_dir=tmp_path, check_no_op=False)
+        other = ModelConfig(
+            key="other-model", provider="mock", model_id="other/model",
+            display_name="Other", temperature=0.0, max_tokens=1024,
+        )
+        run_validation_gate(other, tasks, grader=None, out_dir=tmp_path, check_no_op=False)
+
+    assert len(seen) == 2
+    assert seen[0] != seen[1], "both models wrote to the same scratch dir"
+    assert MODEL.key in seen[0].parts
+    assert "other-model" in seen[1].parts
+
+
+# --- No-op floor ----------------------------------------------------------
+# Some SpreadsheetBench tasks grade a range that already holds the expected
+# values in the input, so handing the workbook back untouched scores a full
+# pass. 4 of the first 40 sample tasks (10%) are free this way, and 2 of the
+# gate's default 5 are -- making a raw accuracy number uninterpretable.
+
+def _gate_with_free_tasks(tmp_path, free_ids: set[str]):
+    tasks = [_FakeTask("free_a"), _FakeTask("real_b"), _FakeTask("free_c")]
+
+    def fake_run(tracker, model, task_id, *a, **kw):
+        return _trajectory(task_id, hit_limit=False)
+
+    # The model passes free_a (which anyone passes) and real_b (a real solve),
+    # and fails free_c -- i.e. it does worse than nothing on one free task.
+    passing = {"free_a", "real_b"}
+
+    with patch("harness.study2.runner.run_react_multi_round", side_effect=fake_run), \
+         patch("harness.study2.runner._grade_trajectory",
+               side_effect=lambda g, task, tr, wd: _grade(task.task_id, task.task_id in passing)), \
+         patch("harness.study2.runner.no_op_passes",
+               side_effect=lambda g, task, wd: task.task_id in free_ids):
+        return run_validation_gate(MODEL, tasks, grader=None, out_dir=tmp_path)
+
+
+def test_gate_reports_the_no_op_floor_beside_the_score(tmp_path):
+    r = _gate_with_free_tasks(tmp_path, {"free_a", "free_c"})
+    assert r["n_passed"] == 2
+    assert r["no_op_n_passed"] == 2, "two tasks pass by doing nothing"
+    assert r["no_op_accuracy"] == 2 / 3
+
+
+def test_gate_counts_only_real_solves_as_beating_the_floor(tmp_path):
+    r = _gate_with_free_tasks(tmp_path, {"free_a", "free_c"})
+    # free_a passed but was free; real_b passed and was not.
+    assert r["n_passed_beating_no_op"] == 1
+    assert r["n_discriminating_tasks"] == 1
+    by_id = {t["task_id"]: t for t in r["per_task"]}
+    assert by_id["free_a"]["beat_no_op"] is False
+    assert by_id["real_b"]["beat_no_op"] is True
+
+
+def test_free_task_ids_are_named_so_the_sample_can_be_fixed(tmp_path):
+    r = _gate_with_free_tasks(tmp_path, {"free_a", "free_c"})
+    assert sorted(r["free_task_ids"]) == ["free_a", "free_c"]
+
+
+def test_no_free_tasks_leaves_the_floor_at_zero(tmp_path):
+    r = _gate_with_free_tasks(tmp_path, set())
+    assert r["no_op_n_passed"] == 0
+    assert r["n_discriminating_tasks"] == 3
+    assert r["n_passed_beating_no_op"] == r["n_passed"]
+
+
+def test_no_op_check_can_be_disabled(tmp_path):
+    """Grading a no-op copy costs real grader work (LibreOffice recalc) and
+    no model spend; it must still be possible to skip."""
+    tasks = [_FakeTask("t1")]
+    with patch("harness.study2.runner.run_react_multi_round",
+               side_effect=lambda *a, **kw: _trajectory("t1", hit_limit=False)), \
+         patch("harness.study2.runner._grade_trajectory", side_effect=lambda *a: _grade("t1", True)), \
+         patch("harness.study2.runner.no_op_passes", side_effect=AssertionError("should not be called")):
+        r = run_validation_gate(MODEL, tasks, grader=None, out_dir=tmp_path, check_no_op=False)
+    assert "no_op_accuracy" not in r
+    assert r["per_task"][0]["no_op_passes"] is None
+
+
+# --- Per-task error isolation ---------------------------------------------
+# A single ProviderError used to propagate out of the gate and discard every
+# task already completed (Qwen's gate died this way on task 1 of 5, twice).
+# Over 200 tasks, or over a paid run, that turns a recoverable hiccup into a
+# total loss of work already paid for.
+
+from harness.spend_tracker import BudgetExceeded  # noqa: E402
+
+
+def _gate_where_one_task_raises(tmp_path, exc: Exception):
+    tasks = [_FakeTask("ok_1"), _FakeTask("boom"), _FakeTask("ok_2")]
+
+    def fake_run(tracker, model, task_id, *a, **kw):
+        if task_id == "boom":
+            raise exc
+        return _trajectory(task_id, hit_limit=False)
+
+    with patch("harness.study2.runner.run_react_multi_round", side_effect=fake_run), \
+         patch("harness.study2.runner._grade_trajectory",
+               side_effect=lambda g, task, tr, wd: _grade(task.task_id, True)):
+        return run_validation_gate(MODEL, tasks, grader=None, out_dir=tmp_path, check_no_op=False)
+
+
+def test_one_failing_task_does_not_discard_the_whole_run(tmp_path):
+    r = _gate_where_one_task_raises(tmp_path, RuntimeError("provider exploded"))
+    assert len(r["per_task"]) == 3, "every task should be accounted for"
+    assert r["n_passed"] == 2, "the two healthy tasks still count"
+
+
+def test_crashed_task_is_recorded_with_its_error(tmp_path):
+    r = _gate_where_one_task_raises(tmp_path, RuntimeError("provider exploded"))
+    boom = next(t for t in r["per_task"] if t["task_id"] == "boom")
+    assert boom["crashed"] is True
+    assert boom["passed"] is False
+    assert "provider exploded" in boom["error"]
+    assert r["n_crashed"] == 1
+    assert r["crashed_task_ids"] == ["boom"]
+
+
+def test_healthy_tasks_are_not_marked_crashed(tmp_path):
+    r = _gate_where_one_task_raises(tmp_path, RuntimeError("provider exploded"))
+    assert all(not t["crashed"] for t in r["per_task"] if t["task_id"] != "boom")
+
+
+def test_budget_exceeded_still_stops_the_run(tmp_path):
+    """A budget cap is a deliberate stop signal, not a task-level failure --
+    swallowing it would keep spending past the cap."""
+    with pytest.raises(BudgetExceeded):
+        _gate_where_one_task_raises(
+            tmp_path, BudgetExceeded(phase="test", cap_usd=1.0, projected_usd=2.0)
+        )
+
+
+# --- Gate sample selection -------------------------------------------------
+# The gate used to take the first n tasks in dataset file order. That drew 2
+# of the 17 no-op-passable tasks into a 5-task sample (a 40% floor against an
+# 8.5% base rate), which is why three roster models scored exactly what doing
+# nothing scores.
+
+from harness.study2.runner import (  # noqa: E402
+    MIN_USEFUL_GATE_TASKS,
+    load_free_task_ids,
+    select_gate_tasks,
+)
+
+
+def _corpus(n_cell: int = 60, n_sheet: int = 40, free: set[str] = frozenset()):
+    tasks = [_FakeTask(f"cell_{i}", "Cell-Level Manipulation") for i in range(n_cell)]
+    tasks += [_FakeTask(f"sheet_{i}", "Sheet-Level Manipulation") for i in range(n_sheet)]
+    return tasks
+
+
+def test_free_tasks_are_never_selected():
+    free = {"cell_0", "cell_1", "sheet_0"}
+    picked = select_gate_tasks(_corpus(), n=20, seed=0, free_ids=free)
+    assert not (set(t.task_id for t in picked) & free)
+
+
+def test_selection_is_deterministic_for_a_seed():
+    a = [t.task_id for t in select_gate_tasks(_corpus(), n=20, seed=7, free_ids=set())]
+    b = [t.task_id for t in select_gate_tasks(_corpus(), n=20, seed=7, free_ids=set())]
+    assert a == b, "an --expected-accuracy value is only comparable if the draw is stable"
+
+
+def test_different_seeds_give_different_samples():
+    a = [t.task_id for t in select_gate_tasks(_corpus(), n=20, seed=1, free_ids=set())]
+    b = [t.task_id for t in select_gate_tasks(_corpus(), n=20, seed=2, free_ids=set())]
+    assert a != b
+
+
+def test_sample_is_stratified_by_instruction_type():
+    """60 Cell / 40 Sheet in, so a 20-task draw should be about 12/8 rather
+    than whichever type happens to sort first."""
+    picked = select_gate_tasks(_corpus(60, 40), n=20, seed=0, free_ids=set())
+    types = collections.Counter(t.instruction_type for t in picked)
+    assert types["Cell-Level Manipulation"] == 12
+    assert types["Sheet-Level Manipulation"] == 8
+
+
+def test_returns_exactly_n_tasks():
+    for n in (5, 20, 33):
+        assert len(select_gate_tasks(_corpus(), n=n, seed=0, free_ids=set())) == n
+
+
+def test_asking_for_more_than_exist_returns_all_eligible():
+    picked = select_gate_tasks(_corpus(3, 2), n=99, seed=0, free_ids={"cell_0"})
+    assert len(picked) == 4  # 5 tasks, 1 free
+
+
+def test_output_is_in_dataset_order_not_shuffled_order():
+    corpus = _corpus()
+    picked = select_gate_tasks(corpus, n=20, seed=3, free_ids=set())
+    order = {t.task_id: i for i, t in enumerate(corpus)}
+    positions = [order[t.task_id] for t in picked]
+    assert positions == sorted(positions)
+
+
+def test_free_task_manifest_loads_and_matches_the_measured_run():
+    """The shipped manifest should carry the 17 ids the 200-task soak found."""
+    ids = load_free_task_ids()
+    assert len(ids) == 17
+    assert {"CF_6540", "CF_8830"} <= ids, "the two that polluted the original 5-task gate"
+
+
+def test_min_useful_gate_tasks_resolves_finer_than_the_default_tolerance():
+    """The gate's default tolerance is 0.08; a sample of MIN_USEFUL_GATE_TASKS
+    must resolve accuracy at least that finely, or pass/fail is decided by
+    rounding rather than by the model."""
+    assert 1 / MIN_USEFUL_GATE_TASKS <= 0.08

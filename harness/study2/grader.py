@@ -66,12 +66,13 @@ not assumed away -- see git history for this file:
 """
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import shutil
 import subprocess
 import sys
 import tempfile
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
@@ -87,6 +88,10 @@ class GradeResult:
     soft_restriction: float  # fraction of test cases passed
     per_test_case_messages: list[str]
     error: Optional[str] = None
+    # Non-empty when LibreOffice recalculation failed for one or more files.
+    # A formula-bearing task can then fail comparison for a reason that has
+    # nothing to do with the model, so this must not be silently dropped.
+    recalc_warnings: list[str] = field(default_factory=list)
 
 
 def recalculate_with_libreoffice(paths: list[Path], soffice_bin: Optional[str] = None) -> tuple[bool, str]:
@@ -102,6 +107,13 @@ def recalculate_with_libreoffice(paths: list[Path], soffice_bin: Optional[str] =
     if not soffice_bin:
         return False, "soffice/libreoffice binary not found on PATH"
 
+    # Every path is attempted even if an earlier one fails. This used to
+    # `return False` on the first failure, which silently skipped the
+    # remaining files: a hiccup converting test case 1 left cases 2 and 3
+    # un-recalculated, and their formula cells then compared as None. The
+    # task scored 0/3 and was recorded as a model failure with no trace of
+    # the real cause.
+    failures: list[str] = []
     for path in paths:
         path = Path(path)
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -124,9 +136,51 @@ def recalculate_with_libreoffice(paths: list[Path], soffice_bin: Optional[str] =
             combined_output = (proc.stdout or "") + (proc.stderr or "")
             converted = Path(tmpdir) / (path.stem + ".xlsx")
             if proc.returncode != 0 or "Error" in combined_output or not converted.exists():
-                return False, f"LibreOffice recalculation failed for {path}: {combined_output}"
+                failures.append(f"{path}: {combined_output.strip()[:200]}")
+                continue
             shutil.move(str(converted), str(path))
+    if failures:
+        return False, "LibreOffice recalculation failed for: " + "; ".join(failures)
     return True, ""
+
+
+def recalculated_copy(path: Path, cache_dir: Path, soffice_bin: Optional[str] = None) -> tuple[Path, str]:
+    """Return a path to a recalculated COPY of `path`, leaving the original
+    untouched. Returns (path_to_use, warning); on failure the warning is
+    non-empty and the ORIGINAL path is returned, so comparison still runs.
+
+    This exists because the alternative -- recalculating in place -- mutated
+    SpreadsheetBench's shipped ground-truth answer files. Those need
+    recalculating (they ship with uncached formulas; see evaluate_task), but
+    doing it over the originals was destructive in three compounding ways:
+    the dataset no longer matched its own tarball, `_extract_tarball_if_needed`
+    skips re-extraction whenever the directory exists so nothing ever restored
+    it, and the in-memory memo was per-instance, so each new process
+    re-converted already-converted files -- a LibreOffice round-trip applied
+    on top of the previous one, forever.
+
+    The cache key includes the source's size and mtime, so an updated or
+    re-extracted source converts again instead of returning a stale copy.
+    """
+    path = Path(path)
+    try:
+        stat = path.stat()
+    except OSError:
+        return path, f"cannot stat {path}"
+    key = hashlib.sha256(f"{path.resolve()}|{stat.st_size}|{stat.st_mtime_ns}".encode()).hexdigest()[:20]
+    cache_dir = Path(cache_dir)
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    cached = cache_dir / f"{key}{path.suffix or '.xlsx'}"
+    if cached.exists():
+        return cached, ""
+
+    shutil.copy(path, cached)
+    ok, msg = recalculate_with_libreoffice([cached], soffice_bin=soffice_bin)
+    if not ok:
+        # Leave nothing half-converted behind for the next run to trust.
+        cached.unlink(missing_ok=True)
+        return path, msg
+    return cached, ""
 
 
 class SpreadsheetBenchGrader:
@@ -146,10 +200,11 @@ class SpreadsheetBenchGrader:
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         self._compare_workbooks = module.compare_workbooks
-        # Tracks answer_paths already recalculated this run -- see
-        # evaluate_task() docstring for why the ground-truth files need
-        # recalculation too, and why it's memoized rather than repeated.
-        self._recalculated_answer_paths: set[str] = set()
+        # Recalculated ground-truth copies live here, NEVER over the shipped
+        # files. A dotdir inside the clone so it is obviously not dataset
+        # content, and persistent across processes so the LibreOffice
+        # round-trip for a given answer file happens once, not once per run.
+        self.recalc_cache_dir = self.repo_dir / ".recalc_cache"
 
     def evaluate_task(
         self,
@@ -180,17 +235,31 @@ class SpreadsheetBenchGrader:
         if len(output_paths) != len(answer_paths):
             return GradeResult(task_id, False, len(answer_paths), 0, 0.0, [], error="output/answer count mismatch")
 
+        recalc_warnings: list[str] = []
         if recalculate:
-            recalculate_with_libreoffice([p for p in output_paths if p is not None])
-            new_answer_paths = [p for p in answer_paths if p is not None and str(p) not in self._recalculated_answer_paths]
-            if new_answer_paths:
-                recalculate_with_libreoffice(new_answer_paths)
-                self._recalculated_answer_paths.update(str(p) for p in new_answer_paths)
+            # Output workbooks are ours (written into scratch), so converting
+            # them in place is fine.
+            ok, msg = recalculate_with_libreoffice([p for p in output_paths if p is not None])
+            if not ok:
+                recalc_warnings.append(msg)
+            # Answer workbooks are the shipped ground truth and must NOT be
+            # modified -- recalculate a cached copy and compare against that.
+            resolved: list[Optional[Path]] = []
+            for p in answer_paths:
+                if p is None:
+                    resolved.append(None)
+                    continue
+                use, warn = recalculated_copy(p, self.recalc_cache_dir)
+                if warn:
+                    recalc_warnings.append(warn)
+                resolved.append(use)
+            answer_paths = resolved
             # Recalculation failures (missing LibreOffice, a broken file) are
             # not hard-failed here -- comparison still runs and may still
-            # pass for pure-value, non-formula tasks -- but any resulting
-            # failure on a formula-bearing task should be treated with
-            # suspicion. See module docstring's LibreOffice caveat.
+            # pass for pure-value, non-formula tasks -- but they are now
+            # surfaced on the GradeResult instead of being discarded, so a
+            # formula-bearing task that failed for this reason is
+            # distinguishable from one the model actually got wrong.
 
         results = []
         messages = []
@@ -215,4 +284,8 @@ class SpreadsheetBenchGrader:
             n_test_cases_passed=n_passed,
             soft_restriction=n_passed / n_total if n_total else 0.0,
             per_test_case_messages=messages,
+            # Surfaced rather than discarded: a formula-bearing task can fail
+            # comparison purely because recalculation didn't happen, and that
+            # is not the same result as the model getting it wrong.
+            recalc_warnings=recalc_warnings,
         )
