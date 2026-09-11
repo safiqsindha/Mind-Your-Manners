@@ -131,3 +131,68 @@ def test_script_path_handed_to_the_child_is_absolute(tmp_path: Path, monkeypatch
         if line.startswith(("WORKBOOK_PATH =", "OUTPUT_PATH =")):
             value = line.split("=", 1)[1].strip().strip("'\"")
             assert os.path.isabs(value), f"{line!r} is not absolute"
+
+
+# --- Stale-output contamination -------------------------------------------
+# execute_python_on_workbook reports success as output_path.exists(). If a
+# file from an earlier run is left in place, that check answers "does an
+# output exist" rather than "did this run produce one", and the grader scores
+# the earlier run's answer. This silently inflated a roster-wide gate
+# baseline before it was found -- see the sandbox.py comment.
+
+FAILING_CODE = 'raise RuntimeError("model code failed")'
+
+
+def test_stale_output_is_not_reported_as_this_runs_output(tmp_path: Path):
+    workdir = tmp_path / "work"
+    workdir.mkdir()
+    stale = openpyxl.Workbook()
+    stale.active["A1"] = "STALE"
+    stale.save(workdir / "output.xlsx")
+
+    workbook = tmp_path / "in.xlsx"
+    _make_workbook(workbook)
+
+    result = execute_python_on_workbook(FAILING_CODE, workbook, workdir)
+
+    assert result.returncode != 0
+    assert result.output_workbook_path is None, (
+        "a run that wrote nothing must not report a previous run's file as its output"
+    )
+
+
+def test_stale_output_file_is_removed_not_merely_ignored(tmp_path: Path):
+    """The stale file must not survive to be picked up by anything else
+    downstream (the grader reads this path directly)."""
+    workdir = tmp_path / "work"
+    workdir.mkdir()
+    stale = openpyxl.Workbook()
+    stale.active["A1"] = "STALE"
+    stale.save(workdir / "output.xlsx")
+
+    workbook = tmp_path / "in.xlsx"
+    _make_workbook(workbook)
+
+    execute_python_on_workbook(FAILING_CODE, workbook, workdir)
+
+    assert not (workdir / "output.xlsx").exists()
+
+
+def test_a_rerun_that_succeeds_reports_its_own_fresh_output(tmp_path: Path):
+    """The overwrite case must keep working: a stale file present, and this
+    run writes a real one -- the result must be this run's content."""
+    workdir = tmp_path / "work"
+    workdir.mkdir()
+    stale = openpyxl.Workbook()
+    stale.active["A1"] = "STALE"
+    stale.save(workdir / "output.xlsx")
+
+    workbook = tmp_path / "in.xlsx"
+    _make_workbook(workbook)
+
+    result = execute_python_on_workbook(READ_WRITE_CODE, workbook, workdir)
+
+    assert result.output_workbook_path is not None
+    reloaded = openpyxl.load_workbook(result.output_workbook_path)
+    assert reloaded.active["A1"].value == 42, "should be this run's output, not the stale one"
+    assert reloaded.active["B1"].value == 99

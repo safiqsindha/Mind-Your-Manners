@@ -92,8 +92,64 @@ def test_answer_file_recalculation_is_memoized(fake_repo: Path, tmp_path: Path, 
 
     monkeypatch.setattr(grader_module, "recalculate_with_libreoffice", spy)
 
+    before = answer_path.read_bytes()
+
     for _ in range(3):
         grader.evaluate_task("t1", "Cell-Level Manipulation", "A1", [output_path], [answer_path], recalculate=True)
 
-    answer_recalc_calls = sum(1 for c in calls if str(answer_path) in c)
-    assert answer_recalc_calls == 1, f"answer file should be recalculated once, not every call: {calls}"
+    # The original ground-truth file must never be handed to the in-place
+    # recalculator. It used to be, which silently overwrote SpreadsheetBench's
+    # shipped answer with a LibreOffice round-trip -- permanently, since the
+    # tarball is never re-extracted once the directory exists.
+    assert all(str(answer_path) not in c for c in calls), (
+        f"ground truth was passed to the in-place recalculator: {calls}"
+    )
+    assert answer_path.read_bytes() == before, "ground-truth answer file was modified"
+
+    # The expensive conversion still happens only once across repeated calls
+    # (the point of the old memo), now via an on-disk cache that also holds
+    # across processes rather than dying with the instance.
+    cache_dir = grader.recalc_cache_dir
+    converted = sum(1 for c in calls if any(str(cache_dir) in p for p in c))
+    assert converted == 1, f"cached copy should be converted once, not per call: {calls}"
+
+
+def test_a_second_grader_instance_reuses_the_cached_conversion(tmp_path, fake_repo, monkeypatch):
+    """The old memo was per-instance, so every new process re-converted files
+    already converted -- a LibreOffice round-trip stacked on the previous
+    one, compounding indefinitely."""
+    import openpyxl
+
+    import harness.study2.grader as grader_module
+
+    answer_wb = openpyxl.Workbook()
+    answer_wb.active["A1"] = 42
+    answer_path = tmp_path / "answer.xlsx"
+    answer_wb.save(answer_path)
+    output_wb = openpyxl.Workbook()
+    output_wb.active["A1"] = 42
+    output_path = tmp_path / "output.xlsx"
+    output_wb.save(output_path)
+
+    SpreadsheetBenchGrader(fake_repo).evaluate_task(
+        "t1", "Cell-Level Manipulation", "A1", [output_path], [answer_path], recalculate=True
+    )
+
+    calls = []
+    real_recalc = grader_module.recalculate_with_libreoffice
+
+    def spy(paths, soffice_bin=None):
+        calls.append([str(p) for p in paths])
+        return real_recalc(paths, soffice_bin=soffice_bin)
+
+    monkeypatch.setattr(grader_module, "recalculate_with_libreoffice", spy)
+
+    # A fresh instance, as a new process would build.
+    grader2 = SpreadsheetBenchGrader(fake_repo)
+    grader2.evaluate_task(
+        "t1", "Cell-Level Manipulation", "A1", [output_path], [answer_path], recalculate=True
+    )
+
+    cache_dir = grader2.recalc_cache_dir
+    answer_conversions = sum(1 for c in calls if any(str(cache_dir) in p for p in c))
+    assert answer_conversions == 0, f"cached conversion should be reused across instances: {calls}"

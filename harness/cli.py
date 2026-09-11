@@ -187,7 +187,12 @@ def cmd_study1_part_b(args: argparse.Namespace) -> None:
 def cmd_study2_validation_gate(args: argparse.Namespace) -> None:
     from .study2.dataset import ensure_repo, load_spreadsheetbench
     from .study2.grader import SpreadsheetBenchGrader
-    from .study2.runner import run_validation_gate
+    from .study2.runner import (
+        MIN_USEFUL_GATE_TASKS,
+        load_free_task_ids,
+        run_validation_gate,
+        select_gate_tasks,
+    )
 
     model = resolve_models([args.model], args.live)[0]
     if args.live:
@@ -197,17 +202,77 @@ def cmd_study2_validation_gate(args: argparse.Namespace) -> None:
             cap_usd=10.0, assume_yes=args.yes,
         )
     repo_dir = ensure_repo(Path(args.repo_dir))
-    tasks = load_spreadsheetbench(repo_dir, sample_only=True, limit=args.n_tasks)
     grader = SpreadsheetBenchGrader(repo_dir)
+    if args.task_order:
+        # Escape hatch for reproducing an older result: the first n tasks in
+        # file order, free ones included.
+        tasks = load_spreadsheetbench(repo_dir, sample_only=True, limit=args.n_tasks)
+        print(f"[validation-gate] file-order sample: {args.n_tasks} tasks (may include no-op-passable tasks)")
+    else:
+        all_tasks = load_spreadsheetbench(repo_dir, sample_only=True)
+        tasks = select_gate_tasks(all_tasks, n=args.n_tasks, seed=args.sample_seed)
+        print(
+            f"[validation-gate] discriminating sample: {len(tasks)} of {len(all_tasks)} tasks "
+            f"(seed={args.sample_seed}, {len(load_free_task_ids())} known no-op-passable tasks excluded)"
+        )
+    if len(tasks) < MIN_USEFUL_GATE_TASKS and args.expected_accuracy is not None:
+        # With n tasks the observed accuracy can only land on multiples of
+        # 1/n, so a tolerance finer than that step is decided by rounding.
+        print(
+            f"  WARNING: {len(tasks)} tasks resolve accuracy only to steps of "
+            f"{1 / max(1, len(tasks)):.2f}, coarser than --tolerance {args.tolerance}. "
+            f"Use --n-tasks {MIN_USEFUL_GATE_TASKS}+ for the comparison to mean anything."
+        )
 
     result = run_validation_gate(
         model, tasks, grader, RESULTS_ROOT, expected_accuracy=args.expected_accuracy,
         tolerance=args.tolerance, max_turns=args.max_turns,
     )
-    out_path = RESULTS_ROOT / "analysis" / "study2_validation_gate.json"
+    # Per model, not a fixed filename. Gating four models used to leave only
+    # the fourth report on disk -- the same clobbering the scratch-dir fix
+    # addressed, reintroduced at the one artifact that fix exists to preserve.
+    out_path = RESULTS_ROOT / "analysis" / f"study2_validation_gate_{model.key}.json"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(result, indent=2))
-    print(json.dumps(result, indent=2))
+    # Kept as a stable "most recent gate" path for existing tooling/docs.
+    (RESULTS_ROOT / "analysis" / "study2_validation_gate.json").write_text(json.dumps(result, indent=2))
+    # The file keeps everything (per-task turn diagnostics included, for
+    # post-hoc diagnosis); stdout keeps only what a human reads at a glance,
+    # since the diagnostics are hundreds of lines of captured stderr.
+    summary = {k: v for k, v in result.items() if k != "per_task"}
+    print(json.dumps(summary, indent=2))
+    for t in result.get("per_task", []):
+        mark = "CRSH" if t.get("crashed") else ("PASS" if t["passed"] else "FAIL")
+        limit = " [hit turn limit]" if t["hit_turn_limit"] else ""
+        free = "  <- FREE: passes by doing nothing" if t.get("no_op_passes") else ""
+        print(
+            f"  {mark}  {t['task_id']:<10} {t['instruction_type']:<28} "
+            f"cases {t['n_test_cases_passed']}/{t['n_test_cases']}  "
+            f"turns {t['n_turns']}{limit}{free}"
+        )
+    if "no_op_accuracy" in result:
+        # Printed next to the score, not buried in the JSON: an accuracy
+        # figure is not a capability measure until you know what handing the
+        # input straight back would have scored.
+        print(
+            f"\n  no-op floor: {result['no_op_n_passed']}/{result['n_tasks']} "
+            f"({result['no_op_accuracy']:.0%}) -- tasks passed without doing any work"
+            + (f" {result['free_task_ids']}" if result["free_task_ids"] else "")
+        )
+        print(
+            f"  discriminating tasks: {result['n_discriminating_tasks']}/{result['n_tasks']};  "
+            f"this model beat the floor on {result['n_passed_beating_no_op']} of them"
+        )
+        if result["n_passed"] <= result["no_op_n_passed"]:
+            print("  WARNING: this model scored no better than doing nothing on this task sample.")
+    if result.get("n_crashed"):
+        # A soak run's headline number: tasks the pipeline could not carry to
+        # a graded result at all, as distinct from tasks the model got wrong.
+        print(
+            f"\n  CRASHED: {result['n_crashed']}/{result['n_tasks']} tasks raised and were "
+            f"skipped -- {result['crashed_task_ids'][:12]}"
+        )
+    print(f"\nFull per-task detail (incl. turn diagnostics): {out_path}")
     if not result["passed"]:
         print("\nVALIDATION GATE FAILED (or --expected-accuracy not given). Do not proceed.", file=sys.stderr)
         sys.exit(2)
@@ -260,7 +325,7 @@ def cmd_study2_thinking_preflight(args: argparse.Namespace) -> None:
 def _study2_stage(args: argparse.Namespace, phase: str, default_cap: float, default_trials: int) -> None:
     from .study2.dataset import ensure_repo, load_spreadsheetbench
     from .study2.grader import SpreadsheetBenchGrader
-    from .study2.runner import run_condition_batch
+    from .study2.runner import load_free_task_ids, run_condition_batch, select_gate_tasks
 
     cap_usd = args.budget_cap or default_cap
     n_trials = args.n_trials or default_trials
@@ -273,8 +338,21 @@ def _study2_stage(args: argparse.Namespace, phase: str, default_cap: float, defa
             cap_usd=cap_usd, assume_yes=args.yes,
         )
     repo_dir = ensure_repo(Path(args.repo_dir))
-    tasks = load_spreadsheetbench(repo_dir, sample_only=(phase != "core"), limit=args.n_tasks)
     grader = SpreadsheetBenchGrader(repo_dir)
+    if args.task_order:
+        tasks = load_spreadsheetbench(repo_dir, sample_only=(phase != "core"), limit=args.n_tasks)
+        print(f"[{phase}] file-order sample: {args.n_tasks} tasks (may include no-op-passable tasks)")
+    else:
+        # Same discriminating draw the gate uses. The expensive runs were
+        # still taking the first n tasks in file order -- inheriting exactly
+        # the sampling bias select_gate_tasks was written to fix, on the path
+        # where each biased task costs real money rather than cents.
+        all_tasks = load_spreadsheetbench(repo_dir, sample_only=(phase != "core"))
+        tasks = select_gate_tasks(all_tasks, n=args.n_tasks, seed=args.sample_seed)
+        print(
+            f"[{phase}] discriminating sample: {len(tasks)} of {len(all_tasks)} tasks "
+            f"(seed={args.sample_seed}, {len(load_free_task_ids())} known no-op-passable tasks excluded)"
+        )
 
     records = run_condition_batch(
         models, tasks, grader, RESULTS_ROOT, phase=phase,
@@ -493,6 +571,17 @@ def build_parser() -> argparse.ArgumentParser:
     g2.add_argument("--model", required=True, choices=list(MODELS_BY_KEY))
     g2.add_argument("--repo-dir", default="data/spreadsheetbench")
     g2.add_argument("--n-tasks", type=int, default=20)
+    g2.add_argument(
+        "--sample-seed", type=int, default=0,
+        help="Seed for the discriminating-task draw. Same seed + dataset => same tasks, "
+             "which is what makes an --expected-accuracy value comparable across runs.",
+    )
+    g2.add_argument(
+        "--task-order", action="store_true",
+        help="Use the first --n-tasks in dataset file order instead of a discriminating "
+             "sample. Includes tasks that pass when the agent does nothing; for "
+             "reproducing older results only.",
+    )
     g2.add_argument("--expected-accuracy", type=float, default=None)
     g2.add_argument("--tolerance", type=float, default=0.08)
     g2.add_argument("--max-turns", type=int, default=10, help="Per-trajectory turn budget for the multi-round agent loop")
@@ -512,6 +601,15 @@ def build_parser() -> argparse.ArgumentParser:
         sp.add_argument("--models", default=",".join(m.key for m in CORE_MODELS))
         sp.add_argument("--repo-dir", default="data/spreadsheetbench")
         sp.add_argument("--n-tasks", type=int, default=30 if name != "core" else 50)
+        sp.add_argument(
+            "--sample-seed", type=int, default=0,
+            help="Seed for the discriminating-task draw; same seed + dataset => same tasks.",
+        )
+        sp.add_argument(
+            "--task-order", action="store_true",
+            help="Use the first --n-tasks in dataset file order instead of a discriminating "
+                 "sample. Includes tasks that pass when the agent does nothing.",
+        )
         sp.add_argument("--n-trials", type=int, default=None)
         sp.add_argument("--budget-cap", type=float, default=None)
         sp.add_argument("--single-round", action="store_true", help="Use the single-round setting instead of multi-round ReAct")

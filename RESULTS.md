@@ -396,6 +396,100 @@ not a finding. The `max_turns` 6->10 change is kept on post-fix evidence
 the turn-budget-awareness prompt is kept as sound on its own terms -- but
 neither was the fix, and RESULTS.md should not have implied otherwise.
 
+**Roster-wide re-baseline, 2026-09-10 -- and a second scoring bug found by
+running it.** With execution finally working, all four models were re-gated
+on the same 5 unmodified SpreadsheetBench tasks. The first pass returned an
+identical **3/5 for all four models**, which is not a plausible coincidence
+across four vendors, and the gate could not explain it: it returned only
+`n_passed`, discarding which tasks failed.
+
+Adding per-task reporting exposed why. `execute_python_on_workbook()`
+reported success as `output_path.exists()` -- a claim about *this*
+execution only if nothing was there beforehand. Every model's gate run
+shared one scratch directory (`results/scratch/validation_gate/<task_id>/`,
+no model key), so **later models were graded on earlier models' output
+files** whenever their own code crashed without writing. Confirmed
+directly: code that raises immediately still returns a valid
+`output_workbook_path`, containing the previous run's answer. GPT-Luna ran
+first in both passes and was therefore never contaminated -- it scored 3/5
+both times, while GLM and DeepSeek each dropped to 2/5 once isolated.
+Fixed by deleting `output_path` before execution (namespacing alone only
+separates models from each other; re-running one model would still inherit
+its own previous output).
+
+Clean baseline, unmodified instructions, no tone wrapper, `max_turns=10`:
+
+| task | type | Luna | GLM | DeepSeek | Qwen |
+|---|---|---|---|---|---|
+| 59196 | Cell-Level | PASS | fail 0/3 | PASS | PASS |
+| 99-24 | Sheet-Level | fail 1/3 | fail 1/3 | fail 0/3 | fail 0/3 |
+| CF_6540 | Sheet-Level | PASS | PASS | fail 0/3 | fail 0/3 |
+| 81-41 | Sheet-Level | fail 0/3 | fail 0/3 | fail 0/3 | fail 0/3 |
+| CF_8830 | Sheet-Level | PASS | PASS | PASS | PASS |
+| **total** | | **3/5** | **2/5** | **2/5** | **2/5** |
+| spend | | $0.030 | $0.009 | $0.045 | $0.027 |
+
+Total re-baseline spend: **$0.112**. Two tasks (`99-24`, `81-41`) fail for
+every model in the roster and one (`CF_8830`) passes for every model, so
+only 2 of these 5 tasks (`59196`, `CF_6540`) actually discriminate between
+models at all. That matters for `--expected-accuracy`: **0.60 should not be
+set as the gate's expectation** -- it came from the contaminated pass, and
+the clean spread is 2/5-3/5. It matters more for the study's power: if
+three fifths of a task sample is saturated at floor or ceiling, tone
+effects have very little room to show up in accuracy, and the outcome
+measures that vary within a failed trajectory (severity, verification
+behavior, turn count) carry proportionally more of the signal. Whether
+`81-41` and `99-24` are genuinely beyond this roster or hit a grader
+limitation is not yet established and is worth checking before the pilot
+sizes anything off these numbers.
+
+**Qwen needed a larger retry budget, not a different pin.** Qwen's gate
+died twice on HTTP 429 from Alibaba's shared pool, each time having spent
+its whole 30s backoff (2+4+8+16). Both its endpoints report 99%+ uptime,
+so this is a shared-pool rate limit on this account, not an outage -- and
+Qwen has only one *available* endpoint, so there is nothing to fail over
+to. `MAX_RETRIES` 4 -> 6 (90s) got it through: the successful run absorbed
+**38** separate 429s. Capped there deliberately; past ~90s a saturated pool
+will not clear within one call and the run should surface that rather than
+hide it in latency. If it recurs, the remedies are a dedicated Alibaba key
+or re-pinning to Makora (fp4) -- the latter trades away the first-party
+endpoint this roster chose on vendor-fidelity grounds, so it is a design
+decision, not a fix to apply automatically.
+
+**200-task pipeline soak, 2026-09-10 -- clean, and it settles the no-op
+rate.** Every one of the 200 sample tasks was run end to end through the
+real CLI with the mock provider (no network, no spend, a few minutes).
+Purpose was not accuracy but survival: does the pipeline carry every task
+in the sample to a graded result?
+
+- **200/200 tasks completed, 0 crashes.** Dataset loading, sandbox
+  execution, generalization to test cases 2-3, and grading all held up
+  across the full diversity of real workbooks (including `.xlsm`, charts,
+  and files with unparseable headers).
+- **Only 8 turns produced any stderr at all, and all 8 were benign
+  `openpyxl` warnings** (unsupported extensions; "Cannot parse header or
+  footer so it will be ignored") -- not errors.
+- **17 of 200 tasks (8.5%) are passed by doing nothing**, confirming the
+  10% estimate taken from the first 40. The rate is not uniform: 11/77
+  (14%) of Sheet-Level Manipulation tasks are free versus 6/123 (5%) of
+  Cell-Level. Free ids: CF_6540, CF_8830, 532-3, CF_28766, CF_9945,
+  488-29, CF_13984, 48357, CF_11072, 31184, 58114, 53062, 48378, 534-40,
+  575-15, 494-13, 48608.
+- **183 tasks discriminate**, which is the pool a real gate sample should
+  be drawn from. The current gate takes the first 5 in file order, 2 of
+  which are free.
+- Sanity check on the measure itself: the mock provider passed 15 tasks
+  and beat the no-op floor on **0** of them. Its canned code writes
+  `'mock_result'` into A1 and saves, so it scores slightly *worse* than
+  doing nothing -- exactly what a no-op floor should show.
+
+This run was only possible after adding per-task error isolation: a single
+raised exception used to abort the whole gate and discard every completed
+task with it (Qwen's 5-task gate died that way twice). Over 200 tasks, or
+over a paid run, that converts a recoverable hiccup into total loss of
+work already paid for. `BudgetExceeded` is still re-raised, since a cap is
+a stop signal rather than a task-level failure.
+
 Per-call spend logging (`results/raw/*.jsonl`) and a running total
 (`results/spend_log.jsonl`) are wired up and budget-capped
 (`harness/spend_tracker.py:BudgetExceeded`) for whenever a live

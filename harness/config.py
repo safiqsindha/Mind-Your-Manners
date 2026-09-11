@@ -47,18 +47,30 @@ tracker -- see item (c) below on why that last distinction matters):
       three currently share provider_name "OpenAI" in OpenRouter's
       /endpoints listing for this model_id, distinguished only by an
       internal `tag` field ("openai", "openai/flex", "openai/fast") that
-      this harness's served-provider assertion (openai_compatible.py,
-      checks `openrouter_metadata.endpoints.endpoints[].provider` against
-      `provider_pin`) does NOT currently read or verify -- it only checks
-      the shared provider_name. OPEN RISK, not yet resolved: as far as
-      this check can tell, a call pinned to "OpenAI" could in principle be
-      served by any of the three tags without tripping
-      ProviderPinViolation, silently changing both price (up to 4x) and
-      latency profile. Verify this against a real live call (does the
-      response distinguish which tag served it?) before trusting the pin
-      fully; not fixed here because guessing at OpenRouter's tag-pinning
-      syntax without a live call to confirm against risks a pin that looks
-      more specific than it is.
+      this harness's served-provider assertion (openai_compatible.py)
+      does NOT read -- it only checks the shared provider_name. This was
+      recorded as an OPEN RISK: a call pinned to "OpenAI" could in
+      principle be served by any of the three tags without tripping
+      ProviderPinViolation, changing price up to 4x.
+      RESOLVED 2026-09-10 against 16 real logged calls, by billing rather
+      than by any tag field (the response carries no tag). Two independent
+      lines of evidence, both pointing the same way:
+        - 7 of the 16 calls bill at EXACTLY the standard rate, matching
+          prompt/1e6*0.20 + completion/1e6*1.20 to 7 decimal places. Flex
+          would be half that and fast double; neither is within 2% of any
+          observed call.
+        - Every call's `openrouter_metadata.endpoints.available` lists
+          exactly ONE endpoint, selected=true, provider "OpenAI". There is
+          no second candidate for the pin to be ambiguous between.
+      The 9 calls that do not match exactly are all explained by prompt
+      caching, not by a different tier: every call with cached_tokens>0
+      bills BELOW the naive figure (0.19-0.65x, cached reads), and every
+      call slightly above it is above by exactly 5.0e-8 per prompt token
+      -- a 1.25x cache-write premium on the same $0.20 base. A different
+      tier would shift the whole completion rate, which none of them do.
+      Note this is *prompt* caching (a provider-side billing optimization
+      that cannot change the computed response), not *response* caching,
+      which this harness disables per-call via X-OpenRouter-Cache: false.
   (b) NOT pinned to the first-party "DeepSeek" endpoint despite one
       existing in the catalog -- see (f) below. Pinned to "Novita"
       instead (100% uptime at check time, real fp8 quantization).
@@ -466,9 +478,40 @@ NEX_FREE_SMOKETEST = ModelConfig(
     output_price_per_1m=0.0,
 )
 
+# PIPELINE SOAK MODEL -- for running all 200 tasks live to prove the pipeline
+# survives them, NOT to measure anything. Deliberately not a roster model, so
+# soak output can never be mistaken for a result, and deliberately a vendor
+# absent from the roster (Mistral) so it exercises response-shape handling the
+# four roster models do not.
+#
+# Cheapest option on OpenRouter that clears the bar this actually needs, chosen
+# against measured token use rather than guesswork: the real 5-task gate runs
+# consumed a median 18k prompt / 7.7k output tokens per task, so 200 tasks is
+# ~3.6M/1.5M, costing ~$0.11 here (~$0.29 at the worst-case token rate a weak
+# model that burns its full turn budget would hit). 131k context matters --
+# multi-turn ReAct prompts were measured reaching ~52k tokens.
+#
+# NOT provider-pinned on purpose, unlike every roster model: a soak wants
+# fallbacks available so a single congested provider doesn't stall 200 tasks.
+# Reproducibility of *which* provider served it is irrelevant when the output
+# is discarded. reasoning_effort stays None -- this model's
+# supported_parameters (checked live) has no reasoning field at all.
+PIPELINE_SOAK = ModelConfig(
+    key="pipeline-soak",
+    provider="openai_compatible",
+    model_id="mistralai/mistral-nemo",
+    canonical_slug="mistralai/mistral-nemo",  # OpenRouter reports no dated snapshot for this id
+    display_name="Mistral Nemo (pipeline soak only -- results are not data)",
+    temperature=0.0,
+    api_base=OPENROUTER_BASE_URL,
+    max_tokens=2048,
+    input_price_per_1m=0.019,
+    output_price_per_1m=0.030,
+)
+
 ALL_MODELS: list[ModelConfig] = STUDY1_MODELS + [
     GPT_LUNA_CALIBRATION, FRONTIER_SPOTCHECK, CLAUDE_CLI_SMOKETEST,
-    OPENROUTER_FREE_SMOKETEST, NEX_FREE_SMOKETEST,
+    OPENROUTER_FREE_SMOKETEST, NEX_FREE_SMOKETEST, PIPELINE_SOAK,
 ]
 
 MODELS_BY_KEY: dict[str, ModelConfig] = {m.key: m for m in ALL_MODELS}
