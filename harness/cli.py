@@ -109,6 +109,27 @@ def resolve_models(model_keys: list[str], live: bool) -> list:
             file=sys.stderr,
         )
         sys.exit(1)
+
+    # Every live run passes through here, so this is the one place a model
+    # version check covers the whole CLI. A model_id like
+    # `qwen/qwen3.8-flash` is a pointer the provider can repoint at a newer
+    # snapshot without notice, and nothing in a response body reveals it --
+    # a mid-study roll would split the run across two models with every
+    # number still looking plausible. Checked once per invocation, before
+    # any spend.
+    from .providers.openai_compatible import OPENROUTER_BASE_URL, assert_canonical_slugs
+
+    openrouter_models = [
+        m for m in models if m.api_base == OPENROUTER_BASE_URL and m.canonical_slug
+    ]
+    if openrouter_models:
+        try:
+            observed = assert_canonical_slugs(openrouter_models)
+        except Exception as exc:  # ProviderPinViolation / ProviderError
+            print(f"ERROR: {exc}", file=sys.stderr)
+            sys.exit(1)
+        for key, slug in sorted(observed.items()):
+            print(f"[version-check] {key} -> {slug}")
     return models
 
 
@@ -184,6 +205,33 @@ def cmd_study1_part_b(args: argparse.Namespace) -> None:
     print(f"Part B ({args.benchmark}): {len(rows)} calls logged to results/raw/study1_part_b.jsonl")
 
 
+def _refuse_to_shrink_report(out_path: Path, result: dict, force: bool) -> None:
+    """Guard against a small run silently overwriting a large one's report.
+
+    Reports are keyed by model, so re-running the same model with a smaller
+    --n-tasks lands on the same filename. The scores in the new file are
+    correct for what it ran; the problem is that the expensive run's record
+    is gone and nothing says so.
+    """
+    if force or not out_path.exists():
+        return
+    try:
+        existing = json.loads(out_path.read_text())
+    except Exception:  # noqa: BLE001 -- unreadable/corrupt: nothing to protect
+        return
+    old_n, new_n = existing.get("n_tasks") or 0, result.get("n_tasks") or 0
+    if new_n >= old_n:
+        return
+    print(
+        f"ERROR: {out_path} already holds a {old_n}-task run for this model and this "
+        f"run covered only {new_n} tasks. Refusing to overwrite the larger result.\n"
+        f"       Move or delete that file, or pass --force-overwrite, if you really "
+        f"mean to replace it.",
+        file=sys.stderr,
+    )
+    sys.exit(1)
+
+
 def cmd_study2_validation_gate(args: argparse.Namespace) -> None:
     from .study2.dataset import ensure_repo, load_spreadsheetbench
     from .study2.grader import SpreadsheetBenchGrader
@@ -195,6 +243,19 @@ def cmd_study2_validation_gate(args: argparse.Namespace) -> None:
     )
 
     model = resolve_models([args.model], args.live)[0]
+    # Checked BEFORE the run, not at write time: a gate report costs hours of
+    # wall clock and real money, and a one-task smoke run writes a file with
+    # exactly the same name. A stray `--n-tasks 1` invocation destroyed a
+    # completed 100-task GLM report during development -- only a committed
+    # copy saved the numbers. Refusing after the run would protect the file
+    # but still burn the spend, so refuse first.
+    from .study2.runner import _run_tag
+
+    _refuse_to_shrink_report(
+        RESULTS_ROOT / "analysis" / f"study2_validation_gate_{_run_tag([model])}.json",
+        {"n_tasks": args.n_tasks},
+        force=args.force_overwrite,
+    )
     if args.live:
         # multi-round agent loop -- assume ~3 model calls/task as a rough average
         confirm_projection(
@@ -231,11 +292,14 @@ def cmd_study2_validation_gate(args: argparse.Namespace) -> None:
     # Per model, not a fixed filename. Gating four models used to leave only
     # the fourth report on disk -- the same clobbering the scratch-dir fix
     # addressed, reintroduced at the one artifact that fix exists to preserve.
-    out_path = RESULTS_ROOT / "analysis" / f"study2_validation_gate_{model.key}.json"
+    out_path = RESULTS_ROOT / "analysis" / f"study2_validation_gate_{_run_tag([model])}.json"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(result, indent=2))
     # Kept as a stable "most recent gate" path for existing tooling/docs.
-    (RESULTS_ROOT / "analysis" / "study2_validation_gate.json").write_text(json.dumps(result, indent=2))
+    # Not written from a dry run: the alias carries no model key, so a mock
+    # run would leave fabricated numbers where a reader expects real ones.
+    if model.provider != "mock":
+        (RESULTS_ROOT / "analysis" / "study2_validation_gate.json").write_text(json.dumps(result, indent=2))
     # The file keeps everything (per-task turn diagnostics included, for
     # post-hoc diagnosis); stdout keeps only what a human reads at a glance,
     # since the diagnostics are hundreds of lines of captured stderr.
@@ -378,20 +442,45 @@ def _study2_stage(args: argparse.Namespace, phase: str, default_cap: float, defa
         )
     repo_dir = ensure_repo(Path(args.repo_dir))
     grader = SpreadsheetBenchGrader(repo_dir)
+    # The core phase used to draw from the full 909-task dataset while every
+    # other phase drew from the 200-task sample. Two things break at that
+    # boundary, and neither announces itself:
+    #
+    #   * free_tasks.json -- the no-op-passable manifest select_gate_tasks
+    #     subtracts -- was measured over the 200-task sample only. Drawing
+    #     from 909 selects tasks whose no-op status was never established,
+    #     reintroducing the very floor the discriminating draw exists to
+    #     remove.
+    #   * The validation gates, and therefore every --expected-accuracy and
+    #     every neutral-tone baseline, live in the 200-task sample. Measured
+    #     live: a core draw of 50 from 909 overlapped the n=100 gate sample
+    #     by 2 tasks. The tone conditions would have had no baseline to be
+    #     compared against.
+    #
+    # So the sample is the default everywhere now, and reaching the full
+    # dataset is an explicit opt-in that says what it costs.
+    sample_only = not getattr(args, "full_dataset", False)
     if args.task_order:
-        tasks = load_spreadsheetbench(repo_dir, sample_only=(phase != "core"), limit=args.n_tasks)
+        tasks = load_spreadsheetbench(repo_dir, sample_only=sample_only, limit=args.n_tasks)
         print(f"[{phase}] file-order sample: {args.n_tasks} tasks (may include no-op-passable tasks)")
     else:
         # Same discriminating draw the gate uses. The expensive runs were
         # still taking the first n tasks in file order -- inheriting exactly
         # the sampling bias select_gate_tasks was written to fix, on the path
         # where each biased task costs real money rather than cents.
-        all_tasks = load_spreadsheetbench(repo_dir, sample_only=(phase != "core"))
+        all_tasks = load_spreadsheetbench(repo_dir, sample_only=sample_only)
         tasks = select_gate_tasks(all_tasks, n=args.n_tasks, seed=args.sample_seed)
         print(
             f"[{phase}] discriminating sample: {len(tasks)} of {len(all_tasks)} tasks "
             f"(seed={args.sample_seed}, {len(load_free_task_ids())} known no-op-passable tasks excluded)"
         )
+        if not sample_only:
+            print(
+                f"  WARNING: --full-dataset -- tasks outside the 200-task sample have no "
+                f"measured no-op status and no validation-gate baseline. The no-op floor "
+                f"is measured per task during the run, but --expected-accuracy and the "
+                f"gate's neutral-tone numbers do not apply to this draw."
+            )
 
     records = run_condition_batch(
         models, tasks, grader, RESULTS_ROOT, phase=phase,
@@ -644,6 +733,12 @@ def build_parser() -> argparse.ArgumentParser:
              "sample. Includes tasks that pass when the agent does nothing; for "
              "reproducing older results only.",
     )
+    g2.add_argument(
+        "--force-overwrite", action="store_true",
+        help="Replace an existing gate report for this model even if it covered "
+             "more tasks than this run. Off by default: a stray small run must not "
+             "silently destroy an expensive large one.",
+    )
     g2.add_argument("--expected-accuracy", type=float, default=None)
     g2.add_argument("--tolerance", type=float, default=0.08)
     g2.add_argument("--max-turns", type=int, default=10, help="Per-trajectory turn budget for the multi-round agent loop")
@@ -678,6 +773,12 @@ def build_parser() -> argparse.ArgumentParser:
             "--task-order", action="store_true",
             help="Use the first --n-tasks in dataset file order instead of a discriminating "
                  "sample. Includes tasks that pass when the agent does nothing.",
+        )
+        sp.add_argument(
+            "--full-dataset", action="store_true",
+            help="Draw tasks from the full 909-task dataset instead of the 200-task "
+                 "sample. Off by default: the no-op manifest and every validation-gate "
+                 "baseline were measured on the sample, and do not transfer.",
         )
         sp.add_argument("--n-trials", type=int, default=None)
         sp.add_argument("--budget-cap", type=float, default=None)

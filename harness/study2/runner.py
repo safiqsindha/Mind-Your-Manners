@@ -235,7 +235,7 @@ def run_validation_gate(
     # halt early -- the same failure the core path's per-run tags exist to
     # prevent, on the one phase that runs four models at once by design.
     tracker = SpendTracker(
-        out_dir / "raw" / f"study2_validation_gate_{model.key}.jsonl",
+        out_dir / "raw" / f"study2_validation_gate_{_run_tag([model])}.jsonl",
         phase="validation_gate",
         cap_usd=10.0,
     )
@@ -431,10 +431,18 @@ def _run_tag(models: list[ModelConfig]) -> str:
     without anyone having to remember a flag. Multi-model runs in one process
     keep sharing a file, which is correct: they genuinely are one run, and one
     tracker enforcing one cap across them is the intended behaviour.
+
+    Dry runs get their own namespace. --dry-run forces every model onto the
+    mock provider but wrote to the same filenames as a live run, so a dry run
+    started to check a flag appends fabricated rows to the live spend log and
+    the live records. That is not hypothetical: a mock `core` invocation left
+    48 mock rows in `study2_core_gpt-luna.jsonl`, which the next live run then
+    resumed its budget from and would have analysed alongside real ones.
     """
-    if len(models) == 1:
-        return models[0].key
-    return "multi"
+    tag = models[0].key if len(models) == 1 else "multi"
+    if any(m.provider == "mock" for m in models):
+        tag = f"{tag}-dryrun"
+    return tag
 
 
 def run_condition_batch(

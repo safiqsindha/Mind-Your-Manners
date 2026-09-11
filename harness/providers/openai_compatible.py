@@ -160,6 +160,70 @@ RETRY_BACKOFF_BASE_S = 2.0  # exponential: 2s, 4s, 8s, 16s, then capped at 30s
 RETRY_BACKOFF_CAP_S = 30.0
 
 
+def assert_canonical_slugs(models, timeout: int = 30) -> dict[str, str]:
+    """Check that each model's moving slug still points at the dated
+    snapshot recorded in config, and halt if it does not.
+
+    `model_id` values like `qwen/qwen3.8-flash` are pointers the provider
+    can repoint at a newer snapshot at any time, silently. The per-call
+    checks cannot catch that: the response reports the pointer
+    (`qwen/qwen3.8-flash`), never the snapshot behind it, and the served
+    provider stays the same. So a mid-study version roll would split the
+    run across two models and every number would still look plausible --
+    the same shape as the design bugs this harness has been finding.
+
+    The catalog does expose the snapshot, so this reads it once per run and
+    compares. Called before any live batch; raises ProviderPinViolation on
+    drift rather than letting the run continue.
+
+    Returns the observed slug per model key, so a caller can record what it
+    actually ran against instead of echoing its own config back.
+    """
+    key = os.environ.get(API_KEY_ENV_BY_BASE[OPENROUTER_BASE_URL])
+    if not key:
+        raise ProviderError(
+            "OPENROUTER_API_KEY is not set -- cannot verify model versions before a live run."
+        )
+    resp = requests.get(
+        f"{OPENROUTER_BASE_URL}/models",
+        headers={"Authorization": f"Bearer {key}"},
+        timeout=timeout,
+    )
+    if resp.status_code != 200:
+        raise ProviderError(
+            f"could not read the OpenRouter model catalog to verify versions "
+            f"(HTTP {resp.status_code}) -- failing closed rather than starting a "
+            "paid run on unverified model versions."
+        )
+    catalog = {m.get("id"): m.get("canonical_slug") for m in (resp.json().get("data") or [])}
+
+    observed: dict[str, str] = {}
+    drifted: list[str] = []
+    missing: list[str] = []
+    for model in models:
+        if not model.canonical_slug:
+            continue
+        if model.model_id not in catalog:
+            missing.append(f"{model.key}: {model.model_id!r} is no longer in the catalog")
+            continue
+        got = catalog[model.model_id]
+        observed[model.key] = got
+        if got != model.canonical_slug:
+            drifted.append(
+                f"{model.key}: {model.model_id!r} now resolves to {got!r}, "
+                f"but config records {model.canonical_slug!r}"
+            )
+    if drifted or missing:
+        raise ProviderPinViolation(
+            "model version check failed -- refusing to start:\n  "
+            + "\n  ".join(drifted + missing)
+            + "\n\nA moving slug was repointed at a different snapshot. Re-verify the "
+            "roster and update canonical_slug in harness/config.py before running; "
+            "results produced across a version change are not comparable."
+        )
+    return observed
+
+
 def _clamp_delay(delay: float) -> float:
     """A Retry-After header is untrusted input -- a negative value would
     make time.sleep() raise, and so would NaN (parses fine as a float but
@@ -336,6 +400,23 @@ class OpenAICompatibleProvider(Provider):
             endpoints = ((metadata.get("endpoints") or {}).get("available")) or []
             selected = next((e for e in endpoints if e.get("selected")), None)
             served_provider = (selected or {}).get("provider")
+
+            # The model name the response carries must be the one we asked
+            # for. Cheap, and it closes the gap where a request is built with
+            # one model_id and answered under another -- across 2,075 real
+            # calls in the n=100 gate this field was the requested undated
+            # slug every time, for all four roster models, so a mismatch is
+            # a genuine anomaly rather than provider variation. The dated
+            # canonical_slug is accepted too: OpenRouter does not currently
+            # return it here, but a provider that started to would be
+            # reporting the same model more precisely, not a different one.
+            served_model = data.get("model")
+            if served_model and served_model not in (model.model_id, model.canonical_slug):
+                raise ProviderPinViolation(
+                    f"{model.key}: requested {model.model_id!r} but the response was "
+                    f"served as {served_model!r} -- halting rather than attributing one "
+                    "model's output to another."
+                )
 
             if model.provider_pin:
                 if not served_provider:

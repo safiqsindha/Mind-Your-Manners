@@ -201,11 +201,30 @@ REAL_LIVE_PINNED_RESPONSE_BODY = {
 
 @patch("harness.providers.openai_compatible.requests.post")
 def test_matches_real_live_response_shape(mock_post):
-    model = replace(PINNED_MODEL, provider_pin="Nex AGI")
+    # model_id must match the captured body's "model": this fixture is a real
+    # response from nex-n2.5-pro, and complete() now checks that the model
+    # answering is the model requested. Pairing this body with an unrelated
+    # model_id described a response that could not occur live.
+    model = replace(
+        PINNED_MODEL,
+        provider_pin="Nex AGI",
+        model_id=REAL_LIVE_PINNED_RESPONSE_BODY["model"],
+    )
     mock_post.return_value = _fake_response(json_body=REAL_LIVE_PINNED_RESPONSE_BODY)
     provider = OpenAICompatibleProvider(api_key="k")
     response = provider.complete(model, "sys", [{"role": "user", "content": "hi"}])
     assert response.served_provider == "Nex AGI"
+
+
+@patch("harness.providers.openai_compatible.requests.post")
+def test_a_response_served_as_a_different_model_halts(mock_post):
+    """The guard the fixture above tripped: one model's output must never be
+    recorded under another model's name."""
+    model = replace(PINNED_MODEL, provider_pin="Nex AGI", model_id="someone/else-v1")
+    mock_post.return_value = _fake_response(json_body=REAL_LIVE_PINNED_RESPONSE_BODY)
+    provider = OpenAICompatibleProvider(api_key="k")
+    with pytest.raises(ProviderPinViolation):
+        provider.complete(model, "sys", [{"role": "user", "content": "hi"}])
 
 
 @patch("harness.providers.openai_compatible.requests.post")

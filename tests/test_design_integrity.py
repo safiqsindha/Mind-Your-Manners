@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import collections
 from pathlib import Path
+from dataclasses import replace
 from unittest.mock import patch
 
 import openpyxl
@@ -189,19 +190,42 @@ def test_a_different_seed_gives_a_different_arrangement():
 # file, and -- worst -- one SpendTracker resume source, so each model would
 # count all four models' spend against its own cap.
 
+def _live(key: str) -> ModelConfig:
+    return replace(_model(key), provider="openai_compatible")
+
+
 def test_a_single_model_run_gets_its_own_tag():
-    assert _run_tag([_model("gpt-luna")]) == "gpt-luna"
+    assert _run_tag([_live("gpt-luna")]) == "gpt-luna"
 
 
 def test_two_single_model_runs_do_not_collide():
     """The parallel case: each process must write its own files."""
-    tags = {_run_tag([_model(k)]) for k in ("gpt-luna", "glm-current", "deepseek-current", "qwen-current")}
+    tags = {_run_tag([_live(k)]) for k in ("gpt-luna", "glm-current", "deepseek-current", "qwen-current")}
     assert len(tags) == 4
 
 
 def test_a_multi_model_run_in_one_process_shares_one_tag():
     """Correct: they are genuinely one run under one budget cap."""
-    assert _run_tag([_model("a"), _model("b")]) == "multi"
+    assert _run_tag([_live("a"), _live("b")]) == "multi"
+
+
+# A dry run forces every model onto the mock provider but used to write to the
+# same filenames as a live run. A mock `core` invocation left 48 fabricated
+# rows in study2_core_gpt-luna.jsonl, which the next live run resumed its
+# budget from and would have analysed alongside real results.
+
+def test_a_dry_run_does_not_write_where_a_live_run_writes():
+    assert _run_tag([_model("gpt-luna")]) != _run_tag([_live("gpt-luna")])
+
+
+def test_a_dry_run_tag_says_so():
+    assert _run_tag([_model("gpt-luna")]) == "gpt-luna-dryrun"
+
+
+def test_one_mock_model_is_enough_to_mark_the_whole_run():
+    """--dry-run mocks everything, but a partially-mocked run is still not
+    live data and must not land in a live file."""
+    assert _run_tag([_live("a"), _model("b")]).endswith("-dryrun")
 
 
 # --- 4. The validation gate's spend log was still shared -------------------
@@ -239,3 +263,150 @@ def test_two_models_gating_do_not_share_a_spend_log(tmp_path: Path):
 def test_the_gate_spend_log_names_its_model(tmp_path: Path):
     path = _gate_tracker_path("deepseek-current", tmp_path)
     assert "deepseek-current" in path.name, path.name
+
+
+# --- 5. Model version drift, and reports destroyed by stray runs -----------
+# A model_id like "qwen/qwen3.8-flash" is a pointer the provider can repoint
+# at a newer dated snapshot at any time. No response body reveals it: the
+# response reports the pointer, and the served provider is unchanged. A
+# mid-study roll would split the run across two models with every number
+# still looking plausible.
+
+def _cfg(key="qwen-current", model_id="qwen/qwen3.8-flash",
+         canonical="qwen/qwen3.8-flash-20260826"):
+    return ModelConfig(
+        key=key, provider="openai_compatible", model_id=model_id,
+        display_name=key, temperature=0.0, max_tokens=512,
+        canonical_slug=canonical,
+    )
+
+
+def _catalog(*pairs):
+    class _R:
+        status_code = 200
+        @staticmethod
+        def json():
+            return {"data": [{"id": i, "canonical_slug": c} for i, c in pairs]}
+    return _R()
+
+
+def test_matching_versions_pass_and_are_reported_back(monkeypatch):
+    from harness.providers import openai_compatible as oc
+    monkeypatch.setenv("OPENROUTER_API_KEY", "k")
+    monkeypatch.setattr(oc.requests, "get",
+                        lambda *a, **k: _catalog(("qwen/qwen3.8-flash", "qwen/qwen3.8-flash-20260826")))
+    observed = oc.assert_canonical_slugs([_cfg()])
+    assert observed == {"qwen-current": "qwen/qwen3.8-flash-20260826"}
+
+
+def test_a_repointed_slug_halts_the_run(monkeypatch):
+    """The whole point: the pointer now resolves somewhere else."""
+    from harness.providers import openai_compatible as oc
+    from harness.providers.base import ProviderPinViolation
+    monkeypatch.setenv("OPENROUTER_API_KEY", "k")
+    monkeypatch.setattr(oc.requests, "get",
+                        lambda *a, **k: _catalog(("qwen/qwen3.8-flash", "qwen/qwen3.8-flash-20261102")))
+    with pytest.raises(ProviderPinViolation) as e:
+        oc.assert_canonical_slugs([_cfg()])
+    assert "20261102" in str(e.value) and "20260826" in str(e.value)
+
+
+def test_a_model_vanishing_from_the_catalog_halts_the_run(monkeypatch):
+    from harness.providers import openai_compatible as oc
+    from harness.providers.base import ProviderPinViolation
+    monkeypatch.setenv("OPENROUTER_API_KEY", "k")
+    monkeypatch.setattr(oc.requests, "get", lambda *a, **k: _catalog(("something/else", "something/else-1")))
+    with pytest.raises(ProviderPinViolation):
+        oc.assert_canonical_slugs([_cfg()])
+
+
+def test_an_unreadable_catalog_fails_closed(monkeypatch):
+    """Never start a paid run on unverified versions."""
+    from harness.providers import openai_compatible as oc
+    from harness.providers.base import ProviderError
+    monkeypatch.setenv("OPENROUTER_API_KEY", "k")
+
+    class _R:
+        status_code = 503
+    monkeypatch.setattr(oc.requests, "get", lambda *a, **k: _R())
+    with pytest.raises(ProviderError):
+        oc.assert_canonical_slugs([_cfg()])
+
+
+def test_a_small_run_cannot_overwrite_a_large_runs_report(tmp_path: Path):
+    """A stray --n-tasks 1 destroyed a completed 100-task report during
+    development. Only a committed copy saved the numbers."""
+    from harness.cli import _refuse_to_shrink_report
+    import json as _json
+
+    p = tmp_path / "study2_validation_gate_glm-current.json"
+    p.write_text(_json.dumps({"n_tasks": 100, "n_passed": 28}))
+
+    with pytest.raises(SystemExit):
+        _refuse_to_shrink_report(p, {"n_tasks": 1, "n_passed": 0}, force=False)
+    assert _json.loads(p.read_text())["n_tasks"] == 100, "the large report must survive"
+
+
+def test_an_equal_or_larger_run_may_overwrite(tmp_path: Path):
+    from harness.cli import _refuse_to_shrink_report
+    import json as _json
+
+    p = tmp_path / "r.json"
+    p.write_text(_json.dumps({"n_tasks": 100}))
+    _refuse_to_shrink_report(p, {"n_tasks": 100}, force=False)
+    _refuse_to_shrink_report(p, {"n_tasks": 200}, force=False)
+
+
+def test_force_overwrite_is_the_explicit_escape_hatch(tmp_path: Path):
+    from harness.cli import _refuse_to_shrink_report
+    import json as _json
+
+    p = tmp_path / "r.json"
+    p.write_text(_json.dumps({"n_tasks": 100}))
+    _refuse_to_shrink_report(p, {"n_tasks": 1}, force=True)
+
+
+# --- 6. The core phase drew from a different pool than everything else ----
+# core used sample_only=False (909 tasks) while every other phase used the
+# 200-task sample. Both things that make an accuracy interpretable -- the
+# no-op manifest and the validation-gate baselines -- were measured on the
+# sample, and neither transfers.
+
+def _tasks(n, prefix="t"):
+    class _T:
+        def __init__(self, i):
+            self.task_id = f"{prefix}{i}"
+            self.instruction_type = "Cell-Level Manipulation"
+    return [_T(i) for i in range(n)]
+
+
+def test_core_draws_from_the_same_pool_as_the_gate_by_default():
+    """The bug: a core draw of 50 overlapped the n=100 gate sample by 2."""
+    from harness.study2.runner import select_gate_tasks
+
+    pool = _tasks(200)
+    core = {t.task_id for t in select_gate_tasks(pool, n=50, seed=0)}
+    gate = {t.task_id for t in select_gate_tasks(pool, n=100, seed=0)}
+    assert core <= gate, f"core sample is not inside the gate sample: {sorted(core - gate)[:5]}"
+
+
+def test_a_bigger_pool_gives_a_different_draw():
+    """Why the boundary mattered: same seed, same n, different pool."""
+    from harness.study2.runner import select_gate_tasks
+
+    small = {t.task_id for t in select_gate_tasks(_tasks(200), n=50, seed=0)}
+    big = {t.task_id for t in select_gate_tasks(_tasks(909), n=50, seed=0)}
+    assert len(small & big) < 50, "drawing from a larger pool should not reproduce the sample draw"
+
+
+def test_every_phase_defaults_to_the_sample():
+    """--full-dataset must be opt-in, on every staged phase."""
+    import argparse
+    from harness.cli import build_parser
+
+    parser = build_parser()
+    for phase in ("pilot", "core", "frontier"):
+        args = parser.parse_args(["study2", phase])
+        assert args.full_dataset is False, f"{phase} defaults to the full dataset"
+        opted = parser.parse_args(["study2", phase, "--full-dataset"])
+        assert opted.full_dataset is True
