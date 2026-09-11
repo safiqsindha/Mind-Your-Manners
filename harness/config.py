@@ -47,18 +47,30 @@ tracker -- see item (c) below on why that last distinction matters):
       three currently share provider_name "OpenAI" in OpenRouter's
       /endpoints listing for this model_id, distinguished only by an
       internal `tag` field ("openai", "openai/flex", "openai/fast") that
-      this harness's served-provider assertion (openai_compatible.py,
-      checks `openrouter_metadata.endpoints.endpoints[].provider` against
-      `provider_pin`) does NOT currently read or verify -- it only checks
-      the shared provider_name. OPEN RISK, not yet resolved: as far as
-      this check can tell, a call pinned to "OpenAI" could in principle be
-      served by any of the three tags without tripping
-      ProviderPinViolation, silently changing both price (up to 4x) and
-      latency profile. Verify this against a real live call (does the
-      response distinguish which tag served it?) before trusting the pin
-      fully; not fixed here because guessing at OpenRouter's tag-pinning
-      syntax without a live call to confirm against risks a pin that looks
-      more specific than it is.
+      this harness's served-provider assertion (openai_compatible.py)
+      does NOT read -- it only checks the shared provider_name. This was
+      recorded as an OPEN RISK: a call pinned to "OpenAI" could in
+      principle be served by any of the three tags without tripping
+      ProviderPinViolation, changing price up to 4x.
+      RESOLVED 2026-09-10 against 16 real logged calls, by billing rather
+      than by any tag field (the response carries no tag). Two independent
+      lines of evidence, both pointing the same way:
+        - 7 of the 16 calls bill at EXACTLY the standard rate, matching
+          prompt/1e6*0.20 + completion/1e6*1.20 to 7 decimal places. Flex
+          would be half that and fast double; neither is within 2% of any
+          observed call.
+        - Every call's `openrouter_metadata.endpoints.available` lists
+          exactly ONE endpoint, selected=true, provider "OpenAI". There is
+          no second candidate for the pin to be ambiguous between.
+      The 9 calls that do not match exactly are all explained by prompt
+      caching, not by a different tier: every call with cached_tokens>0
+      bills BELOW the naive figure (0.19-0.65x, cached reads), and every
+      call slightly above it is above by exactly 5.0e-8 per prompt token
+      -- a 1.25x cache-write premium on the same $0.20 base. A different
+      tier would shift the whole completion rate, which none of them do.
+      Note this is *prompt* caching (a provider-side billing optimization
+      that cannot change the computed response), not *response* caching,
+      which this harness disables per-call via X-OpenRouter-Cache: false.
   (b) NOT pinned to the first-party "DeepSeek" endpoint despite one
       existing in the catalog -- see (f) below. Pinned to "Novita"
       instead (100% uptime at check time, real fp8 quantization).
