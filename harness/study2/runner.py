@@ -229,7 +229,16 @@ def run_validation_gate(
     any wrapper-condition spend happens (task spec: "Reproduce the published
     baseline accuracy for at least one model on the unmodified benchmark
     before running any tone conditions")."""
-    tracker = SpendTracker(out_dir / "raw" / "study2_validation_gate.jsonl", phase="validation_gate", cap_usd=10.0)
+    # Per model, like the scratch dir and the report. SpendTracker resumes its
+    # running total from this file, so a shared one makes every concurrently
+    # gating model count all the others' spend against its own $10 cap and
+    # halt early -- the same failure the core path's per-run tags exist to
+    # prevent, on the one phase that runs four models at once by design.
+    tracker = SpendTracker(
+        out_dir / "raw" / f"study2_validation_gate_{model.key}.jsonl",
+        phase="validation_gate",
+        cap_usd=10.0,
+    )
     n_passed = 0
     per_task: list[dict] = []
     for task in tasks:

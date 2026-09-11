@@ -202,3 +202,40 @@ def test_two_single_model_runs_do_not_collide():
 def test_a_multi_model_run_in_one_process_shares_one_tag():
     """Correct: they are genuinely one run under one budget cap."""
     assert _run_tag([_model("a"), _model("b")]) == "multi"
+
+
+# --- 4. The validation gate's spend log was still shared -------------------
+# Fix 3 namespaced the core path's files but left the gate's SpendTracker log
+# on one fixed name. The gate is the phase that runs four models AT ONCE by
+# design, and SpendTracker resumes its running total from that file, so each
+# model would count all four models' spend against its own $10 cap.
+
+def _gate_tracker_path(model_key: str, out_dir: Path) -> Path:
+    """Run the gate with zero tasks and report where SpendTracker was pointed."""
+    from harness.study2 import runner
+
+    seen: list[Path] = []
+
+    class _FakeTracker:
+        total_usd = 0.0
+
+        def __init__(self, path, **kw):
+            seen.append(Path(path))
+
+        def close(self):
+            pass
+
+    with patch("harness.study2.runner.SpendTracker", _FakeTracker):
+        runner.run_validation_gate(_model(model_key), [], grader=None, out_dir=out_dir)
+    return seen[0]
+
+
+def test_two_models_gating_do_not_share_a_spend_log(tmp_path: Path):
+    a = _gate_tracker_path("gpt-luna", tmp_path)
+    b = _gate_tracker_path("qwen-current", tmp_path)
+    assert a != b, f"both models wrote spend to {a}"
+
+
+def test_the_gate_spend_log_names_its_model(tmp_path: Path):
+    path = _gate_tracker_path("deepseek-current", tmp_path)
+    assert "deepseek-current" in path.name, path.name
