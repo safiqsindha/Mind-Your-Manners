@@ -374,12 +374,12 @@ def _turn_diagnostics(traj: Trajectory) -> list[dict]:
     ]
 
 
-def _write_records(out_dir: Path, phase: str, records: list[dict]) -> None:
+def _write_records(out_dir: Path, phase: str, records: list[dict], tag: str) -> None:
     """Write the graded records to disk. Called from a finally block, so it
     must not raise: losing the records to a secondary failure while handling
     the primary one would defeat the point."""
     try:
-        path = out_dir / "analysis" / f"study2_{phase}_records.json"
+        path = out_dir / "analysis" / f"study2_{phase}_{tag}_records.json"
         path.parent.mkdir(parents=True, exist_ok=True)
         with open(path, "w") as fh:
             json.dump(records, fh, indent=2, default=str)
@@ -387,7 +387,7 @@ def _write_records(out_dir: Path, phase: str, records: list[dict]) -> None:
         print(f"WARNING: could not write {phase} records: {type(exc).__name__}: {exc}")
 
 
-def _append_record(out_dir: Path, phase: str, record: dict) -> None:
+def _append_record(out_dir: Path, phase: str, record: dict, tag: str) -> None:
     """Append one graded record as it is produced.
 
     The end-of-run JSON is the artifact analysis reads, but it only exists
@@ -397,13 +397,35 @@ def _append_record(out_dir: Path, phase: str, record: dict) -> None:
     append-only line-per-record file is the durable copy.
     """
     try:
-        path = out_dir / "analysis" / f"study2_{phase}_records.jsonl"
+        path = out_dir / "analysis" / f"study2_{phase}_{tag}_records.jsonl"
         path.parent.mkdir(parents=True, exist_ok=True)
         with open(path, "a", encoding="utf-8") as fh:
             fh.write(json.dumps(record, default=str) + "\n")
             fh.flush()
     except Exception as exc:  # noqa: BLE001
         print(f"WARNING: could not append {phase} record: {type(exc).__name__}: {exc}")
+
+
+def _run_tag(models: list[ModelConfig]) -> str:
+    """Filename suffix identifying which models a run covers.
+
+    Every per-phase artifact -- the raw call log, the records JSON, the
+    incremental JSONL -- used to be named by phase alone. That is fine for one
+    process, and silently destructive for four: running the four roster models
+    as concurrent `core` processes (the obvious way to cut a 95-hour sequential
+    run down to ~16) would have had them overwrite each other's records,
+    interleave one raw log, and -- worst -- each SpendTracker resumes its total
+    from that shared log, so every model would count all four models' spend
+    against its own cap and halt early.
+
+    A single-model process gets its own key, so the parallel case is safe
+    without anyone having to remember a flag. Multi-model runs in one process
+    keep sharing a file, which is correct: they genuinely are one run, and one
+    tracker enforcing one cap across them is the intended behaviour.
+    """
+    if len(models) == 1:
+        return models[0].key
+    return "multi"
 
 
 def run_condition_batch(
@@ -416,6 +438,7 @@ def run_condition_batch(
     n_trials: int = 3,
     multi_round: bool = True,
     max_turns: int = 10,
+    tone_seed: int = 0,
 ) -> list[dict]:
     """Runs every (model, task, tone, trial) combination, grades each, and
     returns one flat record per trajectory ready for study2/analysis.py.
@@ -433,12 +456,30 @@ def run_condition_batch(
     retention window. Do not reorder this to model -> tone -> task or
     similar without re-reading that section.
     """
-    tracker = SpendTracker(out_dir / "raw" / f"study2_{phase}.jsonl", phase=phase, cap_usd=budget_cap_usd)
+    tag = _run_tag(models)
+    tracker = SpendTracker(out_dir / "raw" / f"study2_{phase}_{tag}.jsonl", phase=phase, cap_usd=budget_cap_usd)
     records: list[dict] = []
     try:
         for model in models:
             for task in tasks:
-                for tone_key in TONE_ORDER:
+                # TONE ORDER IS RANDOMISED PER (model, task), not fixed.
+                # Running L1..L7 in the same sequence every time entangles tone
+                # with position-in-burst: anything that drifts across seven
+                # consecutive calls is perfectly confounded with the
+                # manipulation. That is not hypothetical here -- retry backoff
+                # accumulates within a burst (Qwen absorbed 12-21 rate-limit
+                # 429s per 20-task run), so under a fixed order the last tone
+                # would systematically meet worse provider conditions than the
+                # first, and the study would read that as a tone effect.
+                #
+                # This does NOT disturb the task-outer/tone-inner ordering the
+                # docstring above defends: all seven tones for a task still run
+                # back to back, inside the same prompt-cache window. Only their
+                # order within that burst changes. Seeded on (seed, model,
+                # task) so a rerun reproduces the same sequence.
+                tone_order = list(TONE_ORDER)
+                random.Random(f"{tone_seed}|{model.key}|{task.task_id}").shuffle(tone_order)
+                for tone_position, tone_key in enumerate(tone_order):
                     wrapper = TONE_WRAPPERS[tone_key]
                     wrapped_instruction = wrapper.apply(task.instruction)
                     for trial in range(n_trials):
@@ -446,11 +487,41 @@ def run_condition_batch(
                         input_path = task.input_spreadsheet_paths[0]
                         run_fn = run_react_multi_round if multi_round else run_single_round
                         kwargs = dict(max_turns=max_turns) if multi_round else {}
-                        traj = run_fn(
-                            tracker, model, task.task_id, wrapped_instruction, input_path, workdir,
-                            tone_level=tone_key, trial=trial, **kwargs,
-                        )
-                        grade = _grade_trajectory(grader, task, traj, workdir)
+                        # Same isolation the gate has. This is the PAID path
+                        # and had none of it: a single exception anywhere in
+                        # 4,200 core-run trajectories propagated out and ended
+                        # the run. Not hypothetical -- a ChunkedEncodingError
+                        # did exactly that to a 20-task gate, and the gate is
+                        # where isolation already existed. BudgetExceeded is
+                        # deliberately re-raised: a cap is a stop signal, not a
+                        # trajectory-level failure.
+                        try:
+                            traj = run_fn(
+                                tracker, model, task.task_id, wrapped_instruction, input_path, workdir,
+                                tone_level=tone_key, trial=trial, **kwargs,
+                            )
+                            grade = _grade_trajectory(grader, task, traj, workdir)
+                        except BudgetExceeded:
+                            raise
+                        except Exception as exc:  # noqa: BLE001 -- deliberately broad; see above
+                            print(
+                                f"  ERROR {model.key}/{task.task_id}/{tone_key}/t{trial}: "
+                                f"{type(exc).__name__}: {exc}"[:300]
+                            )
+                            crashed = {
+                                "model_key": model.key, "task_id": task.task_id,
+                                "instruction_type": task.instruction_type,
+                                "tone_level": tone_key, "tone_position": tone_position,
+                                "trial": trial, "passed": False, "crashed": True,
+                                "error": f"{type(exc).__name__}: {exc}"[:500],
+                                "soft_restriction": 0.0, "refused": False,
+                                "severity": "other", "severity_detail": "trajectory raised",
+                                "n_turns": 0, "cost_usd": 0.0, "total_tokens": 0,
+                                "turn_diagnostics": [],
+                            }
+                            records.append(crashed)
+                            _append_record(out_dir, phase, crashed, tag)
+                            continue
                         expected_uses_formula = _has_formula(task.answer_spreadsheet_paths[0]) if task.answer_spreadsheet_paths else False
                         behavior = score_trajectory(traj.code_snippets_in_order)
                         severity = classify_failure(
@@ -469,6 +540,11 @@ def run_condition_batch(
                                 "task_id": task.task_id,
                                 "instruction_type": task.instruction_type,
                                 "tone_level": tone_key,
+                                # Where this call fell in its 7-tone burst.
+                                # Recorded so the randomisation can be verified
+                                # after the fact and a position effect tested
+                                # directly, rather than assumed away.
+                                "tone_position": tone_position,
                                 "trial": trial,
                                 "passed": grade.passed,
                                 "soft_restriction": grade.soft_restriction,
@@ -483,10 +559,11 @@ def run_condition_batch(
                                 "cost_usd": total_cost,
                                 "total_tokens": total_tokens,
                                 "turn_diagnostics": _turn_diagnostics(traj),
+                                "crashed": False,
                         }
                         records.append(record)
                         # Durable copy written as we go -- see _append_record.
-                        _append_record(out_dir, phase, record)
+                        _append_record(out_dir, phase, record, tag)
                         append_spend_log(
                             out_dir / "spend_log.jsonl",
                             {"phase": phase, "cumulative_usd": tracker.total_usd, "n_calls": tracker.n_calls},
@@ -501,5 +578,5 @@ def run_condition_batch(
         # wrote zero graded records. results/raw/*.jsonl survived, but that
         # holds raw API calls, not grades -- every pass/fail, severity label
         # and behaviour score existed only in this in-memory list.
-        _write_records(out_dir, phase, records)
+        _write_records(out_dir, phase, records, tag)
     return records

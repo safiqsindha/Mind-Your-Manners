@@ -93,14 +93,30 @@ tracker -- see item (c) below on why that last distinction matters):
       `spend_tracker.compute_cost_usd()` already prefers OpenRouter's
       per-call `usage.cost` over this static table when present, precisely
       because a table like this one can drift; the static price here is
-      only a pre-call spend *projection* input. Also note: Luna's
-      `supported_parameters` (checked live) does NOT include `temperature`
-      -- this harness sends `temperature=0.0` on every call regardless
-      (openai_compatible.py always sets it), so for Luna specifically that
-      parameter is very likely silently ignored by the API rather than
-      actually zeroing sampling variance. Not verified against a real
-      response (no live key available while writing this); flagged here
-      rather than assumed either way.
+      only a pre-call spend *projection* input.
+
+      TEMPERATURE IS NOT DETERMINISM -- FOR ANY MODEL IN THIS ROSTER.
+      Luna's `supported_parameters` (checked live) omits `temperature`
+      entirely, which raised the suspicion that `temperature=0.0` was
+      being silently ignored for it. Tested directly 2026-09-11: three
+      byte-identical calls per model, same system prompt, same user
+      message, temperature=0.0. ALL FOUR models returned three DISTINCT
+      completions -- not just Luna. GLM varied most (different words and
+      even different capitalisation across calls).
+
+      So `temperature=0.0` does not make any roster model deterministic,
+      whether or not the provider accepts the parameter. Plausible causes
+      (not disentangled, and not worth disentangling here): sampled
+      reasoning traces, MoE routing nondeterminism, and batching effects
+      on the provider's own hardware.
+
+      This is not a defect to fix, and the run design already accommodates
+      it -- n_trials=3 per (model, task, tone) means within-condition
+      variance is measured rather than assumed. What matters is that no
+      analysis may treat repeated trials as replicates of a deterministic
+      process: report within-condition variance, and size any tone effect
+      against it. A tone difference smaller than a model's own
+      call-to-call spread is not a finding.
   (d) "Z.AI" endpoint (the model's own first-party host), fp8. Chosen over
       24 third-party re-hosts (DeepInfra, Relace, Morph, Fireworks, etc.,
       $0.075-$0.15/1M input) for the same vendor-fidelity-over-marginal-

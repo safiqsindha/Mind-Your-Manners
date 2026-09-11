@@ -397,8 +397,10 @@ def _study2_stage(args: argparse.Namespace, phase: str, default_cap: float, defa
         models, tasks, grader, RESULTS_ROOT, phase=phase,
         budget_cap_usd=cap_usd, n_trials=n_trials,
         multi_round=not args.single_round, max_turns=args.max_turns,
+        tone_seed=args.sample_seed,
     )
-    print(f"{phase}: {len(records)} trajectories logged to results/analysis/study2_{phase}_records.json")
+    tag = models[0].key if len(models) == 1 else "multi"
+    print(f"{phase}: {len(records)} trajectories logged to results/analysis/study2_{phase}_{tag}_records.json")
 
 
 def cmd_study2_pilot(args: argparse.Namespace) -> None:
@@ -471,9 +473,30 @@ def cmd_study2_analyze(args: argparse.Namespace) -> None:
         verification_rates,
     )
 
-    records = json.loads(Path(args.records_path).read_text())
+    # --records-path is a GLOB, not a single file. Per-phase record files are
+    # namespaced by model (see runner._run_tag), so a four-model core run
+    # executed as four parallel processes writes four files. Reading only one
+    # would silently analyse a quarter of the study as though it were all of
+    # it -- exactly the kind of quiet wrongness this harness has already been
+    # bitten by. Merging every match makes the parallel and single-process
+    # cases produce the same analysis.
+    matches = sorted(Path().glob(args.records_path)) or (
+        [Path(args.records_path)] if Path(args.records_path).exists() else []
+    )
+    if not matches:
+        print(f"No record files matched {args.records_path}", file=sys.stderr)
+        sys.exit(1)
+
+    records = []
+    for m in matches:
+        records.extend(json.loads(m.read_text()))
+    models_seen = sorted({r.get("model_key") for r in records if r.get("model_key")})
+    print(
+        f"[analyze] {len(records)} records from {len(matches)} file(s): "
+        f"{[m.name for m in matches]}\n           models: {models_seen}"
+    )
     if not records:
-        print(f"No records found in {args.records_path}", file=sys.stderr)
+        print(f"No records found in {matches}", file=sys.stderr)
         sys.exit(1)
 
     by_tone: dict[str, list[bool]] = {}
@@ -664,8 +687,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     an = s2_sub.add_parser("analyze")
     an.add_argument(
-        "--records-path", default=str(RESULTS_ROOT / "analysis" / "study2_core_records.json"),
-        help="Path to a study2_<phase>_records.json file written by pilot/core/frontier.",
+        "--records-path", default="results/analysis/study2_core_*_records.json",
+        help="Glob for the per-model record files pilot/core/frontier write; all matches are merged.",
     )
     an.add_argument("--out-path", default=None, help="Where to write the report JSON (default: results/analysis/study2_analysis_report.json)")
     an.set_defaults(func=cmd_study2_analyze)
