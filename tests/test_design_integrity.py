@@ -527,3 +527,90 @@ def test_backfill_survives_a_torn_final_line(tmp_path: Path):
     recs = [{"task_id": "t0", "tone_level": "L4_neutral", "trial": 0}]
     assert backfill_reasoning_tokens(recs, raw) == 1
     assert recs[0]["reasoning_tokens"] == 7
+
+
+# --- 8. A ten-hour run had no resume ---------------------------------------
+# The container was restarted at 896 of 1050 trajectories. The incremental
+# records survived on disk, so redoing that work would have been a choice.
+
+def _jsonl(path: Path, rows):
+    import json as _json
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(_json.dumps(r) for r in rows))
+
+
+def test_recorded_trajectories_are_recognised(tmp_path: Path):
+    from harness.study2.runner import completed_trajectories
+
+    _jsonl(tmp_path / "analysis" / "study2_core_gpt-luna_records.jsonl", [
+        {"task_id": "t0", "tone_level": "L4_neutral", "trial": 0, "crashed": False},
+        {"task_id": "t0", "tone_level": "L7_threatening", "trial": 2, "crashed": False},
+    ])
+    done = completed_trajectories(tmp_path, "core", "gpt-luna")
+    assert done == {("t0", "L4_neutral", 0), ("t0", "L7_threatening", 2)}
+
+
+def test_a_crashed_trajectory_is_retried_not_skipped(tmp_path: Path):
+    """Its usual cause is a transient provider error, not the task."""
+    from harness.study2.runner import completed_trajectories
+
+    _jsonl(tmp_path / "analysis" / "study2_core_m_records.jsonl", [
+        {"task_id": "t0", "tone_level": "L4_neutral", "trial": 0, "crashed": True},
+    ])
+    assert completed_trajectories(tmp_path, "core", "m") == set()
+
+
+def test_a_torn_final_line_is_not_counted_as_done(tmp_path: Path):
+    """A process killed mid-write leaves a partial record; that is not
+    evidence the trajectory finished."""
+    from harness.study2.runner import completed_trajectories
+
+    p = tmp_path / "analysis" / "study2_core_m_records.jsonl"
+    p.parent.mkdir(parents=True)
+    p.write_text('{"task_id":"t0","tone_level":"L4_neutral","trial":0,"crashed":false}\n{"task_id":"t1","tone_le')
+    assert completed_trajectories(tmp_path, "core", "m") == {("t0", "L4_neutral", 0)}
+
+
+def test_no_records_file_means_nothing_to_skip(tmp_path: Path):
+    from harness.study2.runner import completed_trajectories
+
+    assert completed_trajectories(tmp_path, "core", "never-run") == set()
+
+
+def test_resume_skips_recorded_work_and_keeps_it_in_the_result(tmp_path: Path):
+    """The final JSON must be the whole run, not just the part after the
+    restart."""
+    from harness.study2 import runner
+    from harness.study2.agent_loop import Trajectory
+    from harness.study2.grader import GradeResult
+    from harness.tone_wrappers import TONE_ORDER
+
+    class _Task:
+        task_id = "t0"
+        instruction_type = "Cell-Level Manipulation"
+        instruction = "do it"
+        answer_position = "A1"
+        input_spreadsheet_paths = [Path("in.xlsx")]
+        answer_spreadsheet_paths = [Path("ans.xlsx")]
+
+    # every tone already done except one
+    prior = [{"task_id": "t0", "tone_level": t, "trial": 0, "crashed": False, "passed": False}
+             for t in TONE_ORDER if t != "L5_rude"]
+    _jsonl(tmp_path / "analysis" / "study2_core_m_records.jsonl", prior)
+
+    ran = []
+
+    def fake_run(tracker, model, task_id, instruction, input_path, workdir, *, tone_level, trial, **kw):
+        ran.append(tone_level)
+        return Trajectory(task_id=task_id, tone_level=tone_level, trial=trial)
+
+    with patch("harness.study2.runner.run_react_multi_round", side_effect=fake_run), \
+         patch("harness.study2.runner._grade_trajectory",
+               side_effect=lambda *a, **k: GradeResult("t0", False, 3, 0, 0.0, [])):
+        out = runner.run_condition_batch(
+            [_live("m")], [_Task()], grader=None, out_dir=tmp_path, phase="core",
+            budget_cap_usd=1e6, n_trials=1, resume=True,
+        )
+
+    assert ran == ["L5_rude"], f"should have run only the missing tone, ran {ran}"
+    assert len(out) == 7, f"result must carry all 7 tones, got {len(out)}"

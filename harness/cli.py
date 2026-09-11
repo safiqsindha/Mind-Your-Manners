@@ -486,7 +486,7 @@ def _study2_stage(args: argparse.Namespace, phase: str, default_cap: float, defa
         models, tasks, grader, RESULTS_ROOT, phase=phase,
         budget_cap_usd=cap_usd, n_trials=n_trials,
         multi_round=not args.single_round, max_turns=args.max_turns,
-        tone_seed=args.sample_seed,
+        tone_seed=args.sample_seed, resume=args.resume,
     )
     tag = models[0].key if len(models) == 1 else "multi"
     print(f"{phase}: {len(records)} trajectories logged to results/analysis/study2_{phase}_{tag}_records.json")
@@ -822,6 +822,13 @@ def build_parser() -> argparse.ArgumentParser:
             help="Draw tasks from the full 909-task dataset instead of the 200-task "
                  "sample. Off by default: the no-op manifest and every validation-gate "
                  "baseline were measured on the sample, and do not transfer.",
+        )
+        sp.add_argument(
+            "--resume", action="store_true",
+            help="Skip trajectories already recorded in this phase's records JSONL. "
+                 "A core run is hours long and the container can be restarted under "
+                 "it; the incremental records survive, so the work does not have to "
+                 "be redone. Crashed trajectories are retried rather than skipped.",
         )
         sp.add_argument("--n-trials", type=int, default=None)
         sp.add_argument("--budget-cap", type=float, default=None)

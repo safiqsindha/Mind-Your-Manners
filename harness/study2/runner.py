@@ -445,6 +445,47 @@ def _run_tag(models: list[ModelConfig]) -> str:
     return tag
 
 
+def completed_trajectories(out_dir: Path, phase: str, tag: str) -> set[tuple[str, str, int]]:
+    """(task_id, tone_level, trial) already graded and durably recorded.
+
+    A core run is ten hours of wall clock, and the container it runs in can
+    be restarted out from under it -- which happened at 896 of 1050
+    trajectories. The incremental records file survived, so redoing that
+    work would have been a choice, not a necessity.
+
+    Reads the append-as-you-go JSONL rather than the final JSON, because the
+    final one is only written when the run ends -- exactly the case where
+    there isn't one. A torn last line from a process killed mid-write is
+    skipped: a partially written record is not evidence the trajectory
+    finished.
+    """
+    path = out_dir / "analysis" / f"study2_{phase}_{tag}_records.jsonl"
+    done: set[tuple[str, str, int]] = set()
+    if not path.exists():
+        return done
+    with open(path) as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                r = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if r.get("crashed"):
+                # A crashed trajectory is a recorded outcome, not a gap, but
+                # it is worth retrying on a resume: the usual cause is a
+                # transient provider error rather than anything about the
+                # task. Left out of `done` deliberately.
+                continue
+            try:
+                done.add((r["task_id"], r["tone_level"], int(r["trial"])))
+            except (KeyError, TypeError, ValueError):
+                continue
+    return done
+
+
+
 def run_condition_batch(
     models: list[ModelConfig],
     tasks: list[SpreadsheetTask],
@@ -456,6 +497,7 @@ def run_condition_batch(
     multi_round: bool = True,
     max_turns: int = 10,
     tone_seed: int = 0,
+    resume: bool = False,
 ) -> list[dict]:
     """Runs every (model, task, tone, trial) combination, grades each, and
     returns one flat record per trajectory ready for study2/analysis.py.
@@ -475,7 +517,27 @@ def run_condition_batch(
     """
     tag = _run_tag(models)
     tracker = SpendTracker(out_dir / "raw" / f"study2_{phase}_{tag}.jsonl", phase=phase, cap_usd=budget_cap_usd)
+    already: set[tuple[str, str, int]] = set()
+    if resume:
+        already = completed_trajectories(out_dir, phase, tag)
+        print(
+            f"[{phase}] resuming: {len(already)} trajectories already recorded and will be skipped"
+        )
     records: list[dict] = []
+    # Records from the interrupted run, carried forward so the final JSON is
+    # the whole run rather than only the part after the restart. Read once,
+    # here, because _append_record keeps appending to the same file.
+    if already:
+        prior_path = out_dir / "analysis" / f"study2_{phase}_{tag}_records.jsonl"
+        with open(prior_path) as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    records.append(json.loads(line))
+                except json.JSONDecodeError:
+                    continue
     try:
         for model in models:
             for task in tasks:
@@ -500,6 +562,8 @@ def run_condition_batch(
                     wrapper = TONE_WRAPPERS[tone_key]
                     wrapped_instruction = wrapper.apply(task.instruction)
                     for trial in range(n_trials):
+                        if (task.task_id, tone_key, trial) in already:
+                            continue
                         workdir = out_dir / "scratch" / phase / model.key / tone_key / f"{task.task_id}_t{trial}"
                         input_path = task.input_spreadsheet_paths[0]
                         run_fn = run_react_multi_round if multi_round else run_single_round
