@@ -22,6 +22,7 @@ from harness.providers.openai_compatible import (
     RETRY_BACKOFF_BASE_S,
     RETRY_BACKOFF_CAP_S,
     _clamp_delay,
+    _post_with_retry,
 )
 
 UNPINNED_MODEL = ModelConfig(
@@ -256,3 +257,46 @@ def test_retry_then_success_still_verifies_the_pin_on_a_pinned_model(mock_post, 
     response = provider.complete(pinned_model, "sys", [{"role": "user", "content": "hi"}])
     assert response.served_provider == "Nex AGI"
     assert mock_post.call_count == 2
+
+
+# --- Truncated-response failures ------------------------------------------
+# ChunkedEncodingError and ContentDecodingError inherit from RequestException,
+# NOT from ConnectionError or Timeout, so catching only the obvious two let
+# them through unretried. A real gate run lost a task to
+# "ChunkedEncodingError: Response ended prematurely".
+
+@pytest.mark.parametrize(
+    "exc",
+    [
+        requests.exceptions.ChunkedEncodingError("Response ended prematurely"),
+        requests.exceptions.ContentDecodingError("bad gzip"),
+    ],
+)
+@patch("harness.providers.openai_compatible.time.sleep")
+@patch("harness.providers.openai_compatible.requests.post")
+def test_truncated_response_is_retried(mock_post, mock_sleep, exc):
+    mock_post.side_effect = [exc, _resp(200)]
+    resp = _post_with_retry("http://x", {}, {}, timeout=180)
+    assert resp.status_code == 200
+    assert mock_post.call_count == 2, "a truncated response body must be retried"
+
+
+@patch("harness.providers.openai_compatible.time.sleep")
+@patch("harness.providers.openai_compatible.requests.post")
+def test_truncated_response_eventually_gives_up_as_provider_error(mock_post, mock_sleep):
+    mock_post.side_effect = [
+        requests.exceptions.ChunkedEncodingError("truncated")
+    ] * (MAX_RETRIES + 1)
+    with pytest.raises(ProviderError):
+        _post_with_retry("http://x", {}, {}, timeout=180)
+    assert mock_post.call_count == MAX_RETRIES + 1
+
+
+@patch("harness.providers.openai_compatible.requests.post")
+def test_a_config_error_is_still_not_retried(mock_post):
+    """Only transient network failures. TooManyRedirects is a configuration
+    problem that retrying would merely delay."""
+    mock_post.side_effect = requests.exceptions.TooManyRedirects("loop")
+    with pytest.raises(requests.exceptions.TooManyRedirects):
+        _post_with_retry("http://x", {}, {}, timeout=180)
+    assert mock_post.call_count == 1

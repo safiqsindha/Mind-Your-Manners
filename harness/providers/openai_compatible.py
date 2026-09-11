@@ -128,6 +128,24 @@ API_KEY_ENV_BY_BASE = {
 # OpenRouter's API doesn't expose an idempotency key to prevent this;
 # 429 has no such risk (rejected before any generation happens).
 RETRYABLE_STATUS_CODES = {408, 429, 502, 503, 504}
+
+# Network-level failures worth retrying. ConnectionError and Timeout are the
+# obvious ones; ChunkedEncodingError and ContentDecodingError are here because
+# they are NOT subclasses of either -- both inherit directly from
+# RequestException -- so catching only the obvious two silently let them
+# through. A real gate run lost a task to
+# "ChunkedEncodingError: Response ended prematurely", which is a truncated
+# response body: no complete result was obtained, nothing was consumed, and
+# retrying is both safe and exactly what the retry logic exists for.
+# Deliberately NOT every RequestException: TooManyRedirects, MissingSchema and
+# InvalidURL are configuration or programming errors that retrying only
+# delays.
+RETRYABLE_NETWORK_EXCEPTIONS = (
+    requests.ConnectionError,
+    requests.Timeout,
+    requests.exceptions.ChunkedEncodingError,
+    requests.exceptions.ContentDecodingError,
+)
 # Raised 4 -> 6 on evidence, not preference: Qwen's validation gate died twice
 # in a row on HTTP 429 from Alibaba's shared pool, having spent its whole
 # backoff budget (2+4+8+16 = 30s). OpenRouter's own remedy text for that error
@@ -168,7 +186,7 @@ def _post_with_retry(url: str, headers: dict, json_body: dict, timeout: int) -> 
     while True:
         try:
             resp = requests.post(url, headers=headers, json=json_body, timeout=timeout)
-        except (requests.ConnectionError, requests.Timeout) as exc:
+        except RETRYABLE_NETWORK_EXCEPTIONS as exc:
             if attempt >= MAX_RETRIES:
                 raise ProviderError(
                     f"{url}: network error after {attempt + 1} attempts, giving up: {exc}"
