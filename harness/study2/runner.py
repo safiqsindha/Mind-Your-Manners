@@ -534,6 +534,7 @@ def run_condition_batch(
                                 "soft_restriction": 0.0, "refused": False,
                                 "severity": "other", "severity_detail": "trajectory raised",
                                 "n_turns": 0, "cost_usd": 0.0, "total_tokens": 0,
+                                "reasoning_tokens": 0,
                                 "turn_diagnostics": [],
                             }
                             records.append(crashed)
@@ -551,6 +552,18 @@ def run_condition_batch(
                             grader_stdout="; ".join(grade.per_test_case_messages),
                         )
                         total_tokens = sum(r.prompt_tokens + r.completion_tokens + r.reasoning_tokens for r in traj.result_rows)
+                        # Recorded separately from total_tokens because they
+                        # answer different questions. total_tokens is dominated
+                        # by the prompt, which the tone wrapper changes by
+                        # construction, so a tone difference there is partly
+                        # just the wrapper's own length. Reasoning tokens are
+                        # what the model chose to spend thinking, which is the
+                        # measure a "tone changes how hard it thinks" claim
+                        # actually rests on. Measured live on a partial Luna
+                        # core run: reasoning spend under the threatening
+                        # wrapper ran ~25% above every other tone, which is
+                        # invisible in total_tokens.
+                        reasoning_tokens = sum(r.reasoning_tokens for r in traj.result_rows)
                         total_cost = sum(r.cost_usd for r in traj.result_rows)
                         record = {
                                 "model_key": model.key,
@@ -575,6 +588,7 @@ def run_condition_batch(
                                 "n_turns": behavior.n_code_turns,
                                 "cost_usd": total_cost,
                                 "total_tokens": total_tokens,
+                                "reasoning_tokens": reasoning_tokens,
                                 "turn_diagnostics": _turn_diagnostics(traj),
                                 "crashed": False,
                         }

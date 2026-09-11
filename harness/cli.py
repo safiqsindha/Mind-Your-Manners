@@ -527,6 +527,41 @@ def _underpowered_accuracy_note(n_per_level: dict[str, int]) -> str:
     )
 
 
+def _token_cost_trends(records: list[dict]) -> dict:
+    """Clustered trend test on the token measures, primary outcome first.
+
+    Reported for both because they answer different questions.
+    `reasoning_tokens` is what the model chose to spend thinking, which is
+    what a "tone changes how hard it thinks" claim rests on. `total_tokens`
+    is dominated by the prompt, whose length the tone wrapper changes by
+    construction, so part of any difference there is the wrapper's own text
+    rather than the model's behaviour -- but it is the statistic directly
+    comparable to the published single-turn figure, so it is kept.
+
+    A run recorded before reasoning_tokens existed reports its absence
+    rather than a number: no thinking measurement is not the same as a
+    measurement of no thinking.
+    """
+    from .study2.analysis import token_cost_trend_test
+
+    out: dict[str, dict] = {}
+    for key in ("reasoning_tokens", "total_tokens"):
+        try:
+            t = token_cost_trend_test(records, value_key=key)
+        except ValueError as exc:
+            out[key] = {"unavailable": str(exc)}
+            continue
+        out[key] = {
+            "n_clusters": t.n_clusters,
+            "observed_slope": t.observed_slope,
+            "p_value": t.p_value,
+            "ci_low": t.ci_low,
+            "ci_high": t.ci_high,
+        }
+    return out
+
+
+
 def cmd_study2_analyze(args: argparse.Namespace) -> None:
     """Phase 3 (README "Phases"): load one run's Study 2 records (written by
     `study2 pilot`/`core`/`frontier` to results/analysis/study2_<phase>_records.json)
@@ -558,6 +593,7 @@ def cmd_study2_analyze(args: argparse.Namespace) -> None:
         severity_breakdown,
         shortcut_rate,
         token_cost_effect_size,
+        token_cost_trend_test,
         trajectory_cost_summary,
         verification_rates,
     )
@@ -601,7 +637,14 @@ def cmd_study2_analyze(args: argparse.Namespace) -> None:
     report = {
         "n_records": len(records),
         # Primary outcome (task spec item 6: "Primary: cost").
+        # The effect size is descriptive only -- it reports a relative-variation
+        # percentage with no p-value and means pooled across tasks. Pooling was
+        # the problem: tasks differ enormously in how much thinking they demand
+        # and that variance swamps any tone effect. The trend tests below are
+        # the inferential half, clustered by task, and the primary outcome had
+        # neither until they were added.
         "token_cost_effect_size": token_cost_effect_size(records),
+        "token_cost_trend_test": _token_cost_trends(records),
         "cost_summary_by_tone": trajectory_cost_summary(records),
         # Trajectory-level behavior.
         "severity_breakdown_by_tone": severity_breakdown(records),

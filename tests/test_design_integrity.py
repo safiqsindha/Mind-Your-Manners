@@ -410,3 +410,120 @@ def test_every_phase_defaults_to_the_sample():
         assert args.full_dataset is False, f"{phase} defaults to the full dataset"
         opted = parser.parse_args(["study2", phase, "--full-dataset"])
         assert opted.full_dataset is True
+
+
+# --- 7. The primary outcome had no significance test ----------------------
+# token_cost_effect_size reports a relative-variation percentage, pooled
+# across tasks, with no p-value -- and cost is the study's PRIMARY outcome.
+# Pooling is the defect: tasks differ enormously in how much thinking they
+# demand, and that variance swamps any tone effect. Measured on a partial
+# Luna core run, pooling gave p=0.81 while the same data clustered by task
+# gave p=0.03.
+
+def _token_rows(effect_on_threatening: int, n_tasks: int = 12, seed: int = 0):
+    """Tasks with wildly different baseline token demand, plus a real
+    threatening-tone bump. Pooled, the task spread hides the bump."""
+    import random as _r
+    from harness.tone_wrappers import TONE_ORDER
+
+    rng = _r.Random(seed)
+    rows = []
+    for i in range(n_tasks):
+        base = 200 * (i + 1) * 10          # task demand spans 2k..24k
+        for tone in TONE_ORDER:
+            bump = effect_on_threatening if tone == "L7_threatening" else 0
+            rows.append({
+                "task_id": f"t{i}", "tone_level": tone, "passed": False,
+                "reasoning_tokens": base + bump + rng.randint(-50, 50),
+            })
+    return rows
+
+
+def test_a_real_within_task_effect_is_detected():
+    from harness.study2.analysis import token_cost_trend_test
+
+    t = token_cost_trend_test(_token_rows(effect_on_threatening=400))
+    assert t.p_value < 0.05, f"missed a real effect, p={t.p_value}"
+    assert t.observed_slope > 0
+
+
+def test_no_effect_is_not_invented():
+    from harness.study2.analysis import token_cost_trend_test
+
+    t = token_cost_trend_test(_token_rows(effect_on_threatening=0))
+    assert t.p_value > 0.05, f"found an effect that is not there, p={t.p_value}"
+
+
+def test_it_defaults_to_reasoning_not_total_tokens():
+    """total_tokens is dominated by the prompt, whose length the tone
+    wrapper changes by construction."""
+    import inspect
+    from harness.study2.analysis import token_cost_trend_test
+
+    assert inspect.signature(token_cost_trend_test).parameters["value_key"].default == "reasoning_tokens"
+
+
+def test_a_run_without_the_field_says_so_rather_than_scoring_zero():
+    """No thinking measurement is not a measurement of no thinking."""
+    from harness.study2.analysis import token_cost_trend_test
+
+    rows = [{"task_id": "t0", "tone_level": t, "passed": False} for t in
+            ("L1_sycophantic", "L4_neutral", "L7_threatening")]
+    with pytest.raises(ValueError, match="reasoning_tokens"):
+        token_cost_trend_test(rows)
+
+
+def test_the_report_carries_both_token_trends():
+    from harness.cli import _token_cost_trends
+
+    out = _token_cost_trends(_token_rows(effect_on_threatening=400))
+    assert set(out) == {"reasoning_tokens", "total_tokens"}
+    assert out["reasoning_tokens"]["p_value"] < 0.05
+    assert "unavailable" in out["total_tokens"], "total_tokens absent here, should say so"
+
+
+def test_reasoning_tokens_are_recoverable_from_the_raw_log(tmp_path: Path):
+    """The field was added mid-run. A run recorded before it must not become
+    unanalysable on the study's primary outcome."""
+    import json as _json
+    from harness.study2.analysis import backfill_reasoning_tokens
+
+    raw = tmp_path / "raw.jsonl"
+    raw.write_text("\n".join(_json.dumps(r) for r in [
+        {"item_id": "t0", "tone_level": "L4_neutral", "trial": 0, "reasoning_tokens": 100},
+        {"item_id": "t0", "tone_level": "L4_neutral", "trial": 0, "reasoning_tokens": 50},
+        {"item_id": "t0", "tone_level": "L7_threatening", "trial": 0, "reasoning_tokens": 900},
+    ]))
+    recs = [
+        {"task_id": "t0", "tone_level": "L4_neutral", "trial": 0},
+        {"task_id": "t0", "tone_level": "L7_threatening", "trial": 0},
+    ]
+    assert backfill_reasoning_tokens(recs, raw) == 2
+    assert recs[0]["reasoning_tokens"] == 150, "per-call values must be summed per trajectory"
+    assert recs[1]["reasoning_tokens"] == 900
+
+
+def test_backfill_leaves_existing_values_alone(tmp_path: Path):
+    import json as _json
+    from harness.study2.analysis import backfill_reasoning_tokens
+
+    raw = tmp_path / "raw.jsonl"
+    raw.write_text(_json.dumps({"item_id": "t0", "tone_level": "L4_neutral", "trial": 0, "reasoning_tokens": 999}))
+    recs = [{"task_id": "t0", "tone_level": "L4_neutral", "trial": 0, "reasoning_tokens": 42}]
+    assert backfill_reasoning_tokens(recs, raw) == 0
+    assert recs[0]["reasoning_tokens"] == 42
+
+
+def test_backfill_survives_a_torn_final_line(tmp_path: Path):
+    """A run still in flight can leave a partial line."""
+    import json as _json
+    from harness.study2.analysis import backfill_reasoning_tokens
+
+    raw = tmp_path / "raw.jsonl"
+    raw.write_text(
+        _json.dumps({"item_id": "t0", "tone_level": "L4_neutral", "trial": 0, "reasoning_tokens": 7})
+        + '\n{"item_id": "t0", "tone_lev'
+    )
+    recs = [{"task_id": "t0", "tone_level": "L4_neutral", "trial": 0}]
+    assert backfill_reasoning_tokens(recs, raw) == 1
+    assert recs[0]["reasoning_tokens"] == 7

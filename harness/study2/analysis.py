@@ -5,8 +5,10 @@ behavior, shortcut rate, and turn count/token spend per condition.
 """
 from __future__ import annotations
 
+import json
 from collections import defaultdict
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -42,6 +44,8 @@ __all__ = [
     "shortcut_rate",
     "trajectory_cost_summary",
     "token_cost_effect_size",
+    "token_cost_trend_test",
+    "backfill_reasoning_tokens",
     "compare_direction_to_study1",
     "accuracy_trend_test",
     "bh_corrected_pairwise_comparisons",
@@ -150,6 +154,87 @@ def accuracy_trend_test(
     """
     return clustered_trend_test(
         task_results, levels, cluster_key=cluster_key, group_key="tone_level", value_key="passed",
+    )
+
+
+def backfill_reasoning_tokens(records: list[dict[str, Any]], raw_log: Path) -> int:
+    """Fill in per-trajectory `reasoning_tokens` from the raw call log.
+
+    The field was added to the record schema after a core run had already
+    started, so that run's records carry every other measure but not the one
+    the primary outcome now tests. The raw log has it per call, keyed the
+    same way, so the trajectory total is recoverable exactly rather than
+    approximately -- no need to re-run or re-grade anything.
+
+    Mutates `records` in place and returns how many were filled. Records
+    that already carry the field are left alone, so this is safe to call on
+    a mixed set.
+    """
+    totals: dict[tuple, int] = defaultdict(int)
+    with open(raw_log) as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue  # a run still in flight can leave a torn final line
+            key = (row.get("item_id"), row.get("tone_level"), row.get("trial"))
+            totals[key] += row.get("reasoning_tokens", 0) or 0
+
+    filled = 0
+    for r in records:
+        if r.get("reasoning_tokens") is not None:
+            continue
+        key = (r.get("task_id"), r.get("tone_level"), r.get("trial"))
+        if key in totals:
+            r["reasoning_tokens"] = totals[key]
+            filled += 1
+    return filled
+
+
+def token_cost_trend_test(
+    task_results: list[dict[str, Any]],
+    levels: list[str] = TONE_ORDER,
+    cluster_key: str = "task_id",
+    value_key: str = "reasoning_tokens",
+) -> TrendTestResult:
+    """Significance test for the token-cost hypothesis, clustered by task.
+
+    `token_cost_effect_size` reports a relative-variation percentage and
+    nothing else: no p-value, and means pooled across tasks. Pooling is the
+    problem. Tasks differ enormously in how much thinking they demand, and
+    that between-task variance swamps any tone effect, so the percentage
+    moves with which tasks happen to be in the sample.
+
+    Measured on a partial Luna core run: pooling gave p=0.81 across the
+    seven tones, while the same data clustered by task put the threatening
+    wrapper's reasoning spend ~25% above every other tone with a
+    permutation p of 0.03. Same numbers, opposite conclusions -- the pooled
+    test was simply the wrong test, and it was the only one the token
+    measure had.
+
+    Defaults to `reasoning_tokens` rather than `total_tokens` deliberately:
+    total_tokens is dominated by the prompt, and the tone wrapper changes
+    the prompt's length by construction, so part of any total_tokens
+    difference is just the wrapper's own text rather than anything the
+    model did. Pass value_key="total_tokens" for the statistic directly
+    comparable to the published single-turn figure.
+
+    Rows missing `value_key` are skipped rather than counted as zero: a run
+    recorded before that field existed has no thinking measurement, which
+    is not the same as having measured zero thinking.
+    """
+    rows = [r for r in task_results if r.get(value_key) is not None]
+    if not rows:
+        raise ValueError(
+            f"no records carry {value_key!r} -- runs recorded before that field "
+            "existed cannot be tested for a token-cost trend; re-derive it from "
+            "the raw call log first."
+        )
+    return clustered_trend_test(
+        rows, levels, cluster_key=cluster_key, group_key="tone_level", value_key=value_key,
     )
 
 
