@@ -490,6 +490,58 @@ over a paid run, that converts a recoverable hiccup into total loss of
 work already paid for. `BudgetExceeded` is still re-raised, since a cap is
 a stop signal rather than a task-level failure.
 
+**200-task LIVE soak, 2026-09-11 -- 0 crashes over 1,370 real calls for
+$0.12.** The mock soak proved the dataset/sandbox/grader layer; this one
+exercised the network layer at volume, with a deliberately non-roster model
+(`pipeline-soak`, mistralai/mistral-nemo) so its output can never be
+mistaken for a result.
+
+| | result |
+|---|---|
+| tasks completed | **200/200** |
+| pipeline crashes | **0** |
+| model calls | 1,370 (6.8/task) |
+| calls erroring or refused | **0** |
+| spend | **$0.1191** |
+| tokens | 3.38M prompt / 0.22M output |
+
+Cost landed on the $0.11 median projection (worst case was $0.29); the
+projection was built from measured per-task token use rather than
+guesswork, and prompt tokens came in within 6% of it. Output tokens were
+7x below projection because the estimate was taken from reasoning models
+and this one emits none.
+
+Three things the soak established beyond "it didn't crash":
+
+- **The no-op floor replicates exactly.** 17/200 free tasks, the same 17
+  ids as the mock soak. Two independent runs -- one with canned code, one
+  with a real model over the network -- agreeing to the task id is strong
+  evidence the measure is a property of the benchmark rather than of a
+  particular run.
+- **The stale-output fix is doing visible work.** 19 turns failed with
+  `FileNotFoundError` on `OUTPUT_PATH` -- models trying to *read* their
+  previous turn's output to continue from it, which the system prompt
+  explicitly warns is impossible ("OUTPUT_PATH is a NEW, empty location
+  each turn"). Before the fix those reads would have silently succeeded
+  against a stale file, which is precisely the contamination that made all
+  four roster models score an identical 3/5. These errors are the fix
+  working, not a regression.
+- **Sandbox errors are model errors, not harness errors.** 656 of 1,404
+  executed turns (46.7%) produced stderr, and the distribution is
+  `KeyError` 178, `NameError` 139, `AttributeError` 96, `TypeError` 79,
+  `ValueError` 47, `SyntaxError` 23 -- i.e. a weak model writing buggy
+  Python, which is exactly what the ReAct observe-and-retry loop exists to
+  absorb. Zero are harness-level failures. Contrast the pre-fix runs, where
+  100% of turns died identically on "can't open file".
+
+Not a capability result and not intended as one: the soak model passed
+15/200 and beat the no-op floor on only 4. Worth noting anyway that
+**17% of tasks (34/200) exhausted the 10-turn budget**, concentrated in
+Cell-Level Manipulation (25 of 34) despite Sheet-Level being the harder
+category for this model on pass rate -- if the roster models show the same
+pattern, `max_turns` may bind more often than the 3-4 turn median from the
+5-task gate suggested.
+
 Per-call spend logging (`results/raw/*.jsonl`) and a running total
 (`results/spend_log.jsonl`) are wired up and budget-capped
 (`harness/spend_tracker.py:BudgetExceeded`) for whenever a live
