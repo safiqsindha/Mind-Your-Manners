@@ -28,10 +28,10 @@ happened.
 | 2 | gpt-luna | SpreadsheetBench | **0.42** | 0.00 | 100 |
 | 2 | deepseek-current | SpreadsheetBench | **0.38** | 0.00 | 100 |
 | 2 | glm-current | SpreadsheetBench | **0.28** | 0.00 | 100 |
-| 2 | qwen-current | SpreadsheetBench | *running* | -- | 100 |
+| 2 | qwen-current | SpreadsheetBench | **0.45** | 0.00 | 100 |
 
 Run live on 2026-09-11 against the real roster, seed 0, unmodified
-instructions, `max_turns=10`, zero crashes in 300 trajectories -- see
+instructions, `max_turns=10`, zero crashes in 400 trajectories -- see
 "The n=100 gate" under Study 2 below for the per-model detail, the
 proposed `--expected-accuracy` values, and the measured core-run cost.
 SpreadsheetBench publishes no single-number baseline for these models, so
@@ -465,11 +465,19 @@ tasks, so the accuracies below are directly comparable.
 | Luna | **42/100** | 0/100 | 42 | 4 | 0 | $0.438 |
 | DeepSeek | **38/100** | 0/100 | 38 | 29 | 0 | $1.181 |
 | GLM | **28/100** | 0/100 | 28 | 1 | 0 | $0.187 |
-| Qwen | *running* | -- | -- | -- | -- | -- |
+| **Qwen** | **45/100** | 0/100 | 45 | 26 | 0 | $0.641 |
 
 Compact per-task records: `results_archive/validation_gate_n100_*.json`
 (the full reports carry per-turn stdout/stderr and are ~300 KB each, so
 only the summaries are tracked).
+
+**The slowest model is the most accurate, and the most expensive is not.**
+Qwen scores 45/100 -- the best on the roster -- while being 3x slower per
+call than anything else and costing less per call than Luna or DeepSeek.
+DeepSeek costs 6x GLM per trajectory to score 10 points higher. Neither
+speed nor price predicts accuracy here, which matters for reading the study:
+a tone effect on token spend is not a tone effect on capability, and the two
+must not be collapsed into one "efficiency" story.
 
 **The no-op floor is 0/100 for every model.** This is the result that makes
 the rest usable, and it is the one the 5-task gate could not deliver. Every
@@ -484,11 +492,11 @@ That argument does not apply to this sample. Accuracy is a defensible
 primary measure here, with `soft_restriction` kept as the secondary that
 stays informative where accuracy saturates.
 
-**Zero crashes across 300 trajectories.** The per-task error isolation and
+**Zero crashes across 400 trajectories.** The per-task error isolation and
 the widened retry taxonomy are holding under real load, which is the first
 evidence for either at a scale that resembles the core run.
 
-**The 33 "no output produced" gradings are model failures, not harness
+**The 48 "no output produced" gradings are model failures, not harness
 failures.** Checked against the persisted turn diagnostics: models writing
 Excel formula syntax directly into a Python file, opening a workbook by a
 guessed filename instead of `WORKBOOK_PATH`, or replying in prose without
@@ -504,6 +512,7 @@ check** (same seed, same 100 tasks, or the numbers are not comparable):
 | gpt-luna | 0.42 | 0.10 |
 | deepseek-current | 0.38 | 0.10 |
 | glm-current | 0.28 | 0.10 |
+| qwen-current | 0.45 | 0.10 |
 
 At n=100 the standard deviation of a binomial proportion near p=0.4 is
 0.049, so the default +/-0.08 is 1.6 SD and would fail a healthy harness
@@ -515,15 +524,23 @@ looking at the harness before believing the model changed.
 **Core-run cost, measured rather than estimated.** Per-trajectory spend from
 this run, multiplied by 7 tones x 3 trials:
 
-| n_tasks | trajectories/model | Luna | DeepSeek | GLM | 3-model subtotal |
-|---|---|---|---|---|---|
-| 20 | 420 | $1.84 | $4.96 | $0.78 | $7.58 |
-| 50 | 1050 | $4.59 | $12.40 | $1.96 | $18.96 |
+| n_tasks | trajectories/model | Luna | DeepSeek | GLM | Qwen | roster total |
+|---|---|---|---|---|---|---|
+| 20 | 420 | $1.84 | $4.96 | $0.78 | $2.69 | $10.27 |
+| 50 | 1050 | $4.59 | $12.40 | $1.96 | $6.73 | $25.68 |
 
-With Qwen at a comparable rate the 50-task core run lands near $24, against
-the $150 cap -- consistent with the earlier projection, so no budget
-surprise. DeepSeek is 6x Luna's cost per trajectory, driven by its 29%
-turn-limit rate rather than its token price.
+A 50-task core run for the whole roster lands near $26 against the $150
+cap -- consistent with the earlier projection, so no budget surprise.
+DeepSeek is 6x GLM's cost per trajectory, driven by its 29% turn-limit
+rate rather than its token price.
+
+**Correction, measured against a live run (2026-09-11):** this projection
+is built from a single neutral-tone trajectory per task, and the core run's
+trajectories cost more. Luna's live core run tracks to roughly $3.50 for
+1050 trajectories against the $1.64 the CLI estimator projected, and the
+estimator undercounts by about 2x. Size the roster at **~$50, not ~$26**.
+Both are far under the cap; the point is that the estimator is optimistic
+and should not be the number anyone plans against.
 
 **Qwen is the wall-clock constraint, and the cause is reasoning tokens,
 not rate limits.** It took only 14 HTTP 429s across the whole run, against
@@ -535,10 +552,10 @@ own records:
 | DeepSeek | 4.7s | 235 tok/s | 74% | 1099 | $0.00155 |
 | Luna | 5.7s | 100 tok/s | 36% | 573 | $0.00095 |
 | GLM | 5.5s | 98 tok/s | 19% | 536 | $0.00048 |
-| **Qwen** | **24.7s** | **53 tok/s** | **80%** | **1305** | $0.00080 |
+| **Qwen** | **17.7s** | **66 tok/s** | **77%** | **1170** | $0.00075 |
 
-Qwen emits 1305 completion tokens per call, 80% of them reasoning tokens,
-at ~53 tok/s. That product is ~25s, which is the median latency observed --
+Qwen emits 1170 completion tokens per call, 77% of them reasoning tokens,
+at ~66 tok/s. That product is ~18s, which is the median latency observed --
 the slowness is fully accounted for by how much it generates and how fast
 it generates it. Nothing is left over for throttling to explain.
 
