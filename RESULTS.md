@@ -651,6 +651,67 @@ moves rate limiting onto your own account and should bring Qwen in line
 with the rest, taking the parallel run from ~55 h to ~16 h bounded by
 DeepSeek.
 
+**Pre-core-run design review, 2026-09-11 -- four holes that would have
+produced wrong numbers rather than crashes.** Found by reviewing the design
+rather than chasing a failure. A crash announces itself; each of these would
+have yielded a plausible-looking result.
+
+1. **The answer key was reachable from the sandbox.** SpreadsheetBench
+   stores ground truth beside the input (`spreadsheet/59196/1_59196_input.xlsx`
+   next to `1_59196_answer.xlsx`), `WORKBOOK_PATH` pointed into the dataset,
+   and the sandbox deliberately does not restrict filesystem access -- so one
+   `os.listdir(os.path.dirname(WORKBOOK_PATH))` reached it. The only barrier
+   was a system-prompt line asking models not to look. No model exploited it
+   across the four validation runs (checked: zero turns referencing an answer
+   path, `listdir`, `glob` or `os.walk`), but that is not a guarantee over
+   4,200 core-run trajectories -- and it is a particularly bad risk for a
+   study whose manipulation is *tone*, since corner-cutting under
+   threatening prompts would surface as a tone effect on accuracy while
+   looking exactly like a legitimate pass. The input is now copied into the
+   per-turn workdir, so `dirname(WORKBOOK_PATH)` holds only that turn's own
+   files. Closed at the mechanism, not by instruction.
+2. **Tone order was fixed L1..L7 for every task**, confounding tone with
+   position-in-burst. Retry backoff accumulates across consecutive calls
+   (Qwen absorbed 12-21 rate-limit 429s per 20-task run), so the last tone
+   systematically met worse provider conditions than the first. Order is now
+   shuffled per (model, task), seeded for reproducibility, and each call
+   records its `tone_position` so the randomisation is verifiable and a
+   position effect testable. The task-outer/tone-inner prompt-cache locality
+   is unaffected: all seven tones still run back to back.
+3. **The parallel core run would have corrupted itself.** Per-phase files
+   carried no model key, so four concurrent `core` processes -- the obvious
+   way to cut 95 h sequential to ~16 h -- would have overwritten each other's
+   records, interleaved one raw log, and worst, had each `SpendTracker`
+   resume from the shared log and count all four models' spend against its
+   own cap. Files are now namespaced per run, and `study2 analyze` takes a
+   glob and merges every match, so reading one model's file as though it
+   were the whole study is no longer possible.
+4. **The paid path had no per-task error isolation.** The gate got it; the
+   run that spends money did not, so one exception in 4,200 trajectories
+   ended the run. A `ChunkedEncodingError` did exactly that to a 20-task
+   gate. Now isolated, with `BudgetExceeded` still deliberately re-raised.
+
+**And a measurement fact worth stating loudly: `temperature=0.0` does not
+make any roster model deterministic.** The suspicion was Luna-specific --
+its `supported_parameters` omits `temperature` entirely. Tested directly:
+three byte-identical calls per model (same system prompt, same user message,
+temperature 0). **All four models returned three distinct completions**, GLM
+varying most.
+
+| model | 3 identical calls at temperature=0 |
+|---|---|
+| GPT-5.6 Luna | 3 distinct outputs |
+| GLM 5.3 Flash | 3 distinct outputs |
+| DeepSeek V4.1 | 3 distinct outputs |
+| Qwen3.8 Flash | 3 distinct outputs |
+
+Plausible causes -- sampled reasoning traces, MoE routing, provider-side
+batching -- are not disentangled here and do not need to be. The design
+already accommodates it (`n_trials=3` per condition measures within-condition
+variance rather than assuming it away), but the analysis must not treat
+repeated trials as replicates of a deterministic process. **A tone difference
+smaller than a model's own call-to-call spread is not a finding.**
+
 Per-call spend logging (`results/raw/*.jsonl`) and a running total
 (`results/spend_log.jsonl`) are wired up and budget-capped
 (`harness/spend_tracker.py:BudgetExceeded`) for whenever a live
