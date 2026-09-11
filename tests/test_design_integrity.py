@@ -340,3 +340,49 @@ def test_force_overwrite_is_the_explicit_escape_hatch(tmp_path: Path):
     p = tmp_path / "r.json"
     p.write_text(_json.dumps({"n_tasks": 100}))
     _refuse_to_shrink_report(p, {"n_tasks": 1}, force=True)
+
+
+# --- 6. The core phase drew from a different pool than everything else ----
+# core used sample_only=False (909 tasks) while every other phase used the
+# 200-task sample. Both things that make an accuracy interpretable -- the
+# no-op manifest and the validation-gate baselines -- were measured on the
+# sample, and neither transfers.
+
+def _tasks(n, prefix="t"):
+    class _T:
+        def __init__(self, i):
+            self.task_id = f"{prefix}{i}"
+            self.instruction_type = "Cell-Level Manipulation"
+    return [_T(i) for i in range(n)]
+
+
+def test_core_draws_from_the_same_pool_as_the_gate_by_default():
+    """The bug: a core draw of 50 overlapped the n=100 gate sample by 2."""
+    from harness.study2.runner import select_gate_tasks
+
+    pool = _tasks(200)
+    core = {t.task_id for t in select_gate_tasks(pool, n=50, seed=0)}
+    gate = {t.task_id for t in select_gate_tasks(pool, n=100, seed=0)}
+    assert core <= gate, f"core sample is not inside the gate sample: {sorted(core - gate)[:5]}"
+
+
+def test_a_bigger_pool_gives_a_different_draw():
+    """Why the boundary mattered: same seed, same n, different pool."""
+    from harness.study2.runner import select_gate_tasks
+
+    small = {t.task_id for t in select_gate_tasks(_tasks(200), n=50, seed=0)}
+    big = {t.task_id for t in select_gate_tasks(_tasks(909), n=50, seed=0)}
+    assert len(small & big) < 50, "drawing from a larger pool should not reproduce the sample draw"
+
+
+def test_every_phase_defaults_to_the_sample():
+    """--full-dataset must be opt-in, on every staged phase."""
+    import argparse
+    from harness.cli import build_parser
+
+    parser = build_parser()
+    for phase in ("pilot", "core", "frontier"):
+        args = parser.parse_args(["study2", phase])
+        assert args.full_dataset is False, f"{phase} defaults to the full dataset"
+        opted = parser.parse_args(["study2", phase, "--full-dataset"])
+        assert opted.full_dataset is True
