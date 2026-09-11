@@ -576,6 +576,81 @@ gets the same values with none of that. This entry exists so the record
 does not imply earlier numbers are void -- they are not, and the earlier
 framing of this as "corruption" overstated what was measured.
 
+**FINAL VALIDATION RUN, 2026-09-11 -- the first trustworthy accuracy
+numbers this project has produced.** All four roster models, 20
+discriminating tasks (seeded stratified draw, seed 0), on fully-fixed code.
+Every accuracy figure recorded before this one was measured against broken
+execution, contaminated grading, a biased sample, or some combination, and
+should be treated as void.
+
+| model | passed | accuracy | no-op floor | real solves | crashed | turn-limit | spend |
+|---|---|---|---|---|---|---|---|
+| GPT-5.6 Luna | 7/20 | **35%** | 0/20 | 7 | 0 | 0 | $0.074 |
+| Qwen3.8 Flash | 6/20 | **30%** | 0/20 | 6 | 1 | 6 | $0.124 |
+| GLM 5.3 Flash | 5/20 | **25%** | 0/20 | 5 | 0 | 0 | $0.043 |
+| DeepSeek V4.1 | 5/20 | **25%** | 0/20 | 5 | 0 | 6 | $0.222 |
+
+Total $0.46. **The no-op floor is 0/20 for every model**, so every pass is
+a real solve rather than a task that scores itself -- which is the whole
+point of the sample rework, and it held. The models also separate (35% to
+25%) where the contaminated 5-task gate had all four pinned at an identical
+3/5.
+
+Task-overlap structure matters more than the headline numbers: of the 20
+tasks, 4 are passed by 3 of 4 models, 2 by exactly 2, 1 by one, and **13 by
+nobody**. Roughly a third of the sample carries essentially all the
+discriminating signal and two thirds sits at floor. For the tone study that
+means accuracy has little room to move under a tone manipulation, and the
+within-trajectory measures (severity, verification behaviour, turn count)
+will carry most of it. Resist the temptation to re-sample toward tasks
+models can pass: that is selecting on the dependent variable and would bias
+the very comparison the study exists to make. A larger sample is the honest
+fix.
+
+**Two things the run found that the numbers don't show.**
+
+*Per-task error isolation earned itself.* Qwen's task 15380 died with
+`ChunkedEncodingError: Response ended prematurely`; the other 19 tasks
+completed and were graded normally. Before that fix, one truncated response
+would have discarded the entire run.
+
+*That crash also exposed a retry gap, now fixed.*
+`ChunkedEncodingError` and `ContentDecodingError` inherit from
+`RequestException`, **not** from `ConnectionError` or `Timeout` -- so the
+retry logic, which caught only the latter two, let them through. A
+truncated response body is exactly what retrying is for: no complete result
+was obtained and nothing was consumed. Both are now retried;
+`TooManyRedirects` and friends deliberately still are not, being
+configuration errors that retrying only delays.
+
+**Cross-check on `regrade`.** Qwen's first attempt was killed by a
+too-short timeout at task 19 of 20. Re-grading that dead run from its raw
+log alone scored **4/19 (21%)**, with no model calls; the live re-run
+scored **6/20 (30%)**. Not identical, and should not be -- different task
+counts, and one is a different sample of Qwen's own run-to-run variance --
+but the same order, from a run that had already been thrown away. That is
+the property regrade exists to provide.
+
+**Projections for the core run** (7 tones x 3 trials x 50 tasks = 1,050
+trajectories per model), from measured per-trajectory cost and throughput:
+
+| model | $/trajectory | core cost | throughput | core duration |
+|---|---|---|---|---|
+| GLM 5.3 Flash | $0.0021 | $2.24 | 1.58 traj/min | 11 h |
+| GPT-5.6 Luna | $0.0037 | $3.89 | 1.43 traj/min | 12 h |
+| DeepSeek V4.1 | $0.0111 | $11.66 | 1.07 traj/min | 16 h |
+| Qwen3.8 Flash | $0.0062 | $6.51 | 0.32 traj/min | **55 h** |
+| **total** | | **~$24** (cap $150) | | **95 h sequential / 55 h parallel** |
+
+Cost is not the constraint; **time is, and it is entirely Qwen**. Qwen runs
+at a third of everyone else's rate purely because of rate limiting on
+OpenRouter's shared Alibaba pool -- it absorbed 12 429s in this run alone
+and 21 in the previous attempt. A dedicated DashScope key via OpenRouter's
+BYOK (you fund Alibaba directly; OpenRouter adds 5% of the equivalent cost)
+moves rate limiting onto your own account and should bring Qwen in line
+with the rest, taking the parallel run from ~55 h to ~16 h bounded by
+DeepSeek.
+
 Per-call spend logging (`results/raw/*.jsonl`) and a running total
 (`results/spend_log.jsonl`) are wired up and budget-capped
 (`harness/spend_tracker.py:BudgetExceeded`) for whenever a live
