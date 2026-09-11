@@ -325,7 +325,7 @@ def cmd_study2_thinking_preflight(args: argparse.Namespace) -> None:
 def _study2_stage(args: argparse.Namespace, phase: str, default_cap: float, default_trials: int) -> None:
     from .study2.dataset import ensure_repo, load_spreadsheetbench
     from .study2.grader import SpreadsheetBenchGrader
-    from .study2.runner import run_condition_batch
+    from .study2.runner import load_free_task_ids, run_condition_batch, select_gate_tasks
 
     cap_usd = args.budget_cap or default_cap
     n_trials = args.n_trials or default_trials
@@ -338,8 +338,21 @@ def _study2_stage(args: argparse.Namespace, phase: str, default_cap: float, defa
             cap_usd=cap_usd, assume_yes=args.yes,
         )
     repo_dir = ensure_repo(Path(args.repo_dir))
-    tasks = load_spreadsheetbench(repo_dir, sample_only=(phase != "core"), limit=args.n_tasks)
     grader = SpreadsheetBenchGrader(repo_dir)
+    if args.task_order:
+        tasks = load_spreadsheetbench(repo_dir, sample_only=(phase != "core"), limit=args.n_tasks)
+        print(f"[{phase}] file-order sample: {args.n_tasks} tasks (may include no-op-passable tasks)")
+    else:
+        # Same discriminating draw the gate uses. The expensive runs were
+        # still taking the first n tasks in file order -- inheriting exactly
+        # the sampling bias select_gate_tasks was written to fix, on the path
+        # where each biased task costs real money rather than cents.
+        all_tasks = load_spreadsheetbench(repo_dir, sample_only=(phase != "core"))
+        tasks = select_gate_tasks(all_tasks, n=args.n_tasks, seed=args.sample_seed)
+        print(
+            f"[{phase}] discriminating sample: {len(tasks)} of {len(all_tasks)} tasks "
+            f"(seed={args.sample_seed}, {len(load_free_task_ids())} known no-op-passable tasks excluded)"
+        )
 
     records = run_condition_batch(
         models, tasks, grader, RESULTS_ROOT, phase=phase,
@@ -588,6 +601,15 @@ def build_parser() -> argparse.ArgumentParser:
         sp.add_argument("--models", default=",".join(m.key for m in CORE_MODELS))
         sp.add_argument("--repo-dir", default="data/spreadsheetbench")
         sp.add_argument("--n-tasks", type=int, default=30 if name != "core" else 50)
+        sp.add_argument(
+            "--sample-seed", type=int, default=0,
+            help="Seed for the discriminating-task draw; same seed + dataset => same tasks.",
+        )
+        sp.add_argument(
+            "--task-order", action="store_true",
+            help="Use the first --n-tasks in dataset file order instead of a discriminating "
+                 "sample. Includes tasks that pass when the agent does nothing.",
+        )
         sp.add_argument("--n-trials", type=int, default=None)
         sp.add_argument("--budget-cap", type=float, default=None)
         sp.add_argument("--single-round", action="store_true", help="Use the single-round setting instead of multi-round ReAct")
