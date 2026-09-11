@@ -142,11 +142,34 @@ def execute_python_on_workbook(code: str, workbook_path: Path, workdir: Path) ->
     # what the rest of this function assumes it means.
     output_path.unlink(missing_ok=True)
 
+    # ANSWER-KEY ISOLATION. SpreadsheetBench stores each task's ground truth
+    # beside its input -- spreadsheet/59196/1_59196_input.xlsx sits next to
+    # 1_59196_answer.xlsx. Pointing WORKBOOK_PATH straight at the dataset made
+    # the answer one os.listdir(os.path.dirname(WORKBOOK_PATH)) away, and this
+    # sandbox deliberately does not restrict filesystem access (see module
+    # docstring), so the only thing standing between a model and the answer key
+    # was a system-prompt line asking it not to look.
+    #
+    # No model exploited it across the four validation runs (checked: zero
+    # turns referencing an answer path, listdir, glob or os.walk). That is not
+    # a guarantee for 4,200 core-run trajectories, and it is a particularly bad
+    # risk for THIS study: the manipulation is tone, so if corner-cutting rises
+    # under, say, threatening prompts, the leak would show up as a tone effect
+    # on accuracy while looking exactly like a legitimate pass.
+    #
+    # Copying the input into the workdir closes it at the mechanism instead of
+    # by instruction: dirname(WORKBOOK_PATH) is now a directory containing only
+    # this turn's own files. The basename is preserved so extension checks
+    # (a real one: .xlsm macro handling) still behave. Inputs are ~10KB median,
+    # 929KB max, so the per-turn copy is free.
+    sandbox_workbook = workdir / workbook_path.name
+    shutil.copy(workbook_path, sandbox_workbook)
+
     script = _RUNNER_TEMPLATE.format(
         cpu=CPU_TIME_LIMIT_S,
         mem=MEM_LIMIT_BYTES,
         workdir=str(workdir),
-        workbook_path=str(workbook_path),
+        workbook_path=str(sandbox_workbook),
         output_path=str(output_path),
         code=textwrap.indent(code, ""),
     )

@@ -87,15 +87,15 @@ def test_records_are_written_even_when_the_run_raises(tmp_path: Path):
     raise, or a secondary failure would destroy the records while handling
     the primary one."""
     records = [{"task_id": "t1", "passed": True}]
-    _write_records(tmp_path, "core", records)
-    written = json.loads((tmp_path / "analysis" / "study2_core_records.json").read_text())
+    _write_records(tmp_path, "core", records, "gpt-luna")
+    written = json.loads((tmp_path / "analysis" / "study2_core_gpt-luna_records.json").read_text())
     assert written == records
 
 
 def test_write_records_survives_an_unwritable_destination(tmp_path: Path, capsys):
     bad = tmp_path / "file_not_a_dir"
     bad.write_text("x")  # analysis/ cannot be created underneath a file
-    _write_records(bad, "core", [{"task_id": "t"}])  # must not raise
+    _write_records(bad, "core", [{"task_id": "t"}], "gpt-luna")  # must not raise
     assert "WARNING" in capsys.readouterr().out
 
 
@@ -103,9 +103,9 @@ def test_each_record_is_durable_before_the_run_ends(tmp_path: Path):
     """The end-of-run JSON only exists once the loop finishes. A SIGKILL or
     OOM runs no finally block, so records must also land as they are made."""
     for i in range(3):
-        _append_record(tmp_path, "core", {"task_id": f"t{i}", "passed": i == 0})
+        _append_record(tmp_path, "core", {"task_id": f"t{i}", "passed": i == 0}, "gpt-luna")
 
-    lines = (tmp_path / "analysis" / "study2_core_records.jsonl").read_text().strip().splitlines()
+    lines = (tmp_path / "analysis" / "study2_core_gpt-luna_records.jsonl").read_text().strip().splitlines()
     assert len(lines) == 3
     assert [json.loads(x)["task_id"] for x in lines] == ["t0", "t1", "t2"]
 
@@ -113,5 +113,5 @@ def test_each_record_is_durable_before_the_run_ends(tmp_path: Path):
 def test_appending_records_never_raises_into_the_run(tmp_path: Path, capsys):
     bad = tmp_path / "file_not_a_dir"
     bad.write_text("x")
-    _append_record(bad, "core", {"task_id": "t"})  # must not raise
+    _append_record(bad, "core", {"task_id": "t"}, "gpt-luna")  # must not raise
     assert "WARNING" in capsys.readouterr().out
