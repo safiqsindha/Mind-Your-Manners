@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import collections
 from pathlib import Path
+from dataclasses import replace
 from unittest.mock import patch
 
 import openpyxl
@@ -189,19 +190,42 @@ def test_a_different_seed_gives_a_different_arrangement():
 # file, and -- worst -- one SpendTracker resume source, so each model would
 # count all four models' spend against its own cap.
 
+def _live(key: str) -> ModelConfig:
+    return replace(_model(key), provider="openai_compatible")
+
+
 def test_a_single_model_run_gets_its_own_tag():
-    assert _run_tag([_model("gpt-luna")]) == "gpt-luna"
+    assert _run_tag([_live("gpt-luna")]) == "gpt-luna"
 
 
 def test_two_single_model_runs_do_not_collide():
     """The parallel case: each process must write its own files."""
-    tags = {_run_tag([_model(k)]) for k in ("gpt-luna", "glm-current", "deepseek-current", "qwen-current")}
+    tags = {_run_tag([_live(k)]) for k in ("gpt-luna", "glm-current", "deepseek-current", "qwen-current")}
     assert len(tags) == 4
 
 
 def test_a_multi_model_run_in_one_process_shares_one_tag():
     """Correct: they are genuinely one run under one budget cap."""
-    assert _run_tag([_model("a"), _model("b")]) == "multi"
+    assert _run_tag([_live("a"), _live("b")]) == "multi"
+
+
+# A dry run forces every model onto the mock provider but used to write to the
+# same filenames as a live run. A mock `core` invocation left 48 fabricated
+# rows in study2_core_gpt-luna.jsonl, which the next live run resumed its
+# budget from and would have analysed alongside real results.
+
+def test_a_dry_run_does_not_write_where_a_live_run_writes():
+    assert _run_tag([_model("gpt-luna")]) != _run_tag([_live("gpt-luna")])
+
+
+def test_a_dry_run_tag_says_so():
+    assert _run_tag([_model("gpt-luna")]) == "gpt-luna-dryrun"
+
+
+def test_one_mock_model_is_enough_to_mark_the_whole_run():
+    """--dry-run mocks everything, but a partially-mocked run is still not
+    live data and must not land in a live file."""
+    assert _run_tag([_live("a"), _model("b")]).endswith("-dryrun")
 
 
 # --- 4. The validation gate's spend log was still shared -------------------

@@ -249,8 +249,10 @@ def cmd_study2_validation_gate(args: argparse.Namespace) -> None:
     # completed 100-task GLM report during development -- only a committed
     # copy saved the numbers. Refusing after the run would protect the file
     # but still burn the spend, so refuse first.
+    from .study2.runner import _run_tag
+
     _refuse_to_shrink_report(
-        RESULTS_ROOT / "analysis" / f"study2_validation_gate_{model.key}.json",
+        RESULTS_ROOT / "analysis" / f"study2_validation_gate_{_run_tag([model])}.json",
         {"n_tasks": args.n_tasks},
         force=args.force_overwrite,
     )
@@ -290,11 +292,14 @@ def cmd_study2_validation_gate(args: argparse.Namespace) -> None:
     # Per model, not a fixed filename. Gating four models used to leave only
     # the fourth report on disk -- the same clobbering the scratch-dir fix
     # addressed, reintroduced at the one artifact that fix exists to preserve.
-    out_path = RESULTS_ROOT / "analysis" / f"study2_validation_gate_{model.key}.json"
+    out_path = RESULTS_ROOT / "analysis" / f"study2_validation_gate_{_run_tag([model])}.json"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(result, indent=2))
     # Kept as a stable "most recent gate" path for existing tooling/docs.
-    (RESULTS_ROOT / "analysis" / "study2_validation_gate.json").write_text(json.dumps(result, indent=2))
+    # Not written from a dry run: the alias carries no model key, so a mock
+    # run would leave fabricated numbers where a reader expects real ones.
+    if model.provider != "mock":
+        (RESULTS_ROOT / "analysis" / "study2_validation_gate.json").write_text(json.dumps(result, indent=2))
     # The file keeps everything (per-task turn diagnostics included, for
     # post-hoc diagnosis); stdout keeps only what a human reads at a glance,
     # since the diagnostics are hundreds of lines of captured stderr.
