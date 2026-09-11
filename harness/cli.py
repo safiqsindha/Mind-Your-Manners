@@ -228,9 +228,14 @@ def cmd_study2_validation_gate(args: argparse.Namespace) -> None:
         model, tasks, grader, RESULTS_ROOT, expected_accuracy=args.expected_accuracy,
         tolerance=args.tolerance, max_turns=args.max_turns,
     )
-    out_path = RESULTS_ROOT / "analysis" / "study2_validation_gate.json"
+    # Per model, not a fixed filename. Gating four models used to leave only
+    # the fourth report on disk -- the same clobbering the scratch-dir fix
+    # addressed, reintroduced at the one artifact that fix exists to preserve.
+    out_path = RESULTS_ROOT / "analysis" / f"study2_validation_gate_{model.key}.json"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(result, indent=2))
+    # Kept as a stable "most recent gate" path for existing tooling/docs.
+    (RESULTS_ROOT / "analysis" / "study2_validation_gate.json").write_text(json.dumps(result, indent=2))
     # The file keeps everything (per-task turn diagnostics included, for
     # post-hoc diagnosis); stdout keeps only what a human reads at a glance,
     # since the diagnostics are hundreds of lines of captured stderr.

@@ -337,6 +337,38 @@ def _turn_diagnostics(traj: Trajectory) -> list[dict]:
     ]
 
 
+def _write_records(out_dir: Path, phase: str, records: list[dict]) -> None:
+    """Write the graded records to disk. Called from a finally block, so it
+    must not raise: losing the records to a secondary failure while handling
+    the primary one would defeat the point."""
+    try:
+        path = out_dir / "analysis" / f"study2_{phase}_records.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "w") as fh:
+            json.dump(records, fh, indent=2, default=str)
+    except Exception as exc:  # noqa: BLE001
+        print(f"WARNING: could not write {phase} records: {type(exc).__name__}: {exc}")
+
+
+def _append_record(out_dir: Path, phase: str, record: dict) -> None:
+    """Append one graded record as it is produced.
+
+    The end-of-run JSON is the artifact analysis reads, but it only exists
+    once the loop is over. A long core run is thousands of trajectories and
+    real money; if the process dies (OOM, container reclaim, SIGKILL -- none
+    of which run a finally block) everything graded so far is gone. This
+    append-only line-per-record file is the durable copy.
+    """
+    try:
+        path = out_dir / "analysis" / f"study2_{phase}_records.jsonl"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "a", encoding="utf-8") as fh:
+            fh.write(json.dumps(record, default=str) + "\n")
+            fh.flush()
+    except Exception as exc:  # noqa: BLE001
+        print(f"WARNING: could not append {phase} record: {type(exc).__name__}: {exc}")
+
+
 def run_condition_batch(
     models: list[ModelConfig],
     tasks: list[SpreadsheetTask],
@@ -395,8 +427,7 @@ def run_condition_batch(
                         )
                         total_tokens = sum(r.prompt_tokens + r.completion_tokens + r.reasoning_tokens for r in traj.result_rows)
                         total_cost = sum(r.cost_usd for r in traj.result_rows)
-                        records.append(
-                            {
+                        record = {
                                 "model_key": model.key,
                                 "task_id": task.task_id,
                                 "instruction_type": task.instruction_type,
@@ -415,15 +446,23 @@ def run_condition_batch(
                                 "cost_usd": total_cost,
                                 "total_tokens": total_tokens,
                                 "turn_diagnostics": _turn_diagnostics(traj),
-                            }
-                        )
+                        }
+                        records.append(record)
+                        # Durable copy written as we go -- see _append_record.
+                        _append_record(out_dir, phase, record)
                         append_spend_log(
                             out_dir / "spend_log.jsonl",
                             {"phase": phase, "cumulative_usd": tracker.total_usd, "n_calls": tracker.n_calls},
                         )
     finally:
         tracker.close()
-    (out_dir / "analysis" / f"study2_{phase}_records.json").parent.mkdir(parents=True, exist_ok=True)
-    with open(out_dir / "analysis" / f"study2_{phase}_records.json", "w") as fh:
-        json.dump(records, fh, indent=2, default=str)
+        # MUST be inside finally. This used to sit after it, so any exception
+        # escaping the loop skipped it entirely -- and the exception that ends
+        # a capped run is BudgetExceeded, raised by SpendTracker.record() the
+        # moment the cap is reached. That is the EXPECTED termination of a
+        # core run, not an edge case: a $150 run ending exactly as designed
+        # wrote zero graded records. results/raw/*.jsonl survived, but that
+        # holds raw API calls, not grades -- every pass/fail, severity label
+        # and behaviour score existed only in this in-memory list.
+        _write_records(out_dir, phase, records)
     return records
