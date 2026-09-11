@@ -9,6 +9,10 @@ __pycache__/
 # never commit their contents.
 results/raw/*.jsonl
 results/analysis/*.json
+# The incremental per-record log _append_record writes as a run progresses.
+# Added when crash-durability was, but never added here, so a live run left
+# an untracked file that changes every few seconds and must not be committed.
+results/analysis/*.jsonl
 results/spend_log.jsonl
 results/scratch/
 !results/raw/.gitkeep
