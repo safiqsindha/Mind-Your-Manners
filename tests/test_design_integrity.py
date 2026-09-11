@@ -614,3 +614,62 @@ def test_resume_skips_recorded_work_and_keeps_it_in_the_result(tmp_path: Path):
 
     assert ran == ["L5_rude"], f"should have run only the missing tone, ran {ran}"
     assert len(out) == 7, f"result must carry all 7 tones, got {len(out)}"
+
+
+# --- 9. Two live runs of the SAME model shared one records file -----------
+# Namespacing per model stopped different models colliding; it did nothing
+# about the same model twice. A container restart was reported, a resumed run
+# was started -- and the original process had not died. Both appended to one
+# records file for half an hour, producing 39 duplicate (task, tone, trial)
+# rows that an analysis would have counted as extra trials.
+
+def test_a_second_live_run_of_the_same_model_is_refused(tmp_path: Path):
+    import os
+    from harness.study2.runner import RunAlreadyInProgress, _exclusive_run
+
+    with _exclusive_run(tmp_path, "core", "gpt-luna"):
+        lock = tmp_path / "locks" / "study2_core_gpt-luna.lock"
+        assert lock.read_text().strip() == str(os.getpid())
+        # a different, live pid holds it
+        lock.write_text("1")
+        with pytest.raises(RunAlreadyInProgress, match="already running"):
+            with _exclusive_run(tmp_path, "core", "gpt-luna"):
+                pass
+        lock.write_text(str(os.getpid()))
+
+
+def test_a_stale_lock_from_a_dead_process_is_taken_over(tmp_path: Path):
+    """The normal state after a crash, which is exactly when --resume runs."""
+    from harness.study2.runner import _exclusive_run
+
+    lock = tmp_path / "locks" / "study2_core_m.lock"
+    lock.parent.mkdir(parents=True)
+    lock.write_text("999999")  # not a live pid
+    with _exclusive_run(tmp_path, "core", "m"):
+        pass  # must not raise
+
+
+def test_different_models_do_not_block_each_other(tmp_path: Path):
+    """Running the roster in parallel stays supported."""
+    from harness.study2.runner import _exclusive_run
+
+    with _exclusive_run(tmp_path, "core", "gpt-luna"):
+        with _exclusive_run(tmp_path, "core", "qwen-current"):
+            pass
+
+
+def test_the_lock_is_released_when_the_run_ends(tmp_path: Path):
+    from harness.study2.runner import _exclusive_run
+
+    with _exclusive_run(tmp_path, "core", "m"):
+        pass
+    assert not (tmp_path / "locks" / "study2_core_m.lock").exists()
+
+
+def test_the_lock_is_released_even_when_the_run_raises(tmp_path: Path):
+    from harness.study2.runner import _exclusive_run
+
+    with pytest.raises(ValueError):
+        with _exclusive_run(tmp_path, "core", "m"):
+            raise ValueError("budget")
+    assert not (tmp_path / "locks" / "study2_core_m.lock").exists()

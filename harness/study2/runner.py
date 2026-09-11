@@ -16,8 +16,10 @@ test cases 2 and 3's inputs, and all 3 outputs are graded together via
 """
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
+import os
 import random
 import shutil
 from pathlib import Path
@@ -445,6 +447,58 @@ def _run_tag(models: list[ModelConfig]) -> str:
     return tag
 
 
+class RunAlreadyInProgress(RuntimeError):
+    """Another live process is already writing this phase+model's files."""
+
+
+@contextlib.contextmanager
+def _exclusive_run(out_dir: Path, phase: str, tag: str):
+    """Refuse to start when another process is already writing these files.
+
+    Namespacing per model stopped different models colliding. It does
+    nothing about the *same* model twice, which is the case that actually
+    happened: a container restart was reported, a resumed run was started --
+    and the original process had not died at all. Both appended to the same
+    records file for half an hour, producing 39 duplicate
+    (task, tone, trial) rows that an analysis would have counted as extra
+    trials.
+
+    The lock records a pid. A stale lock from a killed process is taken
+    over rather than treated as fatal, since that is the normal state after
+    a crash and the resume path exists precisely for it.
+    """
+    lock = out_dir / "locks" / f"study2_{phase}_{tag}.lock"
+    lock.parent.mkdir(parents=True, exist_ok=True)
+    if lock.exists():
+        try:
+            holder = int(lock.read_text().strip())
+        except (ValueError, OSError):
+            holder = None
+        if holder is not None and holder != os.getpid():
+            alive = True
+            try:
+                os.kill(holder, 0)
+            except OSError:
+                alive = False
+            if alive:
+                raise RunAlreadyInProgress(
+                    f"pid {holder} is already running {phase} for {tag!r} and writing the "
+                    f"same files ({lock}). Two live runs append to one records file and "
+                    "produce duplicate trajectories. Stop that process, or delete the lock "
+                    "if you are certain it is gone."
+                )
+    lock.write_text(str(os.getpid()))
+    try:
+        yield
+    finally:
+        try:
+            if lock.exists() and lock.read_text().strip() == str(os.getpid()):
+                lock.unlink()
+        except OSError:
+            pass
+
+
+
 def completed_trajectories(out_dir: Path, phase: str, tag: str) -> set[tuple[str, str, int]]:
     """(task_id, tone_level, trial) already graded and durably recorded.
 
@@ -516,6 +570,8 @@ def run_condition_batch(
     similar without re-reading that section.
     """
     tag = _run_tag(models)
+    exclusive = _exclusive_run(out_dir, phase, tag)
+    exclusive.__enter__()
     tracker = SpendTracker(out_dir / "raw" / f"study2_{phase}_{tag}.jsonl", phase=phase, cap_usd=budget_cap_usd)
     already: set[tuple[str, str, int]] = set()
     if resume:
@@ -664,6 +720,7 @@ def run_condition_batch(
                             {"phase": phase, "cumulative_usd": tracker.total_usd, "n_calls": tracker.n_calls},
                         )
     finally:
+        exclusive.__exit__(None, None, None)
         tracker.close()
         # MUST be inside finally. This used to sit after it, so any exception
         # escaping the loop skipped it entirely -- and the exception that ends
