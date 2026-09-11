@@ -239,3 +239,104 @@ def test_two_models_gating_do_not_share_a_spend_log(tmp_path: Path):
 def test_the_gate_spend_log_names_its_model(tmp_path: Path):
     path = _gate_tracker_path("deepseek-current", tmp_path)
     assert "deepseek-current" in path.name, path.name
+
+
+# --- 5. Model version drift, and reports destroyed by stray runs -----------
+# A model_id like "qwen/qwen3.8-flash" is a pointer the provider can repoint
+# at a newer dated snapshot at any time. No response body reveals it: the
+# response reports the pointer, and the served provider is unchanged. A
+# mid-study roll would split the run across two models with every number
+# still looking plausible.
+
+def _cfg(key="qwen-current", model_id="qwen/qwen3.8-flash",
+         canonical="qwen/qwen3.8-flash-20260826"):
+    return ModelConfig(
+        key=key, provider="openai_compatible", model_id=model_id,
+        display_name=key, temperature=0.0, max_tokens=512,
+        canonical_slug=canonical,
+    )
+
+
+def _catalog(*pairs):
+    class _R:
+        status_code = 200
+        @staticmethod
+        def json():
+            return {"data": [{"id": i, "canonical_slug": c} for i, c in pairs]}
+    return _R()
+
+
+def test_matching_versions_pass_and_are_reported_back(monkeypatch):
+    from harness.providers import openai_compatible as oc
+    monkeypatch.setenv("OPENROUTER_API_KEY", "k")
+    monkeypatch.setattr(oc.requests, "get",
+                        lambda *a, **k: _catalog(("qwen/qwen3.8-flash", "qwen/qwen3.8-flash-20260826")))
+    observed = oc.assert_canonical_slugs([_cfg()])
+    assert observed == {"qwen-current": "qwen/qwen3.8-flash-20260826"}
+
+
+def test_a_repointed_slug_halts_the_run(monkeypatch):
+    """The whole point: the pointer now resolves somewhere else."""
+    from harness.providers import openai_compatible as oc
+    from harness.providers.base import ProviderPinViolation
+    monkeypatch.setenv("OPENROUTER_API_KEY", "k")
+    monkeypatch.setattr(oc.requests, "get",
+                        lambda *a, **k: _catalog(("qwen/qwen3.8-flash", "qwen/qwen3.8-flash-20261102")))
+    with pytest.raises(ProviderPinViolation) as e:
+        oc.assert_canonical_slugs([_cfg()])
+    assert "20261102" in str(e.value) and "20260826" in str(e.value)
+
+
+def test_a_model_vanishing_from_the_catalog_halts_the_run(monkeypatch):
+    from harness.providers import openai_compatible as oc
+    from harness.providers.base import ProviderPinViolation
+    monkeypatch.setenv("OPENROUTER_API_KEY", "k")
+    monkeypatch.setattr(oc.requests, "get", lambda *a, **k: _catalog(("something/else", "something/else-1")))
+    with pytest.raises(ProviderPinViolation):
+        oc.assert_canonical_slugs([_cfg()])
+
+
+def test_an_unreadable_catalog_fails_closed(monkeypatch):
+    """Never start a paid run on unverified versions."""
+    from harness.providers import openai_compatible as oc
+    from harness.providers.base import ProviderError
+    monkeypatch.setenv("OPENROUTER_API_KEY", "k")
+
+    class _R:
+        status_code = 503
+    monkeypatch.setattr(oc.requests, "get", lambda *a, **k: _R())
+    with pytest.raises(ProviderError):
+        oc.assert_canonical_slugs([_cfg()])
+
+
+def test_a_small_run_cannot_overwrite_a_large_runs_report(tmp_path: Path):
+    """A stray --n-tasks 1 destroyed a completed 100-task report during
+    development. Only a committed copy saved the numbers."""
+    from harness.cli import _refuse_to_shrink_report
+    import json as _json
+
+    p = tmp_path / "study2_validation_gate_glm-current.json"
+    p.write_text(_json.dumps({"n_tasks": 100, "n_passed": 28}))
+
+    with pytest.raises(SystemExit):
+        _refuse_to_shrink_report(p, {"n_tasks": 1, "n_passed": 0}, force=False)
+    assert _json.loads(p.read_text())["n_tasks"] == 100, "the large report must survive"
+
+
+def test_an_equal_or_larger_run_may_overwrite(tmp_path: Path):
+    from harness.cli import _refuse_to_shrink_report
+    import json as _json
+
+    p = tmp_path / "r.json"
+    p.write_text(_json.dumps({"n_tasks": 100}))
+    _refuse_to_shrink_report(p, {"n_tasks": 100}, force=False)
+    _refuse_to_shrink_report(p, {"n_tasks": 200}, force=False)
+
+
+def test_force_overwrite_is_the_explicit_escape_hatch(tmp_path: Path):
+    from harness.cli import _refuse_to_shrink_report
+    import json as _json
+
+    p = tmp_path / "r.json"
+    p.write_text(_json.dumps({"n_tasks": 100}))
+    _refuse_to_shrink_report(p, {"n_tasks": 1}, force=True)

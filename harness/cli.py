@@ -109,6 +109,27 @@ def resolve_models(model_keys: list[str], live: bool) -> list:
             file=sys.stderr,
         )
         sys.exit(1)
+
+    # Every live run passes through here, so this is the one place a model
+    # version check covers the whole CLI. A model_id like
+    # `qwen/qwen3.8-flash` is a pointer the provider can repoint at a newer
+    # snapshot without notice, and nothing in a response body reveals it --
+    # a mid-study roll would split the run across two models with every
+    # number still looking plausible. Checked once per invocation, before
+    # any spend.
+    from .providers.openai_compatible import OPENROUTER_BASE_URL, assert_canonical_slugs
+
+    openrouter_models = [
+        m for m in models if m.api_base == OPENROUTER_BASE_URL and m.canonical_slug
+    ]
+    if openrouter_models:
+        try:
+            observed = assert_canonical_slugs(openrouter_models)
+        except Exception as exc:  # ProviderPinViolation / ProviderError
+            print(f"ERROR: {exc}", file=sys.stderr)
+            sys.exit(1)
+        for key, slug in sorted(observed.items()):
+            print(f"[version-check] {key} -> {slug}")
     return models
 
 
@@ -184,6 +205,33 @@ def cmd_study1_part_b(args: argparse.Namespace) -> None:
     print(f"Part B ({args.benchmark}): {len(rows)} calls logged to results/raw/study1_part_b.jsonl")
 
 
+def _refuse_to_shrink_report(out_path: Path, result: dict, force: bool) -> None:
+    """Guard against a small run silently overwriting a large one's report.
+
+    Reports are keyed by model, so re-running the same model with a smaller
+    --n-tasks lands on the same filename. The scores in the new file are
+    correct for what it ran; the problem is that the expensive run's record
+    is gone and nothing says so.
+    """
+    if force or not out_path.exists():
+        return
+    try:
+        existing = json.loads(out_path.read_text())
+    except Exception:  # noqa: BLE001 -- unreadable/corrupt: nothing to protect
+        return
+    old_n, new_n = existing.get("n_tasks") or 0, result.get("n_tasks") or 0
+    if new_n >= old_n:
+        return
+    print(
+        f"ERROR: {out_path} already holds a {old_n}-task run for this model and this "
+        f"run covered only {new_n} tasks. Refusing to overwrite the larger result.\n"
+        f"       Move or delete that file, or pass --force-overwrite, if you really "
+        f"mean to replace it.",
+        file=sys.stderr,
+    )
+    sys.exit(1)
+
+
 def cmd_study2_validation_gate(args: argparse.Namespace) -> None:
     from .study2.dataset import ensure_repo, load_spreadsheetbench
     from .study2.grader import SpreadsheetBenchGrader
@@ -195,6 +243,17 @@ def cmd_study2_validation_gate(args: argparse.Namespace) -> None:
     )
 
     model = resolve_models([args.model], args.live)[0]
+    # Checked BEFORE the run, not at write time: a gate report costs hours of
+    # wall clock and real money, and a one-task smoke run writes a file with
+    # exactly the same name. A stray `--n-tasks 1` invocation destroyed a
+    # completed 100-task GLM report during development -- only a committed
+    # copy saved the numbers. Refusing after the run would protect the file
+    # but still burn the spend, so refuse first.
+    _refuse_to_shrink_report(
+        RESULTS_ROOT / "analysis" / f"study2_validation_gate_{model.key}.json",
+        {"n_tasks": args.n_tasks},
+        force=args.force_overwrite,
+    )
     if args.live:
         # multi-round agent loop -- assume ~3 model calls/task as a rough average
         confirm_projection(
@@ -643,6 +702,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Use the first --n-tasks in dataset file order instead of a discriminating "
              "sample. Includes tasks that pass when the agent does nothing; for "
              "reproducing older results only.",
+    )
+    g2.add_argument(
+        "--force-overwrite", action="store_true",
+        help="Replace an existing gate report for this model even if it covered "
+             "more tasks than this run. Off by default: a stray small run must not "
+             "silently destroy an expensive large one.",
     )
     g2.add_argument("--expected-accuracy", type=float, default=None)
     g2.add_argument("--tolerance", type=float, default=0.08)
