@@ -475,11 +475,21 @@ def _exclusive_run(out_dir: Path, phase: str, tag: str):
         except (ValueError, OSError):
             holder = None
         if holder is not None and holder != os.getpid():
+            # Only ProcessLookupError means the holder is gone. PermissionError
+            # means the opposite -- the process EXISTS, we just may not signal
+            # it because it belongs to another user. Catching OSError broadly
+            # treated that as dead and took the lock: CI caught exactly this,
+            # where the runner is unprivileged and pid 1 is root's, so the
+            # guard silently let a second run through. Any other OSError is
+            # treated as alive too, because refusing to start is recoverable
+            # and two concurrent runs corrupting one records file is not.
             alive = True
             try:
                 os.kill(holder, 0)
-            except OSError:
+            except ProcessLookupError:
                 alive = False
+            except OSError:
+                alive = True
             if alive:
                 raise RunAlreadyInProgress(
                     f"pid {holder} is already running {phase} for {tag!r} and writing the "

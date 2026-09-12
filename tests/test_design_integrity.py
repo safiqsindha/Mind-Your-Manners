@@ -630,8 +630,11 @@ def test_a_second_live_run_of_the_same_model_is_refused(tmp_path: Path):
     with _exclusive_run(tmp_path, "core", "gpt-luna"):
         lock = tmp_path / "locks" / "study2_core_gpt-luna.lock"
         assert lock.read_text().strip() == str(os.getpid())
-        # a different, live pid holds it
-        lock.write_text("1")
+        # a different, live pid holds it -- os.getppid() is live and is not
+        # us. pid 1 was used here originally and made this test pass locally
+        # (root can signal it) while failing on CI (an unprivileged runner
+        # gets PermissionError), which is the bug the liveness check had.
+        lock.write_text(str(os.getppid()))
         with pytest.raises(RunAlreadyInProgress, match="already running"):
             with _exclusive_run(tmp_path, "core", "gpt-luna"):
                 pass
@@ -965,3 +968,28 @@ def test_the_accuracy_note_does_not_treat_power_as_invalidating_a_positive():
     assert "false negatives" in lowered
     assert "valid pre-registered test" in lowered
     assert "thousand-plus" not in lowered
+
+
+def test_a_lock_held_by_another_users_process_is_not_stolen(tmp_path: Path):
+    """os.kill(pid, 0) raising PermissionError proves the process EXISTS.
+    Catching OSError broadly read that as 'dead' and took the lock -- CI
+    caught it, where the runner is unprivileged and pid 1 belongs to root."""
+    import os
+    from harness.study2.runner import RunAlreadyInProgress, _exclusive_run
+
+    lock = tmp_path / "locks" / "study2_core_m.lock"
+    lock.parent.mkdir(parents=True)
+    lock.write_text("4242")
+
+    real_kill = os.kill
+
+    def fake_kill(pid, sig):
+        if pid == 4242 and sig == 0:
+            raise PermissionError(1, "Operation not permitted")
+        return real_kill(pid, sig)
+
+    with patch("harness.study2.runner.os.kill", side_effect=fake_kill):
+        with pytest.raises(RunAlreadyInProgress):
+            with _exclusive_run(tmp_path, "core", "m"):
+                pass
+    assert lock.read_text().strip() == "4242", "the other run's lock must survive"
