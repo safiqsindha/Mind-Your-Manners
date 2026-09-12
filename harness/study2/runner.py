@@ -29,7 +29,7 @@ import openpyxl
 
 from ..providers.base import ModelConfig
 from ..spend_tracker import BudgetExceeded, SpendTracker, append_spend_log
-from ..tone_wrappers import TONE_ORDER, TONE_WRAPPERS, WRAPPER_SET_VERSION
+from ..tone_wrappers import INTERJECTIONS, TONE_ORDER, TONE_WRAPPERS, WRAPPER_SET_VERSION
 from .agent_loop import Trajectory, run_react_multi_round, run_single_round
 from .dataset import SpreadsheetTask
 from .failure_taxonomy import classify_failure
@@ -125,6 +125,13 @@ FREE_TASKS_MANIFEST = Path(__file__).parent / "free_tasks.json"
 # 0.08 tolerance against a 5-task sample (steps of 0.20) is decided by
 # rounding rather than by the model. See select_gate_tasks' docstring.
 MIN_USEFUL_GATE_TASKS = 20
+
+# Turns at which a mid-task interjection may land. Turn 0's response is the
+# model's first attempt, so the earliest an interruption can reach it is the
+# observation after that -- turn 1. Capped at 2 because the median trajectory
+# is 3.3 turns: a later injection would simply never fire on most of them, and
+# an arm whose treatment silently misses half its trajectories is not an arm.
+INTERJECTION_TURNS = (1, 2)
 
 
 def load_free_task_ids(manifest: Path = FREE_TASKS_MANIFEST) -> set[str]:
@@ -566,6 +573,7 @@ def run_condition_batch(
     resume: bool = False,
     tones: Optional[list[str]] = None,
     run_label: Optional[str] = None,
+    interject: Optional[str] = None,
 ) -> list[dict]:
     """Runs every (model, task, tone, trial) combination, grades each, and
     returns one flat record per trajectory ready for study2/analysis.py.
@@ -653,6 +661,19 @@ def run_condition_batch(
                         input_path = task.input_spreadsheet_paths[0]
                         run_fn = run_react_multi_round if multi_round else run_single_round
                         kwargs = dict(max_turns=max_turns) if multi_round else {}
+                        # The mid-task interjection. Its TURN is seeded on
+                        # (task, trial) and deliberately NOT on the arm, so
+                        # every arm interrupts the same task+trial at the same
+                        # point. If the turn varied by arm, turn position would
+                        # ride along with the manipulation and the paired
+                        # comparison would be measuring both at once.
+                        injected_turn = None
+                        if interject is not None and multi_round:
+                            injected_turn = random.Random(
+                                f"interject|{tone_seed}|{model.key}|{task.task_id}|{trial}"
+                            ).choice(INTERJECTION_TURNS)
+                            kwargs["interjection"] = INTERJECTIONS[interject]
+                            kwargs["interjection_turn"] = injected_turn
                         # Same isolation the gate has. This is the PAID path
                         # and had none of it: a single exception anywhere in
                         # 4,200 core-run trajectories propagated out and ended
@@ -755,6 +776,9 @@ def run_condition_batch(
                                 # so records must never be pooled across them
                                 # by accident.
                                 "wrapper_set": WRAPPER_SET_VERSION,
+                                "interjection": interject,
+                                "interjection_turn": injected_turn,
+                                "interjection_fired": getattr(traj, "interjection_fired", False),
                                 "trial": trial,
                                 "passed": grade.passed,
                                 "soft_restriction": grade.soft_restriction,

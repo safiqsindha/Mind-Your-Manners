@@ -180,6 +180,11 @@ class Trajectory:
     final_code: Optional[str] = None  # the code snippet that produced final_output_path
     refused: bool = False
     hit_turn_limit: bool = False  # ran out of max_turns without a FINAL response -- see failure_taxonomy.py
+    # Whether a mid-task interjection actually landed. It may not: a trajectory
+    # that finishes in one turn never reaches the injection turn. Recorded
+    # rather than assumed, because an analysis that counted un-fired
+    # trajectories as treated would dilute the effect toward zero.
+    interjection_fired: bool = False
     result_rows: list[ResultRow] = field(default_factory=list)
 
     @property
@@ -296,6 +301,8 @@ def run_react_multi_round(
     workdir: Path,
     tone_level: str,
     trial: int,
+    interjection: Optional[str] = None,
+    interjection_turn: Optional[int] = None,
     max_turns: int = 10,  # was 6. Raised while chasing a 0/5 gate that turned out to be sandbox.py's
     # path bug, not a turn shortage (see _agent_system_prompt's CORRECTED note). Kept at 10 on the
     # post-fix evidence rather than reverted: with execution actually working, 4 of 5 gate tasks
@@ -329,9 +336,12 @@ def run_react_multi_round(
         if not code:
             # Model didn't follow the protocol; feed that back as an observation
             # rather than silently ending the trajectory, then keep going.
-            messages.append(
-                {"role": "user", "content": "Observation: no code block or FINAL: line found. Please respond with one or the other." + turn_marker}
-            )
+            nudge = ("Observation: no code block or FINAL: line found. "
+                     "Please respond with one or the other." + turn_marker)
+            if interjection is not None and turn == interjection_turn:
+                nudge = f"{nudge}\n\n{interjection}"
+                traj.interjection_fired = True
+            messages.append({"role": "user", "content": nudge})
             traj.steps.append(TrajectoryStep(turn, response.text, None, "", "", is_final=False))
             continue
 
@@ -340,6 +350,13 @@ def run_react_multi_round(
             f"Observation: stdout={exec_result.stdout!r} stderr={exec_result.stderr!r} "
             f"timed_out={exec_result.timed_out}{turn_marker}"
         )
+        # Rides along with the observation rather than arriving as a second
+        # consecutive user message: that keeps the strict user/assistant
+        # alternation providers expect, and it is the realistic shape -- a
+        # manager speaks at the moment the tool output lands.
+        if interjection is not None and turn == interjection_turn:
+            observation = f"{observation}\n\n{interjection}"
+            traj.interjection_fired = True
         messages.append({"role": "user", "content": observation})
         traj.steps.append(TrajectoryStep(turn, response.text, code, exec_result.stdout, exec_result.stderr, is_final=False))
         if exec_result.output_workbook_path:
