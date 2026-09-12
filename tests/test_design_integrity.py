@@ -547,7 +547,10 @@ def test_recorded_trajectories_are_recognised(tmp_path: Path):
         {"task_id": "t0", "tone_level": "L7_threatening", "trial": 2, "crashed": False},
     ])
     done = completed_trajectories(tmp_path, "core", "gpt-luna")
-    assert done == {("t0", "L4_neutral", 0), ("t0", "L7_threatening", 2)}
+    # Four fields, not three: the injection turn is part of the key, so a
+    # crossed run's three cells per (task, tone, trial) stay distinct. Rows
+    # carrying no turn key as None, which is what they re-derive to.
+    assert done == {("t0", "L4_neutral", 0, None), ("t0", "L7_threatening", 2, None)}
 
 
 def test_a_crashed_trajectory_is_retried_not_skipped(tmp_path: Path):
@@ -568,7 +571,7 @@ def test_a_torn_final_line_is_not_counted_as_done(tmp_path: Path):
     p = tmp_path / "analysis" / "study2_core_m_records.jsonl"
     p.parent.mkdir(parents=True)
     p.write_text('{"task_id":"t0","tone_level":"L4_neutral","trial":0,"crashed":false}\n{"task_id":"t1","tone_le')
-    assert completed_trajectories(tmp_path, "core", "m") == {("t0", "L4_neutral", 0)}
+    assert completed_trajectories(tmp_path, "core", "m") == {("t0", "L4_neutral", 0, None)}
 
 
 def test_no_records_file_means_nothing_to_skip(tmp_path: Path):
@@ -1234,3 +1237,310 @@ def test_a_trajectory_that_ends_early_records_that_it_never_fired(tmp_path: Path
             interjection="MANAGER SPEAKS", interjection_turn=2, max_turns=4,
         )
     assert traj.interjection_fired is False
+
+
+# --- 13. Seven-level interruptions, crossed over injection turn ------------
+# The opening-wrapper arm came back null on cost; the mid-task interruption
+# did not. These guard the expanded design: all seven registers delivered
+# mid-task, crossed over where they land, with the timing comparison's
+# selection confound closed at analysis time.
+
+def test_every_tone_level_has_an_interjection():
+    """The interjection scale has to be the SAME scale as the wrappers, or
+    an interjection arm and an opening-tone arm cannot be compared."""
+    from harness.tone_wrappers import INTERJECTIONS, TONE_ORDER
+
+    assert list(INTERJECTIONS) == TONE_ORDER
+
+
+def test_no_interjection_carries_a_task_instruction():
+    """Extended from the neutral-only check: v1's mistake was ONE level
+    carrying an instruction the others didn't, which is exactly what a
+    seven-level set makes easy to reintroduce."""
+    from harness.tone_wrappers import INTERJECTIONS
+
+    banned = ("provide a single final answer", "check your", "make sure you",
+              "read carefully", "step by step", "verify", "double-check",
+              "answer the question")
+    for key, text in INTERJECTIONS.items():
+        lowered = text.lower()
+        for phrase in banned:
+            assert phrase not in lowered, f"{key} instructs: {phrase!r}"
+
+
+def test_every_interjection_is_marked_as_an_interruption():
+    """A shared stem is what makes the text read as an interruption rather
+    than task content. If it varied by level, 'was interrupted' would vary
+    with register and the arms would differ by two things at once."""
+    from harness.tone_wrappers import INTERJECTIONS
+
+    for key, text in INTERJECTIONS.items():
+        assert text.startswith("Checking in."), f"{key} lacks the shared stem: {text!r}"
+
+
+def test_turn_zero_is_a_legal_injection_point():
+    """It was excluded on a misreading of the loop: the interjection rides
+    the observation produced AT the end of iteration `turn`, which the model
+    sees on the next one, so index 0 already means 'after the first
+    response'. It is also the position that reaches the most trajectories."""
+    from harness.study2.runner import INTERJECTION_TURNS
+
+    assert 0 in INTERJECTION_TURNS
+
+
+def test_turn_zero_actually_fires_on_the_first_observation():
+    """The claim above, exercised against the real agent loop rather than
+    asserted about it."""
+    from harness.study2.agent_loop import run_react_multi_round
+
+    captured = _capture_messages_run(interjection="ZZ-MARKER", interjection_turn=0)
+    user_texts = [m["content"] for m in captured if m["role"] == "user"]
+    assert any("ZZ-MARKER" in t for t in user_texts), user_texts
+    # It must not be in the OPENING message -- that would make it a wrapper,
+    # not an interruption.
+    assert "ZZ-MARKER" not in user_texts[0]
+
+
+def test_crossed_turns_run_every_turn_once_per_trial():
+    from harness.study2.runner import _injection_turns_for
+
+    turns = _injection_turns_for(
+        "L7_threatening", True, [0, 1, 2], 0, "m", "task", 0
+    )
+    assert turns == [0, 1, 2]
+
+
+def test_crossed_turns_are_deduplicated_and_ordered():
+    from harness.study2.runner import _injection_turns_for
+
+    assert _injection_turns_for("L5_rude", True, [2, 0, 0, 1], 0, "m", "t", 0) == [0, 1, 2]
+
+
+def test_uncrossed_runs_keep_the_legacy_seeded_draw():
+    """The micro-experiment's runs have to stay reproducible."""
+    from harness.study2.runner import _injection_turns_for
+
+    a = _injection_turns_for("L7_threatening", True, None, 0, "m", "task", 0)
+    b = _injection_turns_for("L4_neutral", True, None, 0, "m", "task", 0)
+    assert len(a) == 1 and a == b
+
+
+def test_no_interjection_still_runs_exactly_once():
+    from harness.study2.runner import _injection_turns_for
+
+    assert _injection_turns_for(None, True, [0, 1, 2], 0, "m", "t", 0) == [None]
+
+
+def test_resume_key_distinguishes_injection_turns(tmp_path):
+    """Keyed on (task, tone, trial) alone, a crossed resume would see cell 1
+    recorded and skip cells 2 and 3 as duplicates, truncating the run to a
+    third of its design without saying so."""
+    import json as _json
+
+    from harness.study2.runner import completed_trajectories
+
+    path = tmp_path / "analysis" / "study2_core_x_records.jsonl"
+    path.parent.mkdir(parents=True)
+    with open(path, "w") as fh:
+        for turn in (0, 1):
+            fh.write(_json.dumps({
+                "task_id": "T1", "tone_level": "L4_neutral", "trial": 0,
+                "interjection": "L7_threatening", "interjection_turn": turn,
+                "crashed": False,
+            }) + "\n")
+
+    done = completed_trajectories(tmp_path, "core", "x")
+    assert ("T1", "L4_neutral", 0, 0) in done
+    assert ("T1", "L4_neutral", 0, 1) in done
+    assert ("T1", "L4_neutral", 0, 2) not in done, "turn 2 would be skipped unrun"
+
+
+def test_resume_key_still_matches_rows_without_an_injection_turn(tmp_path):
+    """Runs recorded before the turn was crossed must still resume."""
+    import json as _json
+
+    from harness.study2.runner import completed_trajectories
+
+    path = tmp_path / "analysis" / "study2_core_x_records.jsonl"
+    path.parent.mkdir(parents=True)
+    path.write_text(_json.dumps({
+        "task_id": "T1", "tone_level": "L2_very_polite", "trial": 3,
+        "crashed": False,
+    }) + "\n")
+
+    assert ("T1", "L2_very_polite", 3, None) in completed_trajectories(tmp_path, "core", "x")
+
+
+def test_turn_comparable_tasks_ignores_the_treated_arm_entirely():
+    """The population must be decided from the control arm only. Selecting
+    on the treated arm's own firing would select on a variable the treatment
+    moves, which is the confound this function exists to close."""
+    from harness.study2.analysis import turn_comparable_tasks
+
+    rows = []
+    # Control arm reaches both turns on TASK_OK, only turn 0 on TASK_SHORT.
+    for turn, fired in ((0, True), (1, True)):
+        rows.append(_interj_row("TASK_OK", "L4_neutral", turn, fired, 100))
+    for turn, fired in ((0, True), (1, False)):
+        rows.append(_interj_row("TASK_SHORT", "L4_neutral", turn, fired, 100))
+    # Treated arm says the opposite on both tasks. It must not matter.
+    for turn, fired in ((0, True), (1, False)):
+        rows.append(_interj_row("TASK_OK", "L7_threatening", turn, fired, 900))
+    for turn, fired in ((0, True), (1, True)):
+        rows.append(_interj_row("TASK_SHORT", "L7_threatening", turn, fired, 900))
+
+    assert turn_comparable_tasks(rows, [0, 1]) == {"TASK_OK"}
+
+
+def test_turn_comparison_is_run_on_one_shared_task_set():
+    """Both turns must be measured on identical tasks, or the difference
+    between them can be manufactured by their having drawn different work --
+    the micro-experiment's caveat."""
+    from harness.study2.analysis import injection_turn_effects
+
+    rows = []
+    for task in ("A", "B"):
+        for turn in (0, 1):
+            rows.append(_interj_row(task, "L4_neutral", turn, True, 100))
+            rows.append(_interj_row(task, "L7_threatening", turn, True, 150))
+    # A third task the control never reaches at turn 1, with a huge treated
+    # effect at turn 1. If it leaked in, turn 1 would look far more costly.
+    rows.append(_interj_row("C", "L4_neutral", 0, True, 100))
+    rows.append(_interj_row("C", "L4_neutral", 1, False, 100))
+    rows.append(_interj_row("C", "L7_threatening", 1, True, 5000))
+
+    effects = injection_turn_effects(rows, "L7_threatening", [0, 1])
+    assert effects[0]["n_tasks"] == effects[1]["n_tasks"] == 2
+    assert effects[1]["mean_effect"] == 50.0, effects[1]
+
+
+def test_unfired_trajectories_are_dropped_not_averaged_in():
+    """A trajectory that ended before the injection turn received no dose.
+    Counting it as a treated observation averages the control condition into
+    the treated arm, by an amount that grows with turn index."""
+    from harness.study2.analysis import interjection_trend_test
+
+    rows = []
+    for task in ("A", "B", "C"):
+        for tone, value in (("L4_neutral", 100.0), ("L7_threatening", 300.0)):
+            rows.append(_interj_row(task, tone, 0, True, value))
+        # Unfired treated rows carrying control-like values.
+        rows.append(_interj_row(task, "L7_threatening", 2, False, 100.0))
+
+    kept = interjection_trend_test(rows, levels=["L4_neutral", "L7_threatening"])
+    assert kept.n_clusters == 3
+    assert kept.observed_slope == 200.0, kept
+
+
+def _interj_row(task_id, interjection, turn, fired, reasoning):
+    return {
+        "task_id": task_id, "tone_level": "L4_neutral", "trial": 0,
+        "interjection": interjection, "interjection_turn": turn,
+        "interjection_fired": fired, "reasoning_tokens": reasoning,
+        "crashed": False,
+    }
+
+
+def _capture_messages_run(interjection, interjection_turn):
+    """Runs the real agent loop against a stub that always emits code, and
+    returns the message list the model was shown."""
+    from harness.study2 import agent_loop as al
+
+    captured = []
+
+    class _Resp:
+        refused = False
+        text = "```python\npass\n```"
+
+    def _fake_call(tracker, model, system_prompt, messages, *a, **k):
+        captured.clear()
+        captured.extend({"role": m["role"], "content": m["content"]} for m in messages)
+        return _Resp(), _row()
+
+    class _Exec:
+        stdout, stderr, timed_out = "", "", False
+        output_workbook_path = None
+
+    orig_call, orig_exec = al._call_and_record, al.execute_python_on_workbook
+    al._call_and_record = _fake_call
+    al.execute_python_on_workbook = lambda *a, **k: _Exec()
+    try:
+        al.run_react_multi_round(
+            None, _StubModel(), "task", "instruction", _PathStub(), _PathStub(),
+            tone_level="L4_neutral", trial=0,
+            interjection=interjection, interjection_turn=interjection_turn,
+            max_turns=3,
+        )
+    finally:
+        al._call_and_record = orig_call
+        al.execute_python_on_workbook = orig_exec
+    return captured
+
+
+class _StubModel:
+    key = "m"
+    model_id = "m"
+    provider = "mock"
+
+
+class _PathStub:
+    def __truediv__(self, other):
+        return self
+
+
+def test_timing_comparison_refuses_rather_than_fabricates():
+    """When the control arm never reaches the turns being compared, there is
+    no honest comparison to make. The function must return an empty one
+    rather than fall back to whatever the treated arm happens to have --
+    that fallback is the confound, and it is what a crossed run against
+    short trajectories would silently hit."""
+    from harness.study2.analysis import compare_injection_turns, turn_comparable_tasks
+
+    rows = []
+    for task in ("A", "B", "C"):
+        # Control reaches turn 0 only.
+        rows.append(_interj_row(task, "L4_neutral", 0, True, 100))
+        rows.append(_interj_row(task, "L4_neutral", 1, False, 100))
+        rows.append(_interj_row(task, "L4_neutral", 2, False, 100))
+        # Treated reaches everything, with a large apparent effect.
+        for turn in (0, 1, 2):
+            rows.append(_interj_row(task, "L7_threatening", turn, True, 900))
+
+    assert turn_comparable_tasks(rows, [1, 2]) == set()
+    result = compare_injection_turns(rows, "L7_threatening", 1, 2)
+    assert result["n_tasks"] == 0
+    assert result["p_value"] == 1.0
+
+
+def test_regrade_keeps_crossed_trajectories_apart():
+    """Under the crossed design one (model, task, tone, trial) runs three
+    times, once per injection turn. Grouped without the turn, regrade would
+    splice all three into a single trajectory three times as long as any
+    that actually happened, and grade a thing the model never produced."""
+    from harness.study2.regrade import group_trajectories
+
+    rows = []
+    for turn in (0, 1, 2):
+        for call in (0, 1):
+            rows.append({
+                "model_key": "m", "item_id": "T1", "tone_level": "L4_neutral",
+                "trial": 0, "extra": {"turn": call, "interjection_turn": turn},
+                "response_text": f"turn{turn}call{call}",
+            })
+
+    grouped = group_trajectories(rows)
+    assert len(grouped) == 3, f"crossed cells collapsed into {len(grouped)}"
+    assert all(len(v) == 2 for v in grouped.values())
+
+
+def test_regrade_still_groups_runs_that_predate_the_field():
+    """Rows written before interjection_turn existed must key as they did."""
+    from harness.study2.regrade import group_trajectories
+
+    rows = [
+        {"model_key": "m", "item_id": "T1", "tone_level": "L4_neutral",
+         "trial": 0, "extra": {"turn": t}} for t in (0, 1)
+    ]
+    grouped = group_trajectories(rows)
+    assert len(grouped) == 1
+    assert next(iter(grouped)).interjection_turn is None

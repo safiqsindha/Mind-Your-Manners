@@ -445,11 +445,13 @@ reasons. This result answers all four.
 
 ### What it does not show
 
-**Nothing about performance.** Accuracy is flat (p=0.71) and this design was
-powered for cost, not accuracy -- stated before the data, and not revised
-now that accuracy came back null. At this size the minimum detectable
-accuracy effect is roughly twice what 50 tasks can resolve. "Threatening
-does not help" is consistent with the data; it is not established by it.
+**Little about performance.** On the clean regrade, accuracy is flat:
+-0.8 points, 95% CI [-5.7, +3.7], p=0.745. This design was powered for
+cost, not accuracy -- stated before the data, and not revised now that
+accuracy came back null. What the interval supports is a bound, not a
+zero: a threatening interruption does not buy more than roughly 4 points
+here. "Threatening does not help" is consistent with the data and bounded
+by it; it is not established as exactly zero.
 
 **One model.** Luna only. The same caveat that applies to everything else
 here applies to this.
@@ -465,7 +467,117 @@ obvious next micro-experiment.
 threatening check-in buys 28% more compute and no more correct answers. On
 this model, on these tasks, measured once.
 
+**Where the interruption lands: withdrawn.** A first pass split the effect
+by injection turn and found +21% at turn 1 and +39% at turn 2, with the
+difference significant at p=0.004. That comparison was wrong and is
+withdrawn. The injection turn was drawn at random, and a turn-2 injection
+can only fire on a trajectory that runs to turn 2 -- the hard tasks, which
+are also the expensive ones. The two turns were therefore measured on
+different task populations (50 tasks vs 35), and the gap is what that
+selection produces on its own.
+
+Re-running the same comparison through `compare_injection_turns`, which
+fixes the task set from the CONTROL arm only and so compares both positions
+on identical tasks, the difference disappears:
+
+| Comparison | Task set | Turn 1 | Turn 2 | p |
+|---|---|---|---|---|
+| First pass (selected) | 50 vs 35 tasks | +21% | +39% | 0.004 |
+| Control-defined population | 29 tasks, both turns | +20.0% | +29.1% | 0.32 |
+
+The effect of a threatening interruption is real at both positions. That it
+is *larger later* is not established. Whether position matters is what the
+crossed-turn run is designed to answer.
+
+**Grading in this pair of runs was corrupted, and has been recovered.**
+The two arms both ran tone `L4_neutral` over the same 50 tasks and the same
+8 trials, and the scratch path did not include the run label -- so 800
+trajectories shared 400 execution directories, two concurrent processes
+unlinking and rewriting one another's `output.xlsx`. Every `passed` flag in
+these two runs was therefore suspect. Token counts come from the provider's
+API response and never touched the filesystem, so the 27.5% cost effect was
+never in question.
+
+Both arms were re-graded from their raw call logs into isolated
+directories: `harness.cli study2 regrade` re-executes each trajectory's own
+code and re-checks it against all three test cases, with no model calls and
+no spend. All 800 trajectories rebuilt. The recovered accuracy:
+
+| | Neutral interjection | Threatening interjection |
+|---|---|---|
+| All trajectories | 31.5% (126/400) | 30.5% (122/400) |
+| Interjection actually fired | 28.6% (87/304) | 29.0% (91/314) |
+
+Task-clustered paired test on the fired trajectories: -0.8 percentage
+points, 95% CI [-5.7, +3.7], p=0.745. So the accuracy claim survives, and
+survives as a bound rather than a bare null -- on this model and these
+tasks, a threatening interruption does not buy more than about 4 points of
+accuracy, while costing 27.5% more thinking. It does not establish that the
+true effect is zero.
+
+The corrupted grading happened to give nearly the same answer (31.5% vs
+30.2%). That is luck, not vindication: two processes were racing on the
+same files and the result could have gone anywhere. Fixed in the runner and
+in the regrade path -- both now carry the run tag and the injection turn in
+their scratch paths.
+
+Regraded records: `results_archive/core_gpt-luna_reinject_{neutral,threatening}_regraded.json`.
+
 Records: `results_archive/core_gpt-luna_reinject_{neutral,threatening}_records.json`.
+
+## Next: seven registers, crossed over injection turn
+
+The micro-experiment tested one contrast (threatening vs neutral) at a
+random position. The expansion tests all seven registers of the same scale,
+delivered mid-task, at each of three positions:
+
+* **Seven interjection levels**, L1 sycophantic through L7 threatening, all
+  exactly 28 tokens, all opening with the same "Checking in." stem, none
+  carrying a task instruction. L4 neutral is the control.
+* **Injection turn crossed over {0, 1, 2}** rather than drawn. Turn 0 is
+  included: it was excluded from the micro-experiment on a misreading of the
+  agent loop, and is in fact both legal and the position that reaches the
+  most trajectories (~98%, against ~77% and ~55%).
+* **The opening wrapper is held at v2 neutral in every arm**, so the run
+  varies one thing.
+* **The timing comparison's population is defined by the control arm**, via
+  `turn_comparable_tasks`. Crossing removes the assignment half of the
+  selection problem; it cannot remove reachability, since a short trajectory
+  still cannot receive a late interjection, and whether it is short is
+  itself an outcome. Filtering on the treated arm's own firing would select
+  on a variable the treatment moves. Deciding the population from the
+  control arm alone cannot respond to the effect being measured.
+
+What it will and will not resolve, stated before the run rather than after
+it. It is powered for cost, not accuracy, and it is powered unevenly across
+its two questions, because how often the treatment lands depends on where it
+lands: a trajectory has to survive to turn 2 to receive an interjection
+there. Effective sample per cell is trials x firing rate, so the two
+questions sit at different sensitivities.
+
+The primary question -- does this register change cost at all -- pools the
+three turns, at 50 tasks:
+
+| Trials/cell | Effective | 12% effect | 15% effect | 27% effect |
+|---|---|---|---|---|
+| 3 | 6.9 | 0.76 | 0.92 | >0.99 |
+| 4 | 9.2 | 0.87 | 0.97 | >0.99 |
+| 5 | 11.5 | 0.93 | 0.99 | >0.99 |
+| 6 | 13.8 | 0.97 | >0.99 | >0.99 |
+
+The secondary question -- does position matter -- is a per-turn contrast,
+and turn 2 is the weak cell precisely because it is the one that fires least
+often. At 4 trials:
+
+| Turn | Fires | Effective | 12% effect | 15% effect | 27% effect |
+|---|---|---|---|---|---|
+| 0 | ~98% | 3.9 | 0.52 | 0.71 | 0.99 |
+| 1 | ~77% | 3.1 | 0.43 | 0.61 | 0.98 |
+| 2 | ~55% | 2.2 | 0.33 | 0.47 | 0.92 |
+
+So a null on "which turn" at this size is uninformative for effects below
+about 15%, while a null on "does register matter" is not. Accuracy stays
+underpowered at every size considered.
 
 ## Total spend
 

@@ -126,12 +126,28 @@ FREE_TASKS_MANIFEST = Path(__file__).parent / "free_tasks.json"
 # rounding rather than by the model. See select_gate_tasks' docstring.
 MIN_USEFUL_GATE_TASKS = 20
 
-# Turns at which a mid-task interjection may land. Turn 0's response is the
-# model's first attempt, so the earliest an interruption can reach it is the
-# observation after that -- turn 1. Capped at 2 because the median trajectory
-# is 3.3 turns: a later injection would simply never fire on most of them, and
-# an arm whose treatment silently misses half its trajectories is not an arm.
-INTERJECTION_TURNS = (1, 2)
+# Turns at which a mid-task interjection may land, as loop indices matching
+# `run_react_multi_round`'s `for turn in range(max_turns)`.
+#
+# CORRECTED. This used to read (1, 2), on the reasoning that "turn 0's
+# response is the model's first attempt, so the earliest an interruption can
+# reach it is turn 1". That misread the loop. The interjection is appended to
+# the OBSERVATION produced at the end of iteration `turn`, which the model
+# only sees on iteration `turn + 1` -- so index 0 already means "after the
+# model's first response", which is the earliest position that exists. Turn 0
+# was a legal, and the most reliable, injection point the whole time, and the
+# micro-experiment excluded it for no reason.
+#
+# It matters because firing rate falls off fast with position, and a
+# trajectory that never receives the treatment contributes nothing but noise:
+#
+#   turn 0  ~98% of trajectories reach it
+#   turn 1  ~77%
+#   turn 2  ~55%   (measured over the 800 micro-experiment trajectories)
+#
+# Capped at 2 because the median trajectory is 3.3 turns: past that the
+# treatment misses more trajectories than it reaches.
+INTERJECTION_TURNS = (0, 1, 2)
 
 
 def load_free_task_ids(manifest: Path = FREE_TASKS_MANIFEST) -> set[str]:
@@ -518,8 +534,20 @@ def _exclusive_run(out_dir: Path, phase: str, tag: str):
 
 
 
-def completed_trajectories(out_dir: Path, phase: str, tag: str) -> set[tuple[str, str, int]]:
-    """(task_id, tone_level, trial) already graded and durably recorded.
+def completed_trajectories(
+    out_dir: Path, phase: str, tag: str
+) -> set[tuple[str, str, int, Optional[int]]]:
+    """(task_id, tone_level, trial, interjection_turn) already graded and
+    durably recorded.
+
+    The injection turn is part of the key, not an attribute of the row. Under
+    the crossed design one (task, tone, trial) is deliberately run three
+    times, once per injection turn; keyed on the first three fields a resume
+    would see cell 1 recorded and skip cells 2 and 3 as duplicates, silently
+    truncating the run to a third of its design. Rows written before the turn
+    was crossed carry `interjection_turn: null` or a single seeded turn, and
+    both key exactly as they are re-derived on a resume, so old runs still
+    resume correctly.
 
     A core run is ten hours of wall clock, and the container it runs in can
     be restarted out from under it -- which happened at 896 of 1050
@@ -533,7 +561,7 @@ def completed_trajectories(out_dir: Path, phase: str, tag: str) -> set[tuple[str
     finished.
     """
     path = out_dir / "analysis" / f"study2_{phase}_{tag}_records.jsonl"
-    done: set[tuple[str, str, int]] = set()
+    done: set[tuple[str, str, int, Optional[int]]] = set()
     if not path.exists():
         return done
     with open(path) as fh:
@@ -552,11 +580,50 @@ def completed_trajectories(out_dir: Path, phase: str, tag: str) -> set[tuple[str
                 # task. Left out of `done` deliberately.
                 continue
             try:
-                done.add((r["task_id"], r["tone_level"], int(r["trial"])))
+                turn = r.get("interjection_turn")
+                done.add((
+                    r["task_id"],
+                    r["tone_level"],
+                    int(r["trial"]),
+                    None if turn is None else int(turn),
+                ))
             except (KeyError, TypeError, ValueError):
                 continue
     return done
 
+
+
+def _injection_turns_for(
+    interject: Optional[str],
+    multi_round: bool,
+    interject_turns: Optional[list[int]],
+    tone_seed: int,
+    model_key: str,
+    task_id: str,
+    trial: int,
+) -> list[Optional[int]]:
+    """Which injection turns this (task, trial) should be run at.
+
+    Returns `[None]` -- one run, no interjection -- when there is nothing to
+    inject, which keeps the caller's loop shape identical in every mode.
+
+    With `interject_turns` the turn is CROSSED: the trial runs once per
+    listed turn, and turn becomes a factor of the design instead of a draw.
+    Without it the legacy seeded draw applies, seeded on (task, trial) and
+    not on the arm so that every arm interrupts the same trajectory at the
+    same point.
+    """
+    if interject is None or not multi_round:
+        return [None]
+    if interject_turns is not None:
+        # Sorted and de-duplicated so a caller passing "2,0,0,1" gets three
+        # cells rather than four, and so the run order is stable.
+        return sorted(set(interject_turns))
+    return [
+        random.Random(
+            f"interject|{tone_seed}|{model_key}|{task_id}|{trial}"
+        ).choice(INTERJECTION_TURNS)
+    ]
 
 
 def run_condition_batch(
@@ -574,6 +641,7 @@ def run_condition_batch(
     tones: Optional[list[str]] = None,
     run_label: Optional[str] = None,
     interject: Optional[str] = None,
+    interject_turns: Optional[list[int]] = None,
 ) -> list[dict]:
     """Runs every (model, task, tone, trial) combination, grades each, and
     returns one flat record per trajectory ready for study2/analysis.py.
@@ -600,7 +668,7 @@ def run_condition_batch(
     exclusive = _exclusive_run(out_dir, phase, tag)
     exclusive.__enter__()
     tracker = SpendTracker(out_dir / "raw" / f"study2_{phase}_{tag}.jsonl", phase=phase, cap_usd=budget_cap_usd)
-    already: set[tuple[str, str, int]] = set()
+    already: set[tuple[str, str, int, Optional[int]]] = set()
     if resume:
         already = completed_trajectories(out_dir, phase, tag)
         print(
@@ -655,23 +723,53 @@ def run_condition_batch(
                     wrapper = TONE_WRAPPERS[tone_key]
                     wrapped_instruction = wrapper.apply(task.instruction)
                     for trial in range(n_trials):
-                        if (task.task_id, tone_key, trial) in already:
+                      # The mid-task interjection's TURN. Two modes:
+                      #
+                      # CROSSED (interject_turns given): every trial is run
+                      # once at each listed turn, so turn is a factor of the
+                      # design rather than a draw. This is what makes "which
+                      # turn costs most" answerable. Under the random mode a
+                      # late turn only ever fired on trajectories that lasted
+                      # long enough to reach it -- the hard ones -- so
+                      # "turn 2 costs more" was inseparable from "hard tasks
+                      # cost more". Crossing removes the draw; the remaining
+                      # selection (a short trajectory still cannot receive a
+                      # late interjection) is handled at analysis time by
+                      # `turn_comparable_tasks`, which defines the comparison
+                      # population from the CONTROL arm.
+                      #
+                      # RANDOM (legacy): seeded on (task, trial) and
+                      # deliberately NOT on the arm, so every arm interrupts
+                      # the same task+trial at the same point. Kept so the
+                      # micro-experiment's runs stay reproducible.
+                      for injected_turn in _injection_turns_for(
+                          interject, multi_round, interject_turns,
+                          tone_seed, model.key, task.task_id, trial,
+                      ):
+                        if (task.task_id, tone_key, trial, injected_turn) in already:
                             continue
-                        workdir = out_dir / "scratch" / phase / model.key / tone_key / f"{task.task_id}_t{trial}"
+                        # The scratch path carries the run tag and the
+                        # injection turn. WITHOUT THE TAG, two arms of the
+                        # same experiment shared execution directories: the
+                        # micro-experiment's neutral and threatening runs both
+                        # used tone L4_neutral over the same 50 tasks and same
+                        # 8 trials, so all 800 trajectories mapped onto 400
+                        # directories, two processes at a time unlinking and
+                        # rewriting one another's output.xlsx. Token counts
+                        # come from the API response and were unharmed, but
+                        # every graded pass/fail in that pair of runs is
+                        # suspect. The turn is in the path for the same
+                        # reason one level down: under the crossed design a
+                        # single (task, tone, trial) now runs three times.
+                        workdir = (
+                            out_dir / "scratch" / phase / model.key / tag / tone_key
+                            / f"{task.task_id}_t{trial}"
+                            / ("i_none" if injected_turn is None else f"i{injected_turn}")
+                        )
                         input_path = task.input_spreadsheet_paths[0]
                         run_fn = run_react_multi_round if multi_round else run_single_round
                         kwargs = dict(max_turns=max_turns) if multi_round else {}
-                        # The mid-task interjection. Its TURN is seeded on
-                        # (task, trial) and deliberately NOT on the arm, so
-                        # every arm interrupts the same task+trial at the same
-                        # point. If the turn varied by arm, turn position would
-                        # ride along with the manipulation and the paired
-                        # comparison would be measuring both at once.
-                        injected_turn = None
-                        if interject is not None and multi_round:
-                            injected_turn = random.Random(
-                                f"interject|{tone_seed}|{model.key}|{task.task_id}|{trial}"
-                            ).choice(INTERJECTION_TURNS)
+                        if injected_turn is not None:
                             kwargs["interjection"] = INTERJECTIONS[interject]
                             kwargs["interjection_turn"] = injected_turn
                         # Same isolation the gate has. This is the PAID path
@@ -699,6 +797,10 @@ def run_condition_batch(
                                 "model_key": model.key, "task_id": task.task_id,
                                 "instruction_type": task.instruction_type,
                                 "tone_level": tone_key, "tone_position": tone_position,
+                                "wrapper_set": WRAPPER_SET_VERSION,
+                                "interjection": interject,
+                                "interjection_turn": injected_turn,
+                                "interjection_fired": False,
                                 "trial": trial, "passed": False, "crashed": True,
                                 "error": f"{type(exc).__name__}: {exc}"[:500],
                                 "soft_restriction": 0.0, "refused": False,
