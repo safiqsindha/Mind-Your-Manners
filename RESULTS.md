@@ -445,11 +445,13 @@ reasons. This result answers all four.
 
 ### What it does not show
 
-**Nothing about performance.** Accuracy is flat (p=0.71) and this design was
-powered for cost, not accuracy -- stated before the data, and not revised
-now that accuracy came back null. At this size the minimum detectable
-accuracy effect is roughly twice what 50 tasks can resolve. "Threatening
-does not help" is consistent with the data; it is not established by it.
+**Little about performance.** On the clean regrade, accuracy is flat:
+-0.8 points, 95% CI [-5.7, +3.7], p=0.745. This design was powered for
+cost, not accuracy -- stated before the data, and not revised now that
+accuracy came back null. What the interval supports is a bound, not a
+zero: a threatening interruption does not buy more than roughly 4 points
+here. "Threatening does not help" is consistent with the data and bounded
+by it; it is not established as exactly zero.
 
 **One model.** Luna only. The same caveat that applies to everything else
 here applies to this.
@@ -487,17 +489,39 @@ The effect of a threatening interruption is real at both positions. That it
 is *larger later* is not established. Whether position matters is what the
 crossed-turn run is designed to answer.
 
-**Grading in this pair of runs is not trustworthy; the cost result is.**
+**Grading in this pair of runs was corrupted, and has been recovered.**
 The two arms both ran tone `L4_neutral` over the same 50 tasks and the same
 8 trials, and the scratch path did not include the run label -- so 800
 trajectories shared 400 execution directories, two concurrent processes
 unlinking and rewriting one another's `output.xlsx`. Every `passed` flag in
-these two runs is therefore suspect, including the flat accuracy result
-above, which should be read as "not measured" rather than "measured null".
-Token counts come from the provider's API response and never touched the
-filesystem, so the 27.5% cost effect -- the headline -- is unaffected. Fixed
-in the runner: the scratch path now carries the run tag and the injection
-turn.
+these two runs was therefore suspect. Token counts come from the provider's
+API response and never touched the filesystem, so the 27.5% cost effect was
+never in question.
+
+Both arms were re-graded from their raw call logs into isolated
+directories: `harness.cli study2 regrade` re-executes each trajectory's own
+code and re-checks it against all three test cases, with no model calls and
+no spend. All 800 trajectories rebuilt. The recovered accuracy:
+
+| | Neutral interjection | Threatening interjection |
+|---|---|---|
+| All trajectories | 31.5% (126/400) | 30.5% (122/400) |
+| Interjection actually fired | 28.6% (87/304) | 29.0% (91/314) |
+
+Task-clustered paired test on the fired trajectories: -0.8 percentage
+points, 95% CI [-5.7, +3.7], p=0.745. So the accuracy claim survives, and
+survives as a bound rather than a bare null -- on this model and these
+tasks, a threatening interruption does not buy more than about 4 points of
+accuracy, while costing 27.5% more thinking. It does not establish that the
+true effect is zero.
+
+The corrupted grading happened to give nearly the same answer (31.5% vs
+30.2%). That is luck, not vindication: two processes were racing on the
+same files and the result could have gone anywhere. Fixed in the runner and
+in the regrade path -- both now carry the run tag and the injection turn in
+their scratch paths.
+
+Regraded records: `results_archive/core_gpt-luna_reinject_{neutral,threatening}_regraded.json`.
 
 Records: `results_archive/core_gpt-luna_reinject_{neutral,threatening}_records.json`.
 
