@@ -46,6 +46,13 @@ class TrajectoryKey:
     task_id: str
     tone_level: str
     trial: int
+    # Part of the identity, not an attribute. Under the crossed interjection
+    # design one (model, task, tone, trial) is deliberately run once per
+    # injection turn, so without this the three runs group into a single
+    # trajectory three times as long as any that actually happened, and the
+    # regrade grades a thing the model never produced. None for every run
+    # made before the field existed, which keys exactly as it used to.
+    interjection_turn: Optional[int] = None
 
 
 def load_raw_rows(path: Path) -> list[dict]:
@@ -82,6 +89,7 @@ def group_trajectories(rows: Iterable[dict]) -> dict[TrajectoryKey, list[dict]]:
             task_id=str(r.get("item_id", "")),
             tone_level=r.get("tone_level", "none"),
             trial=int(r.get("trial") or 0),
+            interjection_turn=((r.get("extra") or {}).get("interjection_turn")),
         )
         grouped[key].append(r)
     for turns in grouped.values():
@@ -181,7 +189,11 @@ def regrade_run(
             )
             continue
 
-        workdir = workdir_root / key.model_key / key.tone_level / f"{key.task_id}_t{key.trial}"
+        workdir = (
+            workdir_root / key.model_key / key.tone_level
+            / f"{key.task_id}_t{key.trial}"
+            / ("i_none" if key.interjection_turn is None else f"i{key.interjection_turn}")
+        )
         traj = rebuild_trajectory(key, turns, task.input_spreadsheet_paths[0], workdir, max_turns)
         grade = _grade_trajectory(grader, task, traj, workdir)
         records.append(
@@ -191,6 +203,7 @@ def regrade_run(
                 "instruction_type": task.instruction_type,
                 "tone_level": key.tone_level,
                 "trial": key.trial,
+                "interjection_turn": key.interjection_turn,
                 "passed": grade.passed,
                 "soft_restriction": grade.soft_restriction,
                 "n_test_cases_passed": grade.n_test_cases_passed,

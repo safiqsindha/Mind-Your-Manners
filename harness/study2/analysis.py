@@ -381,3 +381,254 @@ def compare_direction_to_study1(
         "study1_p_value": study1_pairwise.p_value,
         "study2_p_value": study2_pairwise.p_value,
     }
+
+
+# --- Mid-task interjection: level and injection-turn analysis ---------------
+
+CONTROL_INTERJECTION = "L4_neutral"
+
+
+def interjection_trend_test(
+    task_results: list[dict[str, Any]],
+    levels: list[str] = TONE_ORDER,
+    cluster_key: str = "task_id",
+    value_key: str = "reasoning_tokens",
+    fired_only: bool = True,
+) -> TrendTestResult:
+    """Task-clustered trend test across the seven INTERJECTION levels.
+
+    Identical machinery to `token_cost_trend_test`, pointed at the
+    `interjection` field instead of `tone_level`. The two are different
+    manipulations and must not be confused: `tone_level` is the register of
+    the opening wrapper, `interjection` the register of the mid-task
+    interruption. In the crossed runs the opening wrapper is held at
+    L4_neutral for every arm precisely so that this test sees one
+    manipulation rather than two.
+
+    `fired_only` drops trajectories where the interjection never landed --
+    the trajectory ended before reaching the injection turn. Those rows are
+    not a weaker dose of the treatment, they are no dose at all: including
+    them averages the control condition into every arm and biases every
+    effect toward zero, by an amount that varies with turn (at turn 2 it
+    would be nearly half the rows). They are dropped rather than counted
+    because "did not receive the treatment" is not an outcome under it.
+    """
+    rows = [
+        r for r in task_results
+        if r.get(value_key) is not None
+        and r.get("interjection") is not None
+        and (not fired_only or r.get("interjection_fired"))
+    ]
+    if not rows:
+        raise ValueError(
+            "no interjection records to test -- this analysis needs rows "
+            "carrying an `interjection` field (a run made with --interject)."
+        )
+    return clustered_trend_test(
+        rows, levels, cluster_key=cluster_key,
+        group_key="interjection", value_key=value_key,
+    )
+
+
+def turn_comparable_tasks(
+    task_results: list[dict[str, Any]],
+    turns: list[int],
+    control_interjection: str = CONTROL_INTERJECTION,
+    min_fire_rate: float = 1.0,
+) -> set[str]:
+    """Tasks on which every compared injection turn is reachable, decided
+    ENTIRELY FROM THE CONTROL ARM.
+
+    This is the fix for the selection confound that made the
+    micro-experiment's timing result uninterpretable. There, injection turn
+    was drawn at random, and a late turn could only fire on a trajectory
+    that lasted long enough to reach it. So the turn-2 rows were not a
+    random sample of tasks -- they were the subset of tasks the agent
+    struggles with, which are also the tasks it thinks hardest about.
+    "Turn 2 costs 39% more than turn 1" was therefore inseparable from
+    "the tasks where turn 2 fires are the expensive ones". The observed gap
+    (turn 1 +21%, turn 2 +39%, difference p=0.004) is exactly what that
+    selection would manufacture on its own.
+
+    Crossing the turn in the runner removes the *assignment* half of the
+    problem: every task now gets every turn. It cannot remove the
+    *reachability* half, because a trajectory that stops at turn 1 still
+    cannot receive an interjection at turn 2, and whether it stops early is
+    itself an outcome. Filtering on the treated arm's own firing would
+    reintroduce the bias through the back door: it would select on a
+    variable the treatment moves.
+
+    So the population is defined from the control arm only. A task is
+    comparable across `turns` if, in the control (neutral-interjection) arm,
+    at least `min_fire_rate` of its trajectories reached every one of those
+    turns. Nothing about the treated arms enters the decision, so the same
+    set of tasks is compared at every turn and at every tone, and the filter
+    cannot respond to the effect being measured.
+
+    `min_fire_rate` defaults to 1.0 -- every control trajectory reached
+    every compared turn. Loosening it buys sample size at the cost of
+    re-admitting tasks where reachability is partly outcome-dependent; if
+    you loosen it, report the value you used alongside the result.
+    """
+    if not turns:
+        raise ValueError("turn_comparable_tasks needs at least one turn to compare.")
+    fired: dict[tuple[str, int], list[bool]] = defaultdict(list)
+    for r in task_results:
+        if r.get("interjection") != control_interjection:
+            continue
+        turn = r.get("interjection_turn")
+        if turn is None:
+            continue
+        fired[(r["task_id"], int(turn))].append(bool(r.get("interjection_fired")))
+
+    tasks = {task_id for task_id, _ in fired}
+    comparable = set()
+    for task_id in tasks:
+        rates = []
+        for turn in turns:
+            outcomes = fired.get((task_id, turn))
+            if not outcomes:
+                rates = []
+                break
+            rates.append(sum(outcomes) / len(outcomes))
+        if rates and min(rates) >= min_fire_rate:
+            comparable.add(task_id)
+    return comparable
+
+
+def injection_turn_effects(
+    task_results: list[dict[str, Any]],
+    interjection: str,
+    turns: list[int],
+    control_interjection: str = CONTROL_INTERJECTION,
+    value_key: str = "reasoning_tokens",
+    min_fire_rate: float = 1.0,
+) -> dict[int, dict[str, Any]]:
+    """Per-turn effect of `interjection` against the control, on the tasks
+    where every compared turn is reachable.
+
+    Returns, per turn: the number of contributing tasks, the mean per-task
+    effect (treated mean minus control mean, both on that task at that
+    turn), and the same as a percentage of the control mean. Because the
+    task set is fixed across turns by `turn_comparable_tasks`, the turns are
+    directly comparable to one another -- which the micro-experiment's were
+    not.
+    """
+    comparable = turn_comparable_tasks(
+        task_results, turns, control_interjection, min_fire_rate
+    )
+    by_cell: dict[tuple[str, int, str], list[float]] = defaultdict(list)
+    for r in task_results:
+        if r["task_id"] not in comparable or not r.get("interjection_fired"):
+            continue
+        arm = r.get("interjection")
+        if arm not in (interjection, control_interjection):
+            continue
+        turn = r.get("interjection_turn")
+        value = r.get(value_key)
+        if turn is None or value is None:
+            continue
+        by_cell[(r["task_id"], int(turn), arm)].append(float(value))
+
+    out: dict[int, dict[str, Any]] = {}
+    for turn in turns:
+        diffs, control_means = [], []
+        for task_id in sorted(comparable):
+            treated = by_cell.get((task_id, turn, interjection))
+            control = by_cell.get((task_id, turn, control_interjection))
+            if not treated or not control:
+                continue
+            t_mean = sum(treated) / len(treated)
+            c_mean = sum(control) / len(control)
+            diffs.append(t_mean - c_mean)
+            control_means.append(c_mean)
+        control_mean = float(np.mean(control_means)) if control_means else 0.0
+        mean_diff = float(np.mean(diffs)) if diffs else 0.0
+        out[turn] = {
+            "n_tasks": len(diffs),
+            "control_mean": control_mean,
+            "mean_effect": mean_diff,
+            "pct_effect": (100.0 * mean_diff / control_mean) if control_mean else 0.0,
+            "per_task_effects": diffs,
+        }
+    return out
+
+
+def compare_injection_turns(
+    task_results: list[dict[str, Any]],
+    interjection: str,
+    turn_a: int,
+    turn_b: int,
+    control_interjection: str = CONTROL_INTERJECTION,
+    value_key: str = "reasoning_tokens",
+    min_fire_rate: float = 1.0,
+    n_perm: int = 10000,
+    seed: int = 0,
+) -> dict[str, Any]:
+    """Does the interjection's effect depend on WHERE it lands?
+
+    Pairs each task's effect at `turn_a` against its own effect at
+    `turn_b` -- same task, same tone, same control, only the position
+    differs -- and tests the mean paired difference by sign-flip
+    permutation, the same clustered scheme the rest of this module uses.
+    Pairing within task is what removes between-task variance, which
+    otherwise swamps everything here (task-to-task SD dwarfs the effect).
+
+    The task set comes from `turn_comparable_tasks`, so both turns are
+    measured on identical tasks and a difference cannot be produced by the
+    two positions having drawn different work.
+    """
+    effects = injection_turn_effects(
+        task_results, interjection, [turn_a, turn_b],
+        control_interjection, value_key, min_fire_rate,
+    )
+    comparable = turn_comparable_tasks(
+        task_results, [turn_a, turn_b], control_interjection, min_fire_rate
+    )
+    by_cell: dict[tuple[str, int, str], list[float]] = defaultdict(list)
+    for r in task_results:
+        if r["task_id"] not in comparable or not r.get("interjection_fired"):
+            continue
+        arm = r.get("interjection")
+        if arm not in (interjection, control_interjection):
+            continue
+        turn, value = r.get("interjection_turn"), r.get(value_key)
+        if turn is None or value is None:
+            continue
+        by_cell[(r["task_id"], int(turn), arm)].append(float(value))
+
+    paired = []
+    for task_id in sorted(comparable):
+        cells = {}
+        for turn in (turn_a, turn_b):
+            treated = by_cell.get((task_id, turn, interjection))
+            control = by_cell.get((task_id, turn, control_interjection))
+            if not treated or not control:
+                cells = {}
+                break
+            cells[turn] = (sum(treated) / len(treated)) - (sum(control) / len(control))
+        if cells:
+            paired.append(cells[turn_a] - cells[turn_b])
+
+    if not paired:
+        return {
+            "n_tasks": 0, "mean_difference": 0.0, "p_value": 1.0,
+            "turn_a": effects[turn_a], "turn_b": effects[turn_b],
+        }
+
+    arr = np.array(paired, dtype=float)
+    observed = float(arr.mean())
+    rng = np.random.default_rng(seed)
+    signs = rng.choice([-1.0, 1.0], size=(n_perm, arr.size))
+    null = (signs * arr).mean(axis=1)
+    # +1 in numerator and denominator: the observed statistic is itself one
+    # draw from the permutation distribution, so a p of exactly 0 is not a
+    # value this test can honestly report.
+    p_value = float((np.sum(np.abs(null) >= abs(observed)) + 1) / (n_perm + 1))
+    return {
+        "n_tasks": int(arr.size),
+        "mean_difference": observed,
+        "p_value": p_value,
+        "turn_a": effects[turn_a],
+        "turn_b": effects[turn_b],
+    }

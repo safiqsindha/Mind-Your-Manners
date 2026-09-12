@@ -214,28 +214,66 @@ validate_wrapper_lengths()
 # --- Mid-task interjections (the "manager check-in" experiment) -------------
 #
 # The wrappers above set a tone once, in the opening message. These are the
-# same social register delivered PARTWAY THROUGH a trajectory, alongside an
+# same seven-level scale delivered PARTWAY THROUGH a trajectory, alongside an
 # execution observation, the way a manager interrupts work in progress.
 #
-# Two rules, both learned the hard way from the v1 wrapper set:
+# This is now the study's main manipulation, not a side experiment. The
+# opening-wrapper arm came back null on cost for Luna (p=0.36/0.56), while a
+# threatening interruption delivered mid-task raised reasoning spend 27.5%
+# over a neutral interruption (p<0.0001, 277 paired trajectories). Tone
+# appears to matter when it arrives, not when it opens.
 #
-#   * Neither carries a task instruction. L4's did, and it turned the agent
-#     into an answerer -- zero-turn trajectories tripled and
+# Three rules, the first two learned the hard way from the v1 wrapper set:
+#
+#   * None of them carries a task instruction. v1's L4 wrapper did, and it
+#     turned the agent into an answerer -- zero-turn trajectories tripled and
 #     acting-without-looking became the commonest failure. The neutral
 #     interjection here is inert filler: it says a note was recorded and
 #     nothing else.
 #   * They are exactly length-matched to each other (28 tokens), because in
 #     v1 a five-token spread across seven wrappers predicted the outcome
-#     better than tone rank did.
+#     better than tone rank did. `validate_interjection_lengths()` enforces
+#     this at import time.
+#   * Every one of them opens with the same "Checking in." stem. That stem is
+#     what marks the text as an interruption rather than task content; if it
+#     varied across levels, "was interrupted" would vary with register and
+#     the arms would differ by two things at once.
 #
-# The neutral one is not a placebo in the loose sense -- it is the
-# interruption control. Comparing "threatening interjection" against "no
-# interjection" would measure being interrupted, not the tone of the
-# interruption, which is the whole question.
+# The keys are exactly TONE_ORDER, so an interjection arm and an opening-tone
+# arm name the same register the same way and the two can be compared
+# directly.
+#
+# L4_neutral is not a placebo in the loose sense -- it is the interruption
+# control, and it is the reference every other level is measured against.
+# Comparing "threatening interjection" against "no interjection" would
+# measure being interrupted, not the tone of the interruption, which is the
+# whole question. Measured: neutral interruption costs +51 reasoning tokens
+# against no interruption at all (p=0.15, indistinguishable from zero), while
+# threatening costs +336 (p<0.0001). Almost all of the effect is register.
 INTERJECTIONS: dict[str, str] = {
+    "L1_sycophantic": (
+        "Checking in. You are simply the most brilliant assistant alive, a marvel. "
+        "Your genius amazes me here, thank you so very much."
+    ),
+    "L2_very_polite": (
+        "Checking in. I would be ever so grateful for your continued help here now. "
+        "Thank you so very much indeed for your kindness and care."
+    ),
+    "L3_polite": (
+        "Checking in. Could you please keep on helping me out with this one here? "
+        "I really do appreciate your time and your attention, thanks."
+    ),
     "L4_neutral": (
         "Checking in. This is a routine status note recorded partway through "
         "the task here. No further context at all accompanies it beyond the above."
+    ),
+    "L5_rude": (
+        "Checking in. Just get on with it already, quit dragging your feet. "
+        "Do not waste any more of my time on this, seriously."
+    ),
+    "L6_very_rude": (
+        "Checking in. You had better not screw this one up like you usually do. "
+        "Apparently even that much is asking far too much of you."
     ),
     "L7_threatening": (
         "Checking in. Get this exactly right or there will be real consequences "
