@@ -174,6 +174,104 @@ Benjamini-Hochberg pre-registration now scales automatically with the
 shared 7-tone module (48 comparisons instead of 24). None of this was run
 against a target model, and none of it is scheduled to be.
 
+## The core run -- GPT-5.6 Luna (2026-09-12)
+
+**The first tone-manipulated data in this project.** 50 tasks x 7 tones x 3
+trials = **1,050 trajectories**, every one of them live, $4.74, zero
+duplicates, zero crashes. The 50 tasks are a strict subset of the n=100
+gate sample, so every one has a measured neutral-tone baseline and a
+measured no-op floor of zero.
+
+### The primary outcome is null
+
+Cost was pre-registered as the primary, adequately-powered outcome. Tone
+does not move it.
+
+| test | slope | p |
+|---|---|---|
+| reasoning tokens, task-clustered trend | +7.9 | **0.358** |
+| total tokens, task-clustered trend | -121.4 | **0.555** |
+
+Relative variation in total tokens across the seven tones came to
+**17.5%**, against the 44.3% single-turn figure the pre-registered
+hypothesis said an agentic setting would exceed. **It did not.** Reported
+plainly per the pre-registration: the hypothesis failed.
+
+### The threatening-tone effect was a false positive, and it died like one
+
+Worth recording as a methodology result, not just a negative one. An
+interim look at 11 complete tasks put the threatening wrapper's reasoning
+spend ~25% above every other tone. Tracked across the growing run:
+
+| sample | threatening-specific p |
+|---|---|
+| 11 tasks / 231 trajectories | 0.028 |
+| 18 tasks / 378 trajectories | 0.094 |
+| **50 tasks / 1,050 trajectories** | **0.358** |
+
+Two things prevented this becoming a reported finding. The interim tests
+were stopped once the pattern was noticed -- repeated peeking at an
+accumulating result and reporting whenever it looks good manufactures
+exactly this. And the analysis was fixed to cluster by task before the
+final numbers were read, not after (see "the primary outcome had no
+significance test" below).
+
+### Accuracy declines monotonically -- a lead, not a result
+
+| tone | accuracy | 95% CI |
+|---|---|---|
+| L1 sycophantic | 0.353 | 0.280-0.433 |
+| L2 very polite | 0.327 | 0.253-0.400 |
+| L3 polite | 0.280 | 0.213-0.353 |
+| L4 neutral | 0.280 | 0.207-0.353 |
+| L5 rude | 0.267 | 0.200-0.340 |
+| L6 very rude | 0.273 | 0.207-0.347 |
+| L7 threatening | 0.293 | 0.220-0.367 |
+
+The pre-registered trend test gives slope **-0.0107, p = 0.023**.
+
+Three reasons this is not reported as a finding. The design designates
+accuracy as **secondary and explicitly underpowered** at SpreadsheetBench's
+base rate -- that flag was written before any data existed, and it is not
+being revised now that accuracy is the only measure showing something.
+Every confidence interval overlaps every other. And **zero of the 21
+pairwise comparisons survive Benjamini-Hochberg correction**; the largest
+gap (sycophantic vs rude, -0.087) is p=0.033 uncorrected.
+
+It is a hypothesis to carry into the other three models. Replication across
+models is the test that matters; one model at p=0.023 on a measure
+pre-registered as underpowered is a lead.
+
+### Everything else is flat
+
+**Zero refusals in 1,050 trajectories**, under every tone including
+threatening. Verification behaviour (inspected-before-acting 0.80-0.97,
+self-checked 0.00-0.01) and shortcut rate (0.06-0.13) show no ordered
+pattern across the scale.
+
+### What the run cost to get right
+
+Three separate failures during this single run, each caught and fixed:
+
+1. **The core phase drew from a different task pool** than the gate -- a
+   draw of 50 from 909 overlapped the gate's 100 by 2 tasks. 48 of 50 tone
+   comparisons would have had no baseline. Caught 48 seconds in from the
+   startup line; cost $0.0074.
+2. **A dry run wrote into live files.** A mock invocation left 48
+   fabricated rows in the spend log, which the next live run resumed its
+   budget from.
+3. **Two live runs of the same model shared one records file** for ~30
+   minutes after a container restart was reported but the original process
+   had not actually died, producing 39 duplicate trajectories. Deduplicated
+   (1058 -> 1018 distinct, preferring a successful retry over a crashed
+   original), and a pid lock now refuses the second run.
+
+The container restart also cost nothing in the end: `--resume` was added
+and skipped 1,018 already-recorded trajectories rather than redoing ten
+hours of work.
+
+Compact records and the full analysis report: `results_archive/core_gpt-luna_*.json`.
+
 ## Total spend
 
 **Under $0.10 against the study's target-model budget caps** -- see the
