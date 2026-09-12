@@ -924,3 +924,44 @@ def test_study2_analyze_clusters_its_accuracy_ci_by_task(tmp_path: Path, monkeyp
     # 20 tasks, all-or-nothing within a task: an iid CI over 60 trajectories
     # lands near +/-0.12; clustering over 20 tasks is roughly twice that.
     assert ci["ci_high"] - ci["ci_low"] > 0.35, ci
+
+
+# --- 13. The accuracy note asserted a base rate the run contradicted ------
+# It printed SpreadsheetBench's published ~18% base rate as though it were
+# this run's; the gpt-luna core run's observed pooled accuracy is 0.296. It
+# then used "underpowered" to wave accuracy away entirely, which inverts
+# what power means: at the observed slope (-0.0107/level) power is ~0.44 and
+# the 80%-power MDE ~0.017/level, so a null is weak evidence -- but a
+# pre-registered test that clears its threshold is valid at n=150 exactly as
+# it is at n=1500.
+
+def _accuracy_note_records(n_pass: int, n_fail: int):
+    rows = []
+    for i in range(n_pass + n_fail):
+        rows.append({"task_id": f"t{i // 3}", "tone_level": f"L{i % 7 + 1}",
+                     "passed": i < n_pass, "refused": False})
+    return rows
+
+
+def test_the_accuracy_note_computes_the_rate_instead_of_asserting_one():
+    from harness.cli import _underpowered_accuracy_note
+
+    note = _underpowered_accuracy_note(_accuracy_note_records(n_pass=311, n_fail=739))
+    assert "29.6%" in note, note
+    assert "18%" not in note, "the published base rate is not this run's observed rate"
+    assert "1050 trajectories" in note
+
+    # A different run must move the number, not reprint a constant.
+    other = _underpowered_accuracy_note(_accuracy_note_records(n_pass=500, n_fail=500))
+    assert "50.0%" in other
+
+
+def test_the_accuracy_note_does_not_treat_power_as_invalidating_a_positive():
+    from harness.cli import _underpowered_accuracy_note
+
+    note = _underpowered_accuracy_note(_accuracy_note_records(n_pass=311, n_fail=739))
+    lowered = note.lower()
+    assert "secondary" in lowered, "accuracy was pre-designated secondary; say so"
+    assert "false negatives" in lowered
+    assert "valid pre-registered test" in lowered
+    assert "thousand-plus" not in lowered

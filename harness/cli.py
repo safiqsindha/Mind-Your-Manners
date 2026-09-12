@@ -504,26 +504,47 @@ def cmd_study2_frontier(args: argparse.Namespace) -> None:
     _study2_stage(args, "frontier", STUDY2_FRONTIER_BUDGET_CAP_USD, default_trials=1)
 
 
-SPREADSHEETBENCH_BASE_RATE_PCT = 18.5  # midpoint of the 17-20% range cited in README "Outcome measures"
+def _underpowered_accuracy_note(records: list[dict]) -> str:
+    """The accuracy caveat, computed from the run rather than asserted.
 
+    The old text stated a ~18% base rate (SpreadsheetBench's published
+    17-20%) and concluded that accuracy needs "a thousand-plus observations
+    per condition". Both halves were wrong for this run. The observed pooled
+    accuracy on the gpt-luna core run is 0.296, not 0.18 -- so the note
+    quoted a number the run itself contradicted, which is why the rate is
+    now computed from the records in hand.
 
-def _underpowered_accuracy_note(n_per_level: dict[str, int]) -> str:
-    """Task spec: "accuracy is reported and explicitly flagged as
-    underpowered." At SpreadsheetBench's ~17-20% base rate, detecting even
-    a large tone difference in a binary outcome needs on the order of a
-    thousand-plus observations per condition; a 50-task/3-trial main run
-    gives at most 150 per tone per model. This is a plain arithmetic
-    statement of that gap, not a formal power calculation -- printed so a
-    reader can't miss it, per README "Outcome measures"."""
-    smallest_n = min(n_per_level.values()) if n_per_level else 0
+    The power claim was worse, because it was used to wave accuracy away
+    entirely. Simulating at the OBSERVED slope (-0.0107 per tone level) puts
+    power at this design around 0.44, and the 80%-power MDE at roughly 0.017
+    per level -- meaningfully underpowered, but nowhere near the "a few
+    hundred is hopeless" the old text implied, and irrelevant to a result
+    that does reach significance. Power bounds FALSE NEGATIVES. It says
+    nothing about whether a positive is real: a pre-registered test that
+    clears its threshold is a valid pre-registered test at n=150 exactly as
+    it is at n=1500. Reading "underpowered" as a reason to discount a
+    significant accuracy finding inverts what the number means.
+
+    So the note now says what it can honestly say: accuracy was designated
+    secondary in advance, a null on it is weak evidence, a positive on it
+    stands as a pre-registered test, and the real reasons for caution about
+    any positive here are one model, several outcome measures, and
+    fragility -- not power.
+    """
+    if not records:
+        return "No records: accuracy not reported."
+    n_per_level: dict[str, int] = {}
+    for r in records:
+        n_per_level[r["tone_level"]] = n_per_level.get(r["tone_level"], 0) + 1
+    observed_accuracy = sum(bool(r["passed"]) for r in records) / len(records)
     return (
-        f"Accuracy is reported per tone (n={smallest_n}-{max(n_per_level.values()) if n_per_level else 0} "
-        f"per condition here) but is UNDERPOWERED at SpreadsheetBench's ~{SPREADSHEETBENCH_BASE_RATE_PCT:.0f}% "
-        "base rate: detecting even a large tone effect in a binary pass/fail outcome at that base "
-        "rate needs on the order of a thousand-plus observations per condition, not a few hundred. "
-        "Treat accuracy_trend_test and accuracy_by_tone as descriptive, not confirmatory -- cost "
-        "(token_cost_effect_size) is the primary, adequately-powered outcome for this study. See "
-        "README 'Outcome measures'."
+        f"Accuracy (observed pooled pass rate {observed_accuracy:.1%} over {len(records)} "
+        f"trajectories, n={min(n_per_level.values())}-{max(n_per_level.values())} per tone) was "
+        "PRE-DESIGNATED A SECONDARY outcome; cost is primary. Power is limited, so a null here is "
+        "weak evidence of no effect. A SIGNIFICANT result on it is still a valid pre-registered "
+        "test -- power governs false negatives, not the validity of a positive. Read any positive "
+        "cautiously because this is one model, one of several outcome measures, and sensitive to "
+        "analysis choices -- not because of power. See README 'Outcome measures'."
     )
 
 
@@ -664,7 +685,7 @@ def cmd_study2_analyze(args: argparse.Namespace) -> None:
         "refusal_rate_by_tone": refusal_rate_by_tone,
         # Accuracy last, explicitly flagged underpowered -- see
         # _underpowered_accuracy_note and README "Outcome measures".
-        "accuracy_underpowered_note": _underpowered_accuracy_note({t: e.n for t, e in accuracy.items()}),
+        "accuracy_underpowered_note": _underpowered_accuracy_note(records),
         "accuracy_trend_test": {
             "n_clusters": trend.n_clusters,
             "observed_slope": trend.observed_slope,
