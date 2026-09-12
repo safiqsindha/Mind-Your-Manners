@@ -1,24 +1,178 @@
-# Mind Your Manners
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/banner-dark.svg">
+    <img src="assets/banner-light.svg" alt="Mind Your Manners" width="100%">
+  </picture>
+</p>
 
-**Does prompt tone change what an agent does, not just what it says?**
+# Mind Your Manners — Tone Effects on Agentic Work
 
-This project exists because of, and directly extends, Dobariya & Kumar's
-*Mind Your Tone* line of work:
+**Three papers found that tone changes what a model *says*. This asks whether it changes what an agent *does* — and on the first model, it does not.**
 
-1. **arXiv 2510.04950** -- the original short paper. 250 prompts,
-   ChatGPT-4o, rude beat polite on accuracy.
-2. **arXiv 2605.29027** (AMCIS 2026) -- the full-paper extension. Seven
-   tones, a 570-question MMLU subset, four models. The accuracy effect
-   largely evaporates at scale.
-3. **arXiv 2607.23915** -- same setup, outcome variable switched to output
-   tokens. Explicit length-matching (18-25 words / 21-26 tokens per tone
-   prefix), scale validated with VADER sentiment (compound scores spanning
-   +0.95 to -0.77). Output-token variation reached 44.3% across tones,
-   substantially exceeding accuracy variation. Public repo:
-   `github.com/OmDobariya/tone-compute-cost`.
+This extends Dobariya & Kumar's *Mind Your Tone* line one rung up the autonomy ladder: same seven-tone scale, but the model now writes and executes Python against real spreadsheets and is graded by the benchmark's own evaluator, not by a string match. Single-turn QA measures the answer. This measures the work.
 
-This attribution is mandatory, not courteous: cite all three papers if you
-use or build on this repository.
+- **The null is the result so far** — token cost was the pre-registered primary outcome, and tone does not move it (p = 0.36)
+- **The pre-registered hypothesis failed, and says so** — predicted >44.3% cost variation, measured 15.2%
+- **Two false positives were caught before publication, not after** — both are written up as methodology, with the interim p-values that made them tempting
+- **The instrument was found broken by independent review** — and the fix was measured, not assumed
+
+![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)
+![Python](https://img.shields.io/badge/python-3.11%2B-0891b2?style=flat-square)
+![Models](https://img.shields.io/badge/models-1%20of%204-f59e0b?style=flat-square)
+![Trajectories](https://img.shields.io/badge/trajectories-1%2C600-7C3AED?style=flat-square)
+![Spend](https://img.shields.io/badge/spend-%247.89-7C3AED?style=flat-square)
+![Tests](https://img.shields.io/badge/tests-264%20passing-22c55e?style=flat-square)
+
+**[Results](RESULTS.md)** · **[Communications](COMMUNICATIONS.md)** · **[Tone wrappers](harness/tone_wrappers.py)** · **[Analysis](harness/study2/analysis.py)** · **[Harness](harness/study2/runner.py)**
+
+> **Status: one model of four, and that one needs re-running.** GPT-5.6 Luna is complete on the **v1** wrapper set. Independent review then found two confounds in the wrappers themselves, so v1 data is superseded as an estimate even though its primary null stands. The wrappers are fixed (**v2**, all seven exactly 35 tokens, neutral carries no task instruction) and every record now carries `wrapper_set`. **Do not quote a v1 effect size.**
+
+## Where it stands
+
+| | |
+|---|---|
+| Models with a complete core run | **1 of 4** (GPT-5.6 Luna) |
+| Graded trajectories | **1,600** — 400 gate, 1,050 core, 150 wrapper-control |
+| Total spend | **$7.89** across 7,809 model calls |
+| Design | 50 tasks × 7 tones × 3 trials, tone order randomised per task |
+| Substrate | SpreadsheetBench, graded by the authors' own evaluator |
+| Tests | **264 passing** |
+
+### The primary outcome
+
+Cost, pre-registered as the primary and adequately-powered outcome. Task-clustered permutation trend tests across the seven-level scale.
+
+| Test | Slope | p |
+|---|---:|---:|
+| Reasoning tokens | +7.9 | **0.358** |
+| Total tokens | −129.3 | **0.517** |
+
+The reasoning-token confidence interval spans −4% to +14% across the whole scale, so an effect of the published magnitude is **excluded, not merely undetected**. Relative variation came to 17.9% on total tokens and **15.2% on completion tokens** — the apples-to-apples comparison against paper 3's 44.3%. The pre-registered hypothesis predicted *more* than 44.3% in an agentic setting. It did not hold.
+
+**Zero refusals in 1,050 trajectories**, under every tone including threatening. The model never once referenced the user's tone, in its answers or its reasoning, across 4,647 calls.
+
+### Accuracy: a lead, not a result
+
+| Tone | Accuracy | 95% CI (task-clustered) |
+|---|---:|---|
+| L1 sycophantic | 0.353 | 0.240 – 0.473 |
+| L2 very polite | 0.327 | 0.207 – 0.453 |
+| L3 polite | 0.280 | 0.167 – 0.400 |
+| L4 neutral | 0.280 | 0.173 – 0.393 |
+| L5 rude | 0.267 | 0.153 – 0.387 |
+| L6 very rude | 0.273 | 0.167 – 0.387 |
+| L7 threatening | 0.293 | 0.180 – 0.407 |
+
+The pre-registered trend test gives slope −0.0107, p = 0.023, and an independent from-scratch re-implementation agrees. **It is still not reported as a finding**, for reasons that are not "underpowered":
+
+1. **It is not monotonic.** Across L3–L7 the slope is +0.002, p = 0.81. What exists is a step at the polite end (+0.061, p = 0.0025), and L7 rebounds above L5/L6.
+2. **The instrument was confounded** (below).
+3. **It is fragile.** Only 19 of 50 tasks have a non-zero slope; dropping the two most influential takes p to 0.128.
+4. **Twelve outcomes were tested.** Under a global null, P(at least one below 0.023) = 0.24. It does not survive BH across that family.
+
+## What independent review found
+
+After the first write-up, three independent analyses reviewed it: an arithmetic audit that recomputed every number from the raw records, an adversarial critique, and an open exploration. They found **four errors in the analysis and two in the instrument**, and corrected three of the claims.
+
+| Found | Consequence |
+|---|---|
+| `total_tokens` double-counted reasoning | Every trajectory over-counted by ~946 tokens; cost priced thinking twice on the fallback path |
+| Accuracy CIs ignored task clustering | Intervals ~35% too narrow |
+| "Underpowered" cited an 18% base rate | Real rate 29.6%; power governs false negatives, not the validity of a positive |
+| Backfill summed abandoned attempts | Latent; would have injected inflated values on any resumed run |
+| **The neutral wrapper carried an extra task instruction** | The study's own reference level was a different instrument |
+| **Wrapper lengths were U-shaped across the scale** | Length predicted accuracy *better than tone rank did* (r = +0.82 vs −0.72) |
+
+### The instrument fix, measured rather than assumed
+
+The v1 neutral wrapper alone said *"provide a single final answer."* Its arm was re-run against v2 — same 50 tasks, same seed, same burst positions, one sentence different.
+
+| Measure | v1 (with instruction) | v2 (removed) | Fisher p |
+|---|---:|---:|---:|
+| Inspected before acting | 0.800 | **0.953** | 7e-5 |
+| Gave up without acting | 0.107 | **0.027** | 0.009 |
+| Insufficient-inspection failures | 0.180 | **0.033** | 5e-5 |
+| Accuracy | 0.280 | 0.307 | 0.70 |
+
+**The clause was making the model answer instead of work**, and changed process without changing score. It also weakens the study's best lead: polite tones inspecting more than rude ones (0.942 vs 0.891) was measured against a reference level now known to be depressed — the *fixed* neutral sits at 0.953, at the polite end rather than between.
+
+## Two false positives, caught and kept
+
+Both are written up rather than quietly dropped, because the interim numbers were genuinely tempting.
+
+**A threatening-tone effect on reasoning spend.** Looked real at a fifth of the data, faded as the sample grew. Interim testing was halted once the pattern was noticed, because repeatedly peeking at an accumulating result and reporting whenever it looks good is how this becomes a paper.
+
+| Sample | p |
+|---|---:|
+| 11 tasks / 231 trajectories | **0.028** |
+| 18 tasks / 378 trajectories | 0.094 |
+| 50 tasks / 1,050 trajectories | 0.358 |
+
+**A "monotonic decline" in accuracy.** Reported as monotonic, then shown to be a step at the polite end with a flat rude half — and confounded by wrapper length. The description was wrong; the number was right.
+
+## Leads worth carrying forward
+
+Ranked by likelihood of replicating, all exploratory, all from one model.
+
+1. **Polite tones inspect more before editing** — measured at turn zero, before any downstream cascade. Needs re-measuring against the fixed neutral.
+2. **Any social framing shortens trajectories ~30% at no accuracy cost** — unwrapped 4.60 turns vs wrapped 3.22, paired p = 8e-5.
+3. **Threatening spends ~12% more reasoning** — p = 0.019 uncorrected, ~0.13 corrected.
+4. **Luna essentially never self-checks** — ~15 verifications in 4,647 calls, under any tone. A behavioural fact, checked against raw responses.
+
+## Reproducing
+
+Every subcommand defaults to **dry-run** — it forces the mock provider regardless of config, so nothing costs money without `--live`. Dry runs write to their own namespaced files so they can never contaminate live data.
+
+```bash
+pip install -r requirements.txt
+cp .env.example .env          # OpenRouter key
+
+python -m pytest -q           # 264 tests, no keys needed
+```
+
+Committed records recompute every table above with no API access:
+
+```
+results_archive/
+  validation_gate_n100_*.json          per-model gate, 100 tasks each
+  core_gpt-luna_records.json           1,050 core trajectories (wrapper v1)
+  core_gpt-luna_analysis.json          the full analysis report
+  core_gpt-luna_L4_wrapper-v2_records.json   the 150-trajectory wrapper control
+```
+
+```bash
+# Re-run the analysis on the committed records
+python -m harness.cli study2 analyze \
+  --records-path results_archive/core_gpt-luna_records.json
+
+# A live run: staged, capped, and resumable
+python -m harness.cli --live study2 core --models gpt-luna \
+  --n-tasks 50 --n-trials 3 --budget-cap 15 --resume
+```
+
+## What running this taught the harness
+
+Seven failures found and fixed during the runs themselves, each with a regression test:
+
+| | |
+|---|---|
+| Answer key reachable from the sandbox | Ground truth sat beside the input; one `os.listdir` away |
+| Fixed tone order | Confounded tone with position-in-burst |
+| Parallel runs shared files | Four models would have overwritten each other's records and spend |
+| No per-task error isolation on the paid path | One exception ended a 4,200-trajectory run |
+| Dry runs wrote into live files | 48 fabricated rows landed in a live spend log |
+| Two live runs of one model shared a records file | 39 duplicate trajectories after a restart that hadn't killed the original |
+| Core drew from a different task pool than the gate | 48 of 50 tone comparisons would have had no baseline |
+
+`--resume` and a pid lock now exist because a container restart killed a ten-hour run at 896 of 1,050 trajectories. It cost nothing: 1,018 already-recorded trajectories were skipped rather than redone.
+
+## Next
+
+Run all four models on the v2 wrappers — Luna included, since the length fix touched all seven. Roughly **$50 and 15–20 hours**, parallelisable across models. Replication across models is the test that matters; one model at p = 0.023 on a secondary measure is a lead.
+
+---
+
+# Reference
 
 ## Why this is one study now, not three
 

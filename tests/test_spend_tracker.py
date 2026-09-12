@@ -48,7 +48,11 @@ def test_compute_cost_usd_matches_manual_calc():
     model = MODELS_BY_KEY["gpt-luna"]
     response = MockProvider().complete(model, "sys", [{"role": "user", "content": "2+2? (A) 3 (B) 4"}])
     cost = compute_cost_usd(model, response)
+    # completion_tokens ALREADY includes reasoning on this route, so the
+    # manual calc must not add reasoning again -- doing so was the bug (see
+    # spend_tracker.compute_cost_usd and test_design_integrity section 10).
     expected = (response.prompt_tokens / 1_000_000) * model.input_price_per_1m + (
-        (response.completion_tokens + response.reasoning_tokens) / 1_000_000
+        response.completion_tokens / 1_000_000
     ) * model.output_price_per_1m
     assert cost == pytest.approx(expected)
+    assert response.reasoning_tokens > 0, "fixture must actually exercise reasoning"

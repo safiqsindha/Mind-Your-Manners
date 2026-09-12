@@ -486,9 +486,18 @@ def _study2_stage(args: argparse.Namespace, phase: str, default_cap: float, defa
         models, tasks, grader, RESULTS_ROOT, phase=phase,
         budget_cap_usd=cap_usd, n_trials=n_trials,
         multi_round=not args.single_round, max_turns=args.max_turns,
-        tone_seed=args.sample_seed,
+        tone_seed=args.sample_seed, resume=args.resume,
+        tones=(args.tones.split(",") if args.tones else None),
+        run_label=args.run_label,
     )
-    tag = models[0].key if len(models) == 1 else "multi"
+    # Ask for the tag rather than re-deriving it. This line used to keep its
+    # own copy of the naming rule and so ignored both --run-label and the
+    # dry-run suffix: a labelled run wrote its records correctly and then
+    # announced the MAIN dataset's path, which reads exactly like the full
+    # run has just been overwritten by a 150-trajectory arm.
+    from .study2.runner import _run_tag
+
+    tag = _run_tag(models, args.run_label)
     print(f"{phase}: {len(records)} trajectories logged to results/analysis/study2_{phase}_{tag}_records.json")
 
 
@@ -504,27 +513,83 @@ def cmd_study2_frontier(args: argparse.Namespace) -> None:
     _study2_stage(args, "frontier", STUDY2_FRONTIER_BUDGET_CAP_USD, default_trials=1)
 
 
-SPREADSHEETBENCH_BASE_RATE_PCT = 18.5  # midpoint of the 17-20% range cited in README "Outcome measures"
+def _underpowered_accuracy_note(records: list[dict]) -> str:
+    """The accuracy caveat, computed from the run rather than asserted.
 
+    The old text stated a ~18% base rate (SpreadsheetBench's published
+    17-20%) and concluded that accuracy needs "a thousand-plus observations
+    per condition". Both halves were wrong for this run. The observed pooled
+    accuracy on the gpt-luna core run is 0.296, not 0.18 -- so the note
+    quoted a number the run itself contradicted, which is why the rate is
+    now computed from the records in hand.
 
-def _underpowered_accuracy_note(n_per_level: dict[str, int]) -> str:
-    """Task spec: "accuracy is reported and explicitly flagged as
-    underpowered." At SpreadsheetBench's ~17-20% base rate, detecting even
-    a large tone difference in a binary outcome needs on the order of a
-    thousand-plus observations per condition; a 50-task/3-trial main run
-    gives at most 150 per tone per model. This is a plain arithmetic
-    statement of that gap, not a formal power calculation -- printed so a
-    reader can't miss it, per README "Outcome measures"."""
-    smallest_n = min(n_per_level.values()) if n_per_level else 0
+    The power claim was worse, because it was used to wave accuracy away
+    entirely. Simulating at the OBSERVED slope (-0.0107 per tone level) puts
+    power at this design around 0.44, and the 80%-power MDE at roughly 0.017
+    per level -- meaningfully underpowered, but nowhere near the "a few
+    hundred is hopeless" the old text implied, and irrelevant to a result
+    that does reach significance. Power bounds FALSE NEGATIVES. It says
+    nothing about whether a positive is real: a pre-registered test that
+    clears its threshold is a valid pre-registered test at n=150 exactly as
+    it is at n=1500. Reading "underpowered" as a reason to discount a
+    significant accuracy finding inverts what the number means.
+
+    So the note now says what it can honestly say: accuracy was designated
+    secondary in advance, a null on it is weak evidence, a positive on it
+    stands as a pre-registered test, and the real reasons for caution about
+    any positive here are one model, several outcome measures, and
+    fragility -- not power.
+    """
+    if not records:
+        return "No records: accuracy not reported."
+    n_per_level: dict[str, int] = {}
+    for r in records:
+        n_per_level[r["tone_level"]] = n_per_level.get(r["tone_level"], 0) + 1
+    observed_accuracy = sum(bool(r["passed"]) for r in records) / len(records)
     return (
-        f"Accuracy is reported per tone (n={smallest_n}-{max(n_per_level.values()) if n_per_level else 0} "
-        f"per condition here) but is UNDERPOWERED at SpreadsheetBench's ~{SPREADSHEETBENCH_BASE_RATE_PCT:.0f}% "
-        "base rate: detecting even a large tone effect in a binary pass/fail outcome at that base "
-        "rate needs on the order of a thousand-plus observations per condition, not a few hundred. "
-        "Treat accuracy_trend_test and accuracy_by_tone as descriptive, not confirmatory -- cost "
-        "(token_cost_effect_size) is the primary, adequately-powered outcome for this study. See "
-        "README 'Outcome measures'."
+        f"Accuracy (observed pooled pass rate {observed_accuracy:.1%} over {len(records)} "
+        f"trajectories, n={min(n_per_level.values())}-{max(n_per_level.values())} per tone) was "
+        "PRE-DESIGNATED A SECONDARY outcome; cost is primary. Power is limited, so a null here is "
+        "weak evidence of no effect. A SIGNIFICANT result on it is still a valid pre-registered "
+        "test -- power governs false negatives, not the validity of a positive. Read any positive "
+        "cautiously because this is one model, one of several outcome measures, and sensitive to "
+        "analysis choices -- not because of power. See README 'Outcome measures'."
     )
+
+
+def _token_cost_trends(records: list[dict]) -> dict:
+    """Clustered trend test on the token measures, primary outcome first.
+
+    Reported for both because they answer different questions.
+    `reasoning_tokens` is what the model chose to spend thinking, which is
+    what a "tone changes how hard it thinks" claim rests on. `total_tokens`
+    is dominated by the prompt, whose length the tone wrapper changes by
+    construction, so part of any difference there is the wrapper's own text
+    rather than the model's behaviour -- but it is the statistic directly
+    comparable to the published single-turn figure, so it is kept.
+
+    A run recorded before reasoning_tokens existed reports its absence
+    rather than a number: no thinking measurement is not the same as a
+    measurement of no thinking.
+    """
+    from .study2.analysis import token_cost_trend_test
+
+    out: dict[str, dict] = {}
+    for key in ("reasoning_tokens", "total_tokens"):
+        try:
+            t = token_cost_trend_test(records, value_key=key)
+        except ValueError as exc:
+            out[key] = {"unavailable": str(exc)}
+            continue
+        out[key] = {
+            "n_clusters": t.n_clusters,
+            "observed_slope": t.observed_slope,
+            "p_value": t.p_value,
+            "ci_low": t.ci_low,
+            "ci_high": t.ci_high,
+        }
+    return out
+
 
 
 def cmd_study2_analyze(args: argparse.Namespace) -> None:
@@ -558,6 +623,7 @@ def cmd_study2_analyze(args: argparse.Namespace) -> None:
         severity_breakdown,
         shortcut_rate,
         token_cost_effect_size,
+        token_cost_trend_test,
         trajectory_cost_summary,
         verification_rates,
     )
@@ -589,19 +655,37 @@ def cmd_study2_analyze(args: argparse.Namespace) -> None:
         sys.exit(1)
 
     by_tone: dict[str, list[bool]] = {}
+    # Parallel to by_tone: which task each pass/fail came from. The CI is
+    # clustered on these, not resampled over trajectories one at a time --
+    # the 150 observations behind a tone are 50 tasks run 3 times each, and
+    # treating them as 150 independent ones made the interval a third too
+    # narrow (see study1.analysis.bootstrap_accuracy_ci for the measured
+    # comparison). Everything else here already clusters by task; accuracy's
+    # CI was the one place that did not.
+    tasks_by_tone: dict[str, list[str]] = {}
     refused_by_tone: dict[str, list[bool]] = {}
     for r in records:
         by_tone.setdefault(r["tone_level"], []).append(bool(r["passed"]))
+        tasks_by_tone.setdefault(r["tone_level"], []).append(r["task_id"])
         refused_by_tone.setdefault(r["tone_level"], []).append(bool(r["refused"]))
 
-    accuracy: dict[str, AccuracyEstimate] = {tone: bootstrap_accuracy_ci(v) for tone, v in by_tone.items()}
+    accuracy: dict[str, AccuracyEstimate] = {
+        tone: bootstrap_accuracy_ci(v, cluster_ids=tasks_by_tone[tone]) for tone, v in by_tone.items()
+    }
     refusal_rate_by_tone = {tone: sum(v) / len(v) for tone, v in refused_by_tone.items()}
     trend = accuracy_trend_test(records)
 
     report = {
         "n_records": len(records),
         # Primary outcome (task spec item 6: "Primary: cost").
+        # The effect size is descriptive only -- it reports a relative-variation
+        # percentage with no p-value and means pooled across tasks. Pooling was
+        # the problem: tasks differ enormously in how much thinking they demand
+        # and that variance swamps any tone effect. The trend tests below are
+        # the inferential half, clustered by task, and the primary outcome had
+        # neither until they were added.
         "token_cost_effect_size": token_cost_effect_size(records),
+        "token_cost_trend_test": _token_cost_trends(records),
         "cost_summary_by_tone": trajectory_cost_summary(records),
         # Trajectory-level behavior.
         "severity_breakdown_by_tone": severity_breakdown(records),
@@ -610,7 +694,7 @@ def cmd_study2_analyze(args: argparse.Namespace) -> None:
         "refusal_rate_by_tone": refusal_rate_by_tone,
         # Accuracy last, explicitly flagged underpowered -- see
         # _underpowered_accuracy_note and README "Outcome measures".
-        "accuracy_underpowered_note": _underpowered_accuracy_note({t: e.n for t, e in accuracy.items()}),
+        "accuracy_underpowered_note": _underpowered_accuracy_note(records),
         "accuracy_trend_test": {
             "n_clusters": trend.n_clusters,
             "observed_slope": trend.observed_slope,
@@ -779,6 +863,26 @@ def build_parser() -> argparse.ArgumentParser:
             help="Draw tasks from the full 909-task dataset instead of the 200-task "
                  "sample. Off by default: the no-op manifest and every validation-gate "
                  "baseline were measured on the sample, and do not transfer.",
+        )
+        sp.add_argument(
+            "--resume", action="store_true",
+            help="Skip trajectories already recorded in this phase's records JSONL. "
+                 "A core run is hours long and the container can be restarted under "
+                 "it; the incremental records survive, so the work does not have to "
+                 "be redone. Crashed trajectories are retried rather than skipped.",
+        )
+        sp.add_argument(
+            "--tones", default=None,
+            help="Comma-separated tone keys to run instead of all seven (e.g. "
+                 "L4_neutral). Tone order is still shuffled over the full scale "
+                 "and then filtered, so a kept tone meets the same burst "
+                 "positions it would have in a full run.",
+        )
+        sp.add_argument(
+            "--run-label", default=None,
+            help="Suffix for this run's output files, for a run that is "
+                 "deliberately separate from the main dataset (e.g. wrapper-v2). "
+                 "Without it the run lands on the main records file.",
         )
         sp.add_argument("--n-trials", type=int, default=None)
         sp.add_argument("--budget-cap", type=float, default=None)
