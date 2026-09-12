@@ -625,12 +625,23 @@ def cmd_study2_analyze(args: argparse.Namespace) -> None:
         sys.exit(1)
 
     by_tone: dict[str, list[bool]] = {}
+    # Parallel to by_tone: which task each pass/fail came from. The CI is
+    # clustered on these, not resampled over trajectories one at a time --
+    # the 150 observations behind a tone are 50 tasks run 3 times each, and
+    # treating them as 150 independent ones made the interval a third too
+    # narrow (see study1.analysis.bootstrap_accuracy_ci for the measured
+    # comparison). Everything else here already clusters by task; accuracy's
+    # CI was the one place that did not.
+    tasks_by_tone: dict[str, list[str]] = {}
     refused_by_tone: dict[str, list[bool]] = {}
     for r in records:
         by_tone.setdefault(r["tone_level"], []).append(bool(r["passed"]))
+        tasks_by_tone.setdefault(r["tone_level"], []).append(r["task_id"])
         refused_by_tone.setdefault(r["tone_level"], []).append(bool(r["refused"]))
 
-    accuracy: dict[str, AccuracyEstimate] = {tone: bootstrap_accuracy_ci(v) for tone, v in by_tone.items()}
+    accuracy: dict[str, AccuracyEstimate] = {
+        tone: bootstrap_accuracy_ci(v, cluster_ids=tasks_by_tone[tone]) for tone, v in by_tone.items()
+    }
     refusal_rate_by_tone = {tone: sum(v) / len(v) for tone, v in refused_by_tone.items()}
     trend = accuracy_trend_test(records)
 

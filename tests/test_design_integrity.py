@@ -837,3 +837,90 @@ def test_a_single_attempt_key_is_unaffected(tmp_path: Path):
     recs = [{"task_id": "t0", "tone_level": "L4_neutral", "trial": 0, "total_tokens": 0}]
     recompute_total_tokens(recs, raw)
     assert recs[0]["total_tokens"] == 800 + 2400 + 3900 + 4400 + 400
+
+
+# --- 12. The accuracy CI resampled trajectories, not tasks ----------------
+# Every other test in this harness clusters by task. bootstrap_accuracy_ci
+# resampled individual trajectories, so 150 observations (50 tasks x 3
+# trials) were treated as 150 independent facts. On the gpt-luna core run's
+# L1_sycophantic tone that gave [0.280, 0.433] where clustering gives
+# [0.240, 0.473] -- the iid interval is a third narrower, on exactly the
+# interval a reader uses to judge whether two tones overlap.
+
+def _perfectly_agreeing_trials(n_tasks: int = 40, n_trials: int = 3):
+    """Half the tasks pass on every trial, half fail on every trial. Trials
+    within a task carry no information the task itself does not, so an iid
+    bootstrap's extra "observations" are pure double-counting."""
+    passed, task_ids = [], []
+    for t in range(n_tasks):
+        for _ in range(n_trials):
+            passed.append(t % 2 == 0)
+            task_ids.append(f"task{t}")
+    return passed, task_ids
+
+
+def test_clustered_accuracy_ci_is_wider_than_the_iid_one():
+    from harness.study1.analysis import bootstrap_accuracy_ci
+
+    passed, task_ids = _perfectly_agreeing_trials()
+    iid = bootstrap_accuracy_ci(passed, n_boot=2000)
+    clustered = bootstrap_accuracy_ci(passed, cluster_ids=task_ids, n_boot=2000)
+
+    assert clustered.accuracy == iid.accuracy == 0.5, "the point estimate must not move"
+    iid_width = iid.ci_high - iid.ci_low
+    clustered_width = clustered.ci_high - clustered.ci_low
+    assert clustered_width > iid_width * 1.5, (iid_width, clustered_width)
+
+
+def test_singleton_clusters_reproduce_the_iid_interval():
+    """The cluster bootstrap must reduce to the iid one when every cluster
+    holds one observation -- otherwise callers with genuinely unclustered
+    data silently get a different number than before."""
+    from harness.study1.analysis import bootstrap_accuracy_ci
+
+    passed = [True, True, False, True, False, False, True]
+    iid = bootstrap_accuracy_ci(passed, n_boot=2000)
+    singleton = bootstrap_accuracy_ci(passed, cluster_ids=list(range(len(passed))), n_boot=2000)
+    assert (singleton.ci_low, singleton.ci_high) == (iid.ci_low, iid.ci_high)
+
+
+def test_mismatched_cluster_ids_are_refused_not_guessed():
+    from harness.study1.analysis import bootstrap_accuracy_ci
+
+    with pytest.raises(ValueError, match="parallel"):
+        bootstrap_accuracy_ci([True, False, True], cluster_ids=["a", "b"])
+
+
+def test_study2_analyze_clusters_its_accuracy_ci_by_task(tmp_path: Path, monkeypatch, capsys):
+    """The bug lived at the call site too: cmd_study2_analyze had the task
+    ids in hand and passed only the pass/fail column."""
+    import argparse
+    import json as _json
+    from harness.cli import cmd_study2_analyze
+
+    passed, task_ids = _perfectly_agreeing_trials(n_tasks=20)
+    records = [
+        {"model_key": "m", "task_id": tid, "instruction_type": "i", "tone_level": tone,
+         "tone_position": 0, "trial": i % 3, "passed": p, "soft_restriction": 0.0,
+         "refused": False, "severity": "correct" if p else "other", "severity_detail": "",
+         "inspected_before_acting": True, "self_checked_output": True,
+         "took_destructive_action": False, "destructive_action_had_backup": False,
+         "n_turns": 2, "cost_usd": 0.01, "total_tokens": 1000, "reasoning_tokens": 100,
+         "crashed": False}
+        for tone in ("L1_sycophantic", "L4_neutral", "L7_threatening")
+        for i, (p, tid) in enumerate(zip(passed, task_ids))
+    ]
+    monkeypatch.chdir(tmp_path)  # --records-path is globbed relative to cwd
+    (tmp_path / "study2_core_m_records.json").write_text(_json.dumps(records))
+    out_path = tmp_path / "report.json"
+    cmd_study2_analyze(
+        argparse.Namespace(records_path="study2_core_m_records.json", out_path=str(out_path))
+    )
+    capsys.readouterr()
+
+    report = _json.loads(out_path.read_text())
+    ci = report["accuracy_by_tone"]["L4_neutral"]
+    assert ci["n"] == 60
+    # 20 tasks, all-or-nothing within a task: an iid CI over 60 trajectories
+    # lands near +/-0.12; clustering over 20 tasks is roughly twice that.
+    assert ci["ci_high"] - ci["ci_low"] > 0.35, ci
