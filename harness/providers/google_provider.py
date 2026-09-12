@@ -95,6 +95,13 @@ class GoogleProvider(Provider):
             prompt_tokens=usage.get("promptTokenCount", 0),
             completion_tokens=usage.get("candidatesTokenCount", 0),
             reasoning_tokens=usage.get("thoughtsTokenCount", 0) or 0,
+            # Google is the one route here where thinking is NOT folded into
+            # the completion figure: usageMetadata reports promptTokenCount,
+            # candidatesTokenCount and thoughtsTokenCount as three disjoint
+            # counts whose sum is totalTokenCount. So this provider's totals
+            # must keep the reasoning term that the OpenAI-style routes must
+            # drop -- see providers/base.py:reasoning_included_in_completion.
+            reasoning_included_in_completion=False,
             refused=finish_reason in ("SAFETY", "PROHIBITED_CONTENT", "BLOCKLIST"),
             raw=data,
             tool_calls=tool_calls,

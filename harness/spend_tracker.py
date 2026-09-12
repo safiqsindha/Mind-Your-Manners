@@ -87,6 +87,13 @@ class ResultRow:
     served_provider: Optional[str] = None  # actual OpenRouter backend that served this call
     thinking_enabled: Optional[bool] = None  # see providers/base.py:ModelConfig.thinking_enabled
     canonical_slug: Optional[str] = None  # see providers/base.py:ModelConfig.canonical_slug
+    # Carried through from the response so a total can be rebuilt from this
+    # row alone without knowing which provider served it -- see
+    # providers/base.py:ProviderResponse.reasoning_included_in_completion.
+    # Defaults True (the OpenAI-style convention every row logged so far was
+    # produced under), so logs written before this field existed still read
+    # back with the right accounting.
+    reasoning_included_in_completion: bool = True
     raw_response: dict[str, Any] = field(default_factory=dict)
     extra: dict[str, Any] = field(default_factory=dict)
 
@@ -108,7 +115,18 @@ def compute_cost_usd(model: ModelConfig, response: ProviderResponse) -> float:
     if isinstance(usage, dict) and usage.get("cost") is not None:
         return float(usage["cost"])
     input_cost = (response.prompt_tokens / 1_000_000) * model.input_price_per_1m
-    output_cost = ((response.completion_tokens + response.reasoning_tokens) / 1_000_000) * model.output_price_per_1m
+    # Reasoning tokens ARE billed at the output rate -- but on every
+    # OpenAI-style route they are already inside completion_tokens (a
+    # breakdown, not an addition: see
+    # providers/base.py:reasoning_included_in_completion, verified on the
+    # 4,647-call core log where usage.total_tokens == prompt + completion on
+    # every call). Adding them again charged the model's thinking twice, and
+    # for gpt-luna that inflated the fallback estimate by the full mean
+    # reasoning spend per call. `reasoning_tokens_outside_completion` adds
+    # them only for providers that really do report them separately (Google),
+    # so reasoning stays priced exactly once either way.
+    billable_output = response.completion_tokens + response.reasoning_tokens_outside_completion
+    output_cost = (billable_output / 1_000_000) * model.output_price_per_1m
     return input_cost + output_cost
 
 

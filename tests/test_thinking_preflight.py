@@ -85,7 +85,13 @@ def test_fails_when_on_and_off_produce_identical_token_counts(tmp_path: Path):
 
 
 def test_passes_when_all_three_conditions_are_satisfied(tmp_path: Path):
-    on = ProviderResponse(text="x", prompt_tokens=10, completion_tokens=10, reasoning_tokens=40, reasoning_tokens_reported=True)
+    # completion_tokens has to CONTAIN the 40 reasoning tokens: on this
+    # route reasoning is reported as a breakdown of completion, so a fixture
+    # with completion=10 and reasoning=40 describes a response no provider
+    # can emit -- and it was that impossible fixture, not the check, that
+    # made the old prompt+completion+reasoning total look like it separated
+    # the two conditions. See test_design_integrity section 10.
+    on = ProviderResponse(text="x", prompt_tokens=10, completion_tokens=50, reasoning_tokens=40, reasoning_tokens_reported=True)
     off = ProviderResponse(text="x", prompt_tokens=10, completion_tokens=10, reasoning_tokens=0, reasoning_tokens_reported=True)
     tracker = SpendTracker(tmp_path / "raw.jsonl", phase="test", cap_usd=10.0)
     with patch("harness.study2.thinking_preflight.get_provider", return_value=_patched_provider(on, off)):

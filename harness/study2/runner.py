@@ -671,7 +671,31 @@ def run_condition_batch(
                             output_has_formula=_has_formula(traj.final_output_path),
                             grader_stdout="; ".join(grade.per_test_case_messages),
                         )
-                        total_tokens = sum(r.prompt_tokens + r.completion_tokens + r.reasoning_tokens for r in traj.result_rows)
+                        # prompt + completion ONLY. Adding reasoning_tokens
+                        # here counted the model's thinking twice: on
+                        # OpenAI-style usage (OpenRouter, the route every
+                        # model in this roster is served through) reasoning is
+                        # reported as completion_tokens_details.reasoning_tokens
+                        # -- a breakdown OF completion, not an extra bucket
+                        # beside it. Checked against the provider's own figure
+                        # on all 4,647 calls of the gpt-luna core run:
+                        # usage.total_tokens == prompt_tokens +
+                        # completion_tokens on every one, and reasoning never
+                        # exceeded completion on any. The old sum ran ~932
+                        # tokens per trajectory above the provider's total,
+                        # which is just the mean reasoning spend (947) added
+                        # back -- so total_tokens, the statistic compared
+                        # against the published single-turn figure, was
+                        # inflated by roughly the size of the effect being
+                        # measured. Providers that really do report reasoning
+                        # outside completion (Google) keep the third term via
+                        # ProviderResponse.reasoning_tokens_outside_completion.
+                        total_tokens = sum(
+                            r.prompt_tokens
+                            + r.completion_tokens
+                            + (0 if r.reasoning_included_in_completion else r.reasoning_tokens)
+                            for r in traj.result_rows
+                        )
                         # Recorded separately from total_tokens because they
                         # answer different questions. total_tokens is dominated
                         # by the prompt, which the tone wrapper changes by

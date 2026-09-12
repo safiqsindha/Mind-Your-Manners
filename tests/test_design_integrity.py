@@ -673,3 +673,85 @@ def test_the_lock_is_released_even_when_the_run_raises(tmp_path: Path):
         with _exclusive_run(tmp_path, "core", "m"):
             raise ValueError("budget")
     assert not (tmp_path / "locks" / "study2_core_m.lock").exists()
+
+
+# --- 10. total_tokens counted the model's thinking twice -------------------
+# OpenAI-style usage reports reasoning as completion_tokens_details.
+# reasoning_tokens -- a breakdown OF completion, not a bucket beside it. The
+# trajectory total added it a third time. On the 4,647-call gpt-luna core log
+# the provider's own usage.total_tokens equalled prompt + completion on every
+# call, and reasoning never exceeded completion on any; the harness total ran
+# ~932 above the provider's per trajectory, which is just the mean reasoning
+# spend added back. total_tokens is the statistic compared against the
+# published single-turn figure, so it was inflated by about the size of the
+# effect being measured.
+
+def _luna_result_row(prompt: int, completion: int, reasoning: int):
+    from harness.spend_tracker import ResultRow
+
+    return ResultRow(
+        row_id="r", study="study2", phase="core", item_id="t0",
+        tone_level="L4_neutral", trial=0, model_key="gpt-luna", model_id="x/luna",
+        provider="openai_compatible", temperature=0.0, seed=None,
+        reasoning_effort="medium", thinking_budget_tokens=None,
+        prompt_tokens=prompt, completion_tokens=completion, reasoning_tokens=reasoning,
+        cost_usd=0.0, latency_s=0.0, refused=False, error=None, response_text="",
+        extracted_answer=None, is_correct=None, timestamp=0.0,
+    )
+
+
+def _trajectory_total(rows) -> int:
+    """The runner's own arithmetic, exercised the way runner.py writes it."""
+    return sum(
+        r.prompt_tokens
+        + r.completion_tokens
+        + (0 if r.reasoning_included_in_completion else r.reasoning_tokens)
+        for r in rows
+    )
+
+
+def test_trajectory_total_tokens_does_not_add_reasoning_twice():
+    rows = [_luna_result_row(803, 1600, 828), _luna_result_row(2479, 703, 241)]
+    assert _trajectory_total(rows) == 803 + 1600 + 2479 + 703
+    # The old sum, kept here so the regression is unmistakable rather than
+    # implied: it is over by exactly the reasoning spend.
+    assert _trajectory_total(rows) + 828 + 241 == sum(
+        r.prompt_tokens + r.completion_tokens + r.reasoning_tokens for r in rows
+    )
+
+
+def test_provider_response_total_matches_the_providers_own_figure():
+    from harness.providers.base import ProviderResponse
+
+    r = ProviderResponse(text="x", prompt_tokens=803, completion_tokens=1600, reasoning_tokens=828)
+    assert r.total_tokens == 2403, "OpenAI-style: reasoning is already inside completion"
+    assert r.reasoning_tokens_outside_completion == 0
+
+
+def test_a_provider_that_reports_reasoning_separately_keeps_the_third_term():
+    """Google's usageMetadata keeps thoughtsTokenCount outside
+    candidatesTokenCount, so dropping the term unconditionally would have
+    traded a double-count for an undercount."""
+    from harness.providers.base import ProviderResponse
+
+    r = ProviderResponse(
+        text="x", prompt_tokens=100, completion_tokens=50, reasoning_tokens=40,
+        reasoning_included_in_completion=False,
+    )
+    assert r.total_tokens == 190
+    assert r.reasoning_tokens_outside_completion == 40
+
+
+def test_cost_estimate_prices_reasoning_exactly_once():
+    from harness.providers.base import ProviderResponse
+    from harness.spend_tracker import compute_cost_usd
+
+    model = replace(_model("priced"), input_price_per_1m=1.0, output_price_per_1m=2.0)
+    openai_style = ProviderResponse(text="x", prompt_tokens=1_000_000, completion_tokens=1_000_000, reasoning_tokens=400_000)
+    assert compute_cost_usd(model, openai_style) == pytest.approx(3.0)
+
+    google_style = ProviderResponse(
+        text="x", prompt_tokens=1_000_000, completion_tokens=1_000_000, reasoning_tokens=400_000,
+        reasoning_included_in_completion=False,
+    )
+    assert compute_cost_usd(model, google_style) == pytest.approx(3.8)

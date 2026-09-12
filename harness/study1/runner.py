@@ -76,6 +76,7 @@ def _call_and_record(
         timestamp=time.time(),
         cached_tokens=response.cached_tokens,
         served_provider=response.served_provider,
+        reasoning_included_in_completion=response.reasoning_included_in_completion,
         raw_response=response.raw,
         extra={"outcome": extraction.outcome, "subject": subject},
     )

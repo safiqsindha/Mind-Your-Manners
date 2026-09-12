@@ -72,7 +72,7 @@ class MockProvider(Provider):
         rng = random.Random(digest)
 
         prompt_tokens = max(20, len(user_text.split()) + len(system.split()))
-        completion_tokens = rng.randint(5, 60)
+        visible_completion_tokens = rng.randint(5, 60)
         # Vary simulated reasoning tokens with the model's thinking setting so
         # a dry-run of harness/study2/thinking_preflight.py's checks actually
         # exercises both the pass and fail paths, not just a hardcoded 0.
@@ -85,13 +85,23 @@ class MockProvider(Provider):
             reasoning_tokens = rng.randint(10, 80)
         else:
             reasoning_tokens = 0
+        # The mock imitates an OpenAI-style route, and on those routes
+        # reasoning tokens are a BREAKDOWN of completion_tokens rather than a
+        # bucket beside it (see providers/base.py's
+        # reasoning_included_in_completion). Folding them in here keeps a
+        # dry run's arithmetic identical to a live one's -- otherwise mock
+        # rows would be the only place in the harness where
+        # prompt + completion silently omits the thinking the mock says it
+        # did, and dry runs would stop being a faithful rehearsal of the
+        # totals the real run produces.
+        completion_tokens = visible_completion_tokens + reasoning_tokens
 
         is_very_rude = "screw this up" in user_text or "asking too much of you" in user_text
         if is_very_rude and rng.random() < 0.03:
             return ProviderResponse(
                 text="I'm not going to continue with a prompt phrased this way.",
                 prompt_tokens=prompt_tokens,
-                completion_tokens=12,
+                completion_tokens=12 + reasoning_tokens,
                 reasoning_tokens=reasoning_tokens,
                 reasoning_tokens_reported=True,
                 refused=True,
@@ -128,7 +138,7 @@ class MockProvider(Provider):
             return ProviderResponse(
                 text=f"<message>\nHere's my offer.\n### {own_label}(${price}) ###\n</message>",
                 prompt_tokens=prompt_tokens,
-                completion_tokens=20,
+                completion_tokens=20 + reasoning_tokens,
                 reasoning_tokens=reasoning_tokens,
                 reasoning_tokens_reported=True,
                 raw={"mock": True},
