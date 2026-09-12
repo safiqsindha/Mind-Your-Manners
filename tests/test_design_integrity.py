@@ -1486,3 +1486,27 @@ class _StubModel:
 class _PathStub:
     def __truediv__(self, other):
         return self
+
+
+def test_timing_comparison_refuses_rather_than_fabricates():
+    """When the control arm never reaches the turns being compared, there is
+    no honest comparison to make. The function must return an empty one
+    rather than fall back to whatever the treated arm happens to have --
+    that fallback is the confound, and it is what a crossed run against
+    short trajectories would silently hit."""
+    from harness.study2.analysis import compare_injection_turns, turn_comparable_tasks
+
+    rows = []
+    for task in ("A", "B", "C"):
+        # Control reaches turn 0 only.
+        rows.append(_interj_row(task, "L4_neutral", 0, True, 100))
+        rows.append(_interj_row(task, "L4_neutral", 1, False, 100))
+        rows.append(_interj_row(task, "L4_neutral", 2, False, 100))
+        # Treated reaches everything, with a large apparent effect.
+        for turn in (0, 1, 2):
+            rows.append(_interj_row(task, "L7_threatening", turn, True, 900))
+
+    assert turn_comparable_tasks(rows, [1, 2]) == set()
+    result = compare_injection_turns(rows, "L7_threatening", 1, 2)
+    assert result["n_tasks"] == 0
+    assert result["p_value"] == 1.0
