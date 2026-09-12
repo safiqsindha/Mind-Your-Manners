@@ -73,6 +73,20 @@ class ProviderResponse:
     # 2608.01347 (reasoning-token reporting found inconsistent across
     # serving/protocol-translation layers, sometimes silently dropped).
     reasoning_tokens_reported: bool = True
+    # Whether this provider's `completion_tokens` ALREADY CONTAINS
+    # `reasoning_tokens`, which decides whether adding the two double-counts.
+    # OpenAI-style usage (OpenRouter, and every OpenAI-compatible route here)
+    # reports reasoning as a BREAKDOWN of completion --
+    # completion_tokens_details.reasoning_tokens -- so it is already inside
+    # the completion figure. Verified on the 4,647-call core log for
+    # gpt-luna: usage.total_tokens == prompt_tokens + completion_tokens on
+    # every single call, and reasoning_tokens <= completion_tokens on every
+    # single call. Anthropic's output_tokens and the Claude CLI's
+    # output_tokens_details.thinking_tokens behave the same way. Google is
+    # the exception -- usageMetadata.thoughtsTokenCount sits OUTSIDE
+    # candidatesTokenCount -- so google_provider.py sets this False and its
+    # totals keep the third term.
+    reasoning_included_in_completion: bool = True
     cached_tokens: int = 0  # provider-side prompt-cache hits (usage.prompt_tokens_details.cached_tokens);
     # measure only -- see harness/config.py module docstring on caching instrumentation.
     served_provider: Optional[str] = None  # actual backend that served this call, when reported
@@ -83,8 +97,19 @@ class ProviderResponse:
     tool_calls: list[dict[str, Any]] = field(default_factory=list)
 
     @property
+    def reasoning_tokens_outside_completion(self) -> int:
+        """Reasoning tokens NOT already counted inside `completion_tokens`.
+
+        Zero for every OpenAI-style route (see
+        `reasoning_included_in_completion`), which is what makes it safe to
+        add this to a prompt+completion total without counting the model's
+        thinking twice.
+        """
+        return 0 if self.reasoning_included_in_completion else self.reasoning_tokens
+
+    @property
     def total_tokens(self) -> int:
-        return self.prompt_tokens + self.completion_tokens + self.reasoning_tokens
+        return self.prompt_tokens + self.completion_tokens + self.reasoning_tokens_outside_completion
 
 
 class ProviderError(RuntimeError):

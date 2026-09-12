@@ -410,3 +410,695 @@ def test_every_phase_defaults_to_the_sample():
         assert args.full_dataset is False, f"{phase} defaults to the full dataset"
         opted = parser.parse_args(["study2", phase, "--full-dataset"])
         assert opted.full_dataset is True
+
+
+# --- 7. The primary outcome had no significance test ----------------------
+# token_cost_effect_size reports a relative-variation percentage, pooled
+# across tasks, with no p-value -- and cost is the study's PRIMARY outcome.
+# Pooling is the defect: tasks differ enormously in how much thinking they
+# demand, and that variance swamps any tone effect. Measured on a partial
+# Luna core run, pooling gave p=0.81 while the same data clustered by task
+# gave p=0.03.
+
+def _token_rows(effect_on_threatening: int, n_tasks: int = 12, seed: int = 0):
+    """Tasks with wildly different baseline token demand, plus a real
+    threatening-tone bump. Pooled, the task spread hides the bump."""
+    import random as _r
+    from harness.tone_wrappers import TONE_ORDER
+
+    rng = _r.Random(seed)
+    rows = []
+    for i in range(n_tasks):
+        base = 200 * (i + 1) * 10          # task demand spans 2k..24k
+        for tone in TONE_ORDER:
+            bump = effect_on_threatening if tone == "L7_threatening" else 0
+            rows.append({
+                "task_id": f"t{i}", "tone_level": tone, "passed": False,
+                "reasoning_tokens": base + bump + rng.randint(-50, 50),
+            })
+    return rows
+
+
+def test_a_real_within_task_effect_is_detected():
+    from harness.study2.analysis import token_cost_trend_test
+
+    t = token_cost_trend_test(_token_rows(effect_on_threatening=400))
+    assert t.p_value < 0.05, f"missed a real effect, p={t.p_value}"
+    assert t.observed_slope > 0
+
+
+def test_no_effect_is_not_invented():
+    from harness.study2.analysis import token_cost_trend_test
+
+    t = token_cost_trend_test(_token_rows(effect_on_threatening=0))
+    assert t.p_value > 0.05, f"found an effect that is not there, p={t.p_value}"
+
+
+def test_it_defaults_to_reasoning_not_total_tokens():
+    """total_tokens is dominated by the prompt, whose length the tone
+    wrapper changes by construction."""
+    import inspect
+    from harness.study2.analysis import token_cost_trend_test
+
+    assert inspect.signature(token_cost_trend_test).parameters["value_key"].default == "reasoning_tokens"
+
+
+def test_a_run_without_the_field_says_so_rather_than_scoring_zero():
+    """No thinking measurement is not a measurement of no thinking."""
+    from harness.study2.analysis import token_cost_trend_test
+
+    rows = [{"task_id": "t0", "tone_level": t, "passed": False} for t in
+            ("L1_sycophantic", "L4_neutral", "L7_threatening")]
+    with pytest.raises(ValueError, match="reasoning_tokens"):
+        token_cost_trend_test(rows)
+
+
+def test_the_report_carries_both_token_trends():
+    from harness.cli import _token_cost_trends
+
+    out = _token_cost_trends(_token_rows(effect_on_threatening=400))
+    assert set(out) == {"reasoning_tokens", "total_tokens"}
+    assert out["reasoning_tokens"]["p_value"] < 0.05
+    assert "unavailable" in out["total_tokens"], "total_tokens absent here, should say so"
+
+
+def test_reasoning_tokens_are_recoverable_from_the_raw_log(tmp_path: Path):
+    """The field was added mid-run. A run recorded before it must not become
+    unanalysable on the study's primary outcome."""
+    import json as _json
+    from harness.study2.analysis import backfill_reasoning_tokens
+
+    raw = tmp_path / "raw.jsonl"
+    raw.write_text("\n".join(_json.dumps(r) for r in [
+        {"item_id": "t0", "tone_level": "L4_neutral", "trial": 0, "reasoning_tokens": 100},
+        {"item_id": "t0", "tone_level": "L4_neutral", "trial": 0, "reasoning_tokens": 50},
+        {"item_id": "t0", "tone_level": "L7_threatening", "trial": 0, "reasoning_tokens": 900},
+    ]))
+    recs = [
+        {"task_id": "t0", "tone_level": "L4_neutral", "trial": 0},
+        {"task_id": "t0", "tone_level": "L7_threatening", "trial": 0},
+    ]
+    assert backfill_reasoning_tokens(recs, raw) == 2
+    assert recs[0]["reasoning_tokens"] == 150, "per-call values must be summed per trajectory"
+    assert recs[1]["reasoning_tokens"] == 900
+
+
+def test_backfill_leaves_existing_values_alone(tmp_path: Path):
+    import json as _json
+    from harness.study2.analysis import backfill_reasoning_tokens
+
+    raw = tmp_path / "raw.jsonl"
+    raw.write_text(_json.dumps({"item_id": "t0", "tone_level": "L4_neutral", "trial": 0, "reasoning_tokens": 999}))
+    recs = [{"task_id": "t0", "tone_level": "L4_neutral", "trial": 0, "reasoning_tokens": 42}]
+    assert backfill_reasoning_tokens(recs, raw) == 0
+    assert recs[0]["reasoning_tokens"] == 42
+
+
+def test_backfill_survives_a_torn_final_line(tmp_path: Path):
+    """A run still in flight can leave a partial line."""
+    import json as _json
+    from harness.study2.analysis import backfill_reasoning_tokens
+
+    raw = tmp_path / "raw.jsonl"
+    raw.write_text(
+        _json.dumps({"item_id": "t0", "tone_level": "L4_neutral", "trial": 0, "reasoning_tokens": 7})
+        + '\n{"item_id": "t0", "tone_lev'
+    )
+    recs = [{"task_id": "t0", "tone_level": "L4_neutral", "trial": 0}]
+    assert backfill_reasoning_tokens(recs, raw) == 1
+    assert recs[0]["reasoning_tokens"] == 7
+
+
+# --- 8. A ten-hour run had no resume ---------------------------------------
+# The container was restarted at 896 of 1050 trajectories. The incremental
+# records survived on disk, so redoing that work would have been a choice.
+
+def _jsonl(path: Path, rows):
+    import json as _json
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(_json.dumps(r) for r in rows))
+
+
+def test_recorded_trajectories_are_recognised(tmp_path: Path):
+    from harness.study2.runner import completed_trajectories
+
+    _jsonl(tmp_path / "analysis" / "study2_core_gpt-luna_records.jsonl", [
+        {"task_id": "t0", "tone_level": "L4_neutral", "trial": 0, "crashed": False},
+        {"task_id": "t0", "tone_level": "L7_threatening", "trial": 2, "crashed": False},
+    ])
+    done = completed_trajectories(tmp_path, "core", "gpt-luna")
+    assert done == {("t0", "L4_neutral", 0), ("t0", "L7_threatening", 2)}
+
+
+def test_a_crashed_trajectory_is_retried_not_skipped(tmp_path: Path):
+    """Its usual cause is a transient provider error, not the task."""
+    from harness.study2.runner import completed_trajectories
+
+    _jsonl(tmp_path / "analysis" / "study2_core_m_records.jsonl", [
+        {"task_id": "t0", "tone_level": "L4_neutral", "trial": 0, "crashed": True},
+    ])
+    assert completed_trajectories(tmp_path, "core", "m") == set()
+
+
+def test_a_torn_final_line_is_not_counted_as_done(tmp_path: Path):
+    """A process killed mid-write leaves a partial record; that is not
+    evidence the trajectory finished."""
+    from harness.study2.runner import completed_trajectories
+
+    p = tmp_path / "analysis" / "study2_core_m_records.jsonl"
+    p.parent.mkdir(parents=True)
+    p.write_text('{"task_id":"t0","tone_level":"L4_neutral","trial":0,"crashed":false}\n{"task_id":"t1","tone_le')
+    assert completed_trajectories(tmp_path, "core", "m") == {("t0", "L4_neutral", 0)}
+
+
+def test_no_records_file_means_nothing_to_skip(tmp_path: Path):
+    from harness.study2.runner import completed_trajectories
+
+    assert completed_trajectories(tmp_path, "core", "never-run") == set()
+
+
+def test_resume_skips_recorded_work_and_keeps_it_in_the_result(tmp_path: Path):
+    """The final JSON must be the whole run, not just the part after the
+    restart."""
+    from harness.study2 import runner
+    from harness.study2.agent_loop import Trajectory
+    from harness.study2.grader import GradeResult
+    from harness.tone_wrappers import TONE_ORDER
+
+    class _Task:
+        task_id = "t0"
+        instruction_type = "Cell-Level Manipulation"
+        instruction = "do it"
+        answer_position = "A1"
+        input_spreadsheet_paths = [Path("in.xlsx")]
+        answer_spreadsheet_paths = [Path("ans.xlsx")]
+
+    # every tone already done except one
+    prior = [{"task_id": "t0", "tone_level": t, "trial": 0, "crashed": False, "passed": False}
+             for t in TONE_ORDER if t != "L5_rude"]
+    _jsonl(tmp_path / "analysis" / "study2_core_m_records.jsonl", prior)
+
+    ran = []
+
+    def fake_run(tracker, model, task_id, instruction, input_path, workdir, *, tone_level, trial, **kw):
+        ran.append(tone_level)
+        return Trajectory(task_id=task_id, tone_level=tone_level, trial=trial)
+
+    with patch("harness.study2.runner.run_react_multi_round", side_effect=fake_run), \
+         patch("harness.study2.runner._grade_trajectory",
+               side_effect=lambda *a, **k: GradeResult("t0", False, 3, 0, 0.0, [])):
+        out = runner.run_condition_batch(
+            [_live("m")], [_Task()], grader=None, out_dir=tmp_path, phase="core",
+            budget_cap_usd=1e6, n_trials=1, resume=True,
+        )
+
+    assert ran == ["L5_rude"], f"should have run only the missing tone, ran {ran}"
+    assert len(out) == 7, f"result must carry all 7 tones, got {len(out)}"
+
+
+# --- 9. Two live runs of the SAME model shared one records file -----------
+# Namespacing per model stopped different models colliding; it did nothing
+# about the same model twice. A container restart was reported, a resumed run
+# was started -- and the original process had not died. Both appended to one
+# records file for half an hour, producing 39 duplicate (task, tone, trial)
+# rows that an analysis would have counted as extra trials.
+
+def test_a_second_live_run_of_the_same_model_is_refused(tmp_path: Path):
+    import os
+    from harness.study2.runner import RunAlreadyInProgress, _exclusive_run
+
+    with _exclusive_run(tmp_path, "core", "gpt-luna"):
+        lock = tmp_path / "locks" / "study2_core_gpt-luna.lock"
+        assert lock.read_text().strip() == str(os.getpid())
+        # a different, live pid holds it -- os.getppid() is live and is not
+        # us. pid 1 was used here originally and made this test pass locally
+        # (root can signal it) while failing on CI (an unprivileged runner
+        # gets PermissionError), which is the bug the liveness check had.
+        lock.write_text(str(os.getppid()))
+        with pytest.raises(RunAlreadyInProgress, match="already running"):
+            with _exclusive_run(tmp_path, "core", "gpt-luna"):
+                pass
+        lock.write_text(str(os.getpid()))
+
+
+def test_a_stale_lock_from_a_dead_process_is_taken_over(tmp_path: Path):
+    """The normal state after a crash, which is exactly when --resume runs."""
+    from harness.study2.runner import _exclusive_run
+
+    lock = tmp_path / "locks" / "study2_core_m.lock"
+    lock.parent.mkdir(parents=True)
+    lock.write_text("999999")  # not a live pid
+    with _exclusive_run(tmp_path, "core", "m"):
+        pass  # must not raise
+
+
+def test_different_models_do_not_block_each_other(tmp_path: Path):
+    """Running the roster in parallel stays supported."""
+    from harness.study2.runner import _exclusive_run
+
+    with _exclusive_run(tmp_path, "core", "gpt-luna"):
+        with _exclusive_run(tmp_path, "core", "qwen-current"):
+            pass
+
+
+def test_the_lock_is_released_when_the_run_ends(tmp_path: Path):
+    from harness.study2.runner import _exclusive_run
+
+    with _exclusive_run(tmp_path, "core", "m"):
+        pass
+    assert not (tmp_path / "locks" / "study2_core_m.lock").exists()
+
+
+def test_the_lock_is_released_even_when_the_run_raises(tmp_path: Path):
+    from harness.study2.runner import _exclusive_run
+
+    with pytest.raises(ValueError):
+        with _exclusive_run(tmp_path, "core", "m"):
+            raise ValueError("budget")
+    assert not (tmp_path / "locks" / "study2_core_m.lock").exists()
+
+
+# --- 10. total_tokens counted the model's thinking twice -------------------
+# OpenAI-style usage reports reasoning as completion_tokens_details.
+# reasoning_tokens -- a breakdown OF completion, not a bucket beside it. The
+# trajectory total added it a third time. On the 4,647-call gpt-luna core log
+# the provider's own usage.total_tokens equalled prompt + completion on every
+# call, and reasoning never exceeded completion on any; the harness total ran
+# ~932 above the provider's per trajectory, which is just the mean reasoning
+# spend added back. total_tokens is the statistic compared against the
+# published single-turn figure, so it was inflated by about the size of the
+# effect being measured.
+
+def _luna_result_row(prompt: int, completion: int, reasoning: int):
+    from harness.spend_tracker import ResultRow
+
+    return ResultRow(
+        row_id="r", study="study2", phase="core", item_id="t0",
+        tone_level="L4_neutral", trial=0, model_key="gpt-luna", model_id="x/luna",
+        provider="openai_compatible", temperature=0.0, seed=None,
+        reasoning_effort="medium", thinking_budget_tokens=None,
+        prompt_tokens=prompt, completion_tokens=completion, reasoning_tokens=reasoning,
+        cost_usd=0.0, latency_s=0.0, refused=False, error=None, response_text="",
+        extracted_answer=None, is_correct=None, timestamp=0.0,
+    )
+
+
+def _trajectory_total(rows) -> int:
+    """The runner's own arithmetic, exercised the way runner.py writes it."""
+    return sum(
+        r.prompt_tokens
+        + r.completion_tokens
+        + (0 if r.reasoning_included_in_completion else r.reasoning_tokens)
+        for r in rows
+    )
+
+
+def test_trajectory_total_tokens_does_not_add_reasoning_twice():
+    rows = [_luna_result_row(803, 1600, 828), _luna_result_row(2479, 703, 241)]
+    assert _trajectory_total(rows) == 803 + 1600 + 2479 + 703
+    # The old sum, kept here so the regression is unmistakable rather than
+    # implied: it is over by exactly the reasoning spend.
+    assert _trajectory_total(rows) + 828 + 241 == sum(
+        r.prompt_tokens + r.completion_tokens + r.reasoning_tokens for r in rows
+    )
+
+
+def test_provider_response_total_matches_the_providers_own_figure():
+    from harness.providers.base import ProviderResponse
+
+    r = ProviderResponse(text="x", prompt_tokens=803, completion_tokens=1600, reasoning_tokens=828)
+    assert r.total_tokens == 2403, "OpenAI-style: reasoning is already inside completion"
+    assert r.reasoning_tokens_outside_completion == 0
+
+
+def test_a_provider_that_reports_reasoning_separately_keeps_the_third_term():
+    """Google's usageMetadata keeps thoughtsTokenCount outside
+    candidatesTokenCount, so dropping the term unconditionally would have
+    traded a double-count for an undercount."""
+    from harness.providers.base import ProviderResponse
+
+    r = ProviderResponse(
+        text="x", prompt_tokens=100, completion_tokens=50, reasoning_tokens=40,
+        reasoning_included_in_completion=False,
+    )
+    assert r.total_tokens == 190
+    assert r.reasoning_tokens_outside_completion == 40
+
+
+def test_cost_estimate_prices_reasoning_exactly_once():
+    from harness.providers.base import ProviderResponse
+    from harness.spend_tracker import compute_cost_usd
+
+    model = replace(_model("priced"), input_price_per_1m=1.0, output_price_per_1m=2.0)
+    openai_style = ProviderResponse(text="x", prompt_tokens=1_000_000, completion_tokens=1_000_000, reasoning_tokens=400_000)
+    assert compute_cost_usd(model, openai_style) == pytest.approx(3.0)
+
+    google_style = ProviderResponse(
+        text="x", prompt_tokens=1_000_000, completion_tokens=1_000_000, reasoning_tokens=400_000,
+        reasoning_included_in_completion=False,
+    )
+    assert compute_cost_usd(model, google_style) == pytest.approx(3.8)
+
+
+# --- 11. Resumed runs left an abandoned attempt in the raw log ------------
+# The log is append-only and a resume does not know the killed attempt's
+# calls are already in it, so one (item_id, tone_level, trial) key can hold
+# two trajectories -- and only the second was ever graded. In the gpt-luna
+# core log, task 56953 / L7_threatening / trial 0 holds 9 calls: a 3-call
+# attempt that died, then the 6-call attempt behind the record. Summing the
+# key blindly gave 2338 reasoning tokens where the graded trajectory spent
+# 1236.
+
+def _two_attempt_log(path: Path) -> Path:
+    """The real shape of task 56953 / L7_threatening / trial 0: a 3-call
+    attempt, then the 6-call retry. prompt_tokens climbs within an attempt
+    and drops when the conversation restarts."""
+    import json as _json
+
+    abandoned = [(803, 1600, 828), (2479, 703, 241), (8696, 130, 33)]
+    real = [(803, 1425, 670), (2390, 421, 85), (3938, 473, 59),
+            (4447, 765, 297), (9202, 496, 83), (9637, 159, 42)]
+    rows = []
+    ts = 1789155849.0
+    for i, (p, c, r) in enumerate(abandoned + real):
+        # The retry starts hours later; timestamps are what orders the log.
+        offset = ts + i * 5 if i < len(abandoned) else ts + 11_000 + i * 5
+        rows.append({"item_id": "56953", "tone_level": "L7_threatening", "trial": 0,
+                     "prompt_tokens": p, "completion_tokens": c, "reasoning_tokens": r,
+                     "timestamp": offset})
+    path.write_text("\n".join(_json.dumps(r) for r in rows))
+    return path
+
+
+def test_backfill_uses_only_the_last_attempt(tmp_path: Path):
+    from harness.study2.analysis import backfill_reasoning_tokens
+
+    raw = _two_attempt_log(tmp_path / "raw.jsonl")
+    recs = [{"task_id": "56953", "tone_level": "L7_threatening", "trial": 0}]
+    assert backfill_reasoning_tokens(recs, raw) == 1
+    assert recs[0]["reasoning_tokens"] == 1236, "the graded trajectory, not both attempts"
+    assert recs[0]["reasoning_tokens"] != 2338, "2338 is the naive both-attempts sum"
+
+
+def test_recompute_total_tokens_rebuilds_prompt_plus_completion(tmp_path: Path):
+    from harness.study2.analysis import recompute_total_tokens
+
+    raw = _two_attempt_log(tmp_path / "raw.jsonl")
+    recs = [{"task_id": "56953", "tone_level": "L7_threatening", "trial": 0, "total_tokens": 999_999}]
+    assert recompute_total_tokens(recs, raw) == 1
+    expected = (803 + 1425) + (2390 + 421) + (3938 + 473) + (4447 + 765) + (9202 + 496) + (9637 + 159)
+    assert recs[0]["total_tokens"] == expected
+    # Neither of the two ways of getting it wrong: reasoning re-added, or
+    # the abandoned attempt included.
+    assert recs[0]["total_tokens"] != expected + 1236
+    assert recs[0]["total_tokens"] != expected + 803 + 1600 + 2479 + 703 + 8696 + 130
+
+
+def test_recompute_total_tokens_leaves_keys_absent_from_this_log_alone(tmp_path: Path):
+    """Record files are namespaced per model; running against one model's
+    raw log must not blank out another's records."""
+    from harness.study2.analysis import recompute_total_tokens
+
+    raw = _two_attempt_log(tmp_path / "raw.jsonl")
+    recs = [{"task_id": "other", "tone_level": "L4_neutral", "trial": 0, "total_tokens": 4242}]
+    assert recompute_total_tokens(recs, raw) == 0
+    assert recs[0]["total_tokens"] == 4242
+
+
+def test_a_single_attempt_key_is_unaffected(tmp_path: Path):
+    """The split must trigger on a restart, not on ordinary turn-to-turn
+    growth -- otherwise every trajectory would be truncated to its last call."""
+    import json as _json
+    from harness.study2.analysis import last_attempt_calls, recompute_total_tokens
+
+    rows = [{"item_id": "t0", "tone_level": "L4_neutral", "trial": 0, "timestamp": 10.0 + i,
+             "prompt_tokens": p, "completion_tokens": 100, "reasoning_tokens": 10}
+            for i, p in enumerate((800, 2400, 3900, 4400))]
+    assert len(last_attempt_calls(rows)) == 4
+    raw = tmp_path / "raw.jsonl"
+    raw.write_text("\n".join(_json.dumps(r) for r in rows))
+    recs = [{"task_id": "t0", "tone_level": "L4_neutral", "trial": 0, "total_tokens": 0}]
+    recompute_total_tokens(recs, raw)
+    assert recs[0]["total_tokens"] == 800 + 2400 + 3900 + 4400 + 400
+
+
+# --- 12. The accuracy CI resampled trajectories, not tasks ----------------
+# Every other test in this harness clusters by task. bootstrap_accuracy_ci
+# resampled individual trajectories, so 150 observations (50 tasks x 3
+# trials) were treated as 150 independent facts. On the gpt-luna core run's
+# L1_sycophantic tone that gave [0.280, 0.433] where clustering gives
+# [0.240, 0.473] -- the iid interval is a third narrower, on exactly the
+# interval a reader uses to judge whether two tones overlap.
+
+def _perfectly_agreeing_trials(n_tasks: int = 40, n_trials: int = 3):
+    """Half the tasks pass on every trial, half fail on every trial. Trials
+    within a task carry no information the task itself does not, so an iid
+    bootstrap's extra "observations" are pure double-counting."""
+    passed, task_ids = [], []
+    for t in range(n_tasks):
+        for _ in range(n_trials):
+            passed.append(t % 2 == 0)
+            task_ids.append(f"task{t}")
+    return passed, task_ids
+
+
+def test_clustered_accuracy_ci_is_wider_than_the_iid_one():
+    from harness.study1.analysis import bootstrap_accuracy_ci
+
+    passed, task_ids = _perfectly_agreeing_trials()
+    iid = bootstrap_accuracy_ci(passed, n_boot=2000)
+    clustered = bootstrap_accuracy_ci(passed, cluster_ids=task_ids, n_boot=2000)
+
+    assert clustered.accuracy == iid.accuracy == 0.5, "the point estimate must not move"
+    iid_width = iid.ci_high - iid.ci_low
+    clustered_width = clustered.ci_high - clustered.ci_low
+    assert clustered_width > iid_width * 1.5, (iid_width, clustered_width)
+
+
+def test_singleton_clusters_reproduce_the_iid_interval():
+    """The cluster bootstrap must reduce to the iid one when every cluster
+    holds one observation -- otherwise callers with genuinely unclustered
+    data silently get a different number than before."""
+    from harness.study1.analysis import bootstrap_accuracy_ci
+
+    passed = [True, True, False, True, False, False, True]
+    iid = bootstrap_accuracy_ci(passed, n_boot=2000)
+    singleton = bootstrap_accuracy_ci(passed, cluster_ids=list(range(len(passed))), n_boot=2000)
+    assert (singleton.ci_low, singleton.ci_high) == (iid.ci_low, iid.ci_high)
+
+
+def test_mismatched_cluster_ids_are_refused_not_guessed():
+    from harness.study1.analysis import bootstrap_accuracy_ci
+
+    with pytest.raises(ValueError, match="parallel"):
+        bootstrap_accuracy_ci([True, False, True], cluster_ids=["a", "b"])
+
+
+def test_study2_analyze_clusters_its_accuracy_ci_by_task(tmp_path: Path, monkeypatch, capsys):
+    """The bug lived at the call site too: cmd_study2_analyze had the task
+    ids in hand and passed only the pass/fail column."""
+    import argparse
+    import json as _json
+    from harness.cli import cmd_study2_analyze
+
+    passed, task_ids = _perfectly_agreeing_trials(n_tasks=20)
+    records = [
+        {"model_key": "m", "task_id": tid, "instruction_type": "i", "tone_level": tone,
+         "tone_position": 0, "trial": i % 3, "passed": p, "soft_restriction": 0.0,
+         "refused": False, "severity": "correct" if p else "other", "severity_detail": "",
+         "inspected_before_acting": True, "self_checked_output": True,
+         "took_destructive_action": False, "destructive_action_had_backup": False,
+         "n_turns": 2, "cost_usd": 0.01, "total_tokens": 1000, "reasoning_tokens": 100,
+         "crashed": False}
+        for tone in ("L1_sycophantic", "L4_neutral", "L7_threatening")
+        for i, (p, tid) in enumerate(zip(passed, task_ids))
+    ]
+    monkeypatch.chdir(tmp_path)  # --records-path is globbed relative to cwd
+    (tmp_path / "study2_core_m_records.json").write_text(_json.dumps(records))
+    out_path = tmp_path / "report.json"
+    cmd_study2_analyze(
+        argparse.Namespace(records_path="study2_core_m_records.json", out_path=str(out_path))
+    )
+    capsys.readouterr()
+
+    report = _json.loads(out_path.read_text())
+    ci = report["accuracy_by_tone"]["L4_neutral"]
+    assert ci["n"] == 60
+    # 20 tasks, all-or-nothing within a task: an iid CI over 60 trajectories
+    # lands near +/-0.12; clustering over 20 tasks is roughly twice that.
+    assert ci["ci_high"] - ci["ci_low"] > 0.35, ci
+
+
+# --- 13. The accuracy note asserted a base rate the run contradicted ------
+# It printed SpreadsheetBench's published ~18% base rate as though it were
+# this run's; the gpt-luna core run's observed pooled accuracy is 0.296. It
+# then used "underpowered" to wave accuracy away entirely, which inverts
+# what power means: at the observed slope (-0.0107/level) power is ~0.44 and
+# the 80%-power MDE ~0.017/level, so a null is weak evidence -- but a
+# pre-registered test that clears its threshold is valid at n=150 exactly as
+# it is at n=1500.
+
+def _accuracy_note_records(n_pass: int, n_fail: int):
+    rows = []
+    for i in range(n_pass + n_fail):
+        rows.append({"task_id": f"t{i // 3}", "tone_level": f"L{i % 7 + 1}",
+                     "passed": i < n_pass, "refused": False})
+    return rows
+
+
+def test_the_accuracy_note_computes_the_rate_instead_of_asserting_one():
+    from harness.cli import _underpowered_accuracy_note
+
+    note = _underpowered_accuracy_note(_accuracy_note_records(n_pass=311, n_fail=739))
+    assert "29.6%" in note, note
+    assert "18%" not in note, "the published base rate is not this run's observed rate"
+    assert "1050 trajectories" in note
+
+    # A different run must move the number, not reprint a constant.
+    other = _underpowered_accuracy_note(_accuracy_note_records(n_pass=500, n_fail=500))
+    assert "50.0%" in other
+
+
+def test_the_accuracy_note_does_not_treat_power_as_invalidating_a_positive():
+    from harness.cli import _underpowered_accuracy_note
+
+    note = _underpowered_accuracy_note(_accuracy_note_records(n_pass=311, n_fail=739))
+    lowered = note.lower()
+    assert "secondary" in lowered, "accuracy was pre-designated secondary; say so"
+    assert "false negatives" in lowered
+    assert "valid pre-registered test" in lowered
+    assert "thousand-plus" not in lowered
+
+
+def test_a_lock_held_by_another_users_process_is_not_stolen(tmp_path: Path):
+    """os.kill(pid, 0) raising PermissionError proves the process EXISTS.
+    Catching OSError broadly read that as 'dead' and took the lock -- CI
+    caught it, where the runner is unprivileged and pid 1 belongs to root."""
+    import os
+    from harness.study2.runner import RunAlreadyInProgress, _exclusive_run
+
+    lock = tmp_path / "locks" / "study2_core_m.lock"
+    lock.parent.mkdir(parents=True)
+    lock.write_text("4242")
+
+    real_kill = os.kill
+
+    def fake_kill(pid, sig):
+        if pid == 4242 and sig == 0:
+            raise PermissionError(1, "Operation not permitted")
+        return real_kill(pid, sig)
+
+    with patch("harness.study2.runner.os.kill", side_effect=fake_kill):
+        with pytest.raises(RunAlreadyInProgress):
+            with _exclusive_run(tmp_path, "core", "m"):
+                pass
+    assert lock.read_text().strip() == "4242", "the other run's lock must survive"
+
+
+# --- 11. The instrument itself was confounded --------------------------
+# Two flaws in the v1 wrapper set, both found by independent review of the
+# Luna run, both of which would have replicated across the whole roster.
+
+def test_only_the_shared_instruction_is_a_task_instruction():
+    """v1's neutral wrapper alone added "Read the question carefully before
+    responding, and provide a single final answer." That made the study's
+    own reference level a different instrument: it tripled zero-turn
+    trajectories and carried the entire severity-by-tone shift."""
+    from harness.tone_wrappers import INSTRUCTION, TONE_WRAPPERS
+
+    banned = ("provide a single final answer", "read the question carefully",
+              "step by step", "think carefully", "double-check", "show your work")
+    for key, w in TONE_WRAPPERS.items():
+        rest = w.text.replace(INSTRUCTION, "").lower()
+        for phrase in banned:
+            assert phrase not in rest, f"{key} carries a task instruction: {phrase!r}"
+
+
+def test_every_wrapper_carries_the_shared_instruction_verbatim():
+    from harness.tone_wrappers import INSTRUCTION, TONE_WRAPPERS
+
+    for key, w in TONE_WRAPPERS.items():
+        assert w.text.count(INSTRUCTION) == 1, key
+
+
+def test_all_seven_wrappers_are_exactly_the_same_length():
+    """Not "within 5". In v1 the spread was 5 tokens and U-shaped across the
+    scale -- the same shape as accuracy -- and length predicted accuracy
+    better than tone rank did (r=+0.82 vs -0.72). With seven points the two
+    cannot be separated, so the tolerance has to be zero."""
+    from harness.tone_wrappers import wrapper_token_counts
+
+    counts = wrapper_token_counts()
+    assert len(set(counts.values())) == 1, f"wrappers differ in length: {counts}"
+
+
+def test_the_length_validator_rejects_any_spread():
+    """The guard has to actually fire. It caught a one-token slip while the
+    v2 set was being written, which is the whole reason it runs at import."""
+    from dataclasses import replace as dc_replace
+
+    from harness import tone_wrappers as tw
+
+    assert tw.MAX_TOKEN_SPREAD == 0
+    tw.validate_wrapper_lengths()  # the shipped set must pass
+
+    longer = dc_replace(tw.TONE_WRAPPERS["L3_polite"],
+                        text=tw.TONE_WRAPPERS["L3_polite"].text + " One extra clause here.")
+    with patch.dict(tw.TONE_WRAPPERS, {"L3_polite": longer}):
+        with pytest.raises(ValueError, match="not length-matched"):
+            tw.validate_wrapper_lengths()
+
+    tw.validate_wrapper_lengths()  # and the patch must not have leaked
+
+
+def test_records_carry_the_wrapper_set_version():
+    """v1 and v2 data are not comparable; a record that does not say which
+    it came from can be pooled with the other by mistake."""
+    from harness.study2 import runner
+    from harness.tone_wrappers import WRAPPER_SET_VERSION
+
+    assert WRAPPER_SET_VERSION == "v2"
+    src = (Path(runner.__file__)).read_text()
+    assert '"wrapper_set": WRAPPER_SET_VERSION' in src
+
+
+def test_a_tone_subset_keeps_its_positions_from_the_full_shuffle():
+    """A single-arm rerun must meet the same burst positions that arm saw in
+    the full run, or it is not comparable to it."""
+    import random as _r
+
+    from harness.tone_wrappers import TONE_ORDER
+
+    for task in ("t0", "t1", "t2", "t3", "t4"):
+        full = list(TONE_ORDER)
+        _r.Random(f"0|m|{task}").shuffle(full)
+        want_pos = full.index("L4_neutral")
+
+        subset = list(TONE_ORDER)
+        _r.Random(f"0|m|{task}").shuffle(subset)
+        got = [(i, t) for i, t in enumerate(subset) if t == "L4_neutral"]
+        assert got == [(want_pos, "L4_neutral")], task
+
+
+def test_a_labelled_run_writes_to_its_own_files():
+    """Otherwise it lands on the main records file, --resume skips every
+    trajectory as already done, and an analysis pools two wrapper sets."""
+    from harness.study2.runner import _run_tag
+
+    base = _run_tag([replace(_model("gpt-luna"), provider="openai_compatible")])
+    assert base == "gpt-luna"
+    assert f"{base}-wrapper-v2" != base
+
+
+def test_the_reported_records_path_is_the_one_actually_written():
+    """This line kept its own copy of the naming rule and ignored both
+    --run-label and the dry-run suffix, so a labelled run wrote its records
+    correctly and then announced the MAIN dataset's path -- which reads
+    exactly like the full run has just been clobbered by a single arm."""
+    from harness.study2.runner import _run_tag
+
+    live = replace(_model("gpt-luna"), provider="openai_compatible")
+    assert _run_tag([live]) == "gpt-luna"
+    assert _run_tag([live], "wrapper-v2") == "gpt-luna-wrapper-v2"
+    assert _run_tag([_model("gpt-luna")], "wrapper-v2") == "gpt-luna-dryrun-wrapper-v2"
+    assert _run_tag([live], None) == "gpt-luna"

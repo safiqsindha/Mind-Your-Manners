@@ -46,24 +46,81 @@ def rows_from_result_rows(result_rows: list[dict[str, Any]]) -> list[dict[str, A
     ]
 
 
-def bootstrap_accuracy_ci(is_correct: list[bool], n_boot: int = N_BOOTSTRAP, alpha: float = 0.05) -> AccuracyEstimate:
+def bootstrap_accuracy_ci(
+    is_correct: list[bool],
+    cluster_ids: Optional[list] = None,
+    n_boot: int = N_BOOTSTRAP,
+    alpha: float = 0.05,
+) -> AccuracyEstimate:
+    """Bootstrap CI on an accuracy, resampling CLUSTERS with replacement.
+
+    `cluster_ids` must be parallel to `is_correct` -- the item/task each
+    observation came from. A resampled draw takes a cluster and every
+    observation in it, which is the same unit of independence
+    clustered_paired_comparison and clustered_trend_test already work in.
+
+    Resampling individual observations instead assumes they are independent,
+    and in this design they are not: the same benchmark item is run under
+    every tone, several trials each, and repeated trials on one item agree
+    with each other far more than two different items do. That makes an iid
+    bootstrap draw treat 150 observations as 150 independent facts when
+    they are 50 tasks' worth, and the interval comes out too narrow by
+    roughly the square root of the trials-per-cluster. Measured on the
+    gpt-luna core run's L1_sycophantic tone (150 observations = 50 tasks x
+    3 trials): iid gave [0.280, 0.433] where clustering gives
+    [0.240, 0.473] -- the iid interval is a third narrower, on the very
+    interval a reader uses to decide whether two tones overlap.
+
+    `cluster_ids=None` keeps the old behaviour (each observation its own
+    cluster) for genuinely unclustered data -- and produces bit-identical
+    output to the previous implementation, since one-observation clusters
+    make the cluster bootstrap the iid bootstrap.
+    """
     arr = np.array(is_correct, dtype=float)
     n = len(arr)
     if n == 0:
         return AccuracyEstimate(n=0, accuracy=float("nan"), ci_low=float("nan"), ci_high=float("nan"))
+    if cluster_ids is None:
+        cluster_ids = list(range(n))
+    if len(cluster_ids) != n:
+        raise ValueError(
+            f"cluster_ids has {len(cluster_ids)} entries for {n} observations -- "
+            "they must be parallel, or the CI silently describes the wrong grouping"
+        )
+
+    members: dict[Any, list[int]] = defaultdict(list)
+    for i, cid in enumerate(cluster_ids):
+        members[cid].append(i)
+    # Insertion order, so the result depends only on the input's order.
+    cluster_sums = np.array([arr[idx].sum() for idx in members.values()])
+    cluster_sizes = np.array([len(idx) for idx in members.values()], dtype=float)
+
+    k = len(cluster_sums)
     rng = np.random.default_rng(RNG_SEED)
-    idx = rng.integers(0, n, size=(n_boot, n))
-    boot_means = arr[idx].mean(axis=1)
+    draws = rng.integers(0, k, size=(n_boot, k))
+    # Pooled accuracy of the resampled clusters: total correct over total
+    # observations drawn, NOT the mean of per-cluster accuracies -- clusters
+    # can differ in size (a task can be missing a trial) and pooling keeps
+    # the bootstrap statistic the same quantity as the point estimate.
+    boot_means = cluster_sums[draws].sum(axis=1) / cluster_sizes[draws].sum(axis=1)
     lo, hi = np.quantile(boot_means, [alpha / 2, 1 - alpha / 2])
     return AccuracyEstimate(n=n, accuracy=float(arr.mean()), ci_low=float(lo), ci_high=float(hi))
 
 
-def per_level_accuracy(rows: list[dict], group_key: str = "tone_level") -> dict[str, AccuracyEstimate]:
+def per_level_accuracy(
+    rows: list[dict], group_key: str = "tone_level", cluster_key: str = "item_id"
+) -> dict[str, AccuracyEstimate]:
+    """Per-level accuracy with item-clustered bootstrap CIs. The cluster ids
+    are passed through rather than dropped: the same item appears under every
+    tone with repeated trials, so an iid CI here would be too narrow (see
+    bootstrap_accuracy_ci)."""
     by_group: dict[str, list[bool]] = defaultdict(list)
+    clusters_by_group: dict[str, list] = defaultdict(list)
     for r in rows:
         if r["outcome"] == "answered":
             by_group[r[group_key]].append(bool(r["is_correct"]))
-    return {g: bootstrap_accuracy_ci(v) for g, v in by_group.items()}
+            clusters_by_group[r[group_key]].append(r[cluster_key])
+    return {g: bootstrap_accuracy_ci(v, cluster_ids=clusters_by_group[g]) for g, v in by_group.items()}
 
 
 def refusal_rate(rows: list[dict], group_key: str = "tone_level") -> dict[str, float]:

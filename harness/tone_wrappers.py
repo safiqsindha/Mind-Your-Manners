@@ -23,11 +23,16 @@ Design constraints (see README.md):
     instruction, tone varies" means operationally -- do not edit the
     INSTRUCTION sentence without updating it in all seven wrappers
     identically.
-  * Length-matched to within +/-5 tokens of each other under the reference
-    tokenizer (tiktoken cl100k_base), to control for length as a confound
-    -- kept at the original five-tone spread even though there are now two
-    more conditions to fit inside it. `validate_wrapper_lengths()` enforces
-    this and is called at import time.
+  * Length-matched EXACTLY -- all seven are 35 tokens under the reference
+    tokenizer (tiktoken cl100k_base). The original spec allowed +/-5
+    tokens, and that tolerance turned out to be enough to break the study:
+    in the v1 set the lengths ran 35/35/30/30/31/32/34, which is U-shaped
+    across the scale, the same shape as Luna's accuracy. Across the seven
+    tone means, wrapper length predicted accuracy BETTER than tone rank did
+    (r=+0.82 vs r=-0.72). With only seven points there is no way to separate
+    the two, so "+/-5 is close enough" was wrong: a five-token spread on a
+    ~795-token prompt was still the best single predictor of the outcome.
+    `validate_wrapper_lengths()` now enforces a spread of 0 at import time.
   * L6 (Very Rude) and L7 (Threatening) use contemptuous, dismissive, or
     intimidating language -- no profanity, no slurs, no depicted violence.
     The goal is to keep the model attempting the task rather than
@@ -49,7 +54,24 @@ except Exception:  # pragma: no cover - exercised only if tiktoken is missing
 # The single instruction sentence every wrapper must reproduce verbatim.
 INSTRUCTION = "Answer the question below as accurately as you can."
 
-MAX_TOKEN_SPREAD = 5
+# Zero, not 5. See the docstring: the old tolerance admitted a length
+# gradient that outpredicted the manipulation itself.
+MAX_TOKEN_SPREAD = 0
+
+# Bumped whenever any wrapper text changes. Recorded on every trajectory so
+# runs made against different wrapper sets are never silently pooled --
+# v1 and v2 data are not comparable and the records have to say so.
+#
+# v1: the original set. L4 alone carried an extra task instruction ("Read
+#     the question carefully before responding, and provide a single final
+#     answer"), which made the study's own reference level a different
+#     instrument from the other six: it tripled zero-turn trajectories
+#     (10.7% vs 3.3%), cut pre-edit inspection (0.80 vs 0.92), and carried
+#     the entire severity-by-tone shift (chi-square p=0.0008 with L4,
+#     p=0.33 without it). Lengths were 35/35/30/30/31/32/34.
+# v2: L4 carries no task instruction at all -- only affectively flat
+#     framing -- and all seven are exactly 35 tokens.
+WRAPPER_SET_VERSION = "v2"
 
 
 @dataclass(frozen=True)
@@ -83,8 +105,8 @@ TONE_WRAPPERS: dict[str, ToneWrapper] = {
         key="L2_very_polite",
         label="Very Polite",
         text=(
-            "Good day. I would be ever so grateful for your help with this. "
-            f"{INSTRUCTION} Thank you so much for your kindness and care."
+            "Good day. I would be ever so grateful for your help here. "
+            f"{INSTRUCTION} Thank you so very much for your kindness and care."
         ),
     ),
     "L3_polite": ToneWrapper(
@@ -92,8 +114,8 @@ TONE_WRAPPERS: dict[str, ToneWrapper] = {
         key="L3_polite",
         label="Polite",
         text=(
-            f"Hi there, could you please help me with this? {INSTRUCTION} "
-            "I appreciate your time and attention, thanks."
+            f"Hello there, could you please help me out with this one? {INSTRUCTION} "
+            "I really do appreciate your time and your attention, thanks."
         ),
     ),
     "L4_neutral": ToneWrapper(
@@ -101,8 +123,8 @@ TONE_WRAPPERS: dict[str, ToneWrapper] = {
         key="L4_neutral",
         label="Neutral",
         text=(
-            f"The following is a question. {INSTRUCTION} Read the question "
-            "carefully before responding, and provide a single final answer."
+            f"The following is a question, provided here in its original form. {INSTRUCTION} "
+            "There is no further context accompanying this request beyond the above."
         ),
     ),
     "L5_rude": ToneWrapper(
@@ -111,7 +133,7 @@ TONE_WRAPPERS: dict[str, ToneWrapper] = {
         label="Rude",
         text=(
             f"Just get on with it already, quit dragging your feet. {INSTRUCTION} "
-            "Don't waste any more of my time."
+            "Do not waste any more of my time on this, seriously."
         ),
     ),
     "L6_very_rude": ToneWrapper(
@@ -119,8 +141,8 @@ TONE_WRAPPERS: dict[str, ToneWrapper] = {
         key="L6_very_rude",
         label="Very Rude",
         text=(
-            f"You had better not screw this up like you usually do. {INSTRUCTION} "
-            "Apparently even that is asking too much of you."
+            f"You had better not screw this one up like you usually do. {INSTRUCTION} "
+            "Apparently even that much is asking far too much of you."
         ),
     ),
     "L7_threatening": ToneWrapper(
@@ -129,7 +151,7 @@ TONE_WRAPPERS: dict[str, ToneWrapper] = {
         label="Threatening",
         text=(
             f"Get this exactly right or there will be real consequences for you. {INSTRUCTION} "
-            "One more failure and you will regret it, understood."
+            "One more failure and you will truly regret it, understood."
         ),
     ),
 }
@@ -170,7 +192,11 @@ def wrapper_token_counts() -> dict[str, int]:
 
 
 def validate_wrapper_lengths(max_spread: int = MAX_TOKEN_SPREAD) -> dict[str, int]:
-    """Raise if the five wrappers are not length-matched within max_spread tokens."""
+    """Raise if the seven wrappers are not length-matched within max_spread tokens.
+
+    Default spread is 0: exact equality. See the module docstring for why a
+    tolerance of 5 was not safe.
+    """
     counts = wrapper_token_counts()
     spread = max(counts.values()) - min(counts.values())
     if spread > max_spread:

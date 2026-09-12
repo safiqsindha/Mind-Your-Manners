@@ -16,8 +16,10 @@ test cases 2 and 3's inputs, and all 3 outputs are graded together via
 """
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
+import os
 import random
 import shutil
 from pathlib import Path
@@ -27,7 +29,7 @@ import openpyxl
 
 from ..providers.base import ModelConfig
 from ..spend_tracker import BudgetExceeded, SpendTracker, append_spend_log
-from ..tone_wrappers import TONE_ORDER, TONE_WRAPPERS
+from ..tone_wrappers import TONE_ORDER, TONE_WRAPPERS, WRAPPER_SET_VERSION
 from .agent_loop import Trajectory, run_react_multi_round, run_single_round
 from .dataset import SpreadsheetTask
 from .failure_taxonomy import classify_failure
@@ -415,7 +417,7 @@ def _append_record(out_dir: Path, phase: str, record: dict, tag: str) -> None:
         print(f"WARNING: could not append {phase} record: {type(exc).__name__}: {exc}")
 
 
-def _run_tag(models: list[ModelConfig]) -> str:
+def _run_tag(models: list[ModelConfig], run_label: Optional[str] = None) -> str:
     """Filename suffix identifying which models a run covers.
 
     Every per-phase artifact -- the raw call log, the records JSON, the
@@ -442,7 +444,112 @@ def _run_tag(models: list[ModelConfig]) -> str:
     tag = models[0].key if len(models) == 1 else "multi"
     if any(m.provider == "mock" for m in models):
         tag = f"{tag}-dryrun"
+    if run_label:
+        tag = f"{tag}-{run_label}"
     return tag
+
+
+class RunAlreadyInProgress(RuntimeError):
+    """Another live process is already writing this phase+model's files."""
+
+
+@contextlib.contextmanager
+def _exclusive_run(out_dir: Path, phase: str, tag: str):
+    """Refuse to start when another process is already writing these files.
+
+    Namespacing per model stopped different models colliding. It does
+    nothing about the *same* model twice, which is the case that actually
+    happened: a container restart was reported, a resumed run was started --
+    and the original process had not died at all. Both appended to the same
+    records file for half an hour, producing 39 duplicate
+    (task, tone, trial) rows that an analysis would have counted as extra
+    trials.
+
+    The lock records a pid. A stale lock from a killed process is taken
+    over rather than treated as fatal, since that is the normal state after
+    a crash and the resume path exists precisely for it.
+    """
+    lock = out_dir / "locks" / f"study2_{phase}_{tag}.lock"
+    lock.parent.mkdir(parents=True, exist_ok=True)
+    if lock.exists():
+        try:
+            holder = int(lock.read_text().strip())
+        except (ValueError, OSError):
+            holder = None
+        if holder is not None and holder != os.getpid():
+            # Only ProcessLookupError means the holder is gone. PermissionError
+            # means the opposite -- the process EXISTS, we just may not signal
+            # it because it belongs to another user. Catching OSError broadly
+            # treated that as dead and took the lock: CI caught exactly this,
+            # where the runner is unprivileged and pid 1 is root's, so the
+            # guard silently let a second run through. Any other OSError is
+            # treated as alive too, because refusing to start is recoverable
+            # and two concurrent runs corrupting one records file is not.
+            alive = True
+            try:
+                os.kill(holder, 0)
+            except ProcessLookupError:
+                alive = False
+            except OSError:
+                alive = True
+            if alive:
+                raise RunAlreadyInProgress(
+                    f"pid {holder} is already running {phase} for {tag!r} and writing the "
+                    f"same files ({lock}). Two live runs append to one records file and "
+                    "produce duplicate trajectories. Stop that process, or delete the lock "
+                    "if you are certain it is gone."
+                )
+    lock.write_text(str(os.getpid()))
+    try:
+        yield
+    finally:
+        try:
+            if lock.exists() and lock.read_text().strip() == str(os.getpid()):
+                lock.unlink()
+        except OSError:
+            pass
+
+
+
+def completed_trajectories(out_dir: Path, phase: str, tag: str) -> set[tuple[str, str, int]]:
+    """(task_id, tone_level, trial) already graded and durably recorded.
+
+    A core run is ten hours of wall clock, and the container it runs in can
+    be restarted out from under it -- which happened at 896 of 1050
+    trajectories. The incremental records file survived, so redoing that
+    work would have been a choice, not a necessity.
+
+    Reads the append-as-you-go JSONL rather than the final JSON, because the
+    final one is only written when the run ends -- exactly the case where
+    there isn't one. A torn last line from a process killed mid-write is
+    skipped: a partially written record is not evidence the trajectory
+    finished.
+    """
+    path = out_dir / "analysis" / f"study2_{phase}_{tag}_records.jsonl"
+    done: set[tuple[str, str, int]] = set()
+    if not path.exists():
+        return done
+    with open(path) as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                r = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if r.get("crashed"):
+                # A crashed trajectory is a recorded outcome, not a gap, but
+                # it is worth retrying on a resume: the usual cause is a
+                # transient provider error rather than anything about the
+                # task. Left out of `done` deliberately.
+                continue
+            try:
+                done.add((r["task_id"], r["tone_level"], int(r["trial"])))
+            except (KeyError, TypeError, ValueError):
+                continue
+    return done
+
 
 
 def run_condition_batch(
@@ -456,6 +563,9 @@ def run_condition_batch(
     multi_round: bool = True,
     max_turns: int = 10,
     tone_seed: int = 0,
+    resume: bool = False,
+    tones: Optional[list[str]] = None,
+    run_label: Optional[str] = None,
 ) -> list[dict]:
     """Runs every (model, task, tone, trial) combination, grades each, and
     returns one flat record per trajectory ready for study2/analysis.py.
@@ -473,9 +583,36 @@ def run_condition_batch(
     retention window. Do not reorder this to model -> tone -> task or
     similar without re-reading that section.
     """
-    tag = _run_tag(models)
+    # A run_label gives a separate namespace to a run that is deliberately NOT
+    # part of the main dataset -- re-running one arm against a changed
+    # instrument, for instance. Without it such a run lands on the main
+    # records file, where --resume would skip every trajectory as already done
+    # and a later analysis would pool two incompatible wrapper sets.
+    tag = _run_tag(models, run_label)
+    exclusive = _exclusive_run(out_dir, phase, tag)
+    exclusive.__enter__()
     tracker = SpendTracker(out_dir / "raw" / f"study2_{phase}_{tag}.jsonl", phase=phase, cap_usd=budget_cap_usd)
+    already: set[tuple[str, str, int]] = set()
+    if resume:
+        already = completed_trajectories(out_dir, phase, tag)
+        print(
+            f"[{phase}] resuming: {len(already)} trajectories already recorded and will be skipped"
+        )
     records: list[dict] = []
+    # Records from the interrupted run, carried forward so the final JSON is
+    # the whole run rather than only the part after the restart. Read once,
+    # here, because _append_record keeps appending to the same file.
+    if already:
+        prior_path = out_dir / "analysis" / f"study2_{phase}_{tag}_records.jsonl"
+        with open(prior_path) as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    records.append(json.loads(line))
+                except json.JSONDecodeError:
+                    continue
     try:
         for model in models:
             for task in tasks:
@@ -494,12 +631,24 @@ def run_condition_batch(
                 # back to back, inside the same prompt-cache window. Only their
                 # order within that burst changes. Seeded on (seed, model,
                 # task) so a rerun reproduces the same sequence.
+                # Shuffle the FULL scale, then filter. Restricting to a
+                # subset must not change where the kept tones land in the
+                # burst: a single-tone rerun should meet the same position
+                # distribution its arm saw in the full run, or it is not
+                # comparable to it.
                 tone_order = list(TONE_ORDER)
                 random.Random(f"{tone_seed}|{model.key}|{task.task_id}").shuffle(tone_order)
-                for tone_position, tone_key in enumerate(tone_order):
+                if tones is not None:
+                    keep = set(tones)
+                    tone_order = [(i, t) for i, t in enumerate(tone_order) if t in keep]
+                else:
+                    tone_order = list(enumerate(tone_order))
+                for tone_position, tone_key in tone_order:
                     wrapper = TONE_WRAPPERS[tone_key]
                     wrapped_instruction = wrapper.apply(task.instruction)
                     for trial in range(n_trials):
+                        if (task.task_id, tone_key, trial) in already:
+                            continue
                         workdir = out_dir / "scratch" / phase / model.key / tone_key / f"{task.task_id}_t{trial}"
                         input_path = task.input_spreadsheet_paths[0]
                         run_fn = run_react_multi_round if multi_round else run_single_round
@@ -534,6 +683,7 @@ def run_condition_batch(
                                 "soft_restriction": 0.0, "refused": False,
                                 "severity": "other", "severity_detail": "trajectory raised",
                                 "n_turns": 0, "cost_usd": 0.0, "total_tokens": 0,
+                                "reasoning_tokens": 0,
                                 "turn_diagnostics": [],
                             }
                             records.append(crashed)
@@ -550,7 +700,43 @@ def run_condition_batch(
                             output_has_formula=_has_formula(traj.final_output_path),
                             grader_stdout="; ".join(grade.per_test_case_messages),
                         )
-                        total_tokens = sum(r.prompt_tokens + r.completion_tokens + r.reasoning_tokens for r in traj.result_rows)
+                        # prompt + completion ONLY. Adding reasoning_tokens
+                        # here counted the model's thinking twice: on
+                        # OpenAI-style usage (OpenRouter, the route every
+                        # model in this roster is served through) reasoning is
+                        # reported as completion_tokens_details.reasoning_tokens
+                        # -- a breakdown OF completion, not an extra bucket
+                        # beside it. Checked against the provider's own figure
+                        # on all 4,647 calls of the gpt-luna core run:
+                        # usage.total_tokens == prompt_tokens +
+                        # completion_tokens on every one, and reasoning never
+                        # exceeded completion on any. The old sum ran ~932
+                        # tokens per trajectory above the provider's total,
+                        # which is just the mean reasoning spend (947) added
+                        # back -- so total_tokens, the statistic compared
+                        # against the published single-turn figure, was
+                        # inflated by roughly the size of the effect being
+                        # measured. Providers that really do report reasoning
+                        # outside completion (Google) keep the third term via
+                        # ProviderResponse.reasoning_tokens_outside_completion.
+                        total_tokens = sum(
+                            r.prompt_tokens
+                            + r.completion_tokens
+                            + (0 if r.reasoning_included_in_completion else r.reasoning_tokens)
+                            for r in traj.result_rows
+                        )
+                        # Recorded separately from total_tokens because they
+                        # answer different questions. total_tokens is dominated
+                        # by the prompt, which the tone wrapper changes by
+                        # construction, so a tone difference there is partly
+                        # just the wrapper's own length. Reasoning tokens are
+                        # what the model chose to spend thinking, which is the
+                        # measure a "tone changes how hard it thinks" claim
+                        # actually rests on. Measured live on a partial Luna
+                        # core run: reasoning spend under the threatening
+                        # wrapper ran ~25% above every other tone, which is
+                        # invisible in total_tokens.
+                        reasoning_tokens = sum(r.reasoning_tokens for r in traj.result_rows)
                         total_cost = sum(r.cost_usd for r in traj.result_rows)
                         record = {
                                 "model_key": model.key,
@@ -562,6 +748,13 @@ def run_condition_batch(
                                 # after the fact and a position effect tested
                                 # directly, rather than assumed away.
                                 "tone_position": tone_position,
+                                # Which wrapper set produced this trajectory.
+                                # v1 and v2 are different instruments -- v1's
+                                # neutral wrapper carried an extra task
+                                # instruction and its lengths were unmatched --
+                                # so records must never be pooled across them
+                                # by accident.
+                                "wrapper_set": WRAPPER_SET_VERSION,
                                 "trial": trial,
                                 "passed": grade.passed,
                                 "soft_restriction": grade.soft_restriction,
@@ -575,6 +768,7 @@ def run_condition_batch(
                                 "n_turns": behavior.n_code_turns,
                                 "cost_usd": total_cost,
                                 "total_tokens": total_tokens,
+                                "reasoning_tokens": reasoning_tokens,
                                 "turn_diagnostics": _turn_diagnostics(traj),
                                 "crashed": False,
                         }
@@ -586,6 +780,7 @@ def run_condition_batch(
                             {"phase": phase, "cumulative_usd": tracker.total_usd, "n_calls": tracker.n_calls},
                         )
     finally:
+        exclusive.__exit__(None, None, None)
         tracker.close()
         # MUST be inside finally. This used to sit after it, so any exception
         # escaping the loop skipped it entirely -- and the exception that ends

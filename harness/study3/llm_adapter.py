@@ -95,6 +95,7 @@ class HarnessLLM:
             timestamp=time.time(),
             cached_tokens=response.cached_tokens,
             served_provider=response.served_provider,
+            reasoning_included_in_completion=response.reasoning_included_in_completion,
             raw_response=response.raw,
             extra={"role": self.role, "call_index": self.n_calls},
         )

@@ -5,8 +5,10 @@ behavior, shortcut rate, and turn count/token spend per condition.
 """
 from __future__ import annotations
 
+import json
 from collections import defaultdict
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -42,6 +44,10 @@ __all__ = [
     "shortcut_rate",
     "trajectory_cost_summary",
     "token_cost_effect_size",
+    "token_cost_trend_test",
+    "backfill_reasoning_tokens",
+    "last_attempt_calls",
+    "recompute_total_tokens",
     "compare_direction_to_study1",
     "accuracy_trend_test",
     "bh_corrected_pairwise_comparisons",
@@ -150,6 +156,179 @@ def accuracy_trend_test(
     """
     return clustered_trend_test(
         task_results, levels, cluster_key=cluster_key, group_key="tone_level", value_key="passed",
+    )
+
+
+def _calls_by_trajectory(raw_log: Path) -> dict[tuple, list[dict[str, Any]]]:
+    """Group a raw per-call log by (item_id, tone_level, trial)."""
+    by_key: dict[tuple, list[dict[str, Any]]] = defaultdict(list)
+    with open(raw_log) as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue  # a run still in flight can leave a torn final line
+            by_key[(row.get("item_id"), row.get("tone_level"), row.get("trial"))].append(row)
+    return by_key
+
+
+def last_attempt_calls(calls: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """The calls belonging to the LAST attempt at one trajectory.
+
+    A killed-and-resumed run leaves the abandoned attempt's calls in the raw
+    log right next to the retry's, under the same (item_id, tone_level,
+    trial) key -- the log is append-only and the resume does not know the
+    earlier calls exist. Summing the key blindly therefore sums two
+    trajectories, only one of which was ever graded.
+
+    Concretely, in the gpt-luna core log task 56953 / L7_threatening /
+    trial 0 holds 9 calls: a 3-call attempt that was killed mid-run, then
+    the 6-call attempt that actually produced the record. Naive summing gave
+    2338 reasoning tokens where the graded trajectory spent 1236 -- 89% too
+    high, on the study's primary outcome, for that key.
+
+    Attempts are separated by a DROP in prompt_tokens: within an attempt the
+    conversation only grows (each turn appends the previous response and its
+    observation), so prompt_tokens rises monotonically; a new attempt
+    restarts from the bare instruction, so its first prompt is shorter than
+    the call before it. Calls are ordered by timestamp first, since the log
+    interleaves nothing but is only append-ordered by wall clock.
+
+    Rows with no timestamp keep their file order (the sort is stable), and
+    rows with no prompt_tokens never trigger a split -- a log that predates
+    those fields degrades to the old single-attempt behaviour rather than
+    fragmenting into spurious attempts.
+    """
+    ordered = sorted(calls, key=lambda r: r.get("timestamp") or 0.0)
+    attempts: list[list[dict[str, Any]]] = [[]]
+    for row in ordered:
+        prev = attempts[-1][-1] if attempts[-1] else None
+        if prev is not None and (row.get("prompt_tokens") or 0) < (prev.get("prompt_tokens") or 0):
+            attempts.append([])
+        attempts[-1].append(row)
+    return attempts[-1]
+
+
+def backfill_reasoning_tokens(records: list[dict[str, Any]], raw_log: Path) -> int:
+    """Fill in per-trajectory `reasoning_tokens` from the raw call log.
+
+    The field was added to the record schema after a core run had already
+    started, so that run's records carry every other measure but not the one
+    the primary outcome now tests. The raw log has it per call, keyed the
+    same way, so the trajectory total is recoverable exactly rather than
+    approximately -- no need to re-run or re-grade anything.
+
+    Counts only the LAST attempt under each key: an interrupted-and-resumed
+    run leaves the abandoned attempt's calls in the log beside the retry's,
+    and the graded record describes only the retry. See last_attempt_calls.
+
+    Mutates `records` in place and returns how many were filled. Records
+    that already carry the field are left alone, so this is safe to call on
+    a mixed set.
+    """
+    totals = {
+        key: sum(row.get("reasoning_tokens", 0) or 0 for row in last_attempt_calls(calls))
+        for key, calls in _calls_by_trajectory(raw_log).items()
+    }
+
+    filled = 0
+    for r in records:
+        if r.get("reasoning_tokens") is not None:
+            continue
+        key = (r.get("task_id"), r.get("tone_level"), r.get("trial"))
+        if key in totals:
+            r["reasoning_tokens"] = totals[key]
+            filled += 1
+    return filled
+
+
+def recompute_total_tokens(records: list[dict[str, Any]], raw_log: Path) -> int:
+    """Rebuild each trajectory's `total_tokens` from the raw call log as
+    prompt + completion, correcting records written by the runner while it
+    was still adding reasoning_tokens a third time.
+
+    Reasoning is a breakdown OF completion on every OpenAI-style route, so
+    prompt + completion is the provider's own total -- checked against
+    usage.total_tokens on all 4,647 calls of the gpt-luna core log, where it
+    matched on every one. See harness/study2/runner.py, where the same sum
+    is now computed at write time.
+
+    Unlike backfill_reasoning_tokens this OVERWRITES an existing value: the
+    existing value is exactly what is wrong. Records whose key has no calls
+    in this log are left untouched, so running it against one model's log
+    cannot blank out another's records.
+
+    Uses the same last-attempt rule (see last_attempt_calls) -- the graded
+    record describes the retry, not the attempt that was killed.
+
+    Mutates `records` in place and returns how many were corrected.
+    """
+    totals = {}
+    for key, calls in _calls_by_trajectory(raw_log).items():
+        attempt = last_attempt_calls(calls)
+        totals[key] = sum(
+            (row.get("prompt_tokens") or 0)
+            + (row.get("completion_tokens") or 0)
+            + (0 if row.get("reasoning_included_in_completion", True) else (row.get("reasoning_tokens") or 0))
+            for row in attempt
+        )
+
+    updated = 0
+    for r in records:
+        key = (r.get("task_id"), r.get("tone_level"), r.get("trial"))
+        if key not in totals:
+            continue
+        if r.get("total_tokens") == totals[key]:
+            continue
+        r["total_tokens"] = totals[key]
+        updated += 1
+    return updated
+
+
+def token_cost_trend_test(
+    task_results: list[dict[str, Any]],
+    levels: list[str] = TONE_ORDER,
+    cluster_key: str = "task_id",
+    value_key: str = "reasoning_tokens",
+) -> TrendTestResult:
+    """Significance test for the token-cost hypothesis, clustered by task.
+
+    `token_cost_effect_size` reports a relative-variation percentage and
+    nothing else: no p-value, and means pooled across tasks. Pooling is the
+    problem. Tasks differ enormously in how much thinking they demand, and
+    that between-task variance swamps any tone effect, so the percentage
+    moves with which tasks happen to be in the sample.
+
+    Measured on a partial Luna core run: pooling gave p=0.81 across the
+    seven tones, while the same data clustered by task put the threatening
+    wrapper's reasoning spend ~25% above every other tone with a
+    permutation p of 0.03. Same numbers, opposite conclusions -- the pooled
+    test was simply the wrong test, and it was the only one the token
+    measure had.
+
+    Defaults to `reasoning_tokens` rather than `total_tokens` deliberately:
+    total_tokens is dominated by the prompt, and the tone wrapper changes
+    the prompt's length by construction, so part of any total_tokens
+    difference is just the wrapper's own text rather than anything the
+    model did. Pass value_key="total_tokens" for the statistic directly
+    comparable to the published single-turn figure.
+
+    Rows missing `value_key` are skipped rather than counted as zero: a run
+    recorded before that field existed has no thinking measurement, which
+    is not the same as having measured zero thinking.
+    """
+    rows = [r for r in task_results if r.get(value_key) is not None]
+    if not rows:
+        raise ValueError(
+            f"no records carry {value_key!r} -- runs recorded before that field "
+            "existed cannot be tested for a token-cost trend; re-derive it from "
+            "the raw call log first."
+        )
+    return clustered_trend_test(
+        rows, levels, cluster_key=cluster_key, group_key="tone_level", value_key=value_key,
     )
 
 
