@@ -1102,3 +1102,135 @@ def test_the_reported_records_path_is_the_one_actually_written():
     assert _run_tag([live], "wrapper-v2") == "gpt-luna-wrapper-v2"
     assert _run_tag([_model("gpt-luna")], "wrapper-v2") == "gpt-luna-dryrun-wrapper-v2"
     assert _run_tag([live], None) == "gpt-luna"
+
+
+# --- 12. Mid-task interjection: the "manager check-in" experiment ---------
+# The wrappers set a tone once, at the start. These deliver it partway
+# through. Comparing "threatening interjection" against "no interjection"
+# would measure being interrupted; the neutral interjection is the control
+# that isolates the tone of the interruption from the interruption itself.
+
+def test_the_interjections_are_exactly_length_matched():
+    """A length difference would be a second manipulation riding along with
+    the first -- the v1 wrapper mistake, repeated at a smaller scale."""
+    from harness.tone_wrappers import interjection_token_counts
+
+    counts = interjection_token_counts()
+    assert len(set(counts.values())) == 1, counts
+
+
+def test_the_neutral_interjection_carries_no_task_instruction():
+    """v1's neutral wrapper carried one and turned the agent into an
+    answerer. The control here has to be inert, not helpful."""
+    from harness.tone_wrappers import INTERJECTIONS
+
+    banned = ("provide a single final answer", "check your", "make sure you",
+              "read carefully", "step by step", "verify", "double-check")
+    text = INTERJECTIONS["L4_neutral"].lower()
+    for phrase in banned:
+        assert phrase not in text, f"neutral interjection instructs: {phrase!r}"
+
+
+def test_both_arms_interrupt_the_same_trajectory_at_the_same_turn():
+    """The turn is seeded on (task, trial) and NOT on the tone. If it varied
+    by arm, turn position would ride along with the manipulation and the
+    paired comparison would measure both at once."""
+    import random as _r
+
+    from harness.study2.runner import INTERJECTION_TURNS
+
+    for task in ("t0", "t1", "t2", "t3", "t4"):
+        for trial in range(3):
+            turns = {
+                _r.Random(f"interject|0|m|{task}|{trial}").choice(INTERJECTION_TURNS)
+                for _tone in ("L4_neutral", "L7_threatening")
+            }
+            assert len(turns) == 1, f"{task}/{trial} would be interrupted at {turns}"
+
+
+def test_the_injection_turn_varies_across_trajectories():
+    """It is supposed to be random, not a fixed turn dressed up as one."""
+    import random as _r
+
+    from harness.study2.runner import INTERJECTION_TURNS
+
+    seen = {_r.Random(f"interject|0|m|t{i}|0").choice(INTERJECTION_TURNS) for i in range(40)}
+    assert len(seen) > 1, f"every trajectory got the same turn: {seen}"
+
+
+def _row():
+    """A minimal ResultRow; the interjection tests only care about messages."""
+    from harness.spend_tracker import ResultRow
+
+    return ResultRow(
+        row_id="r", study="s", phase="p", item_id="t", tone_level="L4_neutral",
+        trial=0, model_key="m", model_id="m", provider="mock", temperature=0.0,
+        seed=None, reasoning_effort=None, thinking_budget_tokens=None,
+        prompt_tokens=1, completion_tokens=1, reasoning_tokens=0, cost_usd=0.0,
+        latency_s=0.0, refused=False, error=None, response_text="",
+        extracted_answer=None, is_correct=None, timestamp=0.0,
+    )
+
+
+
+def test_the_interjection_reaches_the_model_at_that_turn(tmp_path: Path):
+    from harness.study2 import agent_loop
+
+    seen: list[str] = []
+
+    class _Resp:
+        refused = False
+        text = "```python\nprint(1)\n```"
+        prompt_tokens = completion_tokens = reasoning_tokens = 1
+        reasoning_tokens_reported = True
+        cached_tokens = 0
+        served_provider = None
+        raw: dict = {}
+        tool_calls = None
+
+    def fake_call(tracker, model, system, messages, *a, **k):
+        seen.append(messages[-1]["content"] if len(messages) > 1 else "")
+        return _Resp(), _row()
+
+    class _Exec:
+        stdout = "ok"; stderr = ""; timed_out = False; output_workbook_path = None
+
+    with patch("harness.study2.agent_loop._call_and_record", side_effect=fake_call), \
+         patch("harness.study2.agent_loop.execute_python_on_workbook", return_value=_Exec()):
+        traj = agent_loop.run_react_multi_round(
+            None, _model("m"), "t", "do it", tmp_path / "wb.xlsx", tmp_path / "wd",
+            tone_level="L4_neutral", trial=0,
+            interjection="MANAGER SPEAKS", interjection_turn=1, max_turns=4,
+        )
+
+    fired_in = [i for i, m in enumerate(seen) if "MANAGER SPEAKS" in m]
+    assert traj.interjection_fired
+    # injected at turn 1 => first visible to the model on its turn-2 call
+    assert fired_in == [2], f"interjection surfaced on calls {fired_in}"
+
+
+def test_a_trajectory_that_ends_early_records_that_it_never_fired(tmp_path: Path):
+    """An analysis that counted un-fired trajectories as treated would
+    dilute the effect toward zero."""
+    from harness.study2 import agent_loop
+
+    class _Resp:
+        refused = False
+        text = "FINAL: done"
+        prompt_tokens = completion_tokens = reasoning_tokens = 1
+        reasoning_tokens_reported = True
+        cached_tokens = 0
+        served_provider = None
+        raw: dict = {}
+        tool_calls = None
+
+    def fake_call(tracker, model, system, messages, *a, **k):
+        return _Resp(), _row()
+
+    with patch("harness.study2.agent_loop._call_and_record", side_effect=fake_call):
+        traj = agent_loop.run_react_multi_round(
+            None, _model("m"), "t", "do it", tmp_path / "wb.xlsx", tmp_path / "wd",
+            tone_level="L4_neutral", trial=0,
+            interjection="MANAGER SPEAKS", interjection_turn=2, max_turns=4,
+        )
+    assert traj.interjection_fired is False

@@ -43,6 +43,7 @@ from .config import (
     STUDY2_PILOT_BUDGET_CAP_USD,
     STUDY3_BUDGET_CAP_USD,
 )
+from .tone_wrappers import INTERJECTIONS
 from .providers.anthropic_provider import AnthropicProvider
 from .providers.claude_cli_provider import ClaudeCLIProvider
 from .providers.google_provider import GoogleProvider
@@ -488,7 +489,7 @@ def _study2_stage(args: argparse.Namespace, phase: str, default_cap: float, defa
         multi_round=not args.single_round, max_turns=args.max_turns,
         tone_seed=args.sample_seed, resume=args.resume,
         tones=(args.tones.split(",") if args.tones else None),
-        run_label=args.run_label,
+        run_label=args.run_label, interject=args.interject,
     )
     # Ask for the tag rather than re-deriving it. This line used to keep its
     # own copy of the naming rule and so ignored both --run-label and the
@@ -883,6 +884,16 @@ def build_parser() -> argparse.ArgumentParser:
             help="Suffix for this run's output files, for a run that is "
                  "deliberately separate from the main dataset (e.g. wrapper-v2). "
                  "Without it the run lands on the main records file.",
+        )
+        sp.add_argument(
+            "--interject", default=None, choices=sorted(INTERJECTIONS),
+            help="Deliver this tone as a mid-task interjection, alongside the "
+                 "execution observation at a seeded random turn. The opening "
+                 "wrapper is unchanged, so two runs differing only in this flag "
+                 "isolate the tone of the interruption from the interruption "
+                 "itself. The turn is seeded on (task, trial) and not on the "
+                 "tone, so every arm interrupts the same trajectory at the "
+                 "same point.",
         )
         sp.add_argument("--n-trials", type=int, default=None)
         sp.add_argument("--budget-cap", type=float, default=None)

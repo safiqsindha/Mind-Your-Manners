@@ -209,3 +209,55 @@ def validate_wrapper_lengths(max_spread: int = MAX_TOKEN_SPREAD) -> dict[str, in
 
 # Fail fast on import if someone edits a wrapper and breaks length-matching.
 validate_wrapper_lengths()
+
+
+# --- Mid-task interjections (the "manager check-in" experiment) -------------
+#
+# The wrappers above set a tone once, in the opening message. These are the
+# same social register delivered PARTWAY THROUGH a trajectory, alongside an
+# execution observation, the way a manager interrupts work in progress.
+#
+# Two rules, both learned the hard way from the v1 wrapper set:
+#
+#   * Neither carries a task instruction. L4's did, and it turned the agent
+#     into an answerer -- zero-turn trajectories tripled and
+#     acting-without-looking became the commonest failure. The neutral
+#     interjection here is inert filler: it says a note was recorded and
+#     nothing else.
+#   * They are exactly length-matched to each other (28 tokens), because in
+#     v1 a five-token spread across seven wrappers predicted the outcome
+#     better than tone rank did.
+#
+# The neutral one is not a placebo in the loose sense -- it is the
+# interruption control. Comparing "threatening interjection" against "no
+# interjection" would measure being interrupted, not the tone of the
+# interruption, which is the whole question.
+INTERJECTIONS: dict[str, str] = {
+    "L4_neutral": (
+        "Checking in. This is a routine status note recorded partway through "
+        "the task here. No further context at all accompanies it beyond the above."
+    ),
+    "L7_threatening": (
+        "Checking in. Get this exactly right or there will be real consequences "
+        "for you. One more failure and you will truly regret it, understood."
+    ),
+}
+
+
+def interjection_token_counts() -> dict[str, int]:
+    return {k: reference_token_count(v) for k, v in INTERJECTIONS.items()}
+
+
+def validate_interjection_lengths() -> dict[str, int]:
+    """Raise unless every interjection is exactly the same length."""
+    counts = interjection_token_counts()
+    if len(set(counts.values())) != 1:
+        raise ValueError(
+            f"Interjections are not length-matched: {counts}. They differ only in "
+            "social register by construction; a length difference would be a "
+            "second manipulation riding along with the first."
+        )
+    return counts
+
+
+validate_interjection_lengths()
