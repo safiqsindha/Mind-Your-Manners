@@ -1088,3 +1088,17 @@ def test_a_labelled_run_writes_to_its_own_files():
     base = _run_tag([replace(_model("gpt-luna"), provider="openai_compatible")])
     assert base == "gpt-luna"
     assert f"{base}-wrapper-v2" != base
+
+
+def test_the_reported_records_path_is_the_one_actually_written():
+    """This line kept its own copy of the naming rule and ignored both
+    --run-label and the dry-run suffix, so a labelled run wrote its records
+    correctly and then announced the MAIN dataset's path -- which reads
+    exactly like the full run has just been clobbered by a single arm."""
+    from harness.study2.runner import _run_tag
+
+    live = replace(_model("gpt-luna"), provider="openai_compatible")
+    assert _run_tag([live]) == "gpt-luna"
+    assert _run_tag([live], "wrapper-v2") == "gpt-luna-wrapper-v2"
+    assert _run_tag([_model("gpt-luna")], "wrapper-v2") == "gpt-luna-dryrun-wrapper-v2"
+    assert _run_tag([live], None) == "gpt-luna"

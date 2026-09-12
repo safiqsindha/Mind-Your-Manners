@@ -417,7 +417,7 @@ def _append_record(out_dir: Path, phase: str, record: dict, tag: str) -> None:
         print(f"WARNING: could not append {phase} record: {type(exc).__name__}: {exc}")
 
 
-def _run_tag(models: list[ModelConfig]) -> str:
+def _run_tag(models: list[ModelConfig], run_label: Optional[str] = None) -> str:
     """Filename suffix identifying which models a run covers.
 
     Every per-phase artifact -- the raw call log, the records JSON, the
@@ -444,6 +444,8 @@ def _run_tag(models: list[ModelConfig]) -> str:
     tag = models[0].key if len(models) == 1 else "multi"
     if any(m.provider == "mock" for m in models):
         tag = f"{tag}-dryrun"
+    if run_label:
+        tag = f"{tag}-{run_label}"
     return tag
 
 
@@ -581,14 +583,12 @@ def run_condition_batch(
     retention window. Do not reorder this to model -> tone -> task or
     similar without re-reading that section.
     """
-    tag = _run_tag(models)
-    if run_label:
-        # A separate namespace for a run that is deliberately NOT part of the
-        # main dataset -- re-running one arm against a changed instrument, for
-        # instance. Without it such a run lands on the main records file,
-        # where --resume would skip every trajectory as already done and a
-        # later analysis would pool two incompatible wrapper sets.
-        tag = f"{tag}-{run_label}"
+    # A run_label gives a separate namespace to a run that is deliberately NOT
+    # part of the main dataset -- re-running one arm against a changed
+    # instrument, for instance. Without it such a run lands on the main
+    # records file, where --resume would skip every trajectory as already done
+    # and a later analysis would pool two incompatible wrapper sets.
+    tag = _run_tag(models, run_label)
     exclusive = _exclusive_run(out_dir, phase, tag)
     exclusive.__enter__()
     tracker = SpendTracker(out_dir / "raw" / f"study2_{phase}_{tag}.jsonl", phase=phase, cap_usd=budget_cap_usd)

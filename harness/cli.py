@@ -490,7 +490,14 @@ def _study2_stage(args: argparse.Namespace, phase: str, default_cap: float, defa
         tones=(args.tones.split(",") if args.tones else None),
         run_label=args.run_label,
     )
-    tag = models[0].key if len(models) == 1 else "multi"
+    # Ask for the tag rather than re-deriving it. This line used to keep its
+    # own copy of the naming rule and so ignored both --run-label and the
+    # dry-run suffix: a labelled run wrote its records correctly and then
+    # announced the MAIN dataset's path, which reads exactly like the full
+    # run has just been overwritten by a 150-trajectory arm.
+    from .study2.runner import _run_tag
+
+    tag = _run_tag(models, args.run_label)
     print(f"{phase}: {len(records)} trajectories logged to results/analysis/study2_{phase}_{tag}_records.json")
 
 
