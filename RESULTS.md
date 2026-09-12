@@ -369,6 +369,104 @@ trajectories were skipped rather than redone.
 
 Compact records and the full analysis report: `results_archive/core_gpt-luna_*.json`.
 
+## Micro-experiment: tone delivered mid-task (2026-09-12)
+
+**The first effect in this study that survives its own controls.** Every
+result above concerns a tone set once, in the opening message. This asks a
+different question: what happens when the tone arrives *partway through*,
+the way a manager interrupts work already underway.
+
+**Design.** Luna, 50 tasks x 8 trials x 2 arms = 800 trajectories, $4.06.
+Both arms open with the **identical** v2 neutral wrapper. Both are
+interrupted at the same turn on the same (task, trial) -- the turn is seeded
+on task and trial and deliberately *not* on the arm. The only difference is
+what the interruption says, and the two interjections are exactly 28 tokens
+each with no task instruction in either.
+
+The neutral interjection is the **control, not a placebo**: comparing a
+threatening interruption against no interruption would measure being
+interrupted. Only a length-matched neutral interruption at the same turn
+isolates the tone from the interruption.
+
+**Analysed paired on (task, trial), restricted to the 277 pairs where the
+interjection fired in BOTH arms.** It does not always fire -- a trajectory
+that finishes in one turn never reaches the injection turn (fired: 304/400
+neutral, 314/400 threatening). Counting un-fired trajectories as treated
+would have diluted the effect toward zero. Zero injection-turn mismatches
+between arms.
+
+### Result
+
+Paired, task-clustered sign-flip permutation, 277 pairs across 50 tasks:
+
+| measure | mean difference | change | p |
+|---|---:|---:|---:|
+| **reasoning tokens** | **+299** | **+27.5%** | **<0.0001** |
+| total tokens | +7,252 | +35.8% | <0.0001 |
+| turns | +1.22 | +29.8% | <0.0001 |
+| accuracy | -0.009 | -3.3% | 0.71 |
+| inspected before acting | -0.005 | -0.6% | 0.69 |
+
+**A threatening mid-task interruption makes the model work 28% harder and
+finish no better.** The mechanism is visible: it takes 1.2 more turns. The
+token cost follows from the turns.
+
+### It is the tone, not the interruption
+
+Three conditions, same opening wrapper, same 50 tasks:
+
+| condition | n | reasoning tokens | turns | accuracy |
+|---|---:|---:|---:|---:|
+| no interruption | 150 | 957 | 3.47 | 0.307 |
+| neutral interruption | 304 | 1,085 | 4.11 | 0.286 |
+| **threatening interruption** | 314 | **1,370** | **5.33** | 0.290 |
+
+Paired against the no-interruption baseline on the same 50 tasks, the
+neutral interruption costs **+51 reasoning tokens (p=0.15)** -- being
+interrupted is nearly free. The threatening one costs **+336 (p<0.0001)**.
+The interruption is not what matters; what it says is.
+
+### Why this one is believed where the others were not
+
+The accuracy trend in the core run was held at arm's length for four
+reasons. This result answers all four.
+
+1. **Not fragile.** Threatening spends more on **42 of 50 tasks**. Dropping
+   the three most influential tasks moves the effect from +299 to +213 --
+   the core run's accuracy trend went from p=0.023 to p=0.128 on the same
+   test.
+2. **Not a length artifact.** Both interjections are exactly 28 tokens. The
+   v1 wrapper confound cannot apply.
+3. **Not multiplicity.** Reasoning tokens was pre-specified as the single
+   powered outcome before the run, with the power calculation done first
+   (85% for a 12% effect; the observed effect is 27.5%).
+4. **Not a confounded reference level.** The v2 neutral wrapper opens both
+   arms, and the control arm is interrupted identically.
+
+### What it does not show
+
+**Nothing about performance.** Accuracy is flat (p=0.71) and this design was
+powered for cost, not accuracy -- stated before the data, and not revised
+now that accuracy came back null. At this size the minimum detectable
+accuracy effect is roughly twice what 50 tasks can resolve. "Threatening
+does not help" is consistent with the data; it is not established by it.
+
+**One model.** Luna only. The same caveat that applies to everything else
+here applies to this.
+
+**One tone pair.** Threatening vs neutral is the maximum contrast on the
+scale. Whether a *polite* interruption behaves like the neutral one, or
+whether the effect is about arousal rather than valence, is untested. The
+core run's turn-0 analysis hinted at extremity rather than direction, which
+would predict that sycophantic interruptions also cost more. That is the
+obvious next micro-experiment.
+
+**Practical reading, carefully.** For an agent already working, a
+threatening check-in buys 28% more compute and no more correct answers. On
+this model, on these tasks, measured once.
+
+Records: `results_archive/core_gpt-luna_reinject_{neutral,threatening}_records.json`.
+
 ## Total spend
 
 **Under $0.10 against the study's target-model budget caps** -- see the
