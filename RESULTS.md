@@ -309,6 +309,39 @@ turn count by tone (p=0.29), soft-restriction (tracks accuracy, r=0.93),
 cost per success (CIs overlap entirely), destructive actions (p=0.27),
 prose-vs-code ratio, hedging, apologies.
 
+### Measured: what the neutral wrapper's extra sentence was worth
+
+The v1 neutral wrapper was the only one of the seven carrying a task
+instruction. Rather than argue about how much that mattered, its arm was
+re-run against the v2 wrapper -- same 50 tasks, same seed, same burst
+positions, 150 trajectories, $0.70. The only change is that one sentence.
+
+| measure | v1 (with the instruction) | v2 (removed) | Fisher p |
+|---|---|---|---|
+| inspected before acting | 0.800 | **0.953** | 7e-5 |
+| gave up without acting (0 turns) | 0.107 | **0.027** | 0.009 |
+| failed for insufficient inspection | 0.180 | **0.033** | 5e-5 |
+| accuracy | 0.280 | 0.307 | 0.70 |
+| mean turns | 3.3 | 3.5 | -- |
+| reasoning tokens | 875 | 957 | -- |
+
+**The clause was making the model answer instead of work.** "Provide a
+single final answer" produced one no-action trajectory in ten and made
+acting-without-looking the single most common failure category. Remove it
+and both largely vanish. Accuracy does not move (p=0.70), so the sentence
+was changing *process*, not *outcome* -- which is why the cost null and the
+broad flatness of accuracy are not threatened by this.
+
+**It also weakens the polite-tone lead.** The strongest surviving lead was
+that polite tones inspect more than rude ones (0.942 vs 0.891). The *fixed*
+neutral wrapper sits at 0.953 -- at the polite end, not between the two. So
+a good part of that apparent gap was the broken reference level dragging the
+middle of the scale down, not politeness lifting it. The lead survives as a
+question, not as an estimate; the v1 numbers for it should not be quoted.
+
+Records: `results_archive/core_gpt-luna_L4_wrapper-v2_records.json`
+(wrapper_set = "v2" on every row).
+
 ### What must change before the next three models run
 
 The two instrument confounds will replicate three more times if left in
