@@ -2,15 +2,15 @@
   "n_records": 1050,
   "token_cost_effect_size": {
     "mean_total_tokens_by_tone": {
-      "L6_very_rude": 17502.98,
-      "L1_sycophantic": 17543.62,
-      "L3_polite": 15069.36,
-      "L2_very_polite": 17157.613333333335,
-      "L4_neutral": 17040.066666666666,
-      "L7_threatening": 16315.293333333333,
-      "L5_rude": 14663.92
+      "L6_very_rude": 16514.793333333335,
+      "L1_sycophantic": 16595.97333333333,
+      "L3_polite": 14147.666666666666,
+      "L2_very_polite": 16168.453333333333,
+      "L4_neutral": 16164.82,
+      "L7_threatening": 15271.22,
+      "L5_rude": 13809.326666666666
     },
-    "relative_variation_pct": 17.484084587376557,
+    "relative_variation_pct": 17.949868589578028,
     "published_single_turn_comparison_pct": 44.3
   },
   "token_cost_trend_test": {
@@ -23,47 +23,47 @@
     },
     "total_tokens": {
       "n_clusters": 50,
-      "observed_slope": -121.417380952381,
-      "p_value": 0.5551,
-      "ci_low": -532.2874642857143,
-      "ci_high": 260.8942023809523
+      "observed_slope": -129.28285714285715,
+      "p_value": 0.5171,
+      "ci_low": -527.8203630952381,
+      "ci_high": 242.50758333333337
     }
   },
   "cost_summary_by_tone": {
     "L6_very_rude": {
       "n_turns": 3.433333333333333,
       "cost_usd": 0.004747580399999999,
-      "total_tokens": 17502.98
+      "total_tokens": 16514.793333333335
     },
     "L1_sycophantic": {
       "n_turns": 3.3666666666666667,
       "cost_usd": 0.004752464533333334,
-      "total_tokens": 17543.62
+      "total_tokens": 16595.97333333333
     },
     "L3_polite": {
       "n_turns": 3.04,
       "cost_usd": 0.004369878600000001,
-      "total_tokens": 15069.36
+      "total_tokens": 14147.666666666666
     },
     "L2_very_polite": {
       "n_turns": 3.24,
       "cost_usd": 0.004758871666666667,
-      "total_tokens": 17157.613333333335
+      "total_tokens": 16168.453333333333
     },
     "L4_neutral": {
       "n_turns": 3.2733333333333334,
       "cost_usd": 0.004280017133333334,
-      "total_tokens": 17040.066666666666
+      "total_tokens": 16164.82
     },
     "L7_threatening": {
       "n_turns": 3.1866666666666665,
       "cost_usd": 0.004508528866666667,
-      "total_tokens": 16315.293333333333
+      "total_tokens": 15271.22
     },
     "L5_rude": {
       "n_turns": 3.006666666666667,
       "cost_usd": 0.004122352466666666,
-      "total_tokens": 14663.92
+      "total_tokens": 13809.326666666666
     }
   },
   "severity_breakdown_by_tone": {
@@ -165,7 +165,7 @@
     "L7_threatening": 0.0,
     "L5_rude": 0.0
   },
-  "accuracy_underpowered_note": "Accuracy is reported per tone (n=150-150 per condition here) but is UNDERPOWERED at SpreadsheetBench's ~18% base rate: detecting even a large tone effect in a binary pass/fail outcome at that base rate needs on the order of a thousand-plus observations per condition, not a few hundred. Treat accuracy_trend_test and accuracy_by_tone as descriptive, not confirmatory -- cost (token_cost_effect_size) is the primary, adequately-powered outcome for this study. See README 'Outcome measures'.",
+  "accuracy_underpowered_note": "Accuracy (observed pooled pass rate 29.6% over 1050 trajectories, n=150-150 per tone) was PRE-DESIGNATED A SECONDARY outcome; cost is primary. Power is limited, so a null here is weak evidence of no effect. A SIGNIFICANT result on it is still a valid pre-registered test -- power governs false negatives, not the validity of a positive. Read any positive cautiously because this is one model, one of several outcome measures, and sensitive to analysis choices -- not because of power. See README 'Outcome measures'.",
   "accuracy_trend_test": {
     "n_clusters": 50,
     "observed_slope": -0.010714285714285714,
@@ -177,44 +177,44 @@
     "L6_very_rude": {
       "n": 150,
       "accuracy": 0.2733333333333333,
-      "ci_low": 0.20666666666666667,
-      "ci_high": 0.3466666666666667
+      "ci_low": 0.16666666666666666,
+      "ci_high": 0.38666666666666666
     },
     "L1_sycophantic": {
       "n": 150,
       "accuracy": 0.35333333333333333,
-      "ci_low": 0.28,
-      "ci_high": 0.43333333333333335
+      "ci_low": 0.24,
+      "ci_high": 0.47333333333333333
     },
     "L3_polite": {
       "n": 150,
       "accuracy": 0.28,
-      "ci_low": 0.21333333333333335,
-      "ci_high": 0.35333333333333333
+      "ci_low": 0.16666666666666666,
+      "ci_high": 0.4
     },
     "L2_very_polite": {
       "n": 150,
       "accuracy": 0.32666666666666666,
-      "ci_low": 0.25333333333333335,
-      "ci_high": 0.4
+      "ci_low": 0.20666666666666667,
+      "ci_high": 0.4533333333333333
     },
     "L4_neutral": {
       "n": 150,
       "accuracy": 0.28,
-      "ci_low": 0.20666666666666667,
-      "ci_high": 0.35333333333333333
+      "ci_low": 0.17333333333333334,
+      "ci_high": 0.3933333333333333
     },
     "L7_threatening": {
       "n": 150,
       "accuracy": 0.29333333333333333,
-      "ci_low": 0.22,
-      "ci_high": 0.36666666666666664
+      "ci_low": 0.18,
+      "ci_high": 0.4066666666666667
     },
     "L5_rude": {
       "n": 150,
       "accuracy": 0.26666666666666666,
-      "ci_low": 0.2,
-      "ci_high": 0.34
+      "ci_low": 0.15333333333333332,
+      "ci_high": 0.38666666666666666
     }
   },
   "bh_corrected_pairwise_comparisons_followup": [

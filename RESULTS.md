@@ -174,101 +174,165 @@ Benjamini-Hochberg pre-registration now scales automatically with the
 shared 7-tone module (48 comparisons instead of 24). None of this was run
 against a target model, and none of it is scheduled to be.
 
-## The core run -- GPT-5.6 Luna (2026-09-12)
+## The core run -- GPT-5.6 Luna (2026-09-12, corrected after independent review)
 
 **The first tone-manipulated data in this project.** 50 tasks x 7 tones x 3
-trials = **1,050 trajectories**, every one of them live, $4.74, zero
-duplicates, zero crashes. The 50 tasks are a strict subset of the n=100
-gate sample, so every one has a measured neutral-tone baseline and a
-measured no-op floor of zero.
+trials = **1,050 trajectories**, every one live, $4.74, zero duplicates,
+zero crashes. The 50 tasks are a strict subset of the n=100 gate sample, so
+every one has a measured neutral baseline and a no-op floor of zero.
 
-### The primary outcome is null
+An earlier version of this section was reviewed by three independent
+analyses (an arithmetic audit that recomputed every number from the raw
+records, an adversarial critique, and an open exploration). What follows
+incorporates their corrections. The changes from the first version are
+marked **[corrected]** so a reader can see what moved.
 
-Cost was pre-registered as the primary, adequately-powered outcome. Tone
-does not move it.
+### The primary outcome is null -- this held up
+
+Cost was pre-registered as the primary outcome. Tone does not move it.
 
 | test | slope | p |
 |---|---|---|
 | reasoning tokens, task-clustered trend | +7.9 | **0.358** |
-| total tokens, task-clustered trend | -121.4 | **0.555** |
+| total tokens, task-clustered trend | -129.3 | **0.517** |
 
-Relative variation in total tokens across the seven tones came to
-**17.5%**, against the 44.3% single-turn figure the pre-registered
-hypothesis said an agentic setting would exceed. **It did not.** Reported
-plainly per the pre-registration: the hypothesis failed.
+The reasoning-token slope's CI spans -4% to +14% across the whole scale,
+so a 44%-scale effect is genuinely excluded, not merely undetected.
 
-### The threatening-tone effect was a false positive, and it died like one
+**[corrected] The relative-variation figure was computed on a double-counted
+total.** `total_tokens` summed prompt + completion + reasoning, but on
+OpenAI-style routes `completion_tokens` already contains reasoning, so
+every trajectory was overcounted by roughly its thinking spend (~946
+tokens). Corrected, the figure is **17.9%** (was 17.5%). The
+apples-to-apples comparison to the published 44.3% single-turn
+*output-token* figure is completion tokens only: **15.2%**. Reasoning
+only: 20.8%. Every version is well under 44.3%; **the pre-registered
+hypothesis failed** and the correction does not rescue it.
 
-Worth recording as a methodology result, not just a negative one. An
-interim look at 11 complete tasks put the threatening wrapper's reasoning
-spend ~25% above every other tone. Tracked across the growing run:
+### The threatening-tone effect shrank; it did not die **[corrected]**
 
-| sample | threatening-specific p |
-|---|---|
-| 11 tasks / 231 trajectories | 0.028 |
-| 18 tasks / 378 trajectories | 0.094 |
-| **50 tasks / 1,050 trajectories** | **0.358** |
+The first version of this section called it a false positive that
+"evaporated" from p=0.028 to p=0.358. That compared two different tests:
+the interim was a threatening-vs-rest contrast on reasoning tokens, the
+final p=0.358 is the *linear trend*. Like for like, on the full run,
+threatening spends **12.3% more reasoning tokens than the other six tones,
++115 tokens/trajectory, p=0.019**. It shrank from ~25% at 11 tasks. After
+correcting for the seven possible one-vs-rest contrasts it is p≈0.13, so
+it is still not a finding -- but the honest description is "smaller and
+uncorrected-significant", not "gone".
 
-Two things prevented this becoming a reported finding. The interim tests
-were stopped once the pattern was noticed -- repeated peeking at an
-accumulating result and reporting whenever it looks good manufactures
-exactly this. And the analysis was fixed to cluster by task before the
-final numbers were read, not after (see "the primary outcome had no
-significance test" below).
+### Accuracy: a step at the polite end, not a gradient **[corrected]**
 
-### Accuracy declines monotonically -- a lead, not a result
-
-| tone | accuracy | 95% CI |
+| tone | accuracy | 95% CI, task-clustered |
 |---|---|---|
-| L1 sycophantic | 0.353 | 0.280-0.433 |
-| L2 very polite | 0.327 | 0.253-0.400 |
-| L3 polite | 0.280 | 0.213-0.353 |
-| L4 neutral | 0.280 | 0.207-0.353 |
-| L5 rude | 0.267 | 0.200-0.340 |
-| L6 very rude | 0.273 | 0.207-0.347 |
-| L7 threatening | 0.293 | 0.220-0.367 |
+| L1 sycophantic | 0.353 | 0.240-0.473 |
+| L2 very polite | 0.327 | 0.207-0.453 |
+| L3 polite | 0.280 | 0.167-0.400 |
+| L4 neutral | 0.280 | 0.173-0.393 |
+| L5 rude | 0.267 | 0.153-0.387 |
+| L6 very rude | 0.273 | 0.167-0.387 |
+| L7 threatening | 0.293 | 0.180-0.407 |
 
-The pre-registered trend test gives slope **-0.0107, p = 0.023**.
+**[corrected] The CIs in the first version were ~35% too narrow**: the
+bootstrap resampled trajectories as independent, ignoring that they are
+three trials on each of 50 tasks. These are clustered by task.
 
-Three reasons this is not reported as a finding. The design designates
-accuracy as **secondary and explicitly underpowered** at SpreadsheetBench's
-base rate -- that flag was written before any data existed, and it is not
-being revised now that accuracy is the only measure showing something.
-Every confidence interval overlaps every other. And **zero of the 21
-pairwise comparisons survive Benjamini-Hochberg correction**; the largest
-gap (sycophantic vs rude, -0.087) is p=0.033 uncorrected.
+The pre-registered trend test gives slope -0.0107, **p = 0.023**, and an
+independent from-scratch re-implementation agrees (p=0.025; a t-test on the
+50 per-task slopes gives 0.028, Wilcoxon 0.044). The number is right.
+**The description "monotonic decline" was wrong.** Across the rude half of
+the scale, L3 through L7, the slope is +0.002, p=0.81 -- there is no
+gradient there at all. What exists is a **step**: the two most polite
+tones sit 6.1 points above the other five, p=0.0025. Threatening rebounds
+above rude (+0.023, p=0.44). "Politeness helps" and "rudeness hurts
+progressively" are different claims; the data supports at most the first.
 
-It is a hypothesis to carry into the other three models. Replication across
-models is the test that matters; one model at p=0.023 on a measure
-pre-registered as underpowered is a lead.
+**Why it is a lead and not a result -- for better reasons than before.**
+The first version leaned on "underpowered", citing an 18% base rate. The
+real pooled rate is 29.6% and simulated power at the observed slope is
+~0.44. Power governs false negatives; it does not weaken a positive. The
+reasons to hold this at arm's length are these:
 
-### Everything else is flat
+1. **Two confounds in the instrument.** The neutral wrapper (L4) is the only
+   one of the seven that adds a task instruction -- "Read the question
+   carefully before responding, and provide a single final answer." That
+   clause alone triples the rate of zero-turn trajectories (10.7% vs 3.3%,
+   p=3e-4), cuts pre-edit inspection (0.80 vs 0.92, p=5e-5), and carries the
+   *entire* failure-category shift across tones: the severity x tone
+   chi-square is p=0.0008 with L4 and p=0.33 without it. The reference
+   level of the scale is a different instrument. And **wrapper length is
+   U-shaped across the scale** (35/35/30/30/31/32/34 tokens) -- the same
+   shape as accuracy -- and predicts accuracy *better than tone rank does*
+   (r=+0.82 vs r=-0.72 on the seven tone means).
+2. **Fragility.** Only 19 of 50 tasks have a non-zero per-task slope (26
+   never pass, 4 always pass, 1 more is flat). The three most influential
+   tasks supply 51% of the slope. Leave-one-out: drop 1 task, p=0.058; drop
+   2, p=0.128; drop 3, p=0.22.
+3. **Multiplicity across outcomes.** Twelve outcomes each got a trend test.
+   Under a global null the chance at least one lands below p=0.023 is 0.24,
+   and the accuracy result does not survive BH across that family (critical
+   value 0.0042).
+4. **One model.** Replication across the other three is the test that
+   matters.
+
+### Everything else
 
 **Zero refusals in 1,050 trajectories**, under every tone including
-threatening. Verification behaviour (inspected-before-acting 0.80-0.97,
-self-checked 0.00-0.01) and shortcut rate (0.06-0.13) show no ordered
-pattern across the scale.
+threatening. The model never once referred to the user's tone, in its
+answers or its reasoning, across all 4,647 calls (the only "rude"
+substring found was in "prudent").
+
+**Luna essentially never verifies its own output**: ~15 self-checks in
+4,647 calls, under any tone. This is a behavioural fact, not a broken
+detector -- checked against the raw responses directly.
+
+**Randomisation and infrastructure are clean**: tone position is a valid
+permutation for every task and does not predict accuracy (p=0.61); no
+provider drift over the 10.7-hour run (r=-0.003 with elapsed time); served
+provider was OpenAI on every call; cache-hit rate flat across tones.
+
+### Leads worth carrying forward, ranked by likelihood of replicating
+
+1. **Polite tones produce more inspection before editing.** L1-L3 0.942 vs
+   L5-L7 0.891, OR 1.99, Fisher p=0.0076, survives dropping L4. Measured at
+   turn zero, before any downstream cascade. Cheap to power -- a candidate
+   primary outcome for a follow-up.
+2. **Any social framing shortens trajectories ~30% at no accuracy cost.**
+   Unwrapped gate baseline 4.60 turns vs 3.22 wrapped on the same 50 tasks,
+   paired Wilcoxon p=8e-5; accuracy 0.32 vs 0.28, p=0.59.
+3. **Threatening spends ~12% more reasoning** (above). Needs a
+   pre-registered one-contrast test to be more than suggestive.
+4. **The polite step** (above), once the wrapper confounds are removed.
+
+Things that showed nothing: trial-to-trial disagreement by tone (p=0.31),
+turn count by tone (p=0.29), soft-restriction (tracks accuracy, r=0.93),
+cost per success (CIs overlap entirely), destructive actions (p=0.27),
+prose-vs-code ratio, hedging, apologies.
+
+### What must change before the next three models run
+
+The two instrument confounds will replicate three more times if left in
+place. Before the roster runs: **rewrite L4 to remove the extra
+instruction**, and **match all seven wrappers to the same token length**.
+Then rerun only Luna's L4 arm (150 trajectories, ~$1) so its scale is
+comparable. This changes the pre-registered wrapper texts mid-study and is
+recorded here as such; the alternative -- $45 of runs against a
+known-contaminated reference level -- is worse.
 
 ### What the run cost to get right
 
-Three separate failures during this single run, each caught and fixed:
+Three failures during the run itself, each caught and fixed: the core
+phase drew from a different task pool than the gate (caught at 48s, cost
+$0.0074); a dry run wrote fake rows into the live spend log; two live
+processes shared one records file after a container restart that had not
+actually killed the original (39 duplicates, deduplicated, pid lock added).
+Then four errors in the analysis, found by independent review after the
+first write-up: the token double-count, the un-clustered CIs, the false
+base rate in the power note, and a backfill that would have summed
+abandoned attempts. All fixed with regression tests; **255 tests pass**.
 
-1. **The core phase drew from a different task pool** than the gate -- a
-   draw of 50 from 909 overlapped the gate's 100 by 2 tasks. 48 of 50 tone
-   comparisons would have had no baseline. Caught 48 seconds in from the
-   startup line; cost $0.0074.
-2. **A dry run wrote into live files.** A mock invocation left 48
-   fabricated rows in the spend log, which the next live run resumed its
-   budget from.
-3. **Two live runs of the same model shared one records file** for ~30
-   minutes after a container restart was reported but the original process
-   had not actually died, producing 39 duplicate trajectories. Deduplicated
-   (1058 -> 1018 distinct, preferring a successful retry over a crashed
-   original), and a pid lock now refuses the second run.
-
-The container restart also cost nothing in the end: `--resume` was added
-and skipped 1,018 already-recorded trajectories rather than redoing ten
-hours of work.
+`--resume` made the container restart cost nothing: 1,018 already-recorded
+trajectories were skipped rather than redone.
 
 Compact records and the full analysis report: `results_archive/core_gpt-luna_*.json`.
 
