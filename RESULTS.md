@@ -524,12 +524,36 @@ delivered mid-task, at each of three positions:
   on a variable the treatment moves. Deciding the population from the
   control arm alone cannot respond to the effect being measured.
 
-What it will and will not resolve: it is powered for cost, not accuracy.
-At 50 tasks and 4 trials per cell, a single tone-vs-neutral contrast on
-reasoning tokens has power 0.43 against a 12% effect, 0.59 against 15%, and
-above 0.95 against the 27% already observed. Accuracy stays underpowered at
-every size considered, and that is stated here before the run rather than
-after it.
+What it will and will not resolve, stated before the run rather than after
+it. It is powered for cost, not accuracy, and it is powered unevenly across
+its two questions, because how often the treatment lands depends on where it
+lands: a trajectory has to survive to turn 2 to receive an interjection
+there. Effective sample per cell is trials x firing rate, so the two
+questions sit at different sensitivities.
+
+The primary question -- does this register change cost at all -- pools the
+three turns, at 50 tasks:
+
+| Trials/cell | Effective | 12% effect | 15% effect | 27% effect |
+|---|---|---|---|---|
+| 3 | 6.9 | 0.76 | 0.92 | >0.99 |
+| 4 | 9.2 | 0.87 | 0.97 | >0.99 |
+| 5 | 11.5 | 0.93 | 0.99 | >0.99 |
+| 6 | 13.8 | 0.97 | >0.99 | >0.99 |
+
+The secondary question -- does position matter -- is a per-turn contrast,
+and turn 2 is the weak cell precisely because it is the one that fires least
+often. At 4 trials:
+
+| Turn | Fires | Effective | 12% effect | 15% effect | 27% effect |
+|---|---|---|---|---|---|
+| 0 | ~98% | 3.9 | 0.52 | 0.71 | 0.99 |
+| 1 | ~77% | 3.1 | 0.43 | 0.61 | 0.98 |
+| 2 | ~55% | 2.2 | 0.33 | 0.47 | 0.92 |
+
+So a null on "which turn" at this size is uninformative for effects below
+about 15%, while a null on "does register matter" is not. Accuracy stays
+underpowered at every size considered.
 
 ## Total spend
 
