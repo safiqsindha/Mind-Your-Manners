@@ -1510,3 +1510,37 @@ def test_timing_comparison_refuses_rather_than_fabricates():
     result = compare_injection_turns(rows, "L7_threatening", 1, 2)
     assert result["n_tasks"] == 0
     assert result["p_value"] == 1.0
+
+
+def test_regrade_keeps_crossed_trajectories_apart():
+    """Under the crossed design one (model, task, tone, trial) runs three
+    times, once per injection turn. Grouped without the turn, regrade would
+    splice all three into a single trajectory three times as long as any
+    that actually happened, and grade a thing the model never produced."""
+    from harness.study2.regrade import group_trajectories
+
+    rows = []
+    for turn in (0, 1, 2):
+        for call in (0, 1):
+            rows.append({
+                "model_key": "m", "item_id": "T1", "tone_level": "L4_neutral",
+                "trial": 0, "extra": {"turn": call, "interjection_turn": turn},
+                "response_text": f"turn{turn}call{call}",
+            })
+
+    grouped = group_trajectories(rows)
+    assert len(grouped) == 3, f"crossed cells collapsed into {len(grouped)}"
+    assert all(len(v) == 2 for v in grouped.values())
+
+
+def test_regrade_still_groups_runs_that_predate_the_field():
+    """Rows written before interjection_turn existed must key as they did."""
+    from harness.study2.regrade import group_trajectories
+
+    rows = [
+        {"model_key": "m", "item_id": "T1", "tone_level": "L4_neutral",
+         "trial": 0, "extra": {"turn": t}} for t in (0, 1)
+    ]
+    grouped = group_trajectories(rows)
+    assert len(grouped) == 1
+    assert next(iter(grouped)).interjection_turn is None

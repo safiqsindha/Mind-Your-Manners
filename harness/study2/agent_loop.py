@@ -207,6 +207,7 @@ def _call_and_record(
     trial: int,
     phase: str,
     turn: int,
+    interjection_turn: Optional[int] = None,
 ):
     provider = get_provider(model.provider)
     tracker.check_before_call(estimated_cost_usd=0.02)
@@ -252,7 +253,14 @@ def _call_and_record(
         canonical_slug=model.canonical_slug,
         reasoning_included_in_completion=response.reasoning_included_in_completion,
         raw_response=response.raw,
-        extra={"turn": turn},
+        # interjection_turn is on the RAW row, not just the graded record,
+        # because regrade.py rebuilds trajectories from this log alone and
+        # groups them by (model, task, tone, trial). Under the crossed design
+        # that key is no longer unique -- one (task, tone, trial) runs three
+        # times, once per injection turn -- so without this field a regrade
+        # would splice three separate trajectories into one and grade the
+        # result. Free recovery of a paid run depends on this being here.
+        extra={"turn": turn, "interjection_turn": interjection_turn},
     )
     tracker.record(row)
     return response, row
@@ -316,6 +324,7 @@ def run_react_multi_round(
     for turn in range(max_turns):
         response, row = _call_and_record(
             tracker, model, system_prompt, messages, task_id, tone_level, trial, "multi_round_react", turn,
+            interjection_turn=interjection_turn,
         )
         traj.result_rows.append(row)
 

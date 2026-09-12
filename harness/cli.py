@@ -365,7 +365,16 @@ def cmd_study2_regrade(args: argparse.Namespace) -> None:
     print(f"[regrade] {raw_path} against {len(tasks_by_id)} loaded tasks (no model calls)")
     records = regrade_run(
         raw_path, tasks_by_id, grader,
-        workdir_root=RESULTS_ROOT / "scratch" / "regrade",
+        # Namespaced by the raw log's own name. The regrade scratch tree is
+        # keyed by (model, tone, task, trial), which is NOT unique across
+        # runs: the two micro-experiment arms both ran tone L4_neutral over
+        # the same tasks and trials, so regrading them into one tree has the
+        # second arm land on the first's directories. That is survivable only
+        # because this command is sequential and each trajectory is graded
+        # before the next begins -- exactly the assumption that failed in the
+        # runner, where two arms ran concurrently and corrupted 800
+        # trajectories' grades. Not worth relying on twice.
+        workdir_root=RESULTS_ROOT / "scratch" / "regrade" / raw_path.stem,
         max_turns=args.max_turns,
     )
 
