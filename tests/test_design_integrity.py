@@ -993,3 +993,98 @@ def test_a_lock_held_by_another_users_process_is_not_stolen(tmp_path: Path):
             with _exclusive_run(tmp_path, "core", "m"):
                 pass
     assert lock.read_text().strip() == "4242", "the other run's lock must survive"
+
+
+# --- 11. The instrument itself was confounded --------------------------
+# Two flaws in the v1 wrapper set, both found by independent review of the
+# Luna run, both of which would have replicated across the whole roster.
+
+def test_only_the_shared_instruction_is_a_task_instruction():
+    """v1's neutral wrapper alone added "Read the question carefully before
+    responding, and provide a single final answer." That made the study's
+    own reference level a different instrument: it tripled zero-turn
+    trajectories and carried the entire severity-by-tone shift."""
+    from harness.tone_wrappers import INSTRUCTION, TONE_WRAPPERS
+
+    banned = ("provide a single final answer", "read the question carefully",
+              "step by step", "think carefully", "double-check", "show your work")
+    for key, w in TONE_WRAPPERS.items():
+        rest = w.text.replace(INSTRUCTION, "").lower()
+        for phrase in banned:
+            assert phrase not in rest, f"{key} carries a task instruction: {phrase!r}"
+
+
+def test_every_wrapper_carries_the_shared_instruction_verbatim():
+    from harness.tone_wrappers import INSTRUCTION, TONE_WRAPPERS
+
+    for key, w in TONE_WRAPPERS.items():
+        assert w.text.count(INSTRUCTION) == 1, key
+
+
+def test_all_seven_wrappers_are_exactly_the_same_length():
+    """Not "within 5". In v1 the spread was 5 tokens and U-shaped across the
+    scale -- the same shape as accuracy -- and length predicted accuracy
+    better than tone rank did (r=+0.82 vs -0.72). With seven points the two
+    cannot be separated, so the tolerance has to be zero."""
+    from harness.tone_wrappers import wrapper_token_counts
+
+    counts = wrapper_token_counts()
+    assert len(set(counts.values())) == 1, f"wrappers differ in length: {counts}"
+
+
+def test_the_length_validator_rejects_any_spread():
+    """The guard has to actually fire. It caught a one-token slip while the
+    v2 set was being written, which is the whole reason it runs at import."""
+    from dataclasses import replace as dc_replace
+
+    from harness import tone_wrappers as tw
+
+    assert tw.MAX_TOKEN_SPREAD == 0
+    tw.validate_wrapper_lengths()  # the shipped set must pass
+
+    longer = dc_replace(tw.TONE_WRAPPERS["L3_polite"],
+                        text=tw.TONE_WRAPPERS["L3_polite"].text + " One extra clause here.")
+    with patch.dict(tw.TONE_WRAPPERS, {"L3_polite": longer}):
+        with pytest.raises(ValueError, match="not length-matched"):
+            tw.validate_wrapper_lengths()
+
+    tw.validate_wrapper_lengths()  # and the patch must not have leaked
+
+
+def test_records_carry_the_wrapper_set_version():
+    """v1 and v2 data are not comparable; a record that does not say which
+    it came from can be pooled with the other by mistake."""
+    from harness.study2 import runner
+    from harness.tone_wrappers import WRAPPER_SET_VERSION
+
+    assert WRAPPER_SET_VERSION == "v2"
+    src = (Path(runner.__file__)).read_text()
+    assert '"wrapper_set": WRAPPER_SET_VERSION' in src
+
+
+def test_a_tone_subset_keeps_its_positions_from_the_full_shuffle():
+    """A single-arm rerun must meet the same burst positions that arm saw in
+    the full run, or it is not comparable to it."""
+    import random as _r
+
+    from harness.tone_wrappers import TONE_ORDER
+
+    for task in ("t0", "t1", "t2", "t3", "t4"):
+        full = list(TONE_ORDER)
+        _r.Random(f"0|m|{task}").shuffle(full)
+        want_pos = full.index("L4_neutral")
+
+        subset = list(TONE_ORDER)
+        _r.Random(f"0|m|{task}").shuffle(subset)
+        got = [(i, t) for i, t in enumerate(subset) if t == "L4_neutral"]
+        assert got == [(want_pos, "L4_neutral")], task
+
+
+def test_a_labelled_run_writes_to_its_own_files():
+    """Otherwise it lands on the main records file, --resume skips every
+    trajectory as already done, and an analysis pools two wrapper sets."""
+    from harness.study2.runner import _run_tag
+
+    base = _run_tag([replace(_model("gpt-luna"), provider="openai_compatible")])
+    assert base == "gpt-luna"
+    assert f"{base}-wrapper-v2" != base

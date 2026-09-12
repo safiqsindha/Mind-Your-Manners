@@ -487,6 +487,8 @@ def _study2_stage(args: argparse.Namespace, phase: str, default_cap: float, defa
         budget_cap_usd=cap_usd, n_trials=n_trials,
         multi_round=not args.single_round, max_turns=args.max_turns,
         tone_seed=args.sample_seed, resume=args.resume,
+        tones=(args.tones.split(",") if args.tones else None),
+        run_label=args.run_label,
     )
     tag = models[0].key if len(models) == 1 else "multi"
     print(f"{phase}: {len(records)} trajectories logged to results/analysis/study2_{phase}_{tag}_records.json")
@@ -861,6 +863,19 @@ def build_parser() -> argparse.ArgumentParser:
                  "A core run is hours long and the container can be restarted under "
                  "it; the incremental records survive, so the work does not have to "
                  "be redone. Crashed trajectories are retried rather than skipped.",
+        )
+        sp.add_argument(
+            "--tones", default=None,
+            help="Comma-separated tone keys to run instead of all seven (e.g. "
+                 "L4_neutral). Tone order is still shuffled over the full scale "
+                 "and then filtered, so a kept tone meets the same burst "
+                 "positions it would have in a full run.",
+        )
+        sp.add_argument(
+            "--run-label", default=None,
+            help="Suffix for this run's output files, for a run that is "
+                 "deliberately separate from the main dataset (e.g. wrapper-v2). "
+                 "Without it the run lands on the main records file.",
         )
         sp.add_argument("--n-trials", type=int, default=None)
         sp.add_argument("--budget-cap", type=float, default=None)

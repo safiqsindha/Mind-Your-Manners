@@ -29,7 +29,7 @@ import openpyxl
 
 from ..providers.base import ModelConfig
 from ..spend_tracker import BudgetExceeded, SpendTracker, append_spend_log
-from ..tone_wrappers import TONE_ORDER, TONE_WRAPPERS
+from ..tone_wrappers import TONE_ORDER, TONE_WRAPPERS, WRAPPER_SET_VERSION
 from .agent_loop import Trajectory, run_react_multi_round, run_single_round
 from .dataset import SpreadsheetTask
 from .failure_taxonomy import classify_failure
@@ -562,6 +562,8 @@ def run_condition_batch(
     max_turns: int = 10,
     tone_seed: int = 0,
     resume: bool = False,
+    tones: Optional[list[str]] = None,
+    run_label: Optional[str] = None,
 ) -> list[dict]:
     """Runs every (model, task, tone, trial) combination, grades each, and
     returns one flat record per trajectory ready for study2/analysis.py.
@@ -580,6 +582,13 @@ def run_condition_batch(
     similar without re-reading that section.
     """
     tag = _run_tag(models)
+    if run_label:
+        # A separate namespace for a run that is deliberately NOT part of the
+        # main dataset -- re-running one arm against a changed instrument, for
+        # instance. Without it such a run lands on the main records file,
+        # where --resume would skip every trajectory as already done and a
+        # later analysis would pool two incompatible wrapper sets.
+        tag = f"{tag}-{run_label}"
     exclusive = _exclusive_run(out_dir, phase, tag)
     exclusive.__enter__()
     tracker = SpendTracker(out_dir / "raw" / f"study2_{phase}_{tag}.jsonl", phase=phase, cap_usd=budget_cap_usd)
@@ -622,9 +631,19 @@ def run_condition_batch(
                 # back to back, inside the same prompt-cache window. Only their
                 # order within that burst changes. Seeded on (seed, model,
                 # task) so a rerun reproduces the same sequence.
+                # Shuffle the FULL scale, then filter. Restricting to a
+                # subset must not change where the kept tones land in the
+                # burst: a single-tone rerun should meet the same position
+                # distribution its arm saw in the full run, or it is not
+                # comparable to it.
                 tone_order = list(TONE_ORDER)
                 random.Random(f"{tone_seed}|{model.key}|{task.task_id}").shuffle(tone_order)
-                for tone_position, tone_key in enumerate(tone_order):
+                if tones is not None:
+                    keep = set(tones)
+                    tone_order = [(i, t) for i, t in enumerate(tone_order) if t in keep]
+                else:
+                    tone_order = list(enumerate(tone_order))
+                for tone_position, tone_key in tone_order:
                     wrapper = TONE_WRAPPERS[tone_key]
                     wrapped_instruction = wrapper.apply(task.instruction)
                     for trial in range(n_trials):
@@ -729,6 +748,13 @@ def run_condition_batch(
                                 # after the fact and a position effect tested
                                 # directly, rather than assumed away.
                                 "tone_position": tone_position,
+                                # Which wrapper set produced this trajectory.
+                                # v1 and v2 are different instruments -- v1's
+                                # neutral wrapper carried an extra task
+                                # instruction and its lengths were unmatched --
+                                # so records must never be pooled across them
+                                # by accident.
+                                "wrapper_set": WRAPPER_SET_VERSION,
                                 "trial": trial,
                                 "passed": grade.passed,
                                 "soft_restriction": grade.soft_restriction,
