@@ -579,6 +579,136 @@ So a null on "which turn" at this size is uninformative for effects below
 about 15%, while a null on "does register matter" is not. Accuracy stays
 underpowered at every size considered.
 
+## Seven registers, crossed over injection turn (2026-09-12)
+
+3,150 trajectories, gpt-luna, 50 tasks x 7 interjection levels x 3 injection
+turns x 3 trials, $15.48. The opening wrapper is held at v2 `L4_neutral` in
+every arm, so the only thing that varies is the register of the mid-task
+interruption and where it lands. The interjection fired on 2,662 of 3,150
+(85%); unfired trajectories received no dose and are excluded throughout.
+
+### The cost curve is not the tone scale
+
+Mean reasoning tokens against the neutral-interjection control, and each
+arm's task-clustered paired test:
+
+| Arm | Mean | vs neutral | Paired diff | p |
+|---|---|---|---|---|
+| L1 sycophantic | 942 | -2.0% | -24 | 0.36 |
+| L2 very polite | 1100 | +14.6% | +125 | 0.0001 |
+| L3 polite | 1162 | +21.0% | +166 | 0.0001 |
+| L4 neutral | 961 | -- | -- | -- |
+| L5 rude | 999 | +4.0% | +26 | 0.43 |
+| L6 very rude | 1087 | +13.1% | +110 | 0.0055 |
+| L7 threatening | 1238 | +28.9% | +248 | <0.0001 |
+
+The threatening arm replicates the micro-experiment almost exactly: +28.9%
+here against +27.5% there, measured on different trajectories with the
+injection turn crossed rather than drawn. That is the strongest evidence so
+far that the instrument measures something stable.
+
+The seven-level clustered trend test is significant (+23.4 tokens per
+level, 95% CI [+13.2, +34.1], p<0.0001, 50 task clusters), but a linear
+trend is a poor description of this curve and the test should not be read
+as support for one. The curve is not monotonic and not U-shaped. Two arms
+are indistinguishable from the control, and they are not adjacent on the
+scale: sycophantic (p=0.36) and rude (p=0.43). Neither valence nor arousal
+predicts that.
+
+### The instrument is confounded, and the confound wins
+
+The four arms that cost more all say some version of "keep working" or "get
+it right". The three that cost nothing either say nothing about the task or
+tell the model to hurry up:
+
+| Interjection | Implies | Effect |
+|---|---|---|
+| L1 sycophantic | pure praise, no task reference | -24 |
+| L4 neutral | explicitly inert | -- |
+| L5 rude | "get on with it", i.e. go FASTER | +26 |
+| L6 very rude | "had better not screw this one up" | +110 |
+| L2 very polite | "your continued help" | +125 |
+| L3 polite | "keep on helping me out with this one" | +166 |
+| L7 threatening | "get this exactly right" | +248 |
+
+Coding each text for whether it implies a performance demand predicts the
+effect better than tone rank does: r=+0.88 against r=+0.51. The two groups
+do not overlap at all -- every demand arm lands between +110 and +248,
+every non-demand arm between -24 and +26.
+
+This is the v1 wrapper-length mistake in a new costume. There, a five-token
+spread across seven wrappers outpredicted tone rank (r=+0.82 vs -0.72) and
+invalidated the accuracy trend. Here the lengths are exactly matched, and a
+*semantic* nuisance variable has taken its place. The honest reading of
+this run is therefore:
+
+**An interruption that implies the work must continue or be correct costs
+~15-25% more thinking. Whether it is polite or rude about it is not what
+the data separates.** "Rude interruptions cost more" is NOT supported: the
+rude arm is null and the polite arm is +21%.
+
+The design still cleanly supports one narrower claim, because the two arms
+are matched on implied demand and differ only in register: L6 very rude
+(+110) versus L2 very polite (+125) are statistically indistinguishable
+from each other while both differ from control. Same demand, opposite
+valence, same cost.
+
+### Where the interruption lands decides whether it costs anything
+
+With the comparison population fixed from the control arm (23 tasks whose
+neutral trajectories reach every compared turn), the threatening arm's
+effect depends sharply on position:
+
+| Injection turn | Effect | As % of control |
+|---|---|---|
+| 0 (after the first response) | +4 | +0.3% |
+| 1 | +372 | +34.5% |
+| 2 | +697 | +54.8% |
+
+Turn 0 versus turn 1: p=0.013. Turn 0 versus turn 2: p=0.0022. Turn 1
+versus turn 2 is not separable at this size (p=0.20, 21 tasks).
+
+An interruption delivered at the very first observation costs nothing at
+all. The same words two turns later cost half again as much thinking. This
+is the result the micro-experiment could not reach: it drew the turn at
+random from {1,2} and so never tested turn 0, and its turn-1-vs-2 split was
+selection rather than timing. Crossing the turn and defining the population
+from the control arm gives a clean answer, and the answer is that position
+matters more than the earlier data suggested -- just not in the direction
+that was withdrawn.
+
+### Accuracy: flat, and underpowered
+
+| Arm | Accuracy |
+|---|---|
+| L1 sycophantic | 31.6% |
+| L2 very polite | 32.2% |
+| L3 polite | 30.5% |
+| L4 neutral | 30.5% |
+| L5 rude | 30.3% |
+| L6 very rude | 30.8% |
+| L7 threatening | 32.6% |
+
+A 2.3-point spread across seven arms at roughly 380 trajectories each. This
+was stated as underpowered before the run and it is: nothing here is
+interpretable as evidence either way.
+
+### What this run does not establish
+
+**That tone is the operative variable.** See above. The next run has to
+break the confound: hold implied demand fixed and vary only register, and
+separately hold register fixed and vary only demand. Until then the
+headline is about demand, not manners.
+
+**Anything beyond one model.** gpt-luna only.
+
+**That turn 0 is inert in general.** It is inert for the threatening arm on
+23 tasks. Whether the other demand-carrying arms behave the same way is
+untested.
+
+Records: `results_archive/core_gpt-luna_cross7_records.json` (3,150 graded
+trajectories; the 402 rows from the interrupted first attempt are excluded).
+
 ## Total spend
 
 **Under $0.10 against the study's target-model budget caps** -- see the
