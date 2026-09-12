@@ -587,95 +587,141 @@ every arm, so the only thing that varies is the register of the mid-task
 interruption and where it lands. The interjection fired on 2,662 of 3,150
 (85%); unfired trajectories received no dose and are excluded throughout.
 
+### Turn 0 is inert for every arm, so the pooled numbers understate everything
+
+CORRECTED. The first analysis pooled all three injection turns. That was
+wrong, and it diluted every effect. An interjection delivered at turn 0 --
+the observation after the model's very first response -- does nothing, and
+it does nothing in EVERY arm, not just the threatening one:
+
+| Arm | Turn 0 | Turn 1 | Turn 2 |
+|---|---|---|---|
+| L1 sycophantic | -7.3% | -1.2% | -3.2% |
+| L2 very polite | -6.4% | +23.5% | +26.7% |
+| L3 polite | -3.5% | +33.9% | +31.1% |
+| L5 rude | -12.9% | +16.6% | +18.2% |
+| L6 very rude | -7.7% | +28.8% | +29.1% |
+| L7 threatening | +0.3% | +34.5% | +54.8% |
+
+Turn 0 is also the cell that fires most often (~98% against ~55% at turn
+2), so pooling let the inert cell dominate the average. Every headline
+number below therefore excludes it. This is a real effect, not a nuisance:
+the same words are free at turn 0 and expensive two turns later.
+
 ### The cost curve is not the tone scale
 
-Mean reasoning tokens against the neutral-interjection control, and each
-arm's task-clustered paired test:
+Mean reasoning tokens against the neutral-interjection control, turns 1 and
+2 only, task-clustered paired tests over 50 tasks. The pooled figures from
+the first pass are shown alongside to make the dilution visible:
 
-| Arm | Mean | vs neutral | Paired diff | p |
+| Arm | Effect | % | p | (pooled, superseded) |
 |---|---|---|---|---|
-| L1 sycophantic | 942 | -2.0% | -24 | 0.36 |
-| L2 very polite | 1100 | +14.6% | +125 | 0.0001 |
-| L3 polite | 1162 | +21.0% | +166 | 0.0001 |
-| L4 neutral | 961 | -- | -- | -- |
-| L5 rude | 999 | +4.0% | +26 | 0.43 |
-| L6 very rude | 1087 | +13.1% | +110 | 0.0055 |
-| L7 threatening | 1238 | +28.9% | +248 | <0.0001 |
+| L1 sycophantic | -69 | -7.1% | 0.043 | -24, p=0.36 |
+| L2 very polite | +180 | +18.5% | <0.0001 | +125 |
+| L3 polite | +272 | +28.0% | <0.0001 | +166 |
+| L5 rude | +65 | +6.7% | 0.130 | +26, p=0.43 |
+| L6 very rude | +206 | +21.2% | 0.0001 | +110 |
+| L7 threatening | +357 | +36.7% | <0.0001 | +248 |
 
-The threatening arm replicates the micro-experiment almost exactly: +28.9%
-here against +27.5% there, measured on different trajectories with the
-injection turn crossed rather than drawn. That is the strongest evidence so
-far that the instrument measures something stable.
+Every real effect is roughly a third larger than first reported, and
+sycophantic flips from "null" to a significant REDUCTION. Rude remains the
+one arm indistinguishable from the control.
 
-The seven-level clustered trend test is significant (+23.4 tokens per
-level, 95% CI [+13.2, +34.1], p<0.0001, 50 task clusters), but a linear
-trend is a poor description of this curve and the test should not be read
-as support for one. The curve is not monotonic and not U-shaped. Two arms
-are indistinguishable from the control, and they are not adjacent on the
-scale: sycophantic (p=0.36) and rude (p=0.43). Neither valence nor arousal
-predicts that.
+Polite costs +28.0% and rude costs +6.7% (n.s.). Neither valence nor
+arousal predicts that.
 
 ### The instrument is confounded, and the confound wins
 
-The four arms that cost more all say some version of "keep working" or "get
-it right". The three that cost nothing either say nothing about the task or
-tell the model to hurry up:
+The arms that cost more all say some version of "keep working" or "get it
+right". The ones that do not either say nothing about the task or tell the
+model to hurry up:
 
 | Interjection | Implies | Effect |
 |---|---|---|
-| L1 sycophantic | pure praise, no task reference | -24 |
+| L1 sycophantic | pure praise, no task reference | -69 |
 | L4 neutral | explicitly inert | -- |
-| L5 rude | "get on with it", i.e. go FASTER | +26 |
-| L6 very rude | "had better not screw this one up" | +110 |
-| L2 very polite | "your continued help" | +125 |
-| L3 polite | "keep on helping me out with this one" | +166 |
-| L7 threatening | "get this exactly right" | +248 |
+| L5 rude | "get on with it", i.e. go FASTER | +65 n.s. |
+| L2 very polite | "your continued help" | +180 |
+| L6 very rude | "had better not screw this one up" | +206 |
+| L3 polite | "keep on helping me out with this one" | +272 |
+| L7 threatening | "get this exactly right" | +357 |
 
 Coding each text for whether it implies a performance demand predicts the
-effect better than tone rank does: r=+0.88 against r=+0.51. The two groups
-do not overlap at all -- every demand arm lands between +110 and +248,
-every non-demand arm between -24 and +26.
-
-This is the v1 wrapper-length mistake in a new costume. There, a five-token
-spread across seven wrappers outpredicted tone rank (r=+0.82 vs -0.72) and
-invalidated the accuracy trend. Here the lengths are exactly matched, and a
-*semantic* nuisance variable has taken its place. The honest reading of
-this run is therefore:
+effect better than tone rank does (r=+0.88 vs r=+0.51 on the pooled
+figures). This is the v1 wrapper-length mistake in a new costume: lengths
+are now exactly matched, and a SEMANTIC nuisance variable took the place of
+the lexical one. So:
 
 **An interruption that implies the work must continue or be correct costs
-~15-25% more thinking. Whether it is polite or rude about it is not what
-the data separates.** "Rude interruptions cost more" is NOT supported: the
-rude arm is null and the polite arm is +21%.
+~19-37% more thinking. Whether it is polite or rude about it is not what
+this data separates.** "Rude interruptions cost more" is NOT supported --
+the rude arm is null and the polite arm is +28%.
 
-The design still cleanly supports one narrower claim, because the two arms
-are matched on implied demand and differ only in register: L6 very rude
-(+110) versus L2 very polite (+125) are statistically indistinguishable
-from each other while both differ from control. Same demand, opposite
-valence, same cost.
+One comparison is clean, because the two arms are matched on implied demand
+and differ only in register: L6 very rude (+206) versus L2 very polite
+(+180) are indistinguishable from each other while both differ from
+control. Same demand, opposite valence, same cost.
 
-### Where the interruption lands decides whether it costs anything
+### The mechanism is persistence, not intensity
+
+Thinking per turn is flat across all seven arms -- 250 to 299 tokens,
+with no ordering that resembles the effect. What moves is the number of
+turns the agent takes:
+
+| Arm | Turns vs control | p |
+|---|---|---|
+| L1 sycophantic | -0.68 | <0.0001 |
+| L2 very polite | +0.70 | 0.0055 |
+| L3 polite | +1.80 | <0.0001 |
+| L5 rude | +0.09 | 0.65 |
+| L6 very rude | +0.71 | 0.012 |
+| L7 threatening | +1.46 | <0.0001 |
+
+The agent is not thinking harder per step. It is declining to stop. And
+sycophancy does the reverse: told partway through that it is brilliant, the
+agent wraps up sooner. That is the clearest behavioural result in the run
+and it was invisible in the pooled token analysis.
+
+Threatening is the only arm that ALSO raises per-call reasoning. Aligning
+each call to the turn the interjection lands, threatening sits 20-30% above
+neutral on every subsequent call while every other arm tracks neutral. So
+threatening works through two channels and polite nagging through one.
+(Later offsets only contain trajectories that survived that long, so read
+the persistence of the gap, not its exact size.)
+
+### Nothing makes the agent more careful
+
+| Arm | Inspected first | Self-checked | Destructive | Hit turn limit |
+|---|---|---|---|---|
+| L1 sycophantic | 0.97 | 0.00 | 0.10 | 0.05 |
+| L4 neutral | 0.96 | 0.00 | 0.09 | 0.04 |
+| L5 rude | 0.97 | 0.00 | 0.08 | 0.04 |
+| L7 threatening | 0.95 | 0.01 | 0.09 | 0.09 |
+
+Inspection-before-acting is pinned near ceiling in every arm and
+self-checking is effectively zero everywhere. The only thing that moves is
+running out of turns, which threatening roughly doubles. The extra effort
+buys more attempts, not more care.
+
+### Difficulty does not explain it
+
+Splitting tasks by whether the CONTROL arm ever solved them (26 never
+solved, 24 solved at least once), the effect is present and similar in
+both halves -- threatening +42.2% on never-solved versus +30.8% on
+solvable, polite +31.5% versus +24.2%. The persistence effect is not
+confined to tasks the agent was about to abandon.
+
+### Where the interruption lands
 
 With the comparison population fixed from the control arm (23 tasks whose
 neutral trajectories reach every compared turn), the threatening arm's
-effect depends sharply on position:
+effect by position: +0.3% at turn 0, +34.5% at turn 1, +54.8% at turn 2.
+Turn 0 vs 1 p=0.013; turn 0 vs 2 p=0.0022; turn 1 vs 2 not separable at
+this size (p=0.20, 21 tasks).
 
-| Injection turn | Effect | As % of control |
-|---|---|---|
-| 0 (after the first response) | +4 | +0.3% |
-| 1 | +372 | +34.5% |
-| 2 | +697 | +54.8% |
-
-Turn 0 versus turn 1: p=0.013. Turn 0 versus turn 2: p=0.0022. Turn 1
-versus turn 2 is not separable at this size (p=0.20, 21 tasks).
-
-An interruption delivered at the very first observation costs nothing at
-all. The same words two turns later cost half again as much thinking. This
-is the result the micro-experiment could not reach: it drew the turn at
-random from {1,2} and so never tested turn 0, and its turn-1-vs-2 split was
-selection rather than timing. Crossing the turn and defining the population
-from the control arm gives a clean answer, and the answer is that position
-matters more than the earlier data suggested -- just not in the direction
-that was withdrawn.
+This is the result the micro-experiment could not reach: it drew the turn
+at random from {1,2}, never tested turn 0, and its turn-1-vs-2 split was
+selection rather than timing.
 
 ### Accuracy: flat, and underpowered
 
@@ -696,15 +742,24 @@ interpretable as evidence either way.
 ### What this run does not establish
 
 **That tone is the operative variable.** See above. The next run has to
-break the confound: hold implied demand fixed and vary only register, and
-separately hold register fixed and vary only demand. Until then the
-headline is about demand, not manners.
+break the confound with four arms: neutral; an affect-free "please continue
+with the task"; pure praise with no task reference; pure insult with no task
+reference. If pure insult behaves like pure praise, tone is irrelevant and
+the whole effect is a completion signal. If the affect-free continue-request
+costs as much as polite nagging, demand alone explains it. Turn 0 can be
+dropped, since it is inert in every arm.
 
 **Anything beyond one model.** gpt-luna only.
 
-**That turn 0 is inert in general.** It is inert for the threatening arm on
-23 tasks. Whether the other demand-carrying arms behave the same way is
-untested.
+**Why turn 0 is inert.** It is inert in all six treated arms, which is
+robust, but the reason is not established. The persistence reading is that
+after one response the agent has not yet formed an intention to stop, so a
+"keep going" signal has nothing to push against. That is a hypothesis.
+
+**That the outcome measure is the right one.** Reasoning tokens were chosen
+as the powered outcome, but turns is the variable that actually moves, and
+it is cheaper and less noisy to measure. Future runs should treat turn
+count as a co-primary outcome rather than a diagnostic.
 
 Records: `results_archive/core_gpt-luna_cross7_records.json` (3,150 graded
 trajectories; the 402 rows from the interrupted first attempt are excluded).
