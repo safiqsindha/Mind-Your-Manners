@@ -43,6 +43,7 @@ from .config import (
     STUDY2_PILOT_BUDGET_CAP_USD,
     STUDY3_BUDGET_CAP_USD,
 )
+from .study2.runner import INTERJECTION_TURNS
 from .tone_wrappers import INTERJECTIONS
 from .providers.anthropic_provider import AnthropicProvider
 from .providers.claude_cli_provider import ClaudeCLIProvider
@@ -483,6 +484,36 @@ def _study2_stage(args: argparse.Namespace, phase: str, default_cap: float, defa
                 f"gate's neutral-tone numbers do not apply to this draw."
             )
 
+    # Fail before the first paid call, not after 3,000 of them. An
+    # --interject-turns typo that named a turn the agent loop never reaches
+    # would otherwise produce a full arm in which the treatment silently never
+    # fired, and an arm whose treatment never fires is indistinguishable from
+    # its own control.
+    if args.interject_turns:
+        if not args.interject:
+            raise SystemExit("--interject-turns requires --interject.")
+        try:
+            requested = [int(t) for t in args.interject_turns.split(",")]
+        except ValueError:
+            raise SystemExit(
+                f"--interject-turns must be comma-separated integers, got "
+                f"{args.interject_turns!r}."
+            )
+        unknown = sorted(set(requested) - set(INTERJECTION_TURNS))
+        if unknown:
+            raise SystemExit(
+                f"--interject-turns {unknown} outside {list(INTERJECTION_TURNS)}. "
+                f"Turn indices are loop indices: 0 is the observation after the "
+                f"model's first response (reaches ~98% of trajectories), 2 "
+                f"reaches ~55%. Past 2 the treatment misses more trajectories "
+                f"than it reaches."
+            )
+        print(
+            f"[{phase}] injection turn CROSSED over {sorted(set(requested))}: "
+            f"each trial runs once per turn, so this run is "
+            f"{len(set(requested))}x the trajectories of an uncrossed one."
+        )
+
     records = run_condition_batch(
         models, tasks, grader, RESULTS_ROOT, phase=phase,
         budget_cap_usd=cap_usd, n_trials=n_trials,
@@ -490,6 +521,10 @@ def _study2_stage(args: argparse.Namespace, phase: str, default_cap: float, defa
         tone_seed=args.sample_seed, resume=args.resume,
         tones=(args.tones.split(",") if args.tones else None),
         run_label=args.run_label, interject=args.interject,
+        interject_turns=(
+            [int(t) for t in args.interject_turns.split(",")]
+            if args.interject_turns else None
+        ),
     )
     # Ask for the tag rather than re-deriving it. This line used to keep its
     # own copy of the naming rule and so ignored both --run-label and the
@@ -894,6 +929,18 @@ def build_parser() -> argparse.ArgumentParser:
                  "itself. The turn is seeded on (task, trial) and not on the "
                  "tone, so every arm interrupts the same trajectory at the "
                  "same point.",
+        )
+        sp.add_argument(
+            "--interject-turns", default=None,
+            help="Comma-separated turn indices (from 0,1,2) to CROSS the "
+                 "interjection over, e.g. 0,1,2. Every trial is then run once "
+                 "per turn, making injection position a factor of the design "
+                 "rather than a seeded draw -- which is what makes 'which turn "
+                 "costs most' answerable. Without it the turn is drawn at "
+                 "random per (task, trial), and a late turn fires only on the "
+                 "long trajectories, so position is confounded with task "
+                 "difficulty. Requires --interject. Multiplies the run size by "
+                 "the number of turns listed.",
         )
         sp.add_argument("--n-trials", type=int, default=None)
         sp.add_argument("--budget-cap", type=float, default=None)

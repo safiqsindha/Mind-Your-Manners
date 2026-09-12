@@ -465,7 +465,71 @@ obvious next micro-experiment.
 threatening check-in buys 28% more compute and no more correct answers. On
 this model, on these tasks, measured once.
 
+**Where the interruption lands: withdrawn.** A first pass split the effect
+by injection turn and found +21% at turn 1 and +39% at turn 2, with the
+difference significant at p=0.004. That comparison was wrong and is
+withdrawn. The injection turn was drawn at random, and a turn-2 injection
+can only fire on a trajectory that runs to turn 2 -- the hard tasks, which
+are also the expensive ones. The two turns were therefore measured on
+different task populations (50 tasks vs 35), and the gap is what that
+selection produces on its own.
+
+Re-running the same comparison through `compare_injection_turns`, which
+fixes the task set from the CONTROL arm only and so compares both positions
+on identical tasks, the difference disappears:
+
+| Comparison | Task set | Turn 1 | Turn 2 | p |
+|---|---|---|---|---|
+| First pass (selected) | 50 vs 35 tasks | +21% | +39% | 0.004 |
+| Control-defined population | 29 tasks, both turns | +20.0% | +29.1% | 0.32 |
+
+The effect of a threatening interruption is real at both positions. That it
+is *larger later* is not established. Whether position matters is what the
+crossed-turn run is designed to answer.
+
+**Grading in this pair of runs is not trustworthy; the cost result is.**
+The two arms both ran tone `L4_neutral` over the same 50 tasks and the same
+8 trials, and the scratch path did not include the run label -- so 800
+trajectories shared 400 execution directories, two concurrent processes
+unlinking and rewriting one another's `output.xlsx`. Every `passed` flag in
+these two runs is therefore suspect, including the flat accuracy result
+above, which should be read as "not measured" rather than "measured null".
+Token counts come from the provider's API response and never touched the
+filesystem, so the 27.5% cost effect -- the headline -- is unaffected. Fixed
+in the runner: the scratch path now carries the run tag and the injection
+turn.
+
 Records: `results_archive/core_gpt-luna_reinject_{neutral,threatening}_records.json`.
+
+## Next: seven registers, crossed over injection turn
+
+The micro-experiment tested one contrast (threatening vs neutral) at a
+random position. The expansion tests all seven registers of the same scale,
+delivered mid-task, at each of three positions:
+
+* **Seven interjection levels**, L1 sycophantic through L7 threatening, all
+  exactly 28 tokens, all opening with the same "Checking in." stem, none
+  carrying a task instruction. L4 neutral is the control.
+* **Injection turn crossed over {0, 1, 2}** rather than drawn. Turn 0 is
+  included: it was excluded from the micro-experiment on a misreading of the
+  agent loop, and is in fact both legal and the position that reaches the
+  most trajectories (~98%, against ~77% and ~55%).
+* **The opening wrapper is held at v2 neutral in every arm**, so the run
+  varies one thing.
+* **The timing comparison's population is defined by the control arm**, via
+  `turn_comparable_tasks`. Crossing removes the assignment half of the
+  selection problem; it cannot remove reachability, since a short trajectory
+  still cannot receive a late interjection, and whether it is short is
+  itself an outcome. Filtering on the treated arm's own firing would select
+  on a variable the treatment moves. Deciding the population from the
+  control arm alone cannot respond to the effect being measured.
+
+What it will and will not resolve: it is powered for cost, not accuracy.
+At 50 tasks and 4 trials per cell, a single tone-vs-neutral contrast on
+reasoning tokens has power 0.43 against a 12% effect, 0.59 against 15%, and
+above 0.95 against the 27% already observed. Accuracy stays underpowered at
+every size considered, and that is stated here before the run rather than
+after it.
 
 ## Total spend
 
