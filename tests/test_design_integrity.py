@@ -755,3 +755,85 @@ def test_cost_estimate_prices_reasoning_exactly_once():
         reasoning_included_in_completion=False,
     )
     assert compute_cost_usd(model, google_style) == pytest.approx(3.8)
+
+
+# --- 11. Resumed runs left an abandoned attempt in the raw log ------------
+# The log is append-only and a resume does not know the killed attempt's
+# calls are already in it, so one (item_id, tone_level, trial) key can hold
+# two trajectories -- and only the second was ever graded. In the gpt-luna
+# core log, task 56953 / L7_threatening / trial 0 holds 9 calls: a 3-call
+# attempt that died, then the 6-call attempt behind the record. Summing the
+# key blindly gave 2338 reasoning tokens where the graded trajectory spent
+# 1236.
+
+def _two_attempt_log(path: Path) -> Path:
+    """The real shape of task 56953 / L7_threatening / trial 0: a 3-call
+    attempt, then the 6-call retry. prompt_tokens climbs within an attempt
+    and drops when the conversation restarts."""
+    import json as _json
+
+    abandoned = [(803, 1600, 828), (2479, 703, 241), (8696, 130, 33)]
+    real = [(803, 1425, 670), (2390, 421, 85), (3938, 473, 59),
+            (4447, 765, 297), (9202, 496, 83), (9637, 159, 42)]
+    rows = []
+    ts = 1789155849.0
+    for i, (p, c, r) in enumerate(abandoned + real):
+        # The retry starts hours later; timestamps are what orders the log.
+        offset = ts + i * 5 if i < len(abandoned) else ts + 11_000 + i * 5
+        rows.append({"item_id": "56953", "tone_level": "L7_threatening", "trial": 0,
+                     "prompt_tokens": p, "completion_tokens": c, "reasoning_tokens": r,
+                     "timestamp": offset})
+    path.write_text("\n".join(_json.dumps(r) for r in rows))
+    return path
+
+
+def test_backfill_uses_only_the_last_attempt(tmp_path: Path):
+    from harness.study2.analysis import backfill_reasoning_tokens
+
+    raw = _two_attempt_log(tmp_path / "raw.jsonl")
+    recs = [{"task_id": "56953", "tone_level": "L7_threatening", "trial": 0}]
+    assert backfill_reasoning_tokens(recs, raw) == 1
+    assert recs[0]["reasoning_tokens"] == 1236, "the graded trajectory, not both attempts"
+    assert recs[0]["reasoning_tokens"] != 2338, "2338 is the naive both-attempts sum"
+
+
+def test_recompute_total_tokens_rebuilds_prompt_plus_completion(tmp_path: Path):
+    from harness.study2.analysis import recompute_total_tokens
+
+    raw = _two_attempt_log(tmp_path / "raw.jsonl")
+    recs = [{"task_id": "56953", "tone_level": "L7_threatening", "trial": 0, "total_tokens": 999_999}]
+    assert recompute_total_tokens(recs, raw) == 1
+    expected = (803 + 1425) + (2390 + 421) + (3938 + 473) + (4447 + 765) + (9202 + 496) + (9637 + 159)
+    assert recs[0]["total_tokens"] == expected
+    # Neither of the two ways of getting it wrong: reasoning re-added, or
+    # the abandoned attempt included.
+    assert recs[0]["total_tokens"] != expected + 1236
+    assert recs[0]["total_tokens"] != expected + 803 + 1600 + 2479 + 703 + 8696 + 130
+
+
+def test_recompute_total_tokens_leaves_keys_absent_from_this_log_alone(tmp_path: Path):
+    """Record files are namespaced per model; running against one model's
+    raw log must not blank out another's records."""
+    from harness.study2.analysis import recompute_total_tokens
+
+    raw = _two_attempt_log(tmp_path / "raw.jsonl")
+    recs = [{"task_id": "other", "tone_level": "L4_neutral", "trial": 0, "total_tokens": 4242}]
+    assert recompute_total_tokens(recs, raw) == 0
+    assert recs[0]["total_tokens"] == 4242
+
+
+def test_a_single_attempt_key_is_unaffected(tmp_path: Path):
+    """The split must trigger on a restart, not on ordinary turn-to-turn
+    growth -- otherwise every trajectory would be truncated to its last call."""
+    import json as _json
+    from harness.study2.analysis import last_attempt_calls, recompute_total_tokens
+
+    rows = [{"item_id": "t0", "tone_level": "L4_neutral", "trial": 0, "timestamp": 10.0 + i,
+             "prompt_tokens": p, "completion_tokens": 100, "reasoning_tokens": 10}
+            for i, p in enumerate((800, 2400, 3900, 4400))]
+    assert len(last_attempt_calls(rows)) == 4
+    raw = tmp_path / "raw.jsonl"
+    raw.write_text("\n".join(_json.dumps(r) for r in rows))
+    recs = [{"task_id": "t0", "tone_level": "L4_neutral", "trial": 0, "total_tokens": 0}]
+    recompute_total_tokens(recs, raw)
+    assert recs[0]["total_tokens"] == 800 + 2400 + 3900 + 4400 + 400
