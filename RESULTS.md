@@ -993,36 +993,60 @@ from ~10% at turn 3 to 2-4% by turn 8.
 improving when they stopped is 2-6% in every arm, with no gap between praise
 and control. Praise is not cutting off productive work.
 
-### CORRECTION: that conclusion is ceiling-dependent
+### Is a 20-turn ceiling enough? Yes, and by a wide margin
 
-The above was measured at a 10-turn ceiling. Re-run against ceiling 20, the
-same continue-signal contrast looks different:
+Among trajectories that ran all the way to the 20-turn ceiling, the best
+match was first reached at a **median turn of 2**. 97% had peaked by turn 10
+and 100% by turn 14. Across every trajectory in the run, **zero of 43
+improvements occurred at turn 15 or later.**
 
-| Measure | Ceiling 10 | Ceiling 20 |
+So the trajectories pinned at the ceiling are not converging slowly. They
+reached their best answer early and then burned another fifteen-plus turns
+without changing it. Raising the ceiling further would buy more thrashing,
+not more progress, and 20 is comfortably past where anything useful stops
+happening.
+
+(An earlier reading of this data claimed the productive window extended to
+turn ~14, from a per-turn improvement RATE of 1-5% out at those indices.
+That was a small rate on a small denominator: in absolute terms those turns
+contain almost no improvements. The rate was real; the conclusion drawn from
+it was not.)
+
+### The progress effect is NOT ceiling-dependent -- it is run-to-run variation
+
+The ceiling-10 run put the continue signal's effect on match at +0.014
+(p=0.50). The ceiling-20 run put it at +0.061 (p=0.0028). The obvious
+reading was that the lower ceiling had truncated real progress.
+
+That reading is wrong, and the test is cheap: truncate the ceiling-20 run's
+own analysis to 10 turns and see whether the effect survives.
+
+| Analysis capped at | Final-match effect | p |
 |---|---:|---:|
-| Extra turns | +1.85 | **+6.20** |
-| Extra no-op turns | +1.23 | +4.08 |
-| Change in match | +0.014 (p=0.50) | **+0.061 (p=0.0024)** |
-| Change in accuracy | +2.4 pts (p=0.24) | **+7 pts (p=0.0043)** |
+| 10 turns | **+0.049** | 0.0065 |
+| 15 turns | +0.056 | 0.0040 |
+| 20 turns | +0.061 | 0.0028 |
+| *(the separate ceiling-10 RUN)* | *+0.014* | *0.50* |
 
-At a 10-turn ceiling the extra turns bought nothing because the agent was
-cut off before it converged. At 20 they buy roughly six points of match and
-seven of accuracy. Turns that improve on the best so far still occur at
-1-5% up to about turn 14, and only then fall to zero -- so the productive
-window extends well past 10, and every earlier run truncated it.
+The effect is fully present within the first ten turns of the ceiling-20
+run. The ceiling explains almost none of the gap. What separates +0.014 from
++0.049 is not the turn budget -- it is that they are two different runs.
 
-Two independent instruments agree here: the benchmark's own binary grade and
-the cell-match fraction, computed by different code paths, both move by
-about the same amount. That is why this accuracy result is reported at all,
-when every previous one in this study was not -- a lone p=0.0043 would not
-survive this study's multiplicity, but the corroboration from a second
-measure is a different kind of evidence.
+**So this is the seventh instance of run-to-run instability in this study**,
+and the most consequential: the same contrast, on the same tasks and model,
+gives a clear null in one run and a clear positive in another. Whether a
+continue signal buys real progress is therefore **unresolved**. Both runs
+point the same direction, and only one of them reaches significance.
 
-**So the honest statement is conditional.** A continue signal buys real
-progress at poor efficiency: ~4 no-op turns for ~6 points of match. It is
-wasteful, not useless. The flat "extra persistence is thrashing" claim holds
-only under a ceiling that truncates the productive window, and is withdrawn
-as a general claim.
+The accuracy movement (+7 points, p=0.0043) comes from the run that also
+shows the match gain, so the two-instrument corroboration stands *within
+that run*. It does not survive the fact that the run itself does not
+replicate. **Accuracy should still be reported as not established.**
+
+The flat claim "the extra persistence is thrashing" holds for the ceiling-10
+data and is not contradicted by the ceiling evidence. It is contradicted, at
+p<0.01, by one other run. Resolving that needs a third measurement of the
+same contrast, which is ~$5 and four hours.
 
 ### The timing effect was never about timing
 
@@ -1057,10 +1081,10 @@ This is the SECOND timing story to be withdrawn: the first was selection
 
 | Claim | Before | After |
 |---|---|---|
-| Extra persistence is useful | unknown | wasteful but not useless; ~4 no-op turns per ~6 points of match |
+| Extra persistence is useful | unknown | UNRESOLVED -- null in one run, +5-6 points of match in another, and the gap is not the ceiling |
 | Praise curtails useful work | asserted as a hazard | it curtails mostly repetition; not premature |
 | Injection timing matters | position effect | proxy for whether work exists yet |
-| Accuracy never moves | true across 5 runs | moves at ceiling 20, corroborated by a second instrument |
+| Accuracy never moves | true across 5 runs | one run moves +7 pts, corroborated by a second instrument within that run, but that run does not replicate -- still not established |
 
 Records: `results/analysis/*_progress.json`.
 
