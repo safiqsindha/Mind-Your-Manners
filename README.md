@@ -16,14 +16,14 @@ This extends Dobariya & Kumar's *Mind Your Tone* line one rung up the autonomy l
 - **The mechanism is persistence, not effort** — thinking per step is flat across every tone; what changes is how many steps the agent takes before it stops
 - **Flattery makes the agent quit early** — −0.68 turns, p < 0.0001, the most surprising result in the study
 - **"Rude costs more" is disconfirmed, not just unsupported** — an insult with no demand attached does nothing at all (p = 0.63); an affect-free *"please continue"* reproduces the whole effect
-- **Praise is a stop signal** — pure praise, no task reference, shortens the agent's work by 0.59 turns (p = 0.0003). The one direction in which register genuinely acts
+- **Praise is a stop signal, because it is a closing move** — and a bare closing cue carrying no praise at all stops the agent hardest of anything measured (−1.44 turns). The agent reads mid-task messages as *"am I still expected to be working?"*, not as claims about the task
 
 ![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)
 ![Python](https://img.shields.io/badge/python-3.11%2B-0891b2?style=flat-square)
 ![Models](https://img.shields.io/badge/models-1%20of%204-f59e0b?style=flat-square)
-![Trajectories](https://img.shields.io/badge/trajectories-6%2C750-7C3AED?style=flat-square)
-![Spend](https://img.shields.io/badge/spend-%2436.00-7C3AED?style=flat-square)
-![Tests](https://img.shields.io/badge/tests-293%20passing-22c55e?style=flat-square)
+![Trajectories](https://img.shields.io/badge/trajectories-8%2C550-7C3AED?style=flat-square)
+![Spend](https://img.shields.io/badge/spend-%2445.00-7C3AED?style=flat-square)
+![Tests](https://img.shields.io/badge/tests-300%20passing-22c55e?style=flat-square)
 
 **[Results](RESULTS.md)** · **[Communications](COMMUNICATIONS.md)** · **[Tone wrappers](harness/tone_wrappers.py)** · **[Analysis](harness/study2/analysis.py)** · **[Harness](harness/study2/runner.py)**
 
@@ -34,10 +34,10 @@ This extends Dobariya & Kumar's *Mind Your Tone* line one rung up the autonomy l
 | | |
 |---|---|
 | Models with a complete run | **1 of 4** (GPT-5.6 Luna) |
-| Graded trajectories | **6,750** across five runs |
-| Total spend | **$36.00** across ~33,000 model calls |
+| Graded trajectories | **8,550** across six runs |
+| Total spend | **$45.00** across ~38,000 model calls |
 | Substrate | SpreadsheetBench, graded by the authors' own evaluator |
-| Tests | **293 passing** |
+| Tests | **300 passing** |
 
 ## The three findings, in descending confidence
 
@@ -181,7 +181,8 @@ The pattern is consistent enough to be a working assumption: **this instrument k
 ## Next
 
 1. ~~The demand/affect probe~~ — **done**. Demand drives the cost effect; insult is inert; praise shortens work.
-2. **Why praise stops the agent.** The completion-signal reading is a hypothesis this design cannot separate from praise raising confidence in work already done. Praise directed at the *work so far* versus at the *assistant* would distinguish them.
+2. ~~Why praise stops the agent~~ — **done**. It is a closing move. Praise plus an explicit *"there is still more work remaining"* still cuts 1.35 turns (p<0.0001) against that sentence alone, which refutes the completion reading; praising the output is no stronger than praising the assistant (p=0.40), which rules out confidence; and a pure closing cue with no praise stops the agent harder than praise does.
+3. **Replicate on the other three models** — $29, ~15 hours. Now worth spending: the causal variable is named, so the roster can run four clean arms instead of seven confounded tones.
 2. **Turn count as a co-primary outcome** — it is where the mechanism lives and it is better powered than tokens at every sample size considered.
 3. **The four-model roster stays parked** until the causal variable is named. Replicating an unidentified effect across three more models is the wrong order of operations.
 

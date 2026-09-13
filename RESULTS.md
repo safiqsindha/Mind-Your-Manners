@@ -863,6 +863,98 @@ censors the demand arm hardest.
 
 Records: `results_archive/core_gpt-luna_probe_records.json` (1,600 graded).
 
+## Why praise stops the agent: it is a closing move (2026-09-13)
+
+1,800 trajectories, gpt-luna, 6 arms x 2 injection turns {1,2} x 50 tasks x
+3 trials, $8.61, zero crashes. Fired on 1,396 of 1,800 (78%).
+
+The demand/affect probe showed praise-only shortens trajectories while
+insult-only does nothing. Three readings survived it: praise is heard as
+COMPLETION ("this is good" implies "this is done"), as CONFIDENCE (the
+agent's estimate of work already produced rises, so it stops checking), or
+as CLOSING (praise is how conversations end; the agent reads turn-taking,
+not task state). These arms discriminate.
+
+### Result
+
+| Arm | Turns | % | p | Tokens | % | p |
+|---|---:|---:|---:|---:|---:|---:|
+| Q1 praise the assistant | -1.08 | -24.0% | <0.0001 | -182 | -16.2% | <0.0001 |
+| Q2 praise the work | -0.93 | -20.8% | <0.0001 | -105 | -9.3% | 0.018 |
+| Q3 closing cue, no praise | **-1.44** | **-32.1%** | <0.0001 | -226 | -20.1% | <0.0001 |
+| Q4 praise + "work remains" | +0.50 | +11.2% | 0.020 | +141 | +12.5% | 0.003 |
+| Q5 "work remains" alone | +1.85 | +41.1% | <0.0001 | +339 | +30.2% | <0.0001 |
+
+**COMPLETION is refuted.** Q4 vs Q5 share their continuation clause
+verbatim, so it cancels and the contrast is praise alone in a context where
+the agent has just been told the task is NOT finished. Praise still removes
+**1.35 turns (p<0.0001)** and 199 reasoning tokens. If praise meant "you are
+done", an explicit statement to the contrary in the same message should have
+cancelled it. It did not even dent it -- the effect is larger here than
+praise-alone against control.
+
+**CONFIDENCE is not supported.** Praising the OUTPUT (Q2) is no stronger
+than praising the ASSISTANT (Q1): +0.15 turns, p=0.40. If the mechanism were
+rising confidence in work already produced, aiming praise at that work
+should hit harder. It does not; on tokens Q2 is slightly *weaker*
+(+77, p=0.034).
+
+**CLOSING is supported, and overshoots.** A pure closing cue -- "this is the
+final status note recorded for this task here, and no further notes will
+follow it" -- carries no praise, no evaluation, and no task-state claim, and
+it produces **the largest stop in the entire study**: -1.44 turns. It stops
+the agent significantly harder than praise does (-0.36 turns vs Q1,
+p=0.015).
+
+### What this means
+
+The agent is reading mid-task interruptions as **discourse signals about
+whether the exchange continues**, not as statements about the task. On that
+reading the whole series lines up:
+
+| Signal | Effect | Discourse role |
+|---|---:|---|
+| "no further notes will follow" | -1.44 | explicit close |
+| "you are excellent" | -1.08 | conventional close |
+| "the work looks correct" | -0.93 | conventional close |
+| (neutral filler) | -- | no signal |
+| "you are awful" | 0.00 (probe) | not a move the agent acts on |
+| "keep working, get it right" | +1.17 (probe) | explicit continue |
+| "more work remains" | +1.85 | explicit continue |
+
+Cost is a side effect. What the interruption actually does is move the
+agent's estimate of whether it is still expected to be working.
+
+This is a practical hazard rather than a curiosity: **politely wrapping up
+with an agent that is still working will curtail its work**, and doing so
+while telling it there is more to do does not prevent that.
+
+### Accuracy, again, does not move
+
+Every arm within 2.6 points of control, all p>0.13. Nothing in this study
+has ever moved accuracy.
+
+### The magnitude does not replicate, and that is the sixth time
+
+The SAME praise text, model and tasks gave -0.62 turns in the probe run and
+-1.14 here. Direction and significance replicate cleanly; the point estimate
+is not stable, and should not be quoted as one. This is the sixth measured
+quantity in this study that moved materially on re-measurement, and the
+pattern is consistent enough to be a standing assumption rather than a
+footnote.
+
+### What this does not establish
+
+**Why a closing cue works.** That the agent responds to discourse structure
+is measured; whether that reflects dialogue-completion priors from training,
+instruction-following, or something else is not addressed here.
+
+**Anything beyond one model**, or beyond a 10-turn ceiling that censors the
+continue-signal arms hardest -- Q5 at 6.37 mean turns is the closest any arm
+has come to it.
+
+Records: `results_archive/core_gpt-luna_praise_records.json` (1,800 graded).
+
 ## Total spend
 
 **Under $0.10 against the study's target-model budget caps** -- see the
