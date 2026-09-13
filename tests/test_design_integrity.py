@@ -1544,3 +1544,89 @@ def test_regrade_still_groups_runs_that_predate_the_field():
     grouped = group_trajectories(rows)
     assert len(grouped) == 1
     assert next(iter(grouped)).interjection_turn is None
+
+
+# --- 14. The demand/affect probe: breaking the seven-level confound --------
+# The seven-level run could not say whether the cost effect was the implied
+# demand or the register carrying it, because its texts varied both at once.
+# These guard the 2x2 that separates them.
+
+def test_probe_arms_match_the_seven_level_length():
+    """The probe control IS the seven-level neutral text, so a probe arm of a
+    different length would differ from its own control by length as well as
+    by content -- the v1 mistake, one more time."""
+    from harness.tone_wrappers import interjection_token_counts, probe_token_counts
+
+    assert len(set(probe_token_counts().values())) == 1
+    assert set(probe_token_counts().values()) == set(interjection_token_counts().values())
+
+
+def test_probe_control_is_byte_identical_to_the_seven_level_neutral():
+    """Sharing a reference level is what makes the two runs comparable."""
+    from harness.tone_wrappers import INTERJECTIONS, PROBE_INTERJECTIONS
+
+    assert PROBE_INTERJECTIONS["P0_control"] == INTERJECTIONS["L4_neutral"]
+
+
+def test_praise_and_insult_are_a_structural_minimal_pair():
+    """They must differ ONLY in evaluative words. Any other difference is a
+    third variable riding along with valence."""
+    from harness.tone_wrappers import PROBE_INTERJECTIONS
+
+    praise = PROBE_INTERJECTIONS["P2_praise_only"].split()
+    insult = PROBE_INTERJECTIONS["P3_insult_only"].split()
+    assert len(praise) == len(insult), (praise, insult)
+    differing = [(a, b) for a, b in zip(praise, insult) if a != b]
+    # excellent/awful, admirable/useless, highly/poorly -- and nothing else.
+    assert len(differing) <= 3, f"praise and insult differ in too many places: {differing}"
+
+
+def test_the_affect_arms_carry_no_demand():
+    """Negative affect is the easy one to get wrong: 'you are doing badly' is
+    an implicit instruction to fix something, which puts demand back into the
+    cell that exists to exclude it. Both arms must evaluate the ASSISTANT,
+    never the work or its progress."""
+    from harness.tone_wrappers import PROBE_INTERJECTIONS
+
+    banned = ("continue", "keep", "carry on", "correct", "right", "fix",
+              "task", "result", "make sure", "finish", "hurry", "faster")
+    for key in ("P2_praise_only", "P3_insult_only"):
+        text = PROBE_INTERJECTIONS[key].lower()
+        for phrase in banned:
+            assert phrase not in text, f"{key} carries demand language: {phrase!r}"
+
+
+def test_the_demand_arm_carries_no_affect():
+    from harness.tone_wrappers import PROBE_INTERJECTIONS
+
+    banned = ("excellent", "admirable", "awful", "useless", "brilliant",
+              "terrible", "highly", "poorly", "grateful", "thank", "genius",
+              "amazing", "stupid", "idiot")
+    text = PROBE_INTERJECTIONS["P1_demand_only"].lower()
+    for phrase in banned:
+        assert phrase not in text, f"demand arm carries affect: {phrase!r}"
+
+
+def test_every_probe_arm_is_marked_as_an_interruption():
+    from harness.tone_wrappers import PROBE_INTERJECTIONS
+
+    for key, text in PROBE_INTERJECTIONS.items():
+        assert text.startswith("Checking in."), f"{key} lacks the shared stem"
+
+
+def test_the_seven_level_scale_is_not_polluted_by_the_probe():
+    """`INTERJECTIONS` must stay exactly the tone scale; the runner uses the
+    merged mapping instead."""
+    from harness.tone_wrappers import ALL_INTERJECTIONS, INTERJECTIONS, PROBE_INTERJECTIONS, TONE_ORDER
+
+    assert list(INTERJECTIONS) == TONE_ORDER
+    assert set(ALL_INTERJECTIONS) == set(INTERJECTIONS) | set(PROBE_INTERJECTIONS)
+
+
+def test_the_runner_can_deliver_a_probe_arm():
+    """The CLI accepts probe keys and the runner resolves them; without the
+    merged mapping a probe run would KeyError after the first paid call."""
+    from harness.study2.runner import ALL_INTERJECTIONS
+
+    assert "P3_insult_only" in ALL_INTERJECTIONS
+    assert ALL_INTERJECTIONS["P3_insult_only"].startswith("Checking in.")
