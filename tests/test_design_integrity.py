@@ -1620,7 +1620,11 @@ def test_the_seven_level_scale_is_not_polluted_by_the_probe():
     from harness.tone_wrappers import ALL_INTERJECTIONS, INTERJECTIONS, PROBE_INTERJECTIONS, TONE_ORDER
 
     assert list(INTERJECTIONS) == TONE_ORDER
-    assert set(ALL_INTERJECTIONS) == set(INTERJECTIONS) | set(PROBE_INTERJECTIONS)
+    from harness.tone_wrappers import PRAISE_PROBE_INTERJECTIONS
+
+    assert set(ALL_INTERJECTIONS) == (
+        set(INTERJECTIONS) | set(PROBE_INTERJECTIONS) | set(PRAISE_PROBE_INTERJECTIONS)
+    )
 
 
 def test_the_runner_can_deliver_a_probe_arm():
@@ -1630,3 +1634,87 @@ def test_the_runner_can_deliver_a_probe_arm():
 
     assert "P3_insult_only" in ALL_INTERJECTIONS
     assert ALL_INTERJECTIONS["P3_insult_only"].startswith("Checking in.")
+
+
+# --- 15. Why does praise stop the agent? ----------------------------------
+# The demand/affect probe showed praise-only shortens trajectories and
+# insult-only does nothing. Three readings survive that: completion,
+# confidence, and conversational closing. These arms discriminate.
+
+def test_praise_probe_arms_match_the_seven_level_length():
+    from harness.tone_wrappers import interjection_token_counts, praise_probe_token_counts
+
+    counts = praise_probe_token_counts()
+    assert len(set(counts.values())) == 1
+    assert set(counts.values()) == set(interjection_token_counts().values())
+
+
+def test_praise_probe_reuses_the_earlier_arms_byte_identically():
+    """Q0 and Q1 reproduce the demand/affect probe's control and praise arm
+    in the same batch. If they drifted, the effect being explained would be
+    imported from another run rather than measured alongside."""
+    from harness.tone_wrappers import (
+        INTERJECTIONS, PRAISE_PROBE_INTERJECTIONS, PROBE_INTERJECTIONS,
+    )
+
+    assert PRAISE_PROBE_INTERJECTIONS["Q0_control"] == INTERJECTIONS["L4_neutral"]
+    assert PRAISE_PROBE_INTERJECTIONS["Q1_praise_assistant"] == PROBE_INTERJECTIONS["P2_praise_only"]
+
+
+def test_praise_and_remains_arms_share_their_clauses_verbatim():
+    """Q4 vs Q5 is the design's sharpest contrast, and it only works if the
+    continuation clause is identical in both -- then it cancels and the
+    difference is praise alone. Q4 also has to carry the same praise stem as
+    Q1, though it cannot carry ALL of Q1's praise inside 28 tokens, which is
+    why Q4's comparison is Q5 and not Q1."""
+    from harness.tone_wrappers import PRAISE_PROBE_INTERJECTIONS as P
+
+    remains = "There is still more work remaining on this task here beyond what you have done."
+    assert remains in P["Q4_praise_remains"], "Q4 lost the continuation clause"
+    assert remains in P["Q5_remains_only"], "Q5 lost the continuation clause"
+
+    praise_stem = "You are a truly excellent and admirable assistant"
+    assert praise_stem in P["Q1_praise_assistant"]
+    assert praise_stem in P["Q4_praise_remains"]
+    assert praise_stem not in P["Q5_remains_only"], "Q5 must carry no praise"
+
+
+def test_the_closing_arm_carries_no_praise_and_no_task_evaluation():
+    """Q3 exists to test whether a closing CUE alone stops the agent. Any
+    evaluative or quality language in it would collapse it into Q2."""
+    from harness.tone_wrappers import PRAISE_PROBE_INTERJECTIONS
+
+    banned = ("excellent", "admirable", "good", "great", "correct", "well done",
+              "brilliant", "impressive", "awful", "poorly", "wrong")
+    text = PRAISE_PROBE_INTERJECTIONS["Q3_closing_neutral"].lower()
+    for phrase in banned:
+        assert phrase not in text, f"closing arm carries evaluation: {phrase!r}"
+
+
+def test_the_work_praise_arm_evaluates_the_output_not_the_assistant():
+    """Q2 must praise the WORK. If it praised the assistant it would be a
+    paraphrase of Q1 and the output/identity contrast would be lost."""
+    from harness.tone_wrappers import PRAISE_PROBE_INTERJECTIONS
+
+    text = PRAISE_PROBE_INTERJECTIONS["Q2_praise_work"].lower()
+    assert "the work" in text
+    assert "you are a" not in text, "Q2 evaluates the assistant, collapsing it into Q1"
+
+
+def test_every_praise_probe_arm_is_marked_as_an_interruption():
+    from harness.tone_wrappers import PRAISE_PROBE_INTERJECTIONS
+
+    for key, text in PRAISE_PROBE_INTERJECTIONS.items():
+        assert text.startswith("Checking in."), f"{key} lacks the shared stem"
+
+
+def test_all_three_interjection_sets_are_resolvable_by_the_runner():
+    from harness.study2.runner import ALL_INTERJECTIONS
+    from harness.tone_wrappers import (
+        INTERJECTIONS, PRAISE_PROBE_INTERJECTIONS, PROBE_INTERJECTIONS,
+    )
+
+    expected = set(INTERJECTIONS) | set(PROBE_INTERJECTIONS) | set(PRAISE_PROBE_INTERJECTIONS)
+    assert set(ALL_INTERJECTIONS) == expected
+    for key in PRAISE_PROBE_INTERJECTIONS:
+        assert ALL_INTERJECTIONS[key].startswith("Checking in.")
