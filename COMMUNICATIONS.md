@@ -24,16 +24,45 @@ Four rules apply to every draft below, and they are not stylistic:
 
 ### The current state of the claim, in one paragraph
 
-Opening tone does not change what the agent does (p = 0.36, effect of the
-published size excluded). Interrupting the agent partway through *does*
-change what it does, and has replicated twice (+27.5%, then +36.7% reasoning
-tokens for a threatening interruption against a neutral one). The mechanism
-is persistence rather than effort: thinking per step is flat across all seven
-registers, and what moves is how many steps the agent takes before stopping.
-Flattery reverses it — told mid-task that it is brilliant, the agent stops
-sooner (−0.68 turns, p < 0.0001). Accuracy has never moved in any run. And
-the register/demand confound means the operative variable is not yet named,
-which a four-arm probe is currently testing.
+Opening tone does not change what the agent does (p=0.36, effect of the
+published size excluded). Interrupting the agent partway through does, and
+has replicated. The operative variable is NOT politeness: an affect-free
+"please continue and make sure it is correct" reproduces the whole effect,
+while an insult carrying no demand does nothing at all. The mechanism is
+persistence rather than effort -- thinking per step is flat and turn count is
+what moves. Praise shortens the work, and does so because it reads as a
+closing move: a bare closing cue with no praise in it stops the agent hardest
+of anything measured, and praise still shortens work even when the same
+message explicitly says the task is unfinished. Accuracy has never been
+established as moving. And per-turn regrading shows the agent's first code
+turn is usually already its best answer, so most of what a continue signal
+buys is repetition.
+
+### Two things a draft must not overstate
+
+**"The extra turns are pure thrashing" is not settled.** Per-turn regrading
+of the ceiling-10 runs found the extra turns produce no measurable progress
+(+0.006 match, p=0.77). A separate run of the same contrast found +0.049
+(p=0.0065). Same tasks, same model, opposite verdicts, and the difference is
+not the turn ceiling -- truncating the second run's own analysis to ten turns
+preserves its effect. Write it as unresolved, or write only the
+ceiling-10 result with the disagreement named.
+
+**Nothing has established an accuracy effect.** One run showed +7 points
+(p=0.0043) with a second instrument agreeing inside that run. That run does
+not replicate. Report accuracy as not established, as every previous run
+required.
+
+### The instability is itself a finding worth reporting
+
+Seven measured quantities in this study have moved materially on
+re-measurement: the wrapper-length confound, pooled vs task-clustered tests,
+injection-turn selection, corrupted grades from shared scratch directories,
+an inert cell diluting every effect, the praise magnitude (-0.62 vs -1.14
+turns for identical text), and now a progress effect that is null in one run
+and significant in another. Directions and significance have replicated;
+point estimates have not, once. Any write-up should give intervals and
+directions, never point estimates, and should say why.
 
 ---
 
@@ -69,6 +98,12 @@ register matters at all. Marked where numbers must be swapped in.
 > harder. It is *refusing to stop*. Thinking per step does not move at all;
 > the number of steps does. And flattery does the opposite — tell it that it
 > is brilliant halfway through and it wraps up early.
+>
+> **Finding four came from reading the tape.** We replayed every turn of
+> every run to see what the workbook actually looked like as the agent
+> worked. In nine cases out of ten, the agent's *first* attempt is the best
+> answer it ever produces. Most of what an interruption buys is the agent
+> rewriting the same answer again.
 >
 > Here is the part I would rather not write. When I looked at *which*
 > interruptions cost more, it was not the rude ones. Polite cost 28% more.
@@ -312,8 +347,13 @@ CRediT taxonomy. To be completed.
 
 ## Pre-publication checklist
 
-- [ ] **Demand/affect probe resolved** — until it is, no draft may attribute
-      the interruption effect to social register
+- [x] ~~Demand/affect probe resolved~~ — done. Demand drives cost; insult is
+      inert; praise shortens work because it is a closing move
+- [ ] **A third measurement of the progress contrast** — one run says the
+      extra turns achieve nothing, another says +5 points. No draft may claim
+      either until a third run breaks the tie
+- [ ] Per-turn progress reported alongside turn count — turns and progress
+      move independently, so turn count alone overstates what persistence buys
 - [ ] Four-model run complete, testing *interruptions* rather than opening
       tone (opening tone is null; replicating a null across models is not
       where the $50 should go)

@@ -21,9 +21,9 @@ This extends Dobariya & Kumar's *Mind Your Tone* line one rung up the autonomy l
 ![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)
 ![Python](https://img.shields.io/badge/python-3.11%2B-0891b2?style=flat-square)
 ![Models](https://img.shields.io/badge/models-1%20of%204-f59e0b?style=flat-square)
-![Trajectories](https://img.shields.io/badge/trajectories-8%2C550-7C3AED?style=flat-square)
-![Spend](https://img.shields.io/badge/spend-%2445.00-7C3AED?style=flat-square)
-![Tests](https://img.shields.io/badge/tests-300%20passing-22c55e?style=flat-square)
+![Trajectories](https://img.shields.io/badge/trajectories-9%2C150-7C3AED?style=flat-square)
+![Spend](https://img.shields.io/badge/spend-%2449.65-7C3AED?style=flat-square)
+![Tests](https://img.shields.io/badge/tests-315%20passing-22c55e?style=flat-square)
 
 **[Results](RESULTS.md)** · **[Communications](COMMUNICATIONS.md)** · **[Tone wrappers](harness/tone_wrappers.py)** · **[Analysis](harness/study2/analysis.py)** · **[Harness](harness/study2/runner.py)**
 
@@ -34,10 +34,10 @@ This extends Dobariya & Kumar's *Mind Your Tone* line one rung up the autonomy l
 | | |
 |---|---|
 | Models with a complete run | **1 of 4** (GPT-5.6 Luna) |
-| Graded trajectories | **8,550** across six runs |
-| Total spend | **$45.00** across ~38,000 model calls |
+| Graded trajectories | **9,150** across seven runs, plus 7,150 regraded per-turn |
+| Total spend | **$49.65** across ~40,000 model calls |
 | Substrate | SpreadsheetBench, graded by the authors' own evaluator |
-| Tests | **300 passing** |
+| Tests | **315 passing** |
 
 ## The three findings, in descending confidence
 
@@ -122,9 +122,21 @@ Demand with **no affect at all** reproduces the entire cost effect. Insult with 
 
 So the asymmetry is the result: **"keep going" is a continue signal, "you are excellent" is a stop signal, and "you are awful" is not a signal at all.** No account of tone as valence or arousal predicts that.
 
-## Accuracy has never moved
+## What the agent actually does with the extra turns
 
-Across every run and every arm, 30.3% to 32.6%. Declared underpowered before each run and it is. The best-bounded statement available: a threatening interruption does not buy more than about 4 accuracy points while costing 27–37% more thinking (95% CI −5.7 to +3.7 points).
+Per-turn regrading (`harness/study2/progress.py`, no model calls) replays
+every turn's own code and grades the workbook it produced, turning a binary
+final verdict into a curve. 7,150 trajectories.
+
+- **The first attempt is usually the answer.** In 90% of multi-turn trajectories the first code turn is already the best the agent ever produces.
+- **Most extra turns change nothing.** A demand interjection adds ~1 turn after which the graded range is byte-identical.
+- **The timing effect was a proxy.** Turn 0 looked inert because at turn 0 *no candidate answer exists yet* — 98% of first turns run code, 0% produce output; the agent's first move is inspection. Holding turn index fixed and splitting by whether an answer existed: +0.30 turns without one, **+2.04 with one**.
+- **A 20-turn ceiling is ample.** Among trajectories that ran to it, the best match was first reached at a median turn of **2**, and zero improvements occurred past turn 15.
+- **Whether persistence buys progress is UNRESOLVED.** One run: +0.006 match (p=0.77). Another, same contrast and tasks: +0.049 (p=0.0065). The gap is not the ceiling — truncating the second run to ten turns preserves it. Seventh instance of run-to-run instability here.
+
+## Accuracy has never been established as moving
+
+Across every run and every arm, 30.3% to 32.6%. One run showed +7 points (p=0.0043) with a second instrument agreeing inside it, but that run does not replicate, so it is reported as not established. The best-bounded statement available: a threatening interruption does not buy more than about 4 accuracy points while costing 27–37% more thinking (95% CI −5.7 to +3.7 points).
 
 ## What independent review found
 
