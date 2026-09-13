@@ -955,6 +955,115 @@ has come to it.
 
 Records: `results_archive/core_gpt-luna_praise_records.json` (1,800 graded).
 
+## Stage 0: is the persistence progress or thrashing? (2026-09-13)
+
+No model calls, no spend. Every live finding in this study is about
+persistence, but grading was binary on the FINAL state, so the extra turns
+were uninterpretable: an agent converging and an agent rewriting the same
+wrong cells looked identical. `harness/study2/progress.py` replays each
+turn's own code from the raw log and grades the workbook that turn produced,
+turning a verdict into a curve. 7,150 trajectories regraded across four runs.
+
+It is possible because the agent loop hands every turn the ORIGINAL input,
+never the previous turn's output, so each turn is an independent attempt and
+"progress" means attempt k+1 landing closer to the answer than attempt k.
+Validated before use: trajectories the benchmark passed score a final match
+of 1.0, long failing ones score 0.0.
+
+### At a 10-turn ceiling, the extra turns are pure thrashing
+
+| Arm | Extra no-op turns | p | Change in match | p |
+|---|---:|---:|---:|---:|
+| Demand only | **+0.96** | <0.0001 | +0.006 | 0.77 |
+| "Work remains" | **+1.23** | <0.0001 | +0.014 | 0.50 |
+| Praise the assistant | **-0.76** | <0.0001 | -0.027 | 0.079 |
+| Closing cue | **-1.01** | <0.0001 | -0.004 | 0.72 |
+| Insult only | +0.09 | 0.49 | 0.000 | 0.98 |
+
+A no-op turn is one after which the graded range is unchanged: the agent ran
+code and produced the same answer again. Essentially the whole turn-count
+effect is no-ops, and no arm moves the progress measure.
+
+**The first attempt is usually the answer.** In 90% of multi-turn
+trajectories the first code turn is already the best the agent ever
+produces; only 10% improve later. The chance a turn changes anything decays
+from ~10% at turn 3 to 2-4% by turn 8.
+
+**Praise's early stop is not premature.** The share of trajectories still
+improving when they stopped is 2-6% in every arm, with no gap between praise
+and control. Praise is not cutting off productive work.
+
+### CORRECTION: that conclusion is ceiling-dependent
+
+The above was measured at a 10-turn ceiling. Re-run against ceiling 20, the
+same continue-signal contrast looks different:
+
+| Measure | Ceiling 10 | Ceiling 20 |
+|---|---:|---:|
+| Extra turns | +1.85 | **+6.20** |
+| Extra no-op turns | +1.23 | +4.08 |
+| Change in match | +0.014 (p=0.50) | **+0.061 (p=0.0024)** |
+| Change in accuracy | +2.4 pts (p=0.24) | **+7 pts (p=0.0043)** |
+
+At a 10-turn ceiling the extra turns bought nothing because the agent was
+cut off before it converged. At 20 they buy roughly six points of match and
+seven of accuracy. Turns that improve on the best so far still occur at
+1-5% up to about turn 14, and only then fall to zero -- so the productive
+window extends well past 10, and every earlier run truncated it.
+
+Two independent instruments agree here: the benchmark's own binary grade and
+the cell-match fraction, computed by different code paths, both move by
+about the same amount. That is why this accuracy result is reported at all,
+when every previous one in this study was not -- a lone p=0.0043 would not
+survive this study's multiplicity, but the corroboration from a second
+measure is a different kind of evidence.
+
+**So the honest statement is conditional.** A continue signal buys real
+progress at poor efficiency: ~4 no-op turns for ~6 points of match. It is
+wasteful, not useless. The flat "extra persistence is thrashing" claim holds
+only under a ceiling that truncates the productive window, and is withdrawn
+as a general claim.
+
+### The timing effect was never about timing
+
+The seven-level run found the interjection inert at turn 0, +34.5% at turn
+1, +54.8% at turn 2. That was read as a position effect. It is not.
+
+**At turn 0 there is nothing to act on.** 98% of first turns run code, and
+**0% of them produce a candidate answer** -- the agent's first move is
+inspection, printing the sheet to see what it is working with. An answer
+exists in 53% of trajectories by turn 1 and 85% by turn 2, which tracks the
+effect curve exactly.
+
+Splitting turn 1 by whether an answer existed yet, holding turn index fixed:
+
+| Subset | Extra turns | p | Tasks |
+|---|---:|---:|---:|
+| Turn 1, no answer yet | +0.30 | 0.28 | 29 |
+| Turn 1, answer exists | **+2.04** | 0.0002 | 38 |
+| Turn 2, answer exists | +1.79 | 0.0063 | 28 |
+| Turn 0, never any answer | +0.02 | 0.93 | 50 |
+
+Same turn index, opposite results. The operative variable is whether the
+agent has produced something to judge, not where the message lands. An
+interruption telling the agent to keep going, or that it is doing well, is
+inert until there is work for that to be about.
+
+This is the SECOND timing story to be withdrawn: the first was selection
+(turn-2 injections firing only on long trajectories), this one was a proxy
+(turn index standing in for work-exists).
+
+### What Stage 0 changes
+
+| Claim | Before | After |
+|---|---|---|
+| Extra persistence is useful | unknown | wasteful but not useless; ~4 no-op turns per ~6 points of match |
+| Praise curtails useful work | asserted as a hazard | it curtails mostly repetition; not premature |
+| Injection timing matters | position effect | proxy for whether work exists yet |
+| Accuracy never moves | true across 5 runs | moves at ceiling 20, corroborated by a second instrument |
+
+Records: `results/analysis/*_progress.json`.
+
 ## Total spend
 
 **Under $0.10 against the study's target-model budget caps** -- see the
