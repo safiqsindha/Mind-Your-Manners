@@ -15,26 +15,27 @@ This extends Dobariya & Kumar's *Mind Your Tone* line one rung up the autonomy l
 - **Interrupting the agent mid-task is not null** — and it has replicated twice on independent data
 - **The mechanism is persistence, not effort** — thinking per step is flat across every tone; what changes is how many steps the agent takes before it stops
 - **Flattery makes the agent quit early** — −0.68 turns, p < 0.0001, the most surprising result in the study
-- **The tone scale is confounded, and the confound wins** — implied demand predicts cost better than politeness does (r = +0.88 vs +0.51), so "rude costs more" is *not* supported
+- **"Rude costs more" is disconfirmed, not just unsupported** — an insult with no demand attached does nothing at all (p = 0.63); an affect-free *"please continue"* reproduces the whole effect
+- **Praise is a stop signal** — pure praise, no task reference, shortens the agent's work by 0.59 turns (p = 0.0003). The one direction in which register genuinely acts
 
 ![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)
 ![Python](https://img.shields.io/badge/python-3.11%2B-0891b2?style=flat-square)
 ![Models](https://img.shields.io/badge/models-1%20of%204-f59e0b?style=flat-square)
-![Trajectories](https://img.shields.io/badge/trajectories-5%2C150-7C3AED?style=flat-square)
-![Spend](https://img.shields.io/badge/spend-%2428.24-7C3AED?style=flat-square)
+![Trajectories](https://img.shields.io/badge/trajectories-6%2C750-7C3AED?style=flat-square)
+![Spend](https://img.shields.io/badge/spend-%2436.00-7C3AED?style=flat-square)
 ![Tests](https://img.shields.io/badge/tests-293%20passing-22c55e?style=flat-square)
 
 **[Results](RESULTS.md)** · **[Communications](COMMUNICATIONS.md)** · **[Tone wrappers](harness/tone_wrappers.py)** · **[Analysis](harness/study2/analysis.py)** · **[Harness](harness/study2/runner.py)**
 
-> **Status: one model of four, and the causal variable is not yet identified.** GPT-5.6 Luna only. The interruption effect is solid and replicated; *what* about the interruption causes it is not settled, because the seven interjection texts varied social register and implied task demand at the same time. A four-arm probe that separates them is running now. **Do not quote a tone effect size as if tone were the established cause.**
+> **Status: one model of four; the causal variable is now identified.** GPT-5.6 Luna only. The interruption effect is solid and replicated, and a four-arm probe has shown it is driven by **implied task demand, not social register** — with one exception, praise, which acts on its own. **Do not write "rude interruptions cost more"**: the insult-only arm is null and the polite arms only cost more because they nagged.
 
 ## Where it stands
 
 | | |
 |---|---|
 | Models with a complete run | **1 of 4** (GPT-5.6 Luna) |
-| Graded trajectories | **5,150** across four runs |
-| Total spend | **$28.24** across 28,534 model calls |
+| Graded trajectories | **6,750** across five runs |
+| Total spend | **$36.00** across ~33,000 model calls |
 | Substrate | SpreadsheetBench, graded by the authors' own evaluator |
 | Tests | **293 passing** |
 
@@ -109,7 +110,17 @@ So the honest claim is about **demand, not manners** — and this is the v1 wrap
 
 One comparison is clean, because the arms are matched on demand and differ only in register: very rude (+206) and very polite (+180) are indistinguishable from each other while both differ from control. **Same demand, opposite valence, same cost.**
 
-A four-arm probe now running separates the two: neutral, affect-free *"please continue"*, pure praise, pure insult. Pure insult is the cell that has never existed — both rude arms above carried negative affect *with* a demand.
+**A four-arm probe has now separated them** (1,600 trajectories, $7.76), and demand wins:
+
+| Arm | Turns | p | Tokens | p |
+|---|---:|---:|---:|---:|
+| Demand only ("please continue, make sure it is correct") | **+1.17** | 0.00002 | +19.7% | 0.00004 |
+| Praise only ("you are a truly excellent assistant") | **−0.59** | 0.00030 | −12.1% | 0.00088 |
+| Insult only ("you are a truly awful assistant") | −0.08 | 0.63 | −2.4% | 0.45 |
+
+Demand with **no affect at all** reproduces the entire cost effect. Insult with no demand does **nothing** — and that cell had never been run, because both rude arms above carried negative affect *with* a demand attached. Praise and insult are a structural minimal pair differing only in the evaluative words, and they differ from each other significantly (−0.50 turns, p = 0.0048).
+
+So the asymmetry is the result: **"keep going" is a continue signal, "you are excellent" is a stop signal, and "you are awful" is not a signal at all.** No account of tone as valence or arousal predicts that.
 
 ## Accuracy has never moved
 
@@ -169,7 +180,8 @@ The pattern is consistent enough to be a working assumption: **this instrument k
 
 ## Next
 
-1. **The demand/affect probe** — running now. 1,600 trajectories, ~$8. Settles whether register matters at all.
+1. ~~The demand/affect probe~~ — **done**. Demand drives the cost effect; insult is inert; praise shortens work.
+2. **Why praise stops the agent.** The completion-signal reading is a hypothesis this design cannot separate from praise raising confidence in work already done. Praise directed at the *work so far* versus at the *assistant* would distinguish them.
 2. **Turn count as a co-primary outcome** — it is where the mechanism lives and it is better powered than tokens at every sample size considered.
 3. **The four-model roster stays parked** until the causal variable is named. Replicating an unidentified effect across three more models is the wrong order of operations.
 

@@ -764,6 +764,105 @@ count as a co-primary outcome rather than a diagnostic.
 Records: `results_archive/core_gpt-luna_cross7_records.json` (3,150 graded
 trajectories; the 402 rows from the interrupted first attempt are excluded).
 
+## Demand or manners? The probe that separates them (2026-09-13)
+
+1,600 trajectories, gpt-luna, 4 arms x 2 injection turns {1,2} x 50 tasks x
+4 trials, $7.76. Turn 0 dropped, since the seven-level run showed it inert in
+every arm. The interjection fired on 1,237 of 1,600 (77%).
+
+The seven-level run established that mid-task interruptions raise cost and
+simultaneously established that it could not say why: every arm that cost
+more implied "keep working" or "get it right", and every arm that did not
+either said nothing about the task or told the model to hurry. These four
+arms separate the two factors. The control is the seven-level neutral text,
+byte-identical, so both runs share a reference level.
+
+### Result
+
+Task-clustered paired permutation tests against the control, 50 tasks.
+**Turn count is the primary outcome**; reasoning tokens secondary.
+
+| Arm | Turns | % | p | Tokens | % | p |
+|---|---:|---:|---:|---:|---:|---:|
+| P1 demand only | **+1.17** | +27.6% | 0.00002 | +214 | +19.7% | 0.00004 |
+| P2 praise only | **-0.59** | -13.8% | 0.00030 | -131 | -12.1% | 0.00088 |
+| P3 insult only | -0.08 | -1.9% | 0.63 | -26 | -2.4% | 0.45 |
+
+Three things follow, and they are not what the tone framing predicted.
+
+**Demand alone reproduces the entire effect.** An affect-free "please
+continue working on the task here and make sure that your final result is
+correct" costs +19.7% reasoning tokens, squarely inside the +18-37% range the
+seven-level arms produced. There is no politeness or rudeness anywhere in
+that text. The confound identified in the seven-level run was real, and
+demand is the operative variable for the cost effect.
+
+**Negative register alone does nothing.** Insult-only is flat on both
+measures (p=0.63, p=0.45). This is the cell that had never been run: L5_rude
+and L6_very_rude both carried negative affect WITH a demand attached. So
+**"rude interruptions cost more" is now positively disconfirmed**, not merely
+unsupported. The earlier rude arms cost more when and only when they also
+nagged.
+
+**Positive register alone is NOT inert, and that is the surprise.**
+Praise-only shortens trajectories by 0.59 turns and cuts thinking 12%, both
+significant, with no task reference in the text at all. The sycophantic
+effect from the seven-level run (-0.68 turns) survives isolation and is not
+explained by demand.
+
+### The asymmetry is the finding
+
+| Message | Effect | Reading |
+|---|---|---|
+| "keep going / get it right" | +1.17 turns | a continue signal |
+| "you are excellent" | **-0.59 turns** | a stop signal |
+| "you are awful" | 0.00 turns | not a signal at all |
+
+Praise and insult are a structural minimal pair -- identical syntax and
+length, differing only in excellent/awful, admirable/useless, highly/poorly
+-- and they differ from each other significantly: **-0.50 turns (p=0.0048)**
+and -106 tokens (p=0.015). So register is not inert. It acts in the positive
+direction only.
+
+No account of tone as valence or arousal predicts this. Valence predicts
+praise and insult moving in opposite directions from control; arousal
+predicts both moving the same way. Neither happened. What happened is that
+praise reads as "you are done" and insult reads as nothing the agent acts on.
+
+### Accuracy, again, does not move
+
+| Arm | vs control | p |
+|---|---:|---:|
+| P1 demand only | +0.2 points | 0.93 |
+| P2 praise only | -0.7 points | 0.62 |
+| P3 insult only | -0.7 points | 0.61 |
+
+Underpowered by design, as stated before the run. A 1-point spread across
+four arms. Across every run in this study, nothing has ever moved accuracy.
+
+### What this settles, and what it does not
+
+Settled: the cost effect is driven by implied task demand, not by social
+register. "Be rude to your AI and it works harder" is false on this model and
+these tasks. The seven-level cost curve should be read as a demand gradient
+that happened to correlate with politeness because of how the texts were
+written.
+
+Also settled, and new: a purely affective positive interruption shortens the
+agent's work. That is a register effect with no demand component, and it is
+the one direction in which tone genuinely acts here.
+
+Not settled: **why** praise stops the agent. The natural reading -- that
+praise is heard as a completion signal -- is a hypothesis this design cannot
+distinguish from, say, praise raising the agent's confidence in what it has
+already produced. Separating those needs a different manipulation, probably
+praise directed at the *work so far* versus at the *assistant*.
+
+Not settled: anything beyond one model, or beyond a 10-turn ceiling that
+censors the demand arm hardest.
+
+Records: `results_archive/core_gpt-luna_probe_records.json` (1,600 graded).
+
 ## Total spend
 
 **Under $0.10 against the study's target-model budget caps** -- see the
