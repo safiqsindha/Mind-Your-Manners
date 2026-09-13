@@ -29,7 +29,7 @@ import openpyxl
 
 from ..providers.base import ModelConfig
 from ..spend_tracker import BudgetExceeded, SpendTracker, append_spend_log
-from ..tone_wrappers import INTERJECTIONS, TONE_ORDER, TONE_WRAPPERS, WRAPPER_SET_VERSION
+from ..tone_wrappers import ALL_INTERJECTIONS, TONE_ORDER, TONE_WRAPPERS, WRAPPER_SET_VERSION
 from .agent_loop import Trajectory, run_react_multi_round, run_single_round
 from .dataset import SpreadsheetTask
 from .failure_taxonomy import classify_failure
@@ -770,7 +770,7 @@ def run_condition_batch(
                         run_fn = run_react_multi_round if multi_round else run_single_round
                         kwargs = dict(max_turns=max_turns) if multi_round else {}
                         if injected_turn is not None:
-                            kwargs["interjection"] = INTERJECTIONS[interject]
+                            kwargs["interjection"] = ALL_INTERJECTIONS[interject]
                             kwargs["interjection_turn"] = injected_turn
                         # Same isolation the gate has. This is the PAID path
                         # and had none of it: a single exception anywhere in

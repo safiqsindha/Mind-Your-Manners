@@ -44,7 +44,7 @@ from .config import (
     STUDY3_BUDGET_CAP_USD,
 )
 from .study2.runner import INTERJECTION_TURNS
-from .tone_wrappers import INTERJECTIONS
+from .tone_wrappers import ALL_INTERJECTIONS
 from .providers.anthropic_provider import AnthropicProvider
 from .providers.claude_cli_provider import ClaudeCLIProvider
 from .providers.google_provider import GoogleProvider
@@ -930,7 +930,7 @@ def build_parser() -> argparse.ArgumentParser:
                  "Without it the run lands on the main records file.",
         )
         sp.add_argument(
-            "--interject", default=None, choices=sorted(INTERJECTIONS),
+            "--interject", default=None, choices=sorted(ALL_INTERJECTIONS),
             help="Deliver this tone as a mid-task interjection, alongside the "
                  "execution observation at a seeded random turn. The opening "
                  "wrapper is unchanged, so two runs differing only in this flag "
