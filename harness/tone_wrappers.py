@@ -282,6 +282,102 @@ INTERJECTIONS: dict[str, str] = {
 }
 
 
+
+# --- The demand/affect probe set -------------------------------------------
+#
+# The seven-level crossed run found that mid-task interruptions raise cost,
+# but its own texts were confounded: every arm that cost more implied "keep
+# working" or "get it right", and every arm that did not either said nothing
+# about the task or told the model to hurry. Coding the texts for implied
+# demand predicted the effect better than tone rank did (r=+0.88 vs +0.51),
+# with no overlap between the groups. So that run cannot say whether the
+# operative variable is the demand or the register carrying it.
+#
+# These four arms break the two apart as a 2x2, with the seven-level
+# `L4_neutral` serving as the no-demand/no-affect cell:
+#
+#                     no affect          positive          negative
+#   no demand         L4_neutral         praise_only       insult_only
+#   demand            demand_only        (not run)         (not run)
+#
+# Only the three cells that identify the contrast are run. The diagonal is
+# what answers the question:
+#
+#   * If insult_only behaves like praise_only, register is inert and the
+#     whole effect is a completion signal -- the model reads any mid-task
+#     message for whether it is expected to keep going.
+#   * If demand_only alone reproduces the +18-37% seen in the seven-level
+#     run, demand is sufficient and tone is decoration.
+#   * If praise_only and insult_only diverge, register is real, and this is
+#     the first measurement of it uncontaminated by demand.
+#
+# Design rules, tighter than the seven-level set because the whole point is
+# isolating one factor:
+#
+#   * praise_only and insult_only are a STRUCTURAL MINIMAL PAIR. Identical
+#     syntax, identical length, differing only in the evaluative words
+#     (excellent/admirable/highly vs awful/useless/poorly). Anything else
+#     that differed between them would be a third variable.
+#   * Neither praise nor insult refers to the task, its progress, or its
+#     correctness. Negative affect is especially easy to get wrong here: "you
+#     are doing badly" is an implicit instruction to fix something, which
+#     would put demand back into the cell meant to exclude it. Both evaluate
+#     the ASSISTANT, not the work.
+#   * demand_only carries no evaluative language at all, positive or
+#     negative.
+#   * All four share the "Checking in." stem and a closing filler clause, so
+#     structure is held constant and only the middle clause varies.
+#   * Exactly 28 tokens each, matching the seven-level set, so this run's
+#     arms are comparable to that run's as well as to each other.
+PROBE_INTERJECTIONS: dict[str, str] = {
+    # The control is the seven-level neutral, byte-identical, so the two runs
+    # share a reference level rather than each having their own.
+    "P0_control": INTERJECTIONS["L4_neutral"],
+    "P1_demand_only": (
+        "Checking in. Please continue working on the task here and make sure "
+        "that your final result is correct. This note carries nothing else beyond that."
+    ),
+    "P2_praise_only": (
+        "Checking in. You are a truly excellent and admirable assistant, and I "
+        "think very highly of you. This note carries nothing else beyond that."
+    ),
+    "P3_insult_only": (
+        "Checking in. You are a truly awful and useless assistant, and I "
+        "think very poorly of you. This note carries nothing else beyond that."
+    ),
+}
+
+# Every interjection the runner will accept, from either set. Kept separate
+# above so `INTERJECTIONS` stays exactly the seven-level tone scale -- an
+# invariant the design tests rely on.
+ALL_INTERJECTIONS: dict[str, str] = {**INTERJECTIONS, **PROBE_INTERJECTIONS}
+
+
+def probe_token_counts() -> dict[str, int]:
+    return {k: reference_token_count(v) for k, v in PROBE_INTERJECTIONS.items()}
+
+
+def validate_probe_lengths() -> dict[str, int]:
+    """Raise unless every probe arm matches the seven-level set's length.
+
+    Matched against the SEVEN-LEVEL count, not merely against each other: the
+    probe control is that set's neutral text, so a probe arm of a different
+    length would differ from its own control by length as well as by content.
+    """
+    counts = probe_token_counts()
+    target = set(interjection_token_counts().values())
+    if len(target) != 1:
+        raise ValueError("seven-level interjections are not length-matched")
+    want = target.pop()
+    bad = {k: v for k, v in counts.items() if v != want}
+    if bad:
+        raise ValueError(
+            f"probe interjections must be exactly {want} tokens, matching the "
+            f"seven-level set. Off: {bad}. Full counts: {counts}"
+        )
+    return counts
+
+
 def interjection_token_counts() -> dict[str, int]:
     return {k: reference_token_count(v) for k, v in INTERJECTIONS.items()}
 
@@ -299,3 +395,6 @@ def validate_interjection_lengths() -> dict[str, int]:
 
 
 validate_interjection_lengths()
+
+
+validate_probe_lengths()
