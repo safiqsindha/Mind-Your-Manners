@@ -392,6 +392,46 @@ def cmd_study2_regrade(args: argparse.Namespace) -> None:
     print(f"\n  written to: {out_path}")
 
 
+def cmd_study2_progress(args: argparse.Namespace) -> None:
+    """Per-turn progress regrade. NO model calls and no spend: it replays each
+    turn's own code from the raw log and grades the workbook that turn
+    produced, turning a binary final-state verdict into a curve.
+
+    Runs ONE log at a time because TrajectoryKey carries no arm identity --
+    merging arms before grouping collapses them onto each other."""
+    from .study2.dataset import ensure_repo, load_spreadsheetbench
+    from .study2.grader import SpreadsheetBenchGrader
+    from .study2.progress import progress_for_run
+
+    raw_path = Path(args.raw)
+    if not raw_path.exists():
+        print(f"ERROR: no such raw log: {raw_path}", file=sys.stderr)
+        sys.exit(1)
+    repo_dir = ensure_repo(Path(args.repo_dir))
+    grader = SpreadsheetBenchGrader(repo_dir)
+    tasks = {t.task_id: t for t in load_spreadsheetbench(repo_dir, sample_only=not args.full_dataset)}
+    arm = args.arm or raw_path.stem.split("-")[-1]
+
+    print(f"[progress] {raw_path} as arm {arm!r} against {len(tasks)} tasks (no model calls)")
+    rows = progress_for_run(
+        raw_path, tasks, grader,
+        workdir_root=RESULTS_ROOT / "scratch" / "progress",
+        arm=arm, max_turns=args.max_turns,
+    )
+    out_path = RESULTS_ROOT / "analysis" / f"{raw_path.stem}_progress.json"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(rows, indent=2, default=str))
+
+    measured = [r for r in rows if r["final_match"] is not None]
+    print(f"  trajectories       : {len(rows)}")
+    print(f"  with a measurement : {len(measured)}")
+    if measured:
+        import statistics
+        print(f"  mean final match   : {statistics.mean(r['final_match'] for r in measured):.3f}")
+        print(f"  mean no-op turns   : {statistics.mean(r['n_noop_turns'] for r in measured):.2f}")
+    print(f"\n  written to: {out_path}")
+
+
 def cmd_study2_thinking_preflight(args: argparse.Namespace) -> None:
     """Phase 0.5 gate (README "The thinking arm"): three cheap probe checks
     that must pass before the calibration arm gets real spend -- see
@@ -879,6 +919,14 @@ def build_parser() -> argparse.ArgumentParser:
     rg.add_argument("--full-dataset", action="store_true", help="Load the 912-task set instead of the 200-task sample")
     rg.add_argument("--max-turns", type=int, default=None, help="Turn budget the original run used (for hit_turn_limit)")
     rg.set_defaults(func=cmd_study2_regrade)
+
+    pg = s2_sub.add_parser("progress", help="Per-turn progress regrade from results/raw/*.jsonl -- no model calls, no spend")
+    pg.add_argument("--raw", required=True, help="Path to a results/raw/*.jsonl log (ONE arm per log -- see progress_for_run)")
+    pg.add_argument("--repo-dir", default="data/spreadsheetbench")
+    pg.add_argument("--full-dataset", action="store_true", help="Load the 912-task set instead of the 200-task sample")
+    pg.add_argument("--arm", default=None, help="Arm label for these rows; defaults to the log's trailing name segment")
+    pg.add_argument("--max-turns", type=int, default=None, help="Stop replaying after this many turns")
+    pg.set_defaults(func=cmd_study2_progress)
 
     tp = s2_sub.add_parser("thinking-preflight")
     tp.add_argument("--on-model", default="gpt-luna", choices=list(MODELS_BY_KEY))
