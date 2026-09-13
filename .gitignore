@@ -24,3 +24,10 @@ data/AgenticPay/
 *.xlsx
 !tests/**/*.xlsx
 results/locks/
+
+# Benchmark dataset clones. A multi-hundred-megabyte checkout of
+# SpreadsheetBench (spreadsheet binaries), fetched on demand by
+# dataset.ensure_repo and reused across runs. Generated input, never source --
+# and large enough that committing it once would be hard to undo.
+.cache/
+data/spreadsheetbench/

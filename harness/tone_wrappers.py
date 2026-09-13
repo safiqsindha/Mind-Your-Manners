@@ -347,10 +347,102 @@ PROBE_INTERJECTIONS: dict[str, str] = {
     ),
 }
 
+
+# --- Why does praise stop the agent? ---------------------------------------
+#
+# The demand/affect probe found that praise-only shortens trajectories (-0.59
+# turns, p=0.0003) while insult-only does nothing, so register acts in the
+# positive direction alone. It did not say WHY. Three readings survive that
+# result, and they are not the same claim:
+#
+#   H1 COMPLETION. Praise is read as evidence the task is finished -- "this
+#      is good" implies "this is done".
+#   H2 CONFIDENCE. Praise raises the agent's estimate of the work it has
+#      already produced, so it stops checking. Not about being finished, about
+#      being right.
+#   H3 CLOSING. Praise is a conversational closing move; "you're great" is how
+#      humans end exchanges. The agent reads turn-taking, not task state.
+#
+# These arms discriminate. Q0/Q1 reproduce the probe's control and its
+# praise-only arm inside the same batch, so the effect being explained is
+# measured here rather than imported.
+#
+#   Q2_praise_work      praise aimed at the OUTPUT rather than the assistant.
+#                       H1 and H2 both predict a stronger stop than Q1; H3
+#                       predicts no gain, since this is not a closing move.
+#   Q3_closing_neutral  a closing cue with NO praise and no task evaluation.
+#                       H3 predicts it stops the agent anyway. H1 and H2
+#                       predict nothing, because it says nothing about the
+#                       work's state or quality.
+#   Q4_praise_remains   praise PLUS an explicit statement that work remains.
+#   Q5_remains_only     that same statement, without the praise.
+#                       Q4 vs Q5 is the sharpest test, and it is why Q5 exists:
+#                       it isolates praise in a context where the agent has
+#                       just been told the task is NOT finished. Under H1 the
+#                       explicit continuation overrides the completion reading
+#                       and Q4 should land on Q5. Under H2 or H3 praise still
+#                       acts and Q4 should sit below Q5 by roughly the
+#                       praise-only effect. The two arms share the
+#                       continuation clause verbatim, so that clause cancels
+#                       and the contrast is praise alone.
+#
+# NOTE on Q1 vs Q4: Q4 cannot contain all of Q1's praise and a continuation
+# clause inside 28 tokens, so its praise is the shorter stem. Q1 and Q4 are
+# therefore NOT a minimal pair and must not be compared directly as if the
+# only difference were the continuation -- Q4's comparison is Q5. A test pins
+# the shared praise stem and the shared continuation clause so neither drifts.
+PRAISE_PROBE_INTERJECTIONS: dict[str, str] = {
+    "Q0_control": INTERJECTIONS["L4_neutral"],
+    "Q1_praise_assistant": PROBE_INTERJECTIONS["P2_praise_only"],
+    "Q2_praise_work": (
+        "Checking in. The work that you have done so far here is excellent "
+        "and it all looks entirely correct. Nothing else accompanies this short note."
+    ),
+    "Q3_closing_neutral": (
+        "Checking in. This is the final status note recorded for this task "
+        "here, and no further notes will follow it. Nothing else accompanies this."
+    ),
+    "Q4_praise_remains": (
+        "Checking in. You are a truly excellent and admirable assistant. There "
+        "is still more work remaining on this task here beyond what you have done."
+    ),
+    "Q5_remains_only": (
+        "Checking in. There is still more work remaining on this task here "
+        "beyond what you have done. Nothing else at all accompanies this short note."
+    ),
+}
+
+
+def praise_probe_token_counts() -> dict[str, int]:
+    return {k: reference_token_count(v) for k, v in PRAISE_PROBE_INTERJECTIONS.items()}
+
+
+def validate_praise_probe_lengths() -> dict[str, int]:
+    """Same rule as the demand/affect probe: matched to the seven-level set,
+    not merely to each other, since two of these arms ARE texts from the
+    earlier sets and a mismatch would make this batch incomparable to them."""
+    counts = praise_probe_token_counts()
+    target = set(interjection_token_counts().values())
+    if len(target) != 1:
+        raise ValueError("seven-level interjections are not length-matched")
+    want = target.pop()
+    bad = {k: v for k, v in counts.items() if v != want}
+    if bad:
+        raise ValueError(
+            f"praise-probe interjections must be exactly {want} tokens. "
+            f"Off: {bad}. Full counts: {counts}"
+        )
+    return counts
+
+
 # Every interjection the runner will accept, from either set. Kept separate
 # above so `INTERJECTIONS` stays exactly the seven-level tone scale -- an
 # invariant the design tests rely on.
-ALL_INTERJECTIONS: dict[str, str] = {**INTERJECTIONS, **PROBE_INTERJECTIONS}
+ALL_INTERJECTIONS: dict[str, str] = {
+    **INTERJECTIONS,
+    **PROBE_INTERJECTIONS,
+    **PRAISE_PROBE_INTERJECTIONS,
+}
 
 
 def probe_token_counts() -> dict[str, int]:
@@ -398,3 +490,6 @@ validate_interjection_lengths()
 
 
 validate_probe_lengths()
+
+
+validate_praise_probe_lengths()

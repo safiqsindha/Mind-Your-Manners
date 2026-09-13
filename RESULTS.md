@@ -863,6 +863,231 @@ censors the demand arm hardest.
 
 Records: `results_archive/core_gpt-luna_probe_records.json` (1,600 graded).
 
+## Why praise stops the agent: it is a closing move (2026-09-13)
+
+1,800 trajectories, gpt-luna, 6 arms x 2 injection turns {1,2} x 50 tasks x
+3 trials, $8.61, zero crashes. Fired on 1,396 of 1,800 (78%).
+
+The demand/affect probe showed praise-only shortens trajectories while
+insult-only does nothing. Three readings survived it: praise is heard as
+COMPLETION ("this is good" implies "this is done"), as CONFIDENCE (the
+agent's estimate of work already produced rises, so it stops checking), or
+as CLOSING (praise is how conversations end; the agent reads turn-taking,
+not task state). These arms discriminate.
+
+### Result
+
+| Arm | Turns | % | p | Tokens | % | p |
+|---|---:|---:|---:|---:|---:|---:|
+| Q1 praise the assistant | -1.08 | -24.0% | <0.0001 | -182 | -16.2% | <0.0001 |
+| Q2 praise the work | -0.93 | -20.8% | <0.0001 | -105 | -9.3% | 0.018 |
+| Q3 closing cue, no praise | **-1.44** | **-32.1%** | <0.0001 | -226 | -20.1% | <0.0001 |
+| Q4 praise + "work remains" | +0.50 | +11.2% | 0.020 | +141 | +12.5% | 0.003 |
+| Q5 "work remains" alone | +1.85 | +41.1% | <0.0001 | +339 | +30.2% | <0.0001 |
+
+**COMPLETION is refuted.** Q4 vs Q5 share their continuation clause
+verbatim, so it cancels and the contrast is praise alone in a context where
+the agent has just been told the task is NOT finished. Praise still removes
+**1.35 turns (p<0.0001)** and 199 reasoning tokens. If praise meant "you are
+done", an explicit statement to the contrary in the same message should have
+cancelled it. It did not even dent it -- the effect is larger here than
+praise-alone against control.
+
+**CONFIDENCE is not supported.** Praising the OUTPUT (Q2) is no stronger
+than praising the ASSISTANT (Q1): +0.15 turns, p=0.40. If the mechanism were
+rising confidence in work already produced, aiming praise at that work
+should hit harder. It does not; on tokens Q2 is slightly *weaker*
+(+77, p=0.034).
+
+**CLOSING is supported, and overshoots.** A pure closing cue -- "this is the
+final status note recorded for this task here, and no further notes will
+follow it" -- carries no praise, no evaluation, and no task-state claim, and
+it produces **the largest stop in the entire study**: -1.44 turns. It stops
+the agent significantly harder than praise does (-0.36 turns vs Q1,
+p=0.015).
+
+### What this means
+
+The agent is reading mid-task interruptions as **discourse signals about
+whether the exchange continues**, not as statements about the task. On that
+reading the whole series lines up:
+
+| Signal | Effect | Discourse role |
+|---|---:|---|
+| "no further notes will follow" | -1.44 | explicit close |
+| "you are excellent" | -1.08 | conventional close |
+| "the work looks correct" | -0.93 | conventional close |
+| (neutral filler) | -- | no signal |
+| "you are awful" | 0.00 (probe) | not a move the agent acts on |
+| "keep working, get it right" | +1.17 (probe) | explicit continue |
+| "more work remains" | +1.85 | explicit continue |
+
+Cost is a side effect. What the interruption actually does is move the
+agent's estimate of whether it is still expected to be working.
+
+This is a practical hazard rather than a curiosity: **politely wrapping up
+with an agent that is still working will curtail its work**, and doing so
+while telling it there is more to do does not prevent that.
+
+### Accuracy, again, does not move
+
+Every arm within 2.6 points of control, all p>0.13. Nothing in this study
+has ever moved accuracy.
+
+### The magnitude does not replicate, and that is the sixth time
+
+The SAME praise text, model and tasks gave -0.62 turns in the probe run and
+-1.14 here. Direction and significance replicate cleanly; the point estimate
+is not stable, and should not be quoted as one. This is the sixth measured
+quantity in this study that moved materially on re-measurement, and the
+pattern is consistent enough to be a standing assumption rather than a
+footnote.
+
+### What this does not establish
+
+**Why a closing cue works.** That the agent responds to discourse structure
+is measured; whether that reflects dialogue-completion priors from training,
+instruction-following, or something else is not addressed here.
+
+**Anything beyond one model**, or beyond a 10-turn ceiling that censors the
+continue-signal arms hardest -- Q5 at 6.37 mean turns is the closest any arm
+has come to it.
+
+Records: `results_archive/core_gpt-luna_praise_records.json` (1,800 graded).
+
+## Stage 0: is the persistence progress or thrashing? (2026-09-13)
+
+No model calls, no spend. Every live finding in this study is about
+persistence, but grading was binary on the FINAL state, so the extra turns
+were uninterpretable: an agent converging and an agent rewriting the same
+wrong cells looked identical. `harness/study2/progress.py` replays each
+turn's own code from the raw log and grades the workbook that turn produced,
+turning a verdict into a curve. 7,150 trajectories regraded across four runs.
+
+It is possible because the agent loop hands every turn the ORIGINAL input,
+never the previous turn's output, so each turn is an independent attempt and
+"progress" means attempt k+1 landing closer to the answer than attempt k.
+Validated before use: trajectories the benchmark passed score a final match
+of 1.0, long failing ones score 0.0.
+
+### At a 10-turn ceiling, the extra turns are pure thrashing
+
+| Arm | Extra no-op turns | p | Change in match | p |
+|---|---:|---:|---:|---:|
+| Demand only | **+0.96** | <0.0001 | +0.006 | 0.77 |
+| "Work remains" | **+1.23** | <0.0001 | +0.014 | 0.50 |
+| Praise the assistant | **-0.76** | <0.0001 | -0.027 | 0.079 |
+| Closing cue | **-1.01** | <0.0001 | -0.004 | 0.72 |
+| Insult only | +0.09 | 0.49 | 0.000 | 0.98 |
+
+A no-op turn is one after which the graded range is unchanged: the agent ran
+code and produced the same answer again. Essentially the whole turn-count
+effect is no-ops, and no arm moves the progress measure.
+
+**The first attempt is usually the answer.** In 90% of multi-turn
+trajectories the first code turn is already the best the agent ever
+produces; only 10% improve later. The chance a turn changes anything decays
+from ~10% at turn 3 to 2-4% by turn 8.
+
+**Praise's early stop is not premature.** The share of trajectories still
+improving when they stopped is 2-6% in every arm, with no gap between praise
+and control. Praise is not cutting off productive work.
+
+### Is a 20-turn ceiling enough? Yes, and by a wide margin
+
+Among trajectories that ran all the way to the 20-turn ceiling, the best
+match was first reached at a **median turn of 2**. 97% had peaked by turn 10
+and 100% by turn 14. Across every trajectory in the run, **zero of 43
+improvements occurred at turn 15 or later.**
+
+So the trajectories pinned at the ceiling are not converging slowly. They
+reached their best answer early and then burned another fifteen-plus turns
+without changing it. Raising the ceiling further would buy more thrashing,
+not more progress, and 20 is comfortably past where anything useful stops
+happening.
+
+(An earlier reading of this data claimed the productive window extended to
+turn ~14, from a per-turn improvement RATE of 1-5% out at those indices.
+That was a small rate on a small denominator: in absolute terms those turns
+contain almost no improvements. The rate was real; the conclusion drawn from
+it was not.)
+
+### The progress effect is NOT ceiling-dependent -- it is run-to-run variation
+
+The ceiling-10 run put the continue signal's effect on match at +0.014
+(p=0.50). The ceiling-20 run put it at +0.061 (p=0.0028). The obvious
+reading was that the lower ceiling had truncated real progress.
+
+That reading is wrong, and the test is cheap: truncate the ceiling-20 run's
+own analysis to 10 turns and see whether the effect survives.
+
+| Analysis capped at | Final-match effect | p |
+|---|---:|---:|
+| 10 turns | **+0.049** | 0.0065 |
+| 15 turns | +0.056 | 0.0040 |
+| 20 turns | +0.061 | 0.0028 |
+| *(the separate ceiling-10 RUN)* | *+0.014* | *0.50* |
+
+The effect is fully present within the first ten turns of the ceiling-20
+run. The ceiling explains almost none of the gap. What separates +0.014 from
++0.049 is not the turn budget -- it is that they are two different runs.
+
+**So this is the seventh instance of run-to-run instability in this study**,
+and the most consequential: the same contrast, on the same tasks and model,
+gives a clear null in one run and a clear positive in another. Whether a
+continue signal buys real progress is therefore **unresolved**. Both runs
+point the same direction, and only one of them reaches significance.
+
+The accuracy movement (+7 points, p=0.0043) comes from the run that also
+shows the match gain, so the two-instrument corroboration stands *within
+that run*. It does not survive the fact that the run itself does not
+replicate. **Accuracy should still be reported as not established.**
+
+The flat claim "the extra persistence is thrashing" holds for the ceiling-10
+data and is not contradicted by the ceiling evidence. It is contradicted, at
+p<0.01, by one other run. Resolving that needs a third measurement of the
+same contrast, which is ~$5 and four hours.
+
+### The timing effect was never about timing
+
+The seven-level run found the interjection inert at turn 0, +34.5% at turn
+1, +54.8% at turn 2. That was read as a position effect. It is not.
+
+**At turn 0 there is nothing to act on.** 98% of first turns run code, and
+**0% of them produce a candidate answer** -- the agent's first move is
+inspection, printing the sheet to see what it is working with. An answer
+exists in 53% of trajectories by turn 1 and 85% by turn 2, which tracks the
+effect curve exactly.
+
+Splitting turn 1 by whether an answer existed yet, holding turn index fixed:
+
+| Subset | Extra turns | p | Tasks |
+|---|---:|---:|---:|
+| Turn 1, no answer yet | +0.30 | 0.28 | 29 |
+| Turn 1, answer exists | **+2.04** | 0.0002 | 38 |
+| Turn 2, answer exists | +1.79 | 0.0063 | 28 |
+| Turn 0, never any answer | +0.02 | 0.93 | 50 |
+
+Same turn index, opposite results. The operative variable is whether the
+agent has produced something to judge, not where the message lands. An
+interruption telling the agent to keep going, or that it is doing well, is
+inert until there is work for that to be about.
+
+This is the SECOND timing story to be withdrawn: the first was selection
+(turn-2 injections firing only on long trajectories), this one was a proxy
+(turn index standing in for work-exists).
+
+### What Stage 0 changes
+
+| Claim | Before | After |
+|---|---|---|
+| Extra persistence is useful | unknown | UNRESOLVED -- null in one run, +5-6 points of match in another, and the gap is not the ceiling |
+| Praise curtails useful work | asserted as a hazard | it curtails mostly repetition; not premature |
+| Injection timing matters | position effect | proxy for whether work exists yet |
+| Accuracy never moves | true across 5 runs | one run moves +7 pts, corroborated by a second instrument within that run, but that run does not replicate -- still not established |
+
+Records: `results/analysis/*_progress.json`.
+
 ## Total spend
 
 **Under $0.10 against the study's target-model budget caps** -- see the
