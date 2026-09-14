@@ -59,8 +59,10 @@ fastest way to lose a reviewer.
 condition**, and is the only variant free-or-better on all six models (0.48–1.16×). So "a stop
 condition in the prompt reduces agentic work" is established for the opening prompt. Your
 contribution is that a **content-free discourse cue delivered mid-task** does it harder than
-anything measured, **and that praise does it even when the message says the task is
-unfinished**. That second clause is the part nobody has. Lead with it.
+anything measured, **and that praise removes 1.35 turns relative to the same continuation
+message without it, even when that message states the task is unfinished** (Q4 vs Q5). That
+second clause is the part nobody has. Lead with it — worded as the within-pair contrast, not
+as "below control" (Q4 alone is +0.50 above control; see §7.2).
 
 ### Two things the first draft got wrong in your favour
 
@@ -127,12 +129,18 @@ lengthening anywhere:
 
 Total tokens fall roughly in proportion to turns (praise vs control −5,880 [−8,593, −3,472]).
 Trailing non-code "sign-off" turns do not rise under praise (+0.053 [−0.028, +0.140], n.s.),
-and the bare closing cue actually produces **fewer** of them (−0.087 [−0.153, −0.018]).
+and the bare closing cue actually produces **fewer** of them (−0.087 [−0.153, −0.018]). The
+praise arm ran at a **10-turn ceiling** (max observed `n_turns` = 10; `RESULTS.md` says the same),
+which censors the continue-signal arms — Q5 at 6.37 mean turns is nearest it — so if anything the
+Q4-vs-Q5 gap is understated.
 
-**And the direct test is impossible on the existing records.** No per-turn token field exists in
-any results file — `turn_diagnostics` carries only `turn`, `had_code`, `stdout`, `stderr`, with
-tokens recorded at trajectory level only. If you want the literal final-turn measurement you
-must re-instrument the harness and re-run.
+**The direct test is not possible from the graded records, but it is from the raw logs.** The
+graded records carry tokens at trajectory level only. The per-call raw logs
+(`results/raw/study2_*.jsonl`, gitignored) carry `prompt_tokens`, `completion_tokens`,
+`reasoning_tokens` and `extra.turn` on every call, and each `--interject` invocation writes one
+log per arm — so if those files still exist, per-turn tokens for every arm are recoverable with
+no re-run. If they do not, re-running the praise arm costs $8.61 at the observed rate. Neither
+is needed for the paper: three proxies already point the same way.
 
 **So argue the weaker, true thing instead.** The prior results measure *verbosity of a single
 response to a question*; you measure *steps taken on a task*. These are different dependent
@@ -169,6 +177,12 @@ not your statistic — theirs is "answer unchanged after two rounds of intrinsic
 reasoning QA", yours is "first attempt was the best of those made, in a 20-turn
 execution-grounded agent". **But they sit right beside your 86% and a reviewer will notice.
 Distinguish them in the text.**
+
+**Also pick one first-attempt figure and name its run.** `RESULTS.md` reports three: **90%**
+(Stage 0, ceiling-10 per-turn regrade, "in 90% of multi-turn trajectories the first code turn is
+already the best"), and **87% / 85%** (Stage 1, ceiling-20, Luna / GLM). The "~86%" in the brief is
+the Stage 1 average. Quoting 86% next to Huang's 88–96% without saying which run and ceiling
+invites exactly the comparison you want to control.
 
 ### (f) Nothing contradicts §2, §3 or §4.
 
@@ -253,8 +267,8 @@ general proposition.
 
 | Your term | Adopt | Source | Why |
 |---|---|---|---|
-| **"no-op turn"** | **"redundant step"**, and **"Duplicated Step"** for pure repetition | RedundancyBench (2605.29893) | Their counterfactual definition: a step is redundant iff removing it does not flip success to failure. Four subtypes — Abnormal, **Duplicated** ("identical tool name/args/output… providing no additional information gain"), Incorrect, Exploratory. **"Duplicated Step" is the exact match for what §6 measures.** ⚠ Do not compare base rates: some of their redundant steps are synthetically injected, and they report no overall redundant fraction. |
-| "agent stops early" | **"premature disengagement"** | Cuadron et al. | Their coinage, verbatim: "LRMs sometimes terminate tasks based solely on their internal simulation… either through direct abandonment or by delegating hypothetical action sequences." Also gives you **"analysis paralysis"**. |
+| **"no-op turn"** | **"redundant step"** | RedundancyBench (2605.29893) | `RESULTS.md` defines a no-op turn as one "after which the graded range is unchanged" — an *output* criterion. That maps onto their counterfactual definition (a step is redundant iff removing it does not flip success to failure), not onto their **"Duplicated Step"** subtype, which additionally requires *identical tool name, args and output* — your definition does not require identical code. Cite "Duplicated Step" as the nearest named subtype, not as equivalent. ⚠ Do not compare base rates: some of their redundant steps are synthetically injected, and they report no overall redundant fraction. |
+| "agent stops early" | **"premature disengagement"** — *for the failure mode, not for your effect* | Cuadron et al. | Their coinage, verbatim: "LRMs sometimes terminate tasks based solely on their internal simulation… either through direct abandonment or by delegating hypothetical action sequences." ⚠ **But your Stage 0 regrade shows the praise stop is *not* premature**: "the share of trajectories still improving when they stopped is 2–6% in every arm, with no gap between praise and control." So say praise induces *earlier* disengagement that the per-turn regrade shows is not premature — that is a sharper claim than borrowing a term for a failure you did not observe. Also gives you **"analysis paralysis"**. |
 | "tone" | **"social register"** | A3 defines it | Makes the affect/demand decomposition sayable: register is the variable, affect and demand its components. |
 | "when the cue bites" | **"turn of stop"**, by explicit analogy to **Turn of Flip** | SYCON-Bench | Same estimator design (mean earliest turn of divergence from expected behaviour). ⚠ **Say the analogy is structural, not substantive** — they measure stance conformity, not work quantity. Better still, use them as the mirror image: disagreement changes what the model says; praise changes how much it does. |
 | "consistency across runs" | **pass^k** | τ-bench | "the chance that all k i.i.d. task trials are successful, averaged across tasks." Standard. |
@@ -309,18 +323,19 @@ positive decimal under 1" for partial achievement. Near-binary in practice, not 
    title, reports 4,644 runs not 4,643, and dropped the "$166", the "92–97% success" range and
    **both quotes** this review originally attributed to it. Cite `v1` explicitly for those, or
    move wholesale to v6.
-2. **⚠ RESTATE §5. The data does not support it as currently worded.** Two things came out of
-   `results/analysis/praise_turn_vs_trajectory.py`:
+2. **Word §5 from the table, not from the summary sentence.** `RESULTS.md` already reports this
+   correctly: Q4 (praise + "there is still more work remaining") is **+0.50 turns vs control,
+   p = 0.020** — *longer*, not shorter — and the praise effect is stated there as the
+   **Q4-vs-Q5 contrast, −1.35 turns, p < 0.0001** ("COMPLETION is refuted… the effect is larger
+   here than praise-alone against control"). The independent re-analysis in
+   `results/analysis/praise_turn_vs_trajectory.py` agrees: **+0.502 [+0.090, +0.908]** and
+   **−1.347 [−1.738, −0.950]**.
 
-   **(a) Praise does not shorten work below baseline when the message says work remains.**
-   Q4 (praise + "there is still more work remaining") is **longer** than control:
-   **+0.502 turns [+0.090, +0.908], p = 0.017**. The claim only holds as the *within-pair*
-   contrast against the matched message without praise — Q4 vs Q5, **−1.347 turns
-   [−1.738, −0.950], p < 0.001**. That is still a clean and strong result, and it is the
-   sharpest test in the design, but it is a different sentence. Written as "praise shortens
-   work even when the task is explicitly unfinished" a reader will take it as Q4 < control,
-   which is false and reverses sign. Write it as: *praise removes 1.35 turns relative to the
-   same message without praise, even when that message states the task is unfinished.*
+   The hazard is one prose sentence in the same section — "doing so while telling it there is
+   more to do does not prevent that" — and the brief's paraphrase "praise still shortens work
+   even when the message says the task is unfinished". Both read as Q4 < control, which is false.
+   Use: *praise removes 1.35 turns relative to the same message without praise, even when that
+   message states the task is unfinished.* The finding is intact; only the sentence needs care.
 
    **(b) The longer-final-turn escape route is closed** — see §2(a). Drop it.
 
