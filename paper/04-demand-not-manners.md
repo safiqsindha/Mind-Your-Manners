@@ -2,21 +2,25 @@
 
 > **Draft status.** Numbers verified against `RESULTS.md` and the archived records in
 > `results_archive/`. All contrasts are paired within task and clustered by task, per §2.4;
-> accuracy contrasts and their power are in §2.7–§2.8. Citation keys are placeholders.
+> accuracy contrasts, the family they belong to, and their power are in §2.6–§2.8. Citation
+> keys are placeholders.
 
-## 4.1 A cost curve that is not the tone scale
+## 4.1 A cost curve that is not the register scale
 
 We begin with the experiment that produced a clean-looking result and then refuted its own
 interpretation.
 
 Seven registers, from sycophantic through neutral to threatening, delivered as a single
 mid-task interjection alongside an execution observation. 3,150 trajectories: 50 tasks × 7
-registers × 3 injection turns × 3 trials. Every interjection is exactly 28 tokens and opens
-with the same `Checking in.` stem; the opening instruction is held at the neutral wrapper in
-every arm, so the only thing that varies is what the interruption says and where it lands.
+registers × 3 injection turns × 3 trials, at a 10-turn ceiling. Every interjection is exactly
+28 tokens and opens with the same `Checking in.` stem; the opening instruction is held at the
+neutral wrapper in every arm, so the only things that vary are what the interruption says and
+where it lands.
 
 The interjection fired in 2,662 of 3,150 trajectories. Turn 0 is reported separately
-throughout, because it does nothing — in every arm, not only in some:
+throughout, because nothing happens there — in every arm, not only in some. Reasoning tokens
+per trajectory against the neutral-interjection control, on the control-defined comparison
+population of §2.5:
 
 | Arm | Turn 0 | Turn 1 | Turn 2 |
 |---|---:|---:|---:|
@@ -27,13 +31,14 @@ throughout, because it does nothing — in every arm, not only in some:
 | L6 very rude | −7.7% | +28.8% | +29.1% |
 | L7 threatening | +0.3% | +34.5% | +54.8% |
 
-Turn 0 is also the cell that fires most often (~98% against ~55% at turn 2), so pooling the
-three positions lets the inert cell dominate. We report turns 1 and 2, and §4.6 explains why
-turn 0 is inert — it is not a fact about position.
+No arm differs detectably from control at turn 0; the turn-0 turn-count contrast on all 50
+tasks is +0.02 turns, p = 0.93. Turn 0 is also the cell that fires most often (~98% against
+~55% at turn 2), so pooling the three positions lets the inert cell dominate. We report turns
+1 and 2, and §4.6 gives the reason turn 0 is inert — it is not a fact about position.
 
-Against the neutral-interjection control, on turns 1 and 2:
+Against the same control, on turns 1 and 2:
 
-| Arm | Reasoning tokens | % | p | Turns | p |
+| Arm | Reasoning tokens per trajectory | % | p | Turns | p |
 |---|---:|---:|---:|---:|---:|
 | L1 sycophantic | −69 | −7.1% | 0.043 | −0.68 | <0.0001 |
 | L2 very polite | +180 | +18.5% | <0.0001 | +0.70 | 0.0055 |
@@ -50,25 +55,34 @@ happened.
 ## 4.2 The confound is in our instrument too
 
 The arms that cost more all say some version of *keep working* or *get it right*. The arms
-that do not either say nothing about the task or tell the model to hurry up.
+that do not either say nothing about the task or tell the model to hurry up. We code an arm as
+carrying a demand if it instructs the model to persist or to be correct; the rude arm's
+instruction to be quick is coded as no demand, and §4.3 is what tests that reading rather than
+asserting it.
 
-| Arm | What it implies about the task | Turns |
-|---|---|---:|
-| L1 sycophantic | nothing; pure praise, no task reference | −0.68 |
-| L4 neutral | explicitly inert | — |
-| L5 rude | "just get on with it already" — go **faster** | +0.09 |
-| L2 very polite | "your continued help" | +0.70 |
-| L6 very rude | "had better not screw this one up" | +0.71 |
-| L3 polite | "keep on helping me out with this one" | +1.80 |
-| L7 threatening | "get this exactly right" | +1.46 |
+| Arm | What it implies about the task | Demand? | Turns |
+|---|---|---|---:|
+| L1 sycophantic | nothing; pure praise, no task reference | no | −0.68 |
+| L5 rude | "just get on with it already" — go **faster** | no | +0.09 |
+| L4 neutral | explicitly inert | no | — |
+| L2 very polite | "your continued help" | yes | +0.70 |
+| L6 very rude | "had better not screw this one up" | yes | +0.71 |
+| L7 threatening | "get this exactly right" | yes | +1.46 |
+| L3 polite | "keep on helping me out with this one" | yes | +1.80 |
 
-Coding each text for whether it implies a performance demand predicts the effect better than
-tone rank does: r = +0.88 against r = +0.51 across the seven arms. This is precisely the
-directional prediction §3.1 states — outcomes follow the content of the demand, not the valence
-of the wrapper — and the rude arm is the clearest case of it, because its demand points the
-other way. "Quit dragging your feet, do not waste any more of my time" is an instruction to
-finish sooner, delivered in the most hostile register on the scale, and it produces no
-lengthening at all.
+**The four demand-carrying arms span +0.70 to +1.80 turns. The other three span −0.68 to
++0.09. They do not overlap.** Register rank does not separate them: the most hostile arm on the
+scale and the second most polite sit on opposite sides of the split. (A correlation over seven
+points says the same thing — r = +0.85 for the demand coding against +0.42 for register rank —
+but with n = 7 and a coding made after seeing the effects, the non-overlap is the honest
+statement and the correlation is close to curve-fitting. It is why §4.3 exists.)
+
+The rude arm is the informative case. Its text is *"Just get on with it already, quit dragging
+your feet. Do not waste any more of my time on this, seriously"* — the most hostile register on
+the scale, carrying an instruction to finish sooner — and it produces no lengthening at all.
+That is consistent with the direction §3.1 predicts: outcomes follow the content of the demand
+rather than the valence of the wrapper. It is not a full confirmation. A brevity demand should
+shorten, and this one does not; it is null.
 
 One comparison inside the seven arms is already clean, because the two texts are matched on
 implied demand and differ only in register: **L6 very rude (+0.71 turns) against L2 very polite
@@ -81,10 +95,11 @@ rude arm is null and the polite arm is +28%.
 
 ## 4.3 The probe that separates the two factors
 
-Four arms, each 28 tokens, each opening with the same stem, each holding the opening
-instruction at neutral. The control is the seven-level neutral text, byte-identical, so the two
-runs share a reference level. 1,600 trajectories: 50 tasks × 4 arms × 2 injection turns {1, 2}
-× 4 trials. Turn 0 is dropped as inert. The interjection fired in 1,237 of 1,600.
+Four arms, each 28 tokens, each opening with the same `Checking in.` stem, which is omitted from
+the texts below. The opening instruction is held at neutral. The control is the seven-level
+neutral text, byte-identical, so the two runs share a reference level. 1,600 trajectories: 50
+tasks × 4 arms × 2 injection turns {1, 2} × 4 trials at a 10-turn ceiling. Turn 0 is dropped as
+inert. The interjection fired in 1,237 of 1,600.
 
 - **P0 control.** "This is a routine status note recorded partway through the task here. No
   further context at all accompanies it beyond the above."
@@ -96,54 +111,61 @@ runs share a reference level. 1,600 trajectories: 50 tasks × 4 arms × 2 inject
   you. This note carries nothing else beyond that."
 
 P2 and P3 are a structural minimal pair: identical syntax, identical length, differing in
-*excellent/awful*, *admirable/useless*, *highly/poorly*. P1 contains no register at all.
-Turn count is the primary outcome (§2.3).
+*excellent/awful*, *admirable/useless*, *highly/poorly*. P1 carries no evaluative language,
+positive or negative. Turn count is the primary outcome (§2.3).
 
-| Arm | Turns | % | p | Reasoning tokens | % | p |
+| Arm | Turns | % | p | Reasoning tokens per trajectory | % | p |
 |---|---:|---:|---:|---:|---:|---:|
 | P1 demand only | **+1.17** | +27.6% | 0.00002 | +214 | +19.7% | 0.00004 |
 | P2 praise only | **−0.59** | −13.8% | 0.00030 | −131 | −12.1% | 0.00088 |
 | P3 insult only | −0.08 | −1.9% | 0.63 | −26 | −2.4% | 0.45 |
 
-**Demand alone reproduces the effect.** An affect-free continuation request costs +19.7%
-reasoning tokens, inside the +18–37% range the seven-level arms produced, with no politeness
-or rudeness anywhere in the text.
+**Demand alone reproduces the effect.** An interjection with no evaluative language costs
++19.7% reasoning tokens, inside the range the demand-carrying arms of §4.2 produced (+18.5% to
++36.7%), with no politeness or rudeness anywhere in the text.
 
-It does not reproduce *all* of it, and the gap is worth stating. P1's +1.17 turns sits below
-polite's +1.80 and threatening's +1.46, and threatening works through a second channel the
-affect-free arm does not touch (§4.5). Demand is the operative variable for the cost effect;
-it is not the only thing happening in the seven-level arms.
+Its +1.17 turns likewise sits inside the demand-carrying range (+0.70 to +1.80) — below polite,
+above very polite. We do not interpret the 0.63-turn gap to polite: these are different runs,
+and the same demand-only text gave +27.6% turns here and +34.2% in the cross-model run (§4.7),
+while the same praise text gave −0.59 and −1.08 (§2.9). The gap is inside this study's own
+documented run-to-run range.
 
 **Negative register alone does nothing.** Insult-only is flat on both measures. This is the
-cell that had never been run: the rude and very rude arms of §4.1 both carried negative affect
+cell that had never been run: the rude and very rude arms of §4.2 both carried negative affect
 *with* a demand attached. "Rude interruptions cost more" is now disconfirmed rather than merely
 unsupported.
 
 **Positive register alone is not inert.** Praise-only shortens trajectories by 0.59 turns and
-cuts thinking by 12%, both significant, with no task reference in the text at all. The
-sycophantic arm's −0.68 turns survives isolation and is not explained by demand.
+cuts reasoning tokens per trajectory by 12%, both significant, with no task reference in the
+text at all. The sycophantic arm's −0.68 turns survives isolation and is not explained by
+demand.
 
 ## 4.4 The asymmetry is the finding
 
 | Message | Turns | Reading |
 |---|---:|---|
-| "keep going / get it right" | +1.17 | a continue signal |
-| "you are excellent" | **−0.59** | a stop signal |
-| "you are awful" | −0.08 (n.s.) | not a signal at all |
+| *keep going, get it right* | +1.17 | a continue signal |
+| *you are excellent* | **−0.59** | a stop signal |
+| *you are awful* | −0.08 (n.s.) | not a signal at all |
 
 Praise and insult differ from each other significantly — **−0.50 turns, p = 0.0048**, and −106
 reasoning tokens, p = 0.015 — so register is not inert. It acts in the positive direction only.
 
 This is the result Section 5 takes up. Praise carries no demand and yet it stops the agent, and
-no account of register as valence or arousal predicts an effect that exists on one side and not
-the other.
+neither valence nor arousal predicts an effect that exists on one side and not the other.
 
-## 4.5 The mechanism is persistence, not effort
+## 4.5 The moved quantity is trajectory length, not reasoning per step
 
-Thinking *per turn* is flat across all seven registers — 250 to 299 tokens, with no ordering
+Reasoning *per turn* is flat across all seven registers — 250 to 299 tokens, with no ordering
 resembling the effect. What moves is the number of turns. The agent is not thinking harder per
 step; it is declining to stop. Following [weinberger-hozez-2026] we keep these two channels
-separate throughout and do not use "effort" for either.
+separate throughout and do not use "effort" for either; that they are separable is their
+result, not ours.
+
+The regime matters for comparison. Kumar & Dobariya report 13–44% token effects from register
+in single-turn MCQ under a chain-of-thought-inducing system prompt, with their largest effects
+in the conditions carrying brevity instructions [kumar-dobariya-2026]. Within a ReAct step we
+see nothing of that size; the movement is entirely in how many steps there are.
 
 Threatening is the exception and we report it rather than bury it: it is the only arm that also
 raises per-call reasoning, sitting 20–30% above neutral on every call after the interjection
@@ -151,54 +173,76 @@ lands, while every other arm tracks neutral. So threatening works through two ch
 polite nagging through one. (Later offsets contain only trajectories that survived that long,
 so the persistence of the gap is the readable quantity, not its exact size.)
 
-Nothing in any arm makes the agent more careful. Inspection-before-acting is pinned near ceiling
-everywhere (0.95–0.97) and self-checking is effectively zero in every arm. The only care-related
-quantity that moves is running out of turns, which threatening roughly doubles (0.09 against
-0.04).
+Nothing in any arm makes the agent more careful, though the measures had little room to move:
+inspection-before-acting is pinned near ceiling everywhere (0.95–0.97) and self-checking is
+effectively zero in every arm. The only care-related quantity that moves is running out of
+turns, which threatening roughly doubles (0.09 against 0.04, uncorrected).
 
 Nor is the effect confined to tasks the agent was about to abandon. Splitting by whether the
 control arm ever solved the task, threatening gives +42.2% on never-solved tasks against +30.8%
 on solvable ones, and polite +31.5% against +24.2%.
 
-**The extra turns are not progress.** The per-turn regrade of §6 settles this: the demand arm
-adds +0.96 redundant turns (p < 0.0001) while moving the graded match by +0.006 (p = 0.77). In
-90% of multi-turn trajectories the first code turn is already the best the agent ever produces.
-A continue signal buys attempts, and the attempts are repetitions.
+**The extra turns are mostly repetition.** The per-turn regrade of §6 is the evidence: the
+demand arm adds +0.96 redundant steps at a 10-turn ceiling and +1.11 at 20 (p < 0.0001 and
+p = 0.012) while moving final match by +0.006 (p = 0.77). In 90% of multi-turn trajectories at
+the 10-turn ceiling the first code turn is already the best the agent ever produces. That said,
+the continue-signal contrast on final match has been measured three times — +0.014 (p = 0.50),
++0.061 (p = 0.0028), +0.019 (p = 0.16) — so "no progress" is what two of three measurements
+show and the third did not replicate (§2.9). A continue signal buys attempts; on the measure we
+report, the attempts are repetitions.
 
 ## 4.6 The apparent timing effect is a proxy
 
 §4.1 showed the interjection inert at turn 0 and large at turns 1 and 2. That looks like a
-position effect. It is not.
+position effect. The data favour a different account.
 
-**At turn 0 there is nothing to act on.** 98% of first turns run code, and 0% of them produce a
-candidate answer — the agent's first move is inspection, printing the sheet to see what it is
-working with. A candidate answer exists in 53% of trajectories by turn 1 and 85% by turn 2,
-which tracks the effect curve.
+**At turn 0 there is nothing to act on.** 98% of first turns run code, and **0% of them
+produce a candidate answer** — the agent's first move is inspection, printing the sheet to see
+what it is working with. In the control arm a candidate answer exists in 56% of trajectories
+through turn 1 and 80% through turn 2, which tracks the effect curve.
 
-Splitting turn 1 by whether an answer existed yet, holding turn index fixed:
+The test splits the seven-level run's threatening-versus-neutral contrast by whether an answer
+existed yet, holding turn index fixed. The moderator is pre-treatment: an interjection
+scheduled for turn *t* is appended to turn *t*'s observation, so whether an answer exists
+through turn *t* is settled before the dose lands.
+(`results/analysis/timing_is_a_proxy.py`.)
 
-| Subset | Extra turns | p | Tasks |
-|---|---:|---:|---:|
-| Turn 1, no answer yet | +0.30 | 0.28 | 29 |
-| Turn 1, answer exists | **+2.04** | 0.0002 | 38 |
-| Turn 2, answer exists | +1.79 | 0.0063 | 28 |
-| Turn 0, never any answer | +0.02 | 0.93 | 50 |
+| Injection turn | Answer exists yet | Extra turns | p | Tasks |
+|---|---|---:|---:|---:|
+| 0 | no | +0.07 | 0.81 | 50 |
+| 1 | no | +0.34 | 0.27 | 31 |
+| 1 | **yes** | **+1.97** | 0.0003 | 38 |
+| 2 | no | +0.40 | 0.65 | 8 |
+| 2 | **yes** | **+1.66** | 0.0002 | 46 |
 
-Same turn index, opposite results. The operative variable is whether the agent has produced
-something for the message to be about, not where the message lands. An interruption telling the
-agent to keep going is inert until there is work to keep going on.
+Read it twice. **Holding the moderator fixed and moving the interjection from turn 1 to turn 2
+changes little** (+1.97 against +1.66). **Holding the turn index fixed and varying the
+moderator changes everything** (+0.34 against +1.97 at turn 1). Position is not what the effect
+tracks.
 
-This is the second timing account this study has withdrawn. The first was selection: an earlier
+Two honest weaknesses. The no-answer cells are small and underpowered against the turn MDE of
+§2.7 — 31 tasks at turn 1 and only 8 at turn 2, which is why the turn-2 no-answer row is
+reported but not leaned on. And tasks on which no answer exists by turn 1 are also the harder
+tasks, so difficulty is not fully separated from the moderator; the turn-0 row, where no
+trajectory in any arm has an answer, is the cleanest cell and is flatly null.
+
+(An earlier version of this table, in `RESULTS.md`, gives +0.30/+2.04/+1.79/+0.02 on 29/38/28/50
+tasks from a slightly different answer-exists rule. The numbers above are the ones the committed
+script reproduces.)
+
+This is the second timing account this study has withdrawn. The first was selection: the
 micro-experiment drew the injection turn at random, so a turn-2 injection could only fire in a
-trajectory that reached turn 2 (§2.5). This one is a proxy.
+trajectory that reached turn 2 (§2.2). This one is a proxy.
 
 ## 4.7 It replicates on a second model
 
-2,700 trajectories on a 20-turn ceiling, 4 arms × 2 injection turns × 50 tasks × 3 trials, with
-GLM 5.3 Flash as the first independent model and Luna re-run at the same ceiling so the two are
-compared on one instrument rather than across runs.
+2,700 trajectories at a 20-turn ceiling: 4 arms × 2 injection turns × 50 tasks × 3 trials on
+each of two models, plus a fifth Luna-only arm — the "work remains" continue signal — re-run
+for the third measurement reported in §2.9. GLM 5.3 Flash is the first independent model, and
+Luna is re-run at the same ceiling so the two are compared on one instrument rather than across
+runs.
 
-| Arm | Luna | p | GLM | p |
+| Arm | Luna, Δ turns | p | GLM, Δ turns | p |
 |---|---:|---:|---:|---:|
 | Demand only | **+34.2%** | 0.0013 | **+17.7%** | 0.0038 |
 | Praise only | **−19.3%** | 0.016 | −11.2% | 0.062 |
@@ -206,42 +250,49 @@ compared on one instrument rather than across runs.
 
 Demand above control above praise, insult indistinguishable from control, on two models from
 different labs. The ordering is what replicates; the magnitudes are not, and GLM's praise arm
-does not reach significance on its own, so the replication rests on the demand arm. GLM's
-effects are roughly half of Luna's, and its control runs 3.08 turns against Luna's 5.22 — a
-model that stops early has less room to be pushed into continuing.
+does not reach significance on its own — it is also below 80% power at its observed size
+(§2.7), so the replication rests on the demand arm. GLM's effects are roughly half of Luna's,
+and its control runs 3.08 turns against Luna's 5.22 — a model that stops early has less room to
+be pushed into continuing.
 
 Two structural facts hold on both models: the first code turn is already the best in 87% (Luna)
-and 85% (GLM) of trajectories, and the first turn is inspection rather than production (0% and
-5% produce a candidate answer at turn 0). The *waste* is Luna's alone. Control redundant turns
-run 1.88 on Luna against 0.35 on GLM, and the demand arm adds +1.11 (p = 0.012) against +0.23
-(p = 0.087). How wasteful a continue signal is scales with how inclined the model already was
-to keep going: it is a property of the model's stopping behaviour, not of the signal.
+and 85% (GLM) of trajectories at this ceiling, and the first turn is inspection rather than
+production (0% and 5% produce a candidate answer at turn 0). The *waste* is mostly Luna's.
+Control redundant steps run 1.88 on Luna against 0.35 on GLM, and the demand arm adds +1.11
+(p = 0.012) against +0.23 (p = 0.087). How wasteful a continue signal is scales with how
+inclined the model already was to keep going: it is a property of the model's stopping
+behaviour, not of the signal.
 
-## 4.8 Accuracy does not move
+## 4.8 Accuracy does not move, and that part is a replication
 
-It does not move in this run, in any arm, on either model, and it has not moved in any of the
-seven runs in this study. §2.8 states that null as an equivalence rather than as an absence:
-pooled across measurements, demand versus control is −0.30 accuracy points, 95% CI
-[−2.56, +1.95], and praise versus control is −0.11, [−1.96, +1.75]. Each is equivalent to zero
-within two to three points, against a published tone-accuracy gap of about four.
+That register moves output length rather than correctness is already published, in single-turn
+settings, by [kumar-dobariya-2026] and [yin-2024]. Our accuracy null is a replication of that
+in an agentic substrate, not a new finding, and we frame it as one.
 
-The design cannot exclude an effect of a point or two, and we do not claim it does. What it
+No accuracy contrast in this study survives correction or replication. Across the 22-contrast
+family of §2.6 there are two nominal hits against 1.1 expected under a global null — praise
+versus control on GLM at p = 0.0137, and the continue-signal contrast at p = 0.0040, which came
+back at −1.8 points on re-measurement. §2.8 states the null as an equivalence: pooled across
+measurements, demand versus control is −0.31 accuracy points, 95% CI [−2.72, +2.10], and praise
+versus control is −0.12, [−1.79, +1.55], each equivalent to zero within the four points the
+tone literature reports.
+
+The design cannot exclude an effect of a point or two and we do not claim it does. What it
 excludes is an accuracy effect of the size this literature reports, in a setting where the same
-manipulations move turn count by 20 to 40%.
+interjections move turn count by roughly 15 to 40%.
 
 ## 4.9 What this establishes and what it does not
 
-**Establishes.** The cost effect of a mid-task interruption is driven by implied task demand,
-not by social register. The seven-level curve of §4.1 should be read as a demand gradient that
-happened to correlate with politeness because of how the texts were written. The moved quantity
-is trajectory length, not reasoning per step — with threatening as a reported exception — and
-the extra length is redundant work rather than progress. This holds on two models, and the
-ordering is what holds; the magnitudes are not stable.
+**Establishes a three-way dissociation.** Demand without evaluative language is sufficient to
+produce the cost effect. Negative register without demand does nothing. Positive register
+without demand produces the opposite effect. The seven-level curve of §4.1 should therefore be
+read as a demand gradient that happened to correlate with politeness because of how the texts
+were written.
 
-**Establishes, and it is the surprise.** A purely affective positive interruption shortens the
-agent's work, while its structural minimal pair with the affect reversed does nothing. That is
-a register effect with no demand component, and it is the one direction in which register
-genuinely acts here.
+**Establishes what the moved quantity is.** Trajectory length, not reasoning per step — with
+threatening as a reported exception — and the extra length is, on the measure we report,
+redundant work rather than detectable progress. This holds on two models. The ordering is what
+holds; the magnitudes are not stable.
 
 **Does not establish why praise stops the agent.** That praise is heard as a completion signal
 is one reading; that it raises the agent's confidence in work already produced is another. This
