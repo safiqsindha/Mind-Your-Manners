@@ -772,6 +772,7 @@ def run_condition_batch(
                         if injected_turn is not None:
                             kwargs["interjection"] = ALL_INTERJECTIONS[interject]
                             kwargs["interjection_turn"] = injected_turn
+                            kwargs["interjection_key"] = interject
                         # Same isolation the gate has. This is the PAID path
                         # and had none of it: a single exception anywhere in
                         # 4,200 core-run trajectories propagated out and ended
