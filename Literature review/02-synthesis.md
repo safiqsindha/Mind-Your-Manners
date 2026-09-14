@@ -111,12 +111,34 @@ preprint with no statistical backing; do not hedge §5 on its account.** Note al
 paper reports negative prompts producing **17.6% shorter** responses, which it calls
 "disengagement or terseness" — cutting against a simple valence-length story.
 
-**The reconciliation to argue, and it is a good one:** these measure *verbosity within a
-response*; you measure *persistence across turns*. Schegloff & Sacks predicts exactly that
-dissociation — an appreciation is a canonical **pre-closing** move, closing-implicative at the
-level of the *exchange* while expansive at the level of the *turn*.
-**Check whether your praise conditions produce a longer final turn but fewer total turns
-before you write §5.** If they do, you have converted the contradiction into your best result.
+**⚠ The reconciliation I proposed does NOT hold. It has now been tested against our data and
+must not be used.** See `results/analysis/praise_turn_vs_trajectory.py`.
+
+The hypothesis was that praise lengthens the final turn while shortening the trajectory, giving
+a turn-level/trajectory-level dissociation that Schegloff & Sacks predicts. **The data says
+otherwise.** Praise shortens the trajectory *and* reduces total output, with no compensating
+lengthening anywhere:
+
+| Contrast (paired by task, cluster bootstrap) | Δ turns | Δ tokens/turn |
+|---|---|---|
+| Praise (assistant) vs control | **−1.080** [−1.464, −0.710] | +11.4 [−230.6, +237.6] n.s. |
+| Praise (the work) vs control | **−0.934** [−1.308, −0.547] | +99.6 [−136.7, +334.3] n.s. |
+| Praise isolated (Q4 vs Q5) | **−1.347** [−1.738, −0.950] | −232.0 [−506.5, +2.1] n.s. |
+
+Total tokens fall roughly in proportion to turns (praise vs control −5,880 [−8,593, −3,472]).
+Trailing non-code "sign-off" turns do not rise under praise (+0.053 [−0.028, +0.140], n.s.),
+and the bare closing cue actually produces **fewer** of them (−0.087 [−0.153, −0.018]).
+
+**And the direct test is impossible on the existing records.** No per-turn token field exists in
+any results file — `turn_diagnostics` carries only `turn`, `had_code`, `stdout`, `stderr`, with
+tokens recorded at trajectory level only. If you want the literal final-turn measurement you
+must re-instrument the harness and re-run.
+
+**So argue the weaker, true thing instead.** The prior results measure *verbosity of a single
+response to a question*; you measure *steps taken on a task*. These are different dependent
+variables in different paradigms, not a dissociation you have demonstrated within one dataset.
+Say that plainly. Do not claim the pre-closing account is empirically supported here — it
+remains a plausible mechanism for the *stopping* result, which is what the data does support.
 
 ### (b) Your opening-prompt null, against Yin et al.
 
@@ -287,8 +309,25 @@ positive decimal under 1" for partial achievement. Near-binary in practice, not 
    title, reports 4,644 runs not 4,643, and dropped the "$166", the "92–97% success" range and
    **both quotes** this review originally attributed to it. Cite `v1` explicitly for those, or
    move wholesale to v6.
-2. **Check whether praise lengthens your final turn while shortening the trajectory.** If yes,
-   §5 becomes your best result and the §2(a) contradiction dissolves.
+2. **⚠ RESTATE §5. The data does not support it as currently worded.** Two things came out of
+   `results/analysis/praise_turn_vs_trajectory.py`:
+
+   **(a) Praise does not shorten work below baseline when the message says work remains.**
+   Q4 (praise + "there is still more work remaining") is **longer** than control:
+   **+0.502 turns [+0.090, +0.908], p = 0.017**. The claim only holds as the *within-pair*
+   contrast against the matched message without praise — Q4 vs Q5, **−1.347 turns
+   [−1.738, −0.950], p < 0.001**. That is still a clean and strong result, and it is the
+   sharpest test in the design, but it is a different sentence. Written as "praise shortens
+   work even when the task is explicitly unfinished" a reader will take it as Q4 < control,
+   which is false and reverses sign. Write it as: *praise removes 1.35 turns relative to the
+   same message without praise, even when that message states the task is unfinished.*
+
+   **(b) The longer-final-turn escape route is closed** — see §2(a). Drop it.
+
+   What survives intact: the bare closing cue stops hardest (−1.443 [−1.860, −1.036]), praise
+   shortens relative to control (−1.080 and −0.934), "work remains" alone lengthens (+1.849
+   [+1.387, +2.284]), per-turn effort is flat on every contrast, and accuracy does not move
+   (0.299–0.349, all CIs overlapping).
 3. **Reframe §7 and the accuracy null as replication**, and **reframe §6 as testing Huang et
    al.'s untested escape hatch** rather than as confirming them.
 4. **Quote the three confound tables** (A1 Table 1, A3 Table 2 + VADER, EmotionPrompt EP01–EP11)
