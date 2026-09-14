@@ -39,8 +39,13 @@ Specific negatives worth knowing, because they are the places a preempt would ha
 **(a) The effect you are rebutting has already been rebutted by its own authors.**
 Dobariya & Kumar's AMCIS 2026 paper re-ran the identical 50-question GPT-4o experiment and got
 Very Polite 82.2% vs Very Rude 82.6%, against 80.8% vs 84.8% originally. They label GPT-4o
-**"Weak / noisy"**. On MMLU the total spread across seven tones is 2.05 pp and **Neutral is
-best** — the direction reverses. **Cite this in your abstract.**
+GPT-4o's tone sensitivity **"Weak / noisy"**. On MMLU with GPT-4o the total spread across
+seven tones is 2.05 pp and **Neutral is best** — the monotone gradient is gone rather than
+reversed (Very Rude 81.2 ≥ Very Polite 81.0). It *does* reverse on ChatGPT-5-nano: Very
+Polite 80.3 vs Very Rude 78.0. **Cite this in your abstract**, with the model named.
+⚠ Do not cite A2 as a bare non-replication: on Gemini 2.5 Flash Lite it reports a 12.46 pp
+spread (Sycophantic −10.35 vs Neutral, Holm p=2.67e-9) and 11.12 pp on ChatGPT-5-nano. Its
+finding is that tone effects are real and strongly model-dependent.
 
 **(b) "Tone moves length, not accuracy" is published.** Kumar & Dobariya report token ranges of
 13.1–44.3% against accuracy ranges under 3%, with RM-ANOVA F(6,54)=248.14 on tokens. Yin et al.

@@ -936,8 +936,17 @@ has ever moved accuracy.
 
 ### The magnitude does not replicate, and that is the sixth time
 
-The SAME praise text, model and tasks gave -0.62 turns in the probe run and
--1.14 here. Direction and significance replicate cleanly; the point estimate
+The SAME praise text, model and tasks gave **-0.59** turns in the probe run
+and **-1.08** here, task-clustered and paired -- the estimator used everywhere
+else in this study. (An earlier version of this paragraph quoted -0.62 and
+-1.14. Those are the same contrasts computed as unpaired arm-mean
+differences, which is a different estimator and was not the one the tables
+report. Both are correct; only one is comparable to the rest of the study,
+and a claim ABOUT point estimates failing to replicate cannot afford to cite
+two different pairs of point estimates for the same contrast. Verified by
+recomputing both ways from the archived records.)
+
+Direction and significance replicate cleanly; the point estimate
 is not stable, and should not be quoted as one. This is the sixth measured
 quantity in this study that moved materially on re-measurement, and the
 pattern is consistent enough to be a standing assumption rather than a
@@ -1059,7 +1068,8 @@ inspection, printing the sheet to see what it is working with. An answer
 exists in 53% of trajectories by turn 1 and 85% by turn 2, which tracks the
 effect curve exactly.
 
-Splitting turn 1 by whether an answer existed yet, holding turn index fixed:
+Splitting turn 1 by whether an answer existed yet, holding turn index fixed
+(threatening vs neutral, seven-level run):
 
 | Subset | Extra turns | p | Tasks |
 |---|---:|---:|---:|
@@ -1067,6 +1077,15 @@ Splitting turn 1 by whether an answer existed yet, holding turn index fixed:
 | Turn 1, answer exists | **+2.04** | 0.0002 | 38 |
 | Turn 2, answer exists | +1.79 | 0.0063 | 28 |
 | Turn 0, never any answer | +0.02 | 0.93 | 50 |
+
+RECOMPUTED, and the arm is now named. `results/analysis/timing_is_a_proxy.py`
+reproduces this split from the archived per-turn regrade under an explicit
+answer-exists rule (some turn <= t has a readable value in the graded range)
+and gets +0.07 / +0.34 / +1.97 / +1.66 on 50 / 31 / 38 / 46 tasks, plus a
+fifth cell the original table omitted -- turn 2 with no answer yet, +0.40
+(p=0.65), on only 8 tasks. The control-arm answer-exists rates under that rule
+are 0% / 56% / 80% rather than 0% / 53% / 85%. Same conclusion, slightly
+different cut; the script's numbers are the ones the paper quotes.
 
 Same turn index, opposite results. The operative variable is whether the
 agent has produced something to judge, not where the message lands. An
@@ -1091,7 +1110,10 @@ Records: `results/analysis/*_progress.json`.
 ## Stage 1: does it hold on another model? (2026-09-14)
 
 2,700 trajectories, $11.88, zero crashes. Four arms x 2 injection turns x 50
-tasks x 3 trials, at a **20-turn ceiling** on both models -- ceiling 10
+tasks x 3 trials on each of two models (2,400), plus a fifth Luna-only arm --
+the `Q5_remains_only` continue signal, 300 trajectories, re-run here for the
+third measurement of the progress contrast below. At a **20-turn ceiling** on
+both models -- ceiling 10
 truncates the continue-signal arms and every earlier cross-run comparison
 suffered for it. GLM 5.3 Flash is the first independent model; Luna is re-run
 here at the same ceiling so the two are compared on one instrument rather
