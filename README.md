@@ -20,9 +20,9 @@ This extends Dobariya & Kumar's *Mind Your Tone* line one rung up the autonomy l
 
 ![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)
 ![Python](https://img.shields.io/badge/python-3.11%2B-0891b2?style=flat-square)
-![Models](https://img.shields.io/badge/models-1%20of%204-f59e0b?style=flat-square)
-![Trajectories](https://img.shields.io/badge/trajectories-9%2C150-7C3AED?style=flat-square)
-![Spend](https://img.shields.io/badge/spend-%2449.65-7C3AED?style=flat-square)
+![Models](https://img.shields.io/badge/models-2%20of%204-f59e0b?style=flat-square)
+![Trajectories](https://img.shields.io/badge/trajectories-11%2C850-7C3AED?style=flat-square)
+![Spend](https://img.shields.io/badge/spend-%2461.53-7C3AED?style=flat-square)
 ![Tests](https://img.shields.io/badge/tests-315%20passing-22c55e?style=flat-square)
 
 **[Results](RESULTS.md)** · **[Communications](COMMUNICATIONS.md)** · **[Tone wrappers](harness/tone_wrappers.py)** · **[Analysis](harness/study2/analysis.py)** · **[Harness](harness/study2/runner.py)**
@@ -33,9 +33,9 @@ This extends Dobariya & Kumar's *Mind Your Tone* line one rung up the autonomy l
 
 | | |
 |---|---|
-| Models with a complete run | **1 of 4** (GPT-5.6 Luna) |
-| Graded trajectories | **9,150** across seven runs, plus 7,150 regraded per-turn |
-| Total spend | **$49.65** across ~40,000 model calls |
+| Models with a complete run | **2 of 4** (GPT-5.6 Luna, GLM 5.3 Flash) |
+| Graded trajectories | **11,850** across eight runs, plus 9,850 regraded per-turn |
+| Total spend | **$61.53** across ~48,000 model calls |
 | Substrate | SpreadsheetBench, graded by the authors' own evaluator |
 | Tests | **315 passing** |
 
@@ -132,11 +132,27 @@ final verdict into a curve. 7,150 trajectories.
 - **Most extra turns change nothing.** A demand interjection adds ~1 turn after which the graded range is byte-identical.
 - **The timing effect was a proxy.** Turn 0 looked inert because at turn 0 *no candidate answer exists yet* — 98% of first turns run code, 0% produce output; the agent's first move is inspection. Holding turn index fixed and splitting by whether an answer existed: +0.30 turns without one, **+2.04 with one**.
 - **A 20-turn ceiling is ample.** Among trajectories that ran to it, the best match was first reached at a median turn of **2**, and zero improvements occurred past turn 15.
-- **Whether persistence buys progress is UNRESOLVED.** One run: +0.006 match (p=0.77). Another, same contrast and tasks: +0.049 (p=0.0065). The gap is not the ceiling — truncating the second run to ten turns preserves it. Seventh instance of run-to-run instability here.
+- **Persistence buys no better outcome.** Resolved by a third measurement: the turn effect replicates (+6.20 then +5.77), but final match is null in two of three runs and accuracy came in at +7.0 points then **−1.8 points** on identical tasks. A continue signal buys turns and tokens, not results.
+
+## It replicates on a second model
+
+Stage 1, 2,700 trajectories at a 20-turn ceiling, GLM 5.3 Flash as the first independent model with Luna re-run on the same instrument.
+
+| Arm | Luna | p | GLM | p |
+|---|---:|---:|---:|---:|
+| Demand only | **+34.2%** turns | 0.0013 | **+17.7%** | 0.0038 |
+| Praise only | **−19.3%** | 0.016 | −11.2% | 0.062 |
+| Insult only | +10.9% | 0.17 | +2.4% | 0.67 |
+
+Demand above control above praise, insult null, on two models from different labs.
+
+The structural facts generalise too: the first code turn is already the best answer in 87% of Luna's trajectories and 85% of GLM's, and turn 0 is inspection on both (98%/90% run code, 0%/5% produce an answer).
+
+The *waste* does not generalise. Luna's control averages 1.88 no-op turns and demand adds 1.11; GLM's control averages 0.35 and demand adds 0.23 (p=0.087). GLM barely repeats itself because it barely persists — so how wasteful a continue signal is depends on how inclined the model already was to keep going.
 
 ## Accuracy has never been established as moving
 
-Across every run and every arm, 30.3% to 32.6%. One run showed +7 points (p=0.0043) with a second instrument agreeing inside it, but that run does not replicate, so it is reported as not established. The best-bounded statement available: a threatening interruption does not buy more than about 4 accuracy points while costing 27–37% more thinking (95% CI −5.7 to +3.7 points).
+Across every run and every arm, 30.3% to 32.6%. One run showed +7 points (p=0.0043); the next measurement of the identical contrast gave −1.8 points. **Seven runs, no accuracy effect.** This is the study's cleanest result. The best-bounded statement available: a threatening interruption does not buy more than about 4 accuracy points while costing 27–37% more thinking (95% CI −5.7 to +3.7 points).
 
 ## What independent review found
 

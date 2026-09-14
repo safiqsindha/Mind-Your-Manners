@@ -1088,6 +1088,94 @@ This is the SECOND timing story to be withdrawn: the first was selection
 
 Records: `results/analysis/*_progress.json`.
 
+## Stage 1: does it hold on another model? (2026-09-14)
+
+2,700 trajectories, $11.88, zero crashes. Four arms x 2 injection turns x 50
+tasks x 3 trials, at a **20-turn ceiling** on both models -- ceiling 10
+truncates the continue-signal arms and every earlier cross-run comparison
+suffered for it. GLM 5.3 Flash is the first independent model; Luna is re-run
+here at the same ceiling so the two are compared on one instrument rather
+than across runs.
+
+Pre-flight passed on all four roster models: `reasoning_tokens` is a present
+field, not a missing one. GLM thinks far less than the others (mean 102
+tokens per call against Luna's 206), which matters less than it would have,
+because Stage 0 established turn count as the better-powered outcome and turn
+count is model-agnostic.
+
+### The ordering replicates
+
+| Arm | Luna | p | GLM | p |
+|---|---:|---:|---:|---:|
+| Demand only | **+34.2%** | 0.0013 | **+17.7%** | 0.0038 |
+| Praise only | **-19.3%** | 0.016 | -11.2% | 0.062 |
+| Insult only | +10.9% | 0.17 | +2.4% | 0.67 |
+
+Demand above control above praise, with insult indistinguishable from
+control, on two models from different labs. That is the directional
+consistency this stage existed to test.
+
+GLM's effects are roughly half of Luna's, and its control runs 3.08 turns
+against Luna's 5.22. A model that stops early has less room to be pushed
+into continuing. GLM's praise arm does not reach significance on its own
+(p=0.062); the replication rests on the demand arm.
+
+### The mechanism generalises; the waste does not
+
+| | Luna | GLM |
+|---|---:|---:|
+| First code turn already the best | 87% | 85% |
+| Turn 0 runs code | 98% | 90% |
+| Turn 0 produces a candidate answer | **0%** | **5%** |
+| Control's no-op turns | 1.88 | 0.35 |
+| Demand's extra no-op turns | +1.11 (p=0.012) | +0.23 (p=0.087) |
+
+Both structural facts hold on both models: the first attempt is almost always
+the best one, and the first turn is inspection rather than production, which
+is why the apparent injection-timing effect was a proxy for "has any work
+been produced yet".
+
+The *thrashing* is Luna's, though. GLM barely repeats itself because it
+barely persists. So the wastefulness of a continue signal scales with how
+inclined a model already was to keep going -- it is a property of the
+model's stopping behaviour, not of the signal.
+
+### Does persistence buy progress? No -- resolved against, on three measurements
+
+The contrast whose two prior measurements disagreed was measured a third
+time, deliberately as the same contrast rather than a proxy:
+
+| Measurement | Extra turns | Final match | p | Accuracy | p |
+|---|---:|---:|---:|---:|---:|
+| Ceiling 10 | +1.85 | +0.014 | 0.50 | +2.4 pts | 0.24 |
+| Ceiling 20 | +6.20 | +0.061 | 0.0028 | +7.0 pts | 0.0043 |
+| **Ceiling 20, third run** | **+5.77** | **+0.019** | **0.16** | **-1.8 pts** | 0.38 |
+
+**The turn effect replicates** (+6.20 then +5.77 on the same instrument,
+both p<0.0001). **Neither outcome measure does.** Final match is null in two
+of three measurements. Accuracy came in at +7.0 points and then -1.8 points
+on identical tasks and ceiling -- opposite signs -- so the earlier p=0.0043
+was noise, and the "two independent instruments agree" argument was two
+measures agreeing inside one unreplicated run, which is weaker evidence than
+it felt like.
+
+Accuracy is now null across **seven** runs. That is the study's cleanest
+result and should be stated as such.
+
+A note on which progress measure to trust. `best_match` gives +0.035
+(p=0.0046) on the third run where `final_match` gives +0.019 (p=0.16). Best
+match is the wrong comparison between arms with different turn counts: more
+attempts means more chances for the maximum to be high. Within the
+continue-signal arm best match does rise with measured turns (0.273 -> 0.293
+-> 0.330); within control it does not, so the inflation cannot be cleanly
+separated from task difficulty here. `final_match` -- what the agent
+actually ended with -- is the fair measure and the one reported.
+
+**So the statement the paper can make:** a continue signal buys more turns
+and more tokens, on two models, and buys no better outcome on either.
+
+Records: `results_archive/stage1_cross_model_records.json`.
+
 ## Total spend
 
 **Under $0.10 against the study's target-model budget caps** -- see the
