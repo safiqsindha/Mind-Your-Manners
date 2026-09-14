@@ -1,0 +1,56 @@
+================================================================================
+PAIRED-BY-TASK CONTRASTS on n_turns  (cluster bootstrap over tasks, 8000 reps)
+================================================================================
+contrast                                   tasks  delta turns               95% CI        p
+praise (assistant) vs control                 50       -1.080 [ -1.464, -0.710]   0.0001*
+praise (the work) vs control                  50       -0.934 [ -1.308, -0.547]   0.0001*
+bare closing cue vs control                   50       -1.443 [ -1.860, -1.036]   0.0001*
+praise+"work remains" vs control              50       +0.502 [ +0.090, +0.908]   0.0165*
+"work remains" only vs control                50       +1.849 [ +1.387, +2.284]   0.0001*
+*** PRAISE ISOLATED: Q4 vs Q5 ***             50       -1.347 [ -1.738, -0.950]   0.0001*
+closing cue vs praise                         50       -0.363 [ -0.638, -0.082]   0.0140*
+
+================================================================================
+SAME CONTRASTS on total_tokens and reasoning_tokens
+================================================================================
+
+-- total_tokens --
+praise (assistant) vs control                   -5880.2 [  -8592.7,  -3471.6]   0.0001*
+praise (the work) vs control                    -4937.5 [  -7874.5,  -2369.3]   0.0001*
+bare closing cue vs control                     -7103.9 [ -10012.9,  -4482.6]   0.0001*
+praise+"work remains" vs control                +3100.7 [   +354.2,  +5859.4]   0.0293*
+"work remains" only vs control                 +11001.6 [  +8058.9, +13986.6]   0.0001*
+*** PRAISE ISOLATED: Q4 vs Q5 ***               -7900.8 [ -10565.4,  -5379.2]   0.0001*
+closing cue vs praise                           -1223.7 [  -3002.7,  +1144.5]   0.2505 
+
+-- reasoning_tokens --
+praise (assistant) vs control                    -181.7 [   -252.3,   -115.9]   0.0001*
+praise (the work) vs control                     -104.9 [   -193.3,    -22.0]   0.0100*
+bare closing cue vs control                      -226.0 [   -316.3,   -141.1]   0.0001*
+praise+"work remains" vs control                 +140.6 [    +52.5,   +236.5]   0.0022*
+"work remains" only vs control                   +339.4 [   +262.2,   +418.4]   0.0001*
+*** PRAISE ISOLATED: Q4 vs Q5 ***                -198.7 [   -283.5,   -113.8]   0.0001*
+closing cue vs praise                             -44.3 [   -112.8,    +25.9]   0.2145 
+
+================================================================================
+TOKENS PER TURN, paired by task
+================================================================================
+praise (assistant) vs control                     +11.4 [   -230.6,   +237.6] 
+praise (the work) vs control                      +99.6 [   -136.7,   +334.3] 
+bare closing cue vs control                       -81.0 [   -288.3,   +116.6] 
+praise+"work remains" vs control                 +164.3 [    -50.2,   +372.0] 
+"work remains" only vs control                   +396.3 [   +162.8,   +646.4]*
+*** PRAISE ISOLATED: Q4 vs Q5 ***                -232.0 [   -506.5,     +2.1] 
+closing cue vs praise                             -92.4 [   -339.7,   +174.6] 
+
+================================================================================
+WAS THE FINAL TURN LONGER?  Direct test is IMPOSSIBLE -- no per-turn token
+field exists in any record. Closest available: trailing non-code turns.
+================================================================================
+praise (assistant) vs control                   +0.0530 [-0.0277,+0.1400] 
+praise (the work) vs control                    +0.0110 [-0.0650,+0.0870] 
+bare closing cue vs control                     -0.0870 [-0.1530,-0.0183]*
+praise+"work remains" vs control                +0.0127 [-0.0510,+0.0817] 
+"work remains" only vs control                  -0.0410 [-0.1197,+0.0437] 
+*** PRAISE ISOLATED: Q4 vs Q5 ***               +0.0537 [-0.0187,+0.1250] 
+closing cue vs praise                           -0.1400 [-0.2267,-0.0593]*

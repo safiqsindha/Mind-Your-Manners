@@ -49,6 +49,14 @@ head-on:
 Three separate studies find positive/polite framing makes responses *longer*, not shorter.
 See [`02-synthesis.md` §2](02-synthesis.md).
 
+**That contradiction has now been tested against our own data, and the escape route I proposed
+is closed** (`results/analysis/praise_turn_vs_trajectory.py`). Praise shortens the trajectory
+*and* cuts total output; there is no compensating longer final turn, and no per-turn token field
+exists in any results file to measure one directly. Separately, **§5 needs restating**: Q4
+(praise + "there is still more work remaining") is **longer** than control, +0.502 turns
+[+0.090, +0.908], p = 0.017. The praise effect survives only as the Q4-vs-Q5 contrast,
+−1.347 turns [−1.738, −0.950]. Details in `02-synthesis.md` §2(a) and §7.2.
+
 ## Rules followed
 
 - Every arXiv ID in the brief was checked against arXiv directly; all three exist.
