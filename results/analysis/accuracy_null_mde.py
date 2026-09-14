@@ -1,15 +1,24 @@
-"""Realized MDE and equivalence bounds for the accuracy null.
+"""Power, equivalence, and multiplicity for this study's accuracy null.
 
-Accuracy has not moved in any run of this study. A null is only informative if
-the design could have seen the effect it is being contrasted with, so this
-script reports, for every accuracy contrast we ran:
+Accuracy has not moved in any run. A null is only informative if the design
+could have seen the effect it is being contrasted with, so this script reports,
+for every accuracy contrast in the study's mid-task interjection runs:
 
   * the paired, task-clustered point estimate (the estimator used throughout),
   * a cluster-bootstrap 95% CI over tasks,
+  * a task-clustered sign-flip permutation p-value,
   * the realized minimum detectable effect at 80% power, alpha = 0.05
     two-sided, following Miller's MDE inversion: MDE = (z_.975 + z_.80) * SE,
-  * a two-one-sided-tests (TOST) verdict against the effect sizes the prior
+  * two-one-sided-tests (TOST) verdicts against the effect sizes the prior
     tone literature reports.
+
+The contrast FAMILY is defined exhaustively and in advance: every
+arm-versus-control accuracy contrast in every run that delivered a mid-task
+interjection. That is 22 contrasts across 6 runs and 2 models. Defining it
+any more narrowly would drop the contrast that came in nominally strongest.
+
+It also reports the same machinery for TURN COUNT, which is the study's
+primary outcome, so the two power regimes can be compared directly.
 
 Run:  python results/analysis/accuracy_null_mde.py
 """
@@ -26,259 +35,407 @@ import numpy as np
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 ARCHIVE = ROOT / "results_archive"
+ANALYSIS = ROOT / "results" / "analysis"
 
 Z_ALPHA = 1.959963985  # two-sided 0.05
+Z_90 = 1.644853627  # two-sided 0.10, for the descriptive equivalence interval
 Z_POWER = 0.8416212336  # 80% power
 BOOT = 20000
-RNG = np.random.default_rng(20260914)
+SEED = 20260914
 
-# Equivalence bounds, in accuracy points, drawn from the prior literature.
+# Equivalence bounds, in accuracy points, fixed before looking at the results.
 # 4.0  -- Dobariya & Kumar 2025's headline polite-vs-rude accuracy gap
-#          (80.8% vs 84.8% on their own MMLU-style set).
+#          (80.8% vs 84.8%). This is the study's pre-specified smallest
+#          effect of interest: the effect the paper is positioned against.
 # 7.5  -- Sclar et al.'s MEDIAN format-induced spread across 50+ tasks.
 #          (Their famous 76 points is a single-task maximum; see the
 #          literature review. Do not use it as a comparator.)
 BOUNDS = {"published tone effect": 4.0, "median format spread": 7.5}
+
+# Expected family size. Asserted so that a silent filter bug -- which this
+# script had once, comparing an int field against string turn labels -- fails
+# loudly instead of quietly shrinking the family.
+EXPECTED_ACCURACY_CONTRASTS = 22
 
 
 def _as_bool(value) -> bool:
     return str(value).strip().lower() == "true"
 
 
-def load(name: str) -> list[dict]:
-    return json.loads((ARCHIVE / name).read_text())
+def load(path: pathlib.Path) -> list[dict]:
+    return json.loads(path.read_text())
 
 
-def per_task_rates(records, arm, *, model=None, fired_only=True, turns=None):
-    """Mean pass rate per task for one arm, as {task_id: rate}."""
+def per_task(records, *, arm=None, field="passed", model=None, turns=None,
+             require_fired=True):
+    """Mean outcome per task for one arm, as {task_id: value}.
+
+    Trajectories on which the interjection did not fire received no dose and
+    are excluded. Firing is decided before the interjection is delivered, so
+    it cannot differ by arm except by chance (see firing_rates below).
+    """
     buckets = defaultdict(list)
     for rec in records:
-        if rec.get("interjection") != arm:
+        if arm is not None and rec.get("interjection") != arm:
             continue
         if model is not None and rec.get("model_key") != model:
             continue
-        if fired_only and not _as_bool(rec.get("interjection_fired", "True")):
-            continue
+        if require_fired and "interjection_fired" in rec:
+            if not _as_bool(rec["interjection_fired"]):
+                continue
         if turns is not None and rec.get("interjection_turn") not in turns:
             continue
-        buckets[rec["task_id"]].append(1.0 if _as_bool(rec["passed"]) else 0.0)
-    return {task: statistics.fmean(vals) for task, vals in buckets.items() if vals}
+        raw = rec[field]
+        value = 1.0 if field == "passed" and _as_bool(raw) else (
+            0.0 if field == "passed" else float(raw)
+        )
+        buckets[rec["task_id"]].append(value)
+    return {t: statistics.fmean(v) for t, v in buckets.items() if v}
 
 
-def paired_contrast(treat, control):
-    """Per-task paired differences in accuracy points, over shared tasks."""
+def firing_rates(records, *, turn, model=None):
+    """Fired / scheduled per arm at one injection turn -- the check that the
+    firing exclusion is pre-treatment and not differential by arm."""
+    out = defaultdict(lambda: [0, 0])
+    for rec in records:
+        if rec.get("interjection_turn") != turn:
+            continue
+        if model is not None and rec.get("model_key") != model:
+            continue
+        if "interjection_fired" not in rec:
+            continue
+        cell = out[rec["interjection"]]
+        cell[1] += 1
+        cell[0] += 1 if _as_bool(rec["interjection_fired"]) else 0
+    return dict(out)
+
+
+def paired_diffs(treat, control, *, scale=1.0):
     shared = sorted(set(treat) & set(control))
-    return np.array([100.0 * (treat[t] - control[t]) for t in shared]), shared
+    return np.array([scale * (treat[t] - control[t]) for t in shared]), shared
 
 
-def cluster_bootstrap(diffs, reps=BOOT):
-    """Resample TASKS with replacement -- the clustering unit."""
+def analyse(label, treat, control, *, scale=1.0, rng=None):
+    rng = rng or np.random.default_rng(SEED)
+    diffs, shared = paired_diffs(treat, control, scale=scale)
+    if len(diffs) < 5:
+        raise ValueError(f"{label}: only {len(diffs)} paired tasks -- check filters")
     n = len(diffs)
-    idx = RNG.integers(0, n, size=(reps, n))
-    return diffs[idx].mean(axis=1)
+    idx = rng.integers(0, n, size=(BOOT, n))
+    boot = diffs[idx].mean(axis=1)
+    se = float(boot.std(ddof=1))
+    lo, hi = (float(x) for x in np.percentile(boot, [2.5, 97.5]))
 
-
-def sign_flip_p(diffs, reps=BOOT):
-    """Task-clustered permutation test: flip the sign of whole tasks."""
-    observed = abs(diffs.mean())
-    flips = RNG.choice([-1.0, 1.0], size=(reps, len(diffs)))
+    observed = abs(float(diffs.mean()))
+    flips = rng.choice([-1.0, 1.0], size=(BOOT, n))
     null = (flips * diffs).mean(axis=1)
-    return (np.abs(null) >= observed - 1e-12).mean()
+    # Phipson & Smyth: never report an exact zero from a finite permutation set.
+    p = float((np.abs(null) >= observed - 1e-12).sum() + 1) / (BOOT + 1)
+
+    est = float(diffs.mean())
+    return {
+        "contrast": label,
+        "tasks": n,
+        "estimate": est,
+        "ci_lo": lo,
+        "ci_hi": hi,
+        "se": se,
+        "p": p,
+        "mde_80": (Z_ALPHA + Z_POWER) * se,
+        "tost": {name: tost(est, se, b) for name, b in BOUNDS.items()},
+        "per_task": {t: float(d) for t, d in zip(shared, diffs)},
+    }
 
 
 def tost(estimate, se, bound):
     """Two one-sided tests. Returns the larger of the two p-values."""
-    from math import erfc, sqrt
+    def upper_tail(z):
+        return 0.5 * math.erfc(z / math.sqrt(2.0))
 
-    def upper_tail(z):  # P(Z > z)
-        return 0.5 * erfc(z / sqrt(2.0))
-
-    p_lower = upper_tail((estimate - (-bound)) / se)  # H0: effect <= -bound
-    p_upper = upper_tail(((bound) - estimate) / se)  # H0: effect >= +bound
-    return max(p_lower, p_upper)
+    return max(upper_tail((estimate + bound) / se), upper_tail((bound - estimate) / se))
 
 
-def report(label, treat_rates, control_rates):
-    diffs, shared = paired_contrast(treat_rates, control_rates)
-    if len(diffs) < 5:
-        return None
-    est = float(diffs.mean())
-    boot = cluster_bootstrap(diffs)
-    se = float(boot.std(ddof=1))
-    lo, hi = np.percentile(boot, [2.5, 97.5])
-    mde = (Z_ALPHA + Z_POWER) * se
-    row = {
-        "contrast": label,
-        "tasks": len(shared),
-        "estimate_pts": est,
-        "ci_lo": float(lo),
-        "ci_hi": float(hi),
-        "se_pts": se,
-        "p": float(sign_flip_p(diffs)),
-        "mde_80_pts": mde,
-        "tost": {name: tost(est, se, b) for name, b in BOUNDS.items()},
-    }
-    return row
+def chi2_sf(x, k):
+    """Upper tail of a chi-square, for Cochran's Q."""
+    a, xx = k / 2.0, x / 2.0
+    if xx < a + 1:
+        s = term = 1.0 / a
+        for i in range(1, 10000):
+            term *= xx / (a + i)
+            s += term
+            if term < s * 1e-14:
+                break
+        return 1.0 - s * math.exp(-xx + a * math.log(xx) - math.lgamma(a))
+    tiny = 1e-300
+    b, c, d = xx + 1 - a, 1 / tiny, 1 / (xx + 1 - a)
+    h = d
+    for i in range(1, 10000):
+        an = -i * (i - a)
+        b += 2
+        d = an * d + b
+        d = tiny if abs(d) < tiny else d
+        c = b + an / c
+        c = tiny if abs(c) < tiny else c
+        d = 1 / d
+        de = d * c
+        h *= de
+        if abs(de - 1) < 1e-14:
+            break
+    return math.exp(-xx + a * math.log(xx) - math.lgamma(a)) * h
 
 
 def benjamini_hochberg(pvals, q=0.05):
-    """Return the BH critical value each rank is tested against, and verdicts."""
-    order = sorted(range(len(pvals)), key=lambda i: pvals[i])
     m = len(pvals)
+    order = sorted(range(m), key=lambda i: pvals[i])
     out = [None] * m
     for rank, i in enumerate(order, start=1):
         out[i] = (rank, q * rank / m, pvals[i] <= q * rank / m)
     return out
 
 
-def inverse_variance_meta(rows, names):
-    """Pool repeated measurements of the SAME contrast across runs.
+def pool(rows, names, *, rng=None):
+    """Pool repeated measurements of one contrast.
 
-    Caveat, stated in the paper: the runs share their 50 tasks, so task-level
-    effects are common to them and this understates the pooled SE somewhat.
-    Cochran's Q is reported so heterogeneity is visible rather than assumed away.
+    Reports BOTH a fixed-effect inverse-variance pool and a DerSimonian-Laird
+    random-effects pool, plus a bootstrap that resamples TASKS JOINTLY across
+    runs -- the runs share their 50 tasks, so an inverse-variance interval that
+    treats them as independent understates the SE. The joint bootstrap is the
+    interval we quote; the others are shown so the reader can see how little
+    the choice matters here.
     """
     sel = [r for r in rows if r["contrast"] in names]
     if len(sel) < 2:
         return None
-    w = [1.0 / r["se_pts"] ** 2 for r in sel]
-    est = sum(wi * r["estimate_pts"] for wi, r in zip(w, sel)) / sum(w)
-    se = math.sqrt(1.0 / sum(w))
-    q_stat = sum(wi * (r["estimate_pts"] - est) ** 2 for wi, r in zip(w, sel))
+    w = [1.0 / r["se"] ** 2 for r in sel]
+    fixed = sum(wi * r["estimate"] for wi, r in zip(w, sel)) / sum(w)
+    fixed_se = math.sqrt(1.0 / sum(w))
+    q_stat = sum(wi * (r["estimate"] - fixed) ** 2 for wi, r in zip(w, sel))
+    df = len(sel) - 1
+    q_p = chi2_sf(q_stat, df) if df else 1.0
+
+    # DerSimonian-Laird between-study variance.
+    c = sum(w) - sum(wi ** 2 for wi in w) / sum(w)
+    tau2 = max(0.0, (q_stat - df) / c) if c > 0 else 0.0
+    w_re = [1.0 / (r["se"] ** 2 + tau2) for r in sel]
+    random = sum(wi * r["estimate"] for wi, r in zip(w_re, sel)) / sum(w_re)
+    random_se = math.sqrt(1.0 / sum(w_re))
+
+    # Joint task-clustered bootstrap, fixed weights.
+    rng = rng or np.random.default_rng(SEED + 1)
+    tasks = sorted(set().union(*(set(r["per_task"]) for r in sel)))
+    draws = []
+    for _ in range(4000):
+        pick = rng.choice(tasks, size=len(tasks), replace=True)
+        parts, wts = [], []
+        for wi, r in zip(w, sel):
+            vals = [r["per_task"][t] for t in pick if t in r["per_task"]]
+            if vals:
+                parts.append(statistics.fmean(vals))
+                wts.append(wi)
+        if parts:
+            draws.append(sum(a * b for a, b in zip(wts, parts)) / sum(wts))
+    joint_se = float(np.std(draws, ddof=1))
+
     return {
         "k": len(sel),
-        "estimate_pts": est,
-        "se_pts": se,
-        "ci_lo": est - Z_ALPHA * se,
-        "ci_hi": est + Z_ALPHA * se,
-        "mde_80_pts": (Z_ALPHA + Z_POWER) * se,
+        "fixed": fixed,
+        "fixed_se": fixed_se,
+        "random": random,
+        "random_se": random_se,
+        "joint_se": joint_se,
         "cochran_q": q_stat,
-        "df": len(sel) - 1,
-        "tost": {name: tost(est, se, b) for name, b in
-                 {**BOUNDS, "3 points": 3.0, "2 points": 2.0}.items()},
+        "df": df,
+        "q_p": q_p,
+        "tau2": tau2,
+        "ci90_lo": fixed - Z_90 * joint_se,
+        "ci90_hi": fixed + Z_90 * joint_se,
+        "ci95_lo": fixed - Z_ALPHA * joint_se,
+        "ci95_hi": fixed + Z_ALPHA * joint_se,
+        "mde_80": (Z_ALPHA + Z_POWER) * joint_se,
+        "tost_fixed": {n: tost(fixed, joint_se, b) for n, b in BOUNDS.items()},
+        "tost_random": {n: tost(random, random_se, b) for n, b in BOUNDS.items()},
     }
+
+
+def build_accuracy_family(rng):
+    rows = []
+
+    cross7 = load(ARCHIVE / "core_gpt-luna_cross7_records.json")
+    # Turn 0 is inert in every arm and fires in ~98% of trajectories, so it is
+    # analysed separately throughout; turns are stored as ints, not strings.
+    l4 = per_task(cross7, arm="L4_neutral", turns={1, 2})
+    for arm in ["L1_sycophantic", "L2_very_polite", "L3_polite", "L5_rude",
+                "L6_very_rude", "L7_threatening"]:
+        rows.append(analyse(f"{arm} vs neutral (seven-level, Luna, ceiling 10)",
+                            per_task(cross7, arm=arm, turns={1, 2}), l4,
+                            scale=100.0, rng=rng))
+
+    probe = load(ARCHIVE / "core_gpt-luna_probe_records.json")
+    ctrl = per_task(probe, arm="P0_control")
+    for arm, name in [("P1_demand_only", "demand"), ("P2_praise_only", "praise"),
+                      ("P3_insult_only", "insult")]:
+        rows.append(analyse(f"{name} vs control (probe, Luna, ceiling 10)",
+                            per_task(probe, arm=arm), ctrl, scale=100.0, rng=rng))
+
+    praise = load(ARCHIVE / "core_gpt-luna_praise_records.json")
+    qctrl = per_task(praise, arm="Q0_control")
+    for arm, name in [("Q1_praise_assistant", "praise-assistant"),
+                      ("Q2_praise_work", "praise-work"),
+                      ("Q3_closing_neutral", "closing cue"),
+                      ("Q4_praise_remains", "praise+remains"),
+                      ("Q5_remains_only", "remains-only")]:
+        rows.append(analyse(f"{name} vs control (praise run, Luna, ceiling 10)",
+                            per_task(praise, arm=arm), qctrl, scale=100.0, rng=rng))
+
+    stage1 = load(ARCHIVE / "stage1_cross_model_records.json")
+    for model, tag in [("gpt-luna", "Luna"), ("glm-current", "GLM")]:
+        c = per_task(stage1, arm="P0_control", model=model)
+        for arm, name in [("P1_demand_only", "demand"), ("P2_praise_only", "praise"),
+                          ("P3_insult_only", "insult")]:
+            rows.append(analyse(f"{name} vs control (stage 1, {tag}, ceiling 20)",
+                                per_task(stage1, arm=arm, model=model), c,
+                                scale=100.0, rng=rng))
+
+    c20_ctrl = load(ANALYSIS / "study2_core_gpt-luna-ceiling20-Q0_control_records.json")
+    c20_q5 = load(ANALYSIS / "study2_core_gpt-luna-ceiling20-Q5_remains_only_records.json")
+    rows.append(analyse("remains-only vs control (ceiling-20 run, Luna)",
+                        per_task(c20_q5), per_task(c20_ctrl), scale=100.0, rng=rng))
+
+    # The micro-experiment drew its injection turn at random from {1,2} rather
+    # than crossing it, so its comparison population is selection-affected
+    # (see the paper's section 2.5). It is in the family anyway: excluding the
+    # runs one dislikes is how families get gerrymandered.
+    micro_n = load(ARCHIVE / "core_gpt-luna_reinject_neutral_regraded.json")
+    micro_t = load(ARCHIVE / "core_gpt-luna_reinject_threatening_regraded.json")
+    rows.append(analyse("threatening vs neutral (micro-experiment, Luna, ceiling 10)",
+                        per_task(micro_t), per_task(micro_n), scale=100.0, rng=rng))
+
+    return rows
+
+
+def build_turn_rows(rng):
+    rows = []
+    probe = load(ARCHIVE / "core_gpt-luna_probe_records.json")
+    ctrl = per_task(probe, arm="P0_control", field="n_turns")
+    for arm, name in [("P1_demand_only", "demand"), ("P2_praise_only", "praise"),
+                      ("P3_insult_only", "insult")]:
+        rows.append(analyse(f"{name} vs control (probe, Luna)",
+                            per_task(probe, arm=arm, field="n_turns"), ctrl, rng=rng))
+
+    stage1 = load(ARCHIVE / "stage1_cross_model_records.json")
+    for model, tag in [("gpt-luna", "Luna"), ("glm-current", "GLM")]:
+        c = per_task(stage1, arm="P0_control", field="n_turns", model=model)
+        for arm, name in [("P1_demand_only", "demand"), ("P2_praise_only", "praise"),
+                          ("P3_insult_only", "insult")]:
+            rows.append(analyse(f"{name} vs control (stage 1, {tag})",
+                                per_task(stage1, arm=arm, field="n_turns", model=model),
+                                c, rng=rng))
+        rows[-1]["control_mean"] = statistics.fmean(c.values())
+    rows[0]["control_mean"] = statistics.fmean(ctrl.values())
+    return rows
 
 
 def main() -> None:
-    rows = []
+    rng = np.random.default_rng(SEED)
 
-    probe = load("core_gpt-luna_probe_records.json")
-    ctrl = per_task_rates(probe, "P0_control")
-    for arm, name in [
-        ("P1_demand_only", "demand vs control (probe, Luna)"),
-        ("P2_praise_only", "praise vs control (probe, Luna)"),
-        ("P3_insult_only", "insult vs control (probe, Luna)"),
-    ]:
-        row = report(name, per_task_rates(probe, arm), ctrl)
-        if row:
-            rows.append(row)
+    print("Firing is pre-treatment: fired/scheduled by arm, probe run, turn 2")
+    for arm, (fired, total) in sorted(firing_rates(
+            load(ARCHIVE / "core_gpt-luna_probe_records.json"), turn=2).items()):
+        print(f"  {arm:<22} {fired:>4}/{total:<4} = {100*fired/total:.1f}%")
 
-    praise = load("core_gpt-luna_praise_records.json")
-    qctrl = per_task_rates(praise, "Q0_control")
-    for arm, name in [
-        ("Q1_praise_assistant", "praise-assistant vs control (praise run, Luna)"),
-        ("Q2_praise_work", "praise-work vs control (praise run, Luna)"),
-        ("Q3_closing_neutral", "closing cue vs control (praise run, Luna)"),
-        ("Q4_praise_remains", "praise+remains vs control (praise run, Luna)"),
-        ("Q5_remains_only", "remains-only vs control (praise run, Luna)"),
-    ]:
-        row = report(name, per_task_rates(praise, arm), qctrl)
-        if row:
-            rows.append(row)
-
-    stage1 = load("stage1_cross_model_records.json")
-    for model, tag in [("gpt-luna", "Luna"), ("glm-current", "GLM")]:
-        c = per_task_rates(stage1, "P0_control", model=model)
-        for arm, name in [
-            ("P1_demand_only", f"demand vs control (stage 1, {tag})"),
-            ("P2_praise_only", f"praise vs control (stage 1, {tag})"),
-            ("P3_insult_only", f"insult vs control (stage 1, {tag})"),
-        ]:
-            row = report(name, per_task_rates(stage1, arm, model=model), c)
-            if row:
-                rows.append(row)
-
-    cross7 = load("core_gpt-luna_cross7_records.json")
-    l4 = per_task_rates(cross7, "L4_neutral", turns={"1", "2"})
-    for arm in ["L1_sycophantic", "L2_very_polite", "L3_polite", "L5_rude",
-                "L6_very_rude", "L7_threatening"]:
-        row = report(
-            f"{arm} vs neutral (seven-level, Luna)",
-            per_task_rates(cross7, arm, turns={"1", "2"}),
-            l4,
-        )
-        if row:
-            rows.append(row)
-
-    header = (
-        f"{'contrast':<48}{'n':>4}{'est':>8}{'95% CI':>19}{'SE':>7}"
-        f"{'p':>8}{'MDE80':>8}{'TOST 4pt':>10}{'TOST 7.5pt':>12}"
+    acc = build_accuracy_family(rng)
+    assert len(acc) == EXPECTED_ACCURACY_CONTRASTS, (
+        f"family is {len(acc)} contrasts, expected {EXPECTED_ACCURACY_CONTRASTS} -- "
+        "a filter has silently dropped rows"
     )
+
+    header = (f"\n{'accuracy contrast':<52}{'n':>4}{'est':>8}{'95% CI':>19}"
+              f"{'SE':>7}{'p':>8}{'MDE80':>8}{'TOST4':>9}{'TOST7.5':>9}")
     print(header)
-    print("-" * len(header))
-    for r in rows:
+    print("-" * (len(header) - 1))
+    for r in acc:
         ci = f"[{r['ci_lo']:+.1f}, {r['ci_hi']:+.1f}]"
-        print(
-            f"{r['contrast']:<48}{r['tasks']:>4}{r['estimate_pts']:>+8.2f}{ci:>19}"
-            f"{r['se_pts']:>7.2f}{r['p']:>8.3f}{r['mde_80_pts']:>8.2f}"
-            f"{r['tost']['published tone effect']:>10.4f}"
-            f"{r['tost']['median format spread']:>12.4f}"
-        )
+        print(f"{r['contrast']:<52}{r['tasks']:>4}{r['estimate']:>+8.2f}{ci:>19}"
+              f"{r['se']:>7.2f}{r['p']:>8.4f}{r['mde_80']:>8.2f}"
+              f"{r['tost']['published tone effect']:>9.4f}"
+              f"{r['tost']['median format spread']:>9.4f}")
 
-    bh = benjamini_hochberg([r["p"] for r in rows])
-    print()
-    print("Benjamini-Hochberg over the accuracy family (q=0.05):")
-    for r, (rank, crit, passed) in sorted(zip(rows, bh), key=lambda z: z[1][0])[:3]:
-        print(f"  rank {rank}: p={r['p']:.4f} vs critical {crit:.4f} "
-              f"-> {'SURVIVES' if passed else 'does not survive'}  ({r['contrast']})")
+    bh = benjamini_hochberg([r["p"] for r in acc])
+    print(f"\nBenjamini-Hochberg over the {len(acc)}-contrast accuracy family (q=0.05):")
+    for r, (rank, crit, passed) in sorted(zip(acc, bh), key=lambda z: z[1][0])[:3]:
+        print(f"  rank {rank}: p={r['p']:.4f} vs critical {crit:.4f} -> "
+              f"{'SURVIVES' if passed else 'does not survive'}  ({r['contrast']})")
+    smallest = min(r["p"] for r in acc)
+    print(f"  Bonferroni-adjusted smallest p: {min(1.0, smallest*len(acc)):.3f}")
+    print(f"  nominal hits at 0.05: {sum(1 for r in acc if r['p'] < 0.05)}; "
+          f"expected under a global null: {0.05*len(acc):.1f} "
+          f"(P(at least one) = {1-0.95**len(acc):.2f})")
 
-    print()
-    print("Pooled across repeated measurements of the same contrast:")
-    meta_specs = {
+    mdes = [r["mde_80"] for r in acc]
+    print(f"  MDE at 80% power: median {statistics.median(mdes):.2f}, "
+          f"range {min(mdes):.2f}-{max(mdes):.2f} points")
+    print(f"  largest |estimate| in the family: "
+          f"{max(abs(r['estimate']) for r in acc):.2f} points")
+    for name in BOUNDS:
+        n_eq = sum(1 for r in acc if r["tost"][name] < 0.05)
+        print(f"  equivalent to zero within +/-{BOUNDS[name]} ({name}): {n_eq}/{len(acc)}")
+
+    print("\nPooled across repeated measurements of the same contrast")
+    print("  (CI and MDE from the joint task-clustered bootstrap):")
+    specs = {
         "demand vs control": {
-            "demand vs control (probe, Luna)",
-            "demand vs control (stage 1, Luna)",
-            "demand vs control (stage 1, GLM)",
+            "demand vs control (probe, Luna, ceiling 10)",
+            "demand vs control (stage 1, Luna, ceiling 20)",
+            "demand vs control (stage 1, GLM, ceiling 20)",
         },
         "praise vs control": {
-            "praise vs control (probe, Luna)",
-            "praise-assistant vs control (praise run, Luna)",
-            "praise vs control (stage 1, Luna)",
-            "praise vs control (stage 1, GLM)",
+            "praise vs control (probe, Luna, ceiling 10)",
+            "praise-assistant vs control (praise run, Luna, ceiling 10)",
+            "praise vs control (stage 1, Luna, ceiling 20)",
+            "praise vs control (stage 1, GLM, ceiling 20)",
         },
         "insult vs control": {
-            "insult vs control (probe, Luna)",
-            "insult vs control (stage 1, Luna)",
-            "insult vs control (stage 1, GLM)",
+            "insult vs control (probe, Luna, ceiling 10)",
+            "insult vs control (stage 1, Luna, ceiling 20)",
+            "insult vs control (stage 1, GLM, ceiling 20)",
+        },
+        "praise vs control, Luna only": {
+            "praise vs control (probe, Luna, ceiling 10)",
+            "praise-assistant vs control (praise run, Luna, ceiling 10)",
+            "praise vs control (stage 1, Luna, ceiling 20)",
         },
     }
-    metas = {}
-    for label, names in meta_specs.items():
-        m = inverse_variance_meta(rows, names)
+    pools = {}
+    for label, names in specs.items():
+        m = pool(acc, names, rng=rng)
         if not m:
             continue
-        metas[label] = m
-        print(
-            f"  {label:<20} k={m['k']} {m['estimate_pts']:+.2f} pts "
-            f"[{m['ci_lo']:+.2f}, {m['ci_hi']:+.2f}]  MDE80={m['mde_80_pts']:.2f}  "
-            f"Q={m['cochran_q']:.2f} on {m['df']} df  "
-            f"TOST+/-3={m['tost']['3 points']:.4f}  TOST+/-2={m['tost']['2 points']:.4f}"
-        )
+        pools[label] = m
+        print(f"  {label:<30} k={m['k']}  {m['fixed']:+.2f} pts  "
+              f"95% [{m['ci95_lo']:+.2f}, {m['ci95_hi']:+.2f}]  "
+              f"90% [{m['ci90_lo']:+.2f}, {m['ci90_hi']:+.2f}]  MDE80={m['mde_80']:.2f}")
+        print(f"  {'':<30} Q={m['cochran_q']:.2f} on {m['df']} df, p={m['q_p']:.3f}; "
+              f"random-effects {m['random']:+.2f} +/- {m['random_se']:.2f}; "
+              f"TOST+/-4 fixed {m['tost_fixed']['published tone effect']:.4f}, "
+              f"random {m['tost_random']['published tone effect']:.4f}")
 
-    ests = [r["estimate_pts"] for r in rows]
-    mdes = [r["mde_80_pts"] for r in rows]
-    print()
-    print(f"{len(rows)} accuracy contrasts across 4 runs and 2 models.")
-    print(f"largest |estimate|: {max(abs(e) for e in ests):.2f} points")
-    print(f"realized MDE at 80% power: median {statistics.median(mdes):.2f}, "
-          f"range {min(mdes):.2f}-{max(mdes):.2f} points")
-    n_eq4 = sum(1 for r in rows if r["tost"]["published tone effect"] < 0.05)
-    n_eq75 = sum(1 for r in rows if r["tost"]["median format spread"] < 0.05)
-    print(f"equivalent to zero within +/-4.0 points (TOST, p<0.05): {n_eq4}/{len(rows)}")
-    print(f"equivalent to zero within +/-7.5 points (TOST, p<0.05): {n_eq75}/{len(rows)}")
+    turns = build_turn_rows(rng)
+    print(f"\n{'turn-count contrast':<44}{'est':>8}{'SE':>7}{'MDE80':>8}{'est/MDE':>9}")
+    print("-" * 76)
+    for r in turns:
+        print(f"{r['contrast']:<44}{r['estimate']:>+8.2f}{r['se']:>7.3f}"
+              f"{r['mde_80']:>8.2f}{abs(r['estimate'])/r['mde_80']:>9.2f}")
+    print("  control mean turns (mean of per-task means over fired control "
+          "trajectories):")
+    for r in turns:
+        if "control_mean" in r:
+            print(f"    {r['contrast']}: {r['control_mean']:.2f}")
 
-    out = ROOT / "results" / "analysis" / "accuracy_null_mde.json"
-    out.write_text(json.dumps({"contrasts": rows, "pooled": metas}, indent=2))
+    for row in acc + turns:
+        row.pop("per_task", None)
+    out = ANALYSIS / "accuracy_null_mde.json"
+    out.write_text(json.dumps(
+        {"accuracy": acc, "pooled": pools, "turns": turns}, indent=2))
     print(f"\nwrote {out.relative_to(ROOT)}")
 
 
