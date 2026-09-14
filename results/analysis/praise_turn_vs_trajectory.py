@@ -98,3 +98,28 @@ for a, b, label in contrasts:
     lo, hi = np.percentile(boots, [2.5, 97.5])
     sig = '*' if (lo > 0 or hi < 0) else ' '
     print(f"{label:42s} {statistics.mean(diffs):+12.4f} [{lo:+7.4f},{hi:+7.4f}]{sig}")
+
+print("\n" + "="*80)
+print("ACCURACY (pass rate), per arm with cluster-bootstrap CI over tasks, and paired vs control")
+print("="*80)
+CONDS = ['Q0_control','Q1_praise_assistant','Q2_praise_work','Q3_closing_neutral',
+         'Q4_praise_remains','Q5_remains_only']
+for c in CONDS:
+    by = collections.defaultdict(list)
+    for r in D:
+        if r['interjection'] == c:
+            by[r['task_id']].append(float(r['passed']))
+    keys = list(by); rng = random.Random(4); boots = []
+    for _ in range(8000):
+        s = []
+        for _ in range(len(keys)):
+            s.extend(by[keys[rng.randrange(len(keys))]])
+        boots.append(statistics.mean(s))
+    lo, hi = np.percentile(boots, [2.5, 97.5])
+    allv = [v for vs in by.values() for v in vs]
+    print(f"{c:24s} pass {statistics.mean(allv):.3f} [{lo:.3f},{hi:.3f}]  n={len(allv)}")
+print()
+for a, b, label in contrasts:
+    n, m, lo, hi, p = paired(a, b, 'passed')
+    sig = '*' if (lo > 0 or hi < 0) else ' '
+    print(f"{label:42s} {m:+12.3f} [{lo:+7.3f},{hi:+7.3f}] {p:8.4f}{sig}")

@@ -54,3 +54,21 @@ praise+"work remains" vs control                +0.0127 [-0.0510,+0.0817]
 "work remains" only vs control                  -0.0410 [-0.1197,+0.0437] 
 *** PRAISE ISOLATED: Q4 vs Q5 ***               +0.0537 [-0.0187,+0.1250] 
 closing cue vs praise                           -0.1400 [-0.2267,-0.0593]*
+
+================================================================================
+ACCURACY (pass rate), per arm with cluster-bootstrap CI over tasks, and paired vs control
+================================================================================
+Q0_control               pass 0.326 [0.216,0.444]  n=236
+Q1_praise_assistant      pass 0.306 [0.197,0.422]  n=232
+Q2_praise_work           pass 0.315 [0.201,0.436]  n=235
+Q3_closing_neutral       pass 0.299 [0.197,0.407]  n=231
+Q4_praise_remains        pass 0.318 [0.205,0.439]  n=233
+Q5_remains_only          pass 0.349 [0.228,0.480]  n=229
+
+praise (assistant) vs control                    -0.020 [ -0.062, +0.016]   0.3090 
+praise (the work) vs control                     -0.015 [ -0.059, +0.024]   0.4920 
+bare closing cue vs control                      -0.026 [ -0.060, +0.006]   0.1165 
+praise+"work remains" vs control                 +0.002 [ -0.029, +0.032]   0.8968 
+"work remains" only vs control                   +0.024 [ -0.014, +0.065]   0.2320 
+*** PRAISE ISOLATED: Q4 vs Q5 ***                -0.022 [ -0.061, +0.015]   0.2575 
+closing cue vs praise                            -0.006 [ -0.042, +0.033]   0.7540 
