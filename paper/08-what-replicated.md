@@ -1,146 +1,188 @@
 # 8. What replicated, and what only looked like it did
 
-> **Draft status.** Every figure in §8.2 is printed by `results/analysis/replication_table.py`,
-> which recomputes each contrast from the archived records under the estimator of §2.4. Citation
-> keys are placeholders.
+> **Draft status.** Every figure in §8.2–§8.4 is printed by
+> `results/analysis/replication_table.py`, which recomputes each contrast from the archived
+> records under the estimator of §2.4. Citation keys are placeholders.
 
 ## 8.1 Why this section exists
 
 This study measured several of its contrasts more than once, not by design at first but because
-the design kept changing — a probe run, a follow-up with more arms, a re-run at a higher ceiling,
-a second model. That accident is the most useful thing in the paper, because it lets us ask of
-our own results the question this literature mostly does not ask of its own: **measured again, on
-the same tasks and the same model, what comes back?**
+the design kept changing — a micro-experiment, a seven-register run, a probe, a follow-up with
+more arms, a re-run at a higher ceiling, a second model. That lets us ask of our own results the
+question this literature mostly does not ask of its own: **measured again, on the same tasks and
+the same model, what comes back?**
 
-The answer is not uniform, and the useful finding is *which* properties survive.
+The answer is not uniform, and the useful part is *which* properties survive.
 
-Reporting this is not a courtesy. [vaugrante-2024] re-ran five prompt-engineering techniques
-against their originals and found "a general lack of statistically significant differences across
-nearly all techniques tested" — emotional prompting replicated at +1%, χ² = 0.11, p = .74 — and
-their diagnosis of the original was not fabrication but selection: "instead of communicating the
-average improvement of the enhanced prompts over the regular prompts, they focused on
-improvements when cherry-picking the most performant emotional cue." Recomputed from the
-original's own data, the average was 4.42% on BIG-Bench and 2.58% across all benchmarks against a
-headline of 115%. We would rather do this to ourselves than have it done for us.
+There is precedent for asking. [vaugrante-2024] re-ran five prompt-engineering techniques against
+their originals and found "a general lack of statistically significant differences across nearly
+all techniques tested"; their emotional-prompting replication came in at +1%, χ² = 0.11, p = .74.
+Their diagnosis of the original was not fabrication but selection: "instead of communicating the
+average improvement of the enhanced prompts over the regular prompts, they focused on improvements
+when cherry-picking the most performant emotional cue." Recomputed from the original's own data,
+the *relative* improvement averaged 4.42% on BIG-Bench and 2.58% across all benchmarks, against a
+headline of 115% on BIG-Bench [li-2023]. Their own design is single-run at temperature 0 with no
+repeated sampling, so repeated measurement is a step past their practice rather than a borrowing
+of it.
 
 ## 8.2 The replication table
 
-Every contrast we measured more than once on the same model, under the estimator of §2.4. Turn
-count, the primary outcome:
+Every arm that appears against a control in more than one run on Luna, under the estimator of
+§2.4, on the primary outcome. Each cell is 50 tasks.
 
-| Contrast | Measurement | Δ turns | 95% CI | p |
-|---|---|---:|---|---:|
-| **Praise vs control** | probe, ceiling 10 | −0.59 | [−0.88, −0.29] | 0.0002 |
-| | praise run, ceiling 10 | −1.08 | [−1.46, −0.71] | <0.0001 |
-| | stage 1, ceiling 20 | −1.01 | [−1.81, −0.23] | 0.017 |
-| **Demand vs control** | probe, ceiling 10 | +1.17 | [+0.80, +1.55] | <0.0001 |
-| | stage 1, ceiling 20 | +1.75 | [+0.77, +2.73] | 0.0010 |
-| **Insult vs control** | probe, ceiling 10 | −0.08 | [−0.40, +0.24] | 0.62 |
-| | stage 1, ceiling 20 | +0.57 | [−0.22, +1.35] | 0.17 |
-| **"Work remains" vs control** | praise run, ceiling 10 | +1.85 | [+1.39, +2.29] | <0.0001 |
-| | dedicated re-run, ceiling 20 | +6.20 | [+4.90, +7.50] | <0.0001 |
-| | stage 1, ceiling 20 | +5.77 | [+4.70, +6.91] | <0.0001 |
-
-Three things follow, and they are different claims.
+| Contrast | Measurement | Ceiling | Δ turns | 95% CI | p |
+|---|---|---:|---:|---|---:|
+| **Praise vs control** | probe | 10 | −0.59 | [−0.88, −0.29] | 0.0002 |
+| | praise run | 10 | −1.08 | [−1.46, −0.71] | <0.0001 |
+| | stage 1 | 20 | −1.01 | [−1.81, −0.23] | 0.017 |
+| **Demand vs control** | probe | 10 | +1.17 | [+0.80, +1.55] | <0.0001 |
+| | stage 1 | 20 | +1.75 | [+0.77, +2.73] | 0.0010 |
+| **Insult vs control** | probe | 10 | −0.08 | [−0.40, +0.24] | 0.62 |
+| | stage 1 | 20 | +0.57 | [−0.22, +1.35] | 0.17 |
+| **Threatening vs neutral** | micro-experiment | 10 | +1.32 | [+0.99, +1.66] | <0.0001 |
+| | seven-level run | 10 | +1.46 | [+1.03, +1.88] | <0.0001 |
+| **"Work remains" vs control** | praise run | 10 | +1.85 | [+1.40, +2.28] | <0.0001 |
+| | dedicated re-run | 20 | +6.20 | [+4.91, +7.52] | <0.0001 |
+| | stage 1 | 20 | +5.77 | [+4.71, +6.92] | <0.0001 |
 
 **Direction and significance replicate wherever the effect is large.** Praise is negative and
-significant in all three measurements; demand positive and significant in both; "work remains"
-positive and significant in all three. The qualitative findings of §4 and §5 are not fragile.
-
-**Magnitude does not, and the ratios are not small.** Praise spans 1.8× across three
-measurements. "Work remains" spans 3.4×. Demand spans 1.5×. **A point estimate from any single
-run of this study should be read as a draw, not as a value.**
+significant in all three measurements; demand, threatening and "work remains" positive and
+significant in every one. The qualitative findings that were re-measured are not fragile.
 
 **The null is the least stable cell.** Insult versus control is −0.08 in one measurement and
-+0.57 in the other — a sign flip and a 7× ratio — though neither reaches significance and both
-intervals contain zero. An effect that is not there is not thereby measured precisely.
++0.57 in the other — a sign flip — though neither reaches significance and both intervals contain
+zero. An effect that is not there is not thereby measured precisely.
 
-## 8.3 Some of that spread is the instrument, and some is not
+Two caveats about how to read magnitudes off this table. First, the cross-ceiling rows are not
+magnitude comparisons: the arms that persist longest are the ones a 10-turn ceiling truncates
+hardest, and "work remains" has a mean of 6.37 turns against a ceiling of 10, so most of the
++1.85-to-+6.20 gap is censoring rather than instability. Second, a ratio of estimates is a poor
+summary — it is scale-dependent and meaningless near zero. §8.3 uses a test instead.
 
-Two of the contrasts above were measured twice at the *same* turn ceiling, which is the only fair
-magnitude comparison — a different ceiling is a different instrument, and the arms that persist
-longest are the ones a low ceiling truncates hardest.
+## 8.3 Matched-ceiling pairs: a test, not an impression
 
-| Contrast, matched ceiling | Measurements | Spread |
-|---|---|---:|
-| "Work remains" vs control, ceiling 20 | +6.20, +5.77 | **1.1×** |
-| Praise vs control, ceiling 10 | −0.59, −1.08 | **1.8×** |
+Three contrasts were measured twice at the *same* ceiling, which is the only fair magnitude
+comparison. For each we report the difference in standard errors of the difference, treating the
+runs as independent — which, since they share the same 50 tasks, is generous to the reading that
+they agree.
 
-**The large effect replicates tightly and the small one does not.** That is the expected pattern
-rather than a surprise, and it locates the instability: it is sampling noise on effects that are
-near the design's resolution, not a defect in the harness. §2.7 gives the realized MDEs that make
-this concrete — 0.42 turns for the probe's praise contrast, 1.13 for stage 1's.
+| Contrast, matched ceiling | Measurements | z | p | Verdict |
+|---|---|---:|---:|---|
+| Threatening vs neutral, ceiling 10 | +1.32, +1.46 | −0.52 | 0.60 | consistent |
+| "Work remains" vs control, ceiling 20 | +6.20, +5.77 | +0.49 | 0.62 | consistent |
+| Praise vs control, ceiling 10 | −0.59, −1.08 | **+2.03** | **0.042** | **inconsistent** |
 
-So the honest generalisation is narrower than "nothing replicates". It is: **in this design, a
-turn-count effect above about 1.5 turns reproduces its magnitude within ~10%; an effect below one
-turn reproduces its direction but not its size.**
+**The two larger effects agree; the smallest does not.** Threatening (≈1.4 turns) and "work
+remains" (≈6 turns) each reproduce within 10% and are comfortably consistent with a single value.
+Praise (≈0.8 turns) reproduces its direction and its significance, but its two measurements differ
+by about two standard errors — at the edge of what sampling variation alone predicts.
 
-## 8.4 The outcome that did not replicate at all
+We do not claim to know why. The two praise runs also differ in trial count (four against three)
+and in date, so sampling variation and drift between runs are not separable here. What we can say
+is bounded: **of the three contrasts measured twice on one instrument, the two larger ones agreed
+within 10% and the smallest is marginally inconsistent with a common value.** Three pairs will not
+support a threshold, and we do not propose one.
 
-Two contrasts flip sign across measurements on outcomes other than turn count, and both involve
-the same arm.
+Reasoning tokens behave the same way, and the praise pair is consistent there (−131 against −182,
+z = 0.95, p = 0.34), which is a further reason to treat the turn-count result as marginal rather
+than as established drift.
 
-| | Ceiling 10 | Ceiling 20 | Ceiling 20, third run |
+## 8.4 Where nothing replicated
+
+The continue-signal arm is the one contrast measured three times, and its non-turn outcomes are
+where the study's instability is worst.
+
+| "Work remains" vs control | praise run, ceiling 10 | dedicated re-run, ceiling 20 | stage 1, ceiling 20 |
 |---|---:|---:|---:|
-| "Work remains", Δ turns | +1.85 | +6.20 | +5.77 |
-| "Work remains", Δ final match | +0.014 (p = 0.50) | **+0.061 (p = 0.0028)** | +0.019 (p = 0.16) |
-| "Work remains", Δ accuracy | +2.4 pts (p = 0.24) | **+7.0 pts (p = 0.0043)** | **−1.8 pts** (p = 0.38) |
+| Δ turns | +1.85 | +6.20 | +5.77 |
+| Δ final match | +0.014 (p = 0.49) | **+0.061 (p = 0.0026)** | +0.019 (p = 0.16) |
+| Δ accuracy | +2.4 pts (p = 0.24) | **+6.6 pts (p = 0.004)** | **−1.8 pts** (p = 0.39) |
 
-The turn effect replicates. **Neither outcome measure does.** Final match is null in two of three.
-Accuracy came in at +7.0 points and then at −1.8 points on identical tasks, model and ceiling —
-opposite signs — so the p = 0.0043 was noise.
+**Final match replicates in direction but not significance** — all three positive, one significant
+— and at matched ceiling the two are formally consistent (z = 1.68, p = 0.094). **Accuracy
+replicates in neither.** Its two matched-ceiling measurements are +6.6 and −1.8 points on identical
+tasks, model and ceiling: z = 2.79, p = 0.005. They are inconsistent with a common value, so at
+least one of them is wrong, and the data do not say which.
 
-This is worth dwelling on because of how convincing the middle column was at the time. It carried
-two *different instruments* agreeing: a progress measure and the benchmark's own grade, both
-positive, both significant, on the same contrast. That felt like corroboration. It was two
-measures agreeing inside a single unreplicated run, which is a much weaker thing — the two
-instruments share every source of run-level noise, so their agreement adds almost nothing.
+The middle column looked like corroboration at the time: a progress measure and the benchmark's
+own grade, both positive, both significant, on the same contrast. That reading was mistaken for a
+reason worth naming. Accuracy and `final_match` are not two instruments. They are two functions of
+the same final workbook — one asks whether all three test cases pass, the other what fraction of
+the graded range is correct — so they share not only every source of run-level noise but the
+underlying object. Their agreement carries almost no independent information.
 
 We also tested the obvious rescue and it failed. The natural reading is that the 10-turn ceiling
-truncated real progress, which is testable: truncate the ceiling-20 run's own analysis to ten
-turns and see whether the effect survives. It does — +0.049 (p = 0.0065) at ten turns, +0.056 at
-fifteen, +0.061 at twenty. The effect is fully present within the first ten turns of that run. The
-ceiling explains almost none of the gap between +0.014 and +0.049; what separates them is that
-they are two different runs.
+truncated real progress, which is testable: truncate the ceiling-20 run's own analysis to ten turns
+and see whether the effect survives. It does — +0.049 (p = 0.0065) at ten turns, +0.056 at fifteen,
++0.061 at twenty. The ceiling explains almost none of the gap between +0.014 and +0.049. What
+separates them is that they are different runs.
 
 **So: a continue signal buys more turns, reliably, on two models. Whether it buys a better answer
 is unresolved, and we report it as unresolved rather than as either a null or a finding.**
 
-## 8.5 Four claims this study withdrew about itself
+One note on the progress figures. The per-turn regrade outputs carry no record of whether the
+interjection fired, so these three contrasts are over all rows with a readable final match — 48
+tasks, with 23–34 unreadable rows dropped per arm — rather than the fired-only population §2.5
+specifies for everything else. The exclusion is independent of arm (§2.5), so we do not expect
+this to bias the contrast, but it is a different population and we say so.
 
-Instability is one failure mode. Analysis error is another, and this study produced four of them
-that survived at least one draft. We list them because a paper arguing that a literature's
-headline effects are artefacts of design should be legible about its own.
+## 8.5 The reasoning-token outcome, including an inconvenient row
 
-**A timing effect that was selection.** An early micro-experiment split the interruption effect by
-injection turn and found +21% at turn 1 against +39% at turn 2, p = 0.004. The injection turn was
-drawn at random, and a turn-2 injection can only fire in a trajectory that reaches turn 2 — the
-harder, longer tasks. The two positions were measured on different task populations, 50 tasks
-against 35. Recomputed on a control-defined population of 29 tasks: +20.0% against +29.1%,
-p = 0.32. Withdrawn. This is why injection turn is crossed rather than sampled (§2.2) and why the
-comparison population is fixed from control (§2.5).
+The first run's pre-registered outcome was reasoning tokens, and a section called "what
+replicated" should not quietly report only the outcome that behaved.
+
+| Contrast | probe, ceiling 10 | stage 1, ceiling 20 |
+|---|---:|---:|
+| Demand vs control | +214 (p < 0.0001) | +357 (p < 0.0001) |
+| Praise vs control | −131 (p = 0.0009) | −113 (p = 0.17) |
+| **Insult vs control** | **−26 (p = 0.45)** | **+176 (p = 0.0086)** |
+
+**Insult flips sign and reaches significance in one of the two measurements.** This is the only
+place in the study where the insult arm moves anything, and it qualifies two statements made
+elsewhere: §4.3's "flat on both measures" is true of the probe run, and §2.8's "insult does not
+move it at all" is about turn count. On reasoning tokens at the 20-turn ceiling, insult is +176,
+p = 0.0086 uncorrected — which does not survive the multiplicity correction of §2.6, is not
+replicated, and runs opposite to the arm's other measurement. We report it because a section about
+selective reporting cannot practise it, and we do not build on it.
+
+Praise on tokens likewise loses significance at stage 1 (p = 0.17), which §4.7's turn-count table
+does not show.
+
+## 8.6 Claims this study withdrew about itself
+
+Instability is one failure mode; analysis error is another. We discuss four here, chosen because
+each changed a substantive claim. They are not the complete list — the arithmetic and estimator
+errors are recorded in §2.4, §2.2 and `RESULTS.md`, and include a double-counted token total, an
+un-clustered confidence interval roughly 35% too narrow, a mislabelled "monotonic decline", a
+false-positive claim that compared two different tests, a pooled inert cell that diluted every
+seven-level effect by about a third, and an unpaired-versus-paired estimator mix-up.
+
+**A timing effect that was selection.** An early micro-experiment split the interruption's
+reasoning-token effect by injection turn and found +21% at turn 1 against +39% at turn 2,
+p = 0.004. The injection turn was drawn at random, and a turn-2 injection can only fire in a
+trajectory that reaches turn 2 — the harder, longer tasks. The two *positions* were therefore
+measured on different task populations, 50 against 35. Recomputed on a control-defined population
+of 29 tasks: +20.0% against +29.1%, p = 0.32. Withdrawn. This is why injection turn is crossed
+rather than sampled (§2.2) and why the comparison population is fixed from control (§2.5).
 
 **A timing effect that was a proxy.** The crossed run then found the interjection inert at turn 0
 and large at turns 1 and 2, which looks like position. §4.6 shows it is not: holding turn index
-fixed and varying whether a candidate answer exists yet changes the effect from +0.34 to +1.97,
-while holding the moderator fixed and varying the turn index changes it from +1.97 to +1.66. The
-operative variable is whether there is work for the message to be about.
+fixed and varying whether a candidate answer exists changes the effect from +0.34 to +1.97, while
+holding the moderator fixed and varying the turn index changes it from +1.97 to +1.66.
 
-**A ceiling explanation that we tested and withdrew.** §8.4 above. The correction was written,
-then the correction was checked, then the correction was withdrawn.
+**A ceiling explanation we tested and withdrew.** §8.4 above: the correction was written, then
+checked, then withdrawn.
 
 **A productive window that was a rate on a small denominator.** A per-turn improvement rate of
-1–5% out at turns 10–14 was read as evidence that the productive window extended that far. The
-rate was real. In absolute terms those turns contain almost no improvements: zero of 43
+1–5% at turn indices around 10–14 was read as evidence that the productive window extended that
+far. The rate was real. In absolute terms those turns contain almost no improvements: zero of 43
 improvements in the run occurred at turn 15 or later, and 97% of trajectories had peaked by turn
 10 (§6.5).
 
-Three of the four were caught by a test we ran on ourselves rather than by a reviewer. The
-fourth — the selection confound — was caught by noticing that two arms had different task counts.
+## 8.7 Two infrastructure failures worth recording
 
-## 8.6 Two infrastructure failures worth recording
-
-Neither changed a conclusion, but both are the kind of thing that silently corrupts a result.
+Neither changed a conclusion; both are the kind of thing that corrupts a result without announcing
+itself.
 
 **Shared scratch directories.** Two runs used the same tone over the same 50 tasks and the same 8
 trials, and the scratch path did not include the run label — so 800 trajectories shared 400
@@ -152,25 +194,29 @@ by run tag and injection turn.
 
 **A silent range-parser bug.** `"P2:P7"` parsed as sheet `P2:` plus cell `P7`, grading a one-cell
 range on a sheet that does not exist. Every affected lookup returned `None`, which reads as
-*unmeasurable* rather than as *broken*. It was caught by validating the regrade against a real
-task before scaling up, and it is the reason §6.2 describes that validation step.
+*unmeasurable* rather than as *broken*. It was caught by validating the regrade against a real task
+before scaling up, and it is why §6.2 describes that validation step.
 
-## 8.7 What we would ask of this literature
+## 8.8 What we would ask of this literature
 
-Nothing here is a novel methodological proposal; it is the discipline [vaugrante-2024],
-[sclar-2024] and [miller-2024] already ask for, applied to a study small enough that applying it
-is cheap. Three things, in order of how much they cost:
+Nothing here is a new methodological proposal; it is the discipline [vaugrante-2024], [sclar-2024]
+and [miller-2024] already ask for, applied to a study small enough that applying it is cheap.
+Three things, in order of what they cost.
 
 1. **Report the estimator.** The unpaired difference of arm means and the paired task-clustered
-   difference give different numbers for the same contrast (§2.4). Ours differed by up to 6% on
-   the praise contrast. A paper that does not say which it used cannot be compared to one that
-   does.
-2. **Measure at least one contrast twice.** It cost us nothing we would not have spent anyway and
-   it changed what we were willing to claim about four separate results. The second measurement is
-   the cheapest experiment in the paper.
+   difference give different numbers for the same contrast — ours differed by up to 6% on the
+   praise contrast (§2.4). A paper that does not say which it used cannot be compared with one that
+   does. This is the defensible complaint about [dobariya-kumar-2025]: its paired t-tests treat ten
+   runs as the unit and ignore clustering within the 50 items.
+2. **Measure at least one contrast twice, on the same instrument.** It cost us nothing we would not
+   have spent anyway, and it changed what we were willing to claim about four results: the
+   continue-signal progress effect, the accuracy movement that accompanied it, the praise magnitude,
+   and the timing effect of §8.6.
 3. **Report ranges where you have them and say so where you do not.** We quote a range wherever a
-   quantity was measured more than once and flag the single measurements as single.
+   quantity was measured more than once and flag the single measurements as single (§9.6).
+   [sclar-2024] recommend this while also noting that single-format evaluation "may still be
+   sufficient for many use cases", so it is a reporting discipline rather than a design requirement.
 
-The first two are what would have caught the effect this paper is positioned against before it
-was published — and, to their credit, its own authors caught it themselves within seven months
+The first is what the design this paper is positioned against lacked. The second is what its own
+authors eventually supplied, re-running the experiment the following spring and not reproducing it
 [dobariya-kumar-2026].
