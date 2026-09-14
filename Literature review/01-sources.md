@@ -1522,22 +1522,55 @@ Zeyao Ma, Bohan Zhang, Jing Zhang, Jifan Yu, Xiaokang Zhang, Xiaohan Zhang, Siji
 Xi Wang, Jie Tang. arXiv:2406.14991, 21 Jun 2024 (rev. Oct 2024). **NeurIPS 2024 Spotlight —
 refereed.** spreadsheetbench.github.io
 
-**Method.** **912** real questions from online Excel forums; real workbooks with multiple
-tables, non-standard relational structures and non-textual elements. Evaluation uses
-**multiple spreadsheet test cases per instruction**, online-judge style. Both single-round
-and multi-round inference are evaluated. Large SOTA-to-human gap.
+**Method.** **912 instructions, 2,729 test cases** (three per instruction by construction).
+Real workbooks from Excel forums. **NeurIPS 2024 Spotlight — main track, not the D&B track.**
 
-**RELATION TO US: your current substrate — cite for the evaluator design.** The
-online-judge multi-test-case scheme is what makes your per-turn regrading defensible; say so.
+**⚠ It already has an official partial-credit metric — say so rather than implying otherwise.**
+Two scores are reported: the **soft** restriction "adheres to the scoring principles of the OJ
+system from the IOI, granting partial credit when a solution only passes some test cases",
+and the **hard** restriction "follows the ICPC scoring rules… where no partial credit is
+awarded." Partial credit exists, but only at the per-instruction / test-case level — not
+per-turn. That distinction is your contribution; state it precisely.
+
+**⚠ The official multi-round protocol is FIVE rounds, not twenty.** Verbatim: "we incorporate
+additional prompt that utilizes the ReAct technique and code execution feedback… **We impose a
+limit of five rounds** for the multi-round setting." **Your 20-turn ceiling is entirely your
+own choice.** Say so explicitly — do not let the paper imply continuity with an official
+protocol. Your harness is structurally the same (ReAct + execution feedback) at 4× their cap.
+
+**⚠⚠ Their own multi-round result supports your §4 and §6, and this review missed it.**
+Table 2, Overall: GPT-4o **declines** from single- to multi-round — soft 18.35 → 16.96, hard
+15.02 → 13.27 — and **the paper attributes the decline to redundant re-fetching of rows the
+agent already has.** Meanwhile GPT-3.5 nearly triples (2.34 → 7.09 soft). So the benchmark's
+own authors observed that extra rounds make the strongest model worse, by repetition.
+**Cite this. It is prior evidence for your mechanism, from the substrate you already use.**
+Their Appendix C.4 ablation points the same way: ReAct + execution feedback + row context
+underperforms execution feedback alone in some configurations.
+
+**Evaluator brittleness, self-audited with numbers (Appendix D.3, 50 sampled instructions):**
+test-case-level false discovery rate 0%; **test-case-level false omission rate 3.8%**;
+instruction-level false positives 0%; **instruction-level false negatives 4%** — "4%
+instructions contain at least one correct sample prediction that fails to pass our automatic
+metric", usually because the generated code writes content beyond the target cells.
+**Quote this in your validity section** — it bounds the noise floor on your per-turn regrading.
+
+Human performance: 71.33 soft / 62.00 hard, against GPT-4o's 15.02 hard — a 47-point gap.
+Contamination is actively mitigated (instruction rewriting, spreadsheet perturbation,
+answer-position shuffling).
+
+**Limitations, verbatim:** "(1) Data Selection: …we eliminate posts that lack an acknowledged
+response or are difficult to formalize… (2) Test Case Construction: Our benchmark has a
+significantly higher number of questions compared to online judge competitions. Consequently,
+we did not meticulously devise corner cases for each question."
 
 ---
 
 ## G2. Trivedi, Khot et al. (2024) — *AppWorld* `[ABS + ar5iv full text]`
 
-"AppWorld: A Controllable World of Apps and People for Benchmarking Interactive Coding
-Agents." arXiv:2407.18901, 26 Jul 2024. Stony Brook / AI2 / Saarland.
-**ACL 2024 — refereed (Best Resource Paper).** *UNVERIFIED: the best-paper designation was
-not re-checked in this pass.*
+Harsh Trivedi, Tushar Khot, Mareike Hartmann, Ruskin Manku, Vinty Dong, Edward Li, Shashank
+Gupta, Ashish Sabharwal, Niranjan Balasubramanian. "AppWorld: A Controllable World of Apps and
+People for Benchmarking Interactive Coding Agents." arXiv:2407.18901, 26 Jul 2024.
+**ACL 2024 (2024.acl-long.850) — refereed, Best Resource Paper. Verified.**
 
 **Method and grading — the details you asked for.**
 - **750 tasks** (105 train / 60 dev / 168 test-normal / 417 test-challenge), **9 apps**,
@@ -1547,23 +1580,49 @@ not re-checked in this pass.*
   **collateral damage** (unintended state modifications).
 - **Task Goal Completion (TGC)**: % of tasks passing *all* tests. **Scenario Goal Completion
   (SGC)**: % of scenarios where *all* tasks in the scenario pass — a consistency metric.
-- **Partial credit: NOT provided at the task level.** TGC is all-or-nothing per task. The
-  unit tests give you *sub-task* signal if you instrument them yourself, but the benchmark's
-  reported metrics are binary-per-task.
-- **Multi-turn with execution feedback: yes.** Step limits: **max 100 LLM calls for ReAct**,
-  15 turns for parallel function calling, 5 retrials for full-code reflection.
+- **Partial credit: NOT provided.** Verbatim: TGC is "the percentage tasks for which the agent
+  passed **all** evaluation tests"; SGC requires passing all tests for all tasks in a scenario.
+  Zero hits for partial credit anywhere in the paper.
+- **✅ But individual assertions ARE programmatically exposed — the recommendation holds.**
+  Verified against the evaluator source (`appworld/evaluator.py`): the `TestTracker` class
+  keeps `self.passes` and `self.failures`, each entry carrying a `requirement` string and a
+  `label`, and `to_dict()` serialises both. **You can compute a per-turn "fraction of unit
+  tests passed" DV from the stock evaluator without modifying it.** This is the crux of the
+  recommendation and it survives scrutiny.
+- **⚠ Collateral damage is NOT a separate metric — correct the earlier framing.** The
+  mechanism is real (database diff against expected changes `C_expect` and allowed-optional
+  changes `C_allow`), but it is implemented as **more entries in the same unit-test battery**
+  that produces TGC. It is folded into pass/fail, not published as a collateral-damage rate.
+  You could split it out using the per-assertion `label` field — but that is engineering you
+  must do and describe, not something the benchmark hands you.
+- **Step limits, all confirmed verbatim:** ReAct — "maximum # LLM calls reach **100**";
+  parallel function calling — "a maximum of **15 turns**" (they tried 10/15/20 and saw
+  saturation at 15); full-code reflection — "a maximum of **5 retrials**". **Compare against
+  the ReAct config (100), not the other two**, and note their ReAct "call" ≈ one thought+code
+  step, so it is roughly commensurate with one of your turns.
 
-**Baselines (GPT-4o):** ReAct 48.8% TGC / 32.1% SGC (test-normal), 30.2% / 13.0%
-(test-challenge). Plan&Execute 44.6% / 23.2% and 19.7% / 7.9%. FullCodeRefl 33.9% / 26.8%
-and 19.2% / 12.2%. Next-best model (GPT-4 Turbo) 32.7% / 17.5%.
+**Baselines (GPT-4o), Table 3:** ReAct 48.8 TGC / 32.1 SGC (test-normal), 30.2 / 13.0
+(test-challenge). Plan&Execute 44.6 / 23.2 and 19.7 / 7.9. FullCodeRefl 33.9 / 26.8 and
+19.2 / 12.2.
+**⚠ Do not cite "GPT-4 Turbo 32.7 / 17.5" as one row — it is a cross-method splice.** The
+paper's prose takes the best TGC per column across different methods: 32.7 is Plan&Execute on
+test-normal, 17.5 is ReAct on test-challenge. They never co-occur in a single configuration,
+and no matching SGC pair exists. Cite full Table 3 rows or drop the pairing.
 
-**RELATION TO US: the best second substrate for your design, with one caveat.** Strengths:
-native ReAct loop with a **100-call ceiling** (5× your current headroom — good for measuring
-persistence without ceiling effects), per-task unit tests you can regrade per turn, and
-**collateral-damage detection**, which gives you a *safety* DV: does an over-persistent agent
-break things? That is a finding SpreadsheetBench cannot give you. Caveat: reported metrics
-are binary, so you'd be computing your own partial-credit measure from the unit tests —
-defensible, but you must define it in advance and say you did.
+**Cost and reproducibility:** "**$0.7 per example** for ReAct… on the Test-N dataset" with
+GPT-4o; total experiment budget ~$10K. Docker image with gVisor runtime; permissive licensing;
+explicitly built "controllable, stable, and reproducible".
+
+**RELATION TO US: the best second substrate for your design — recommendation confirmed and
+strengthened.** Native ReAct loop with a verified 100-call ceiling (5× your current headroom,
+so persistence can be measured without a ceiling effect); per-assertion results exposed in the
+stock evaluator; 750 tasks against OSWorld 2.0's 108; ~$0.7/trajectory; and an ACL Best
+Resource Paper credential. The partial-credit DV is yours to define — preregister it.
+
+**Limitations, verbatim:** "Not all apps… expose their functionality through APIs… Many human
+tasks are collaborative in nature. We built AppWorld Benchmark for testing single-assistant
+tasks… we did not explore multi-agent tasks… resulted in a carefully crafted benchmarking
+dataset, albeit with not enough instances for training models."
 
 > "Rather than comparing steps against reference solutions, we propose state-based
 > programmatic evaluation checking whether final database state is contained in valid gold
@@ -1576,41 +1635,90 @@ defensible, but you must define it in advance and say you did.
 Shunyu Yao, Noah Shinn, Pedram Razavi, Karthik Narasimhan. "τ-bench: A Benchmark for
 Tool-Agent-User Interaction in Real-World Domains." arXiv:2406.12045, 17 Jun 2024.
 
-**Method.** Agent ↔ simulated-user interaction in retail and airline domains; grading
-compares **final database state against annotated goals**; introduces **pass^k** across
-k independent trials.
+**⚠ Venue corrected: ICLR 2025 (poster) — refereed, not merely a preprint.** This matters:
+the case against using it must rest entirely on the design critique, not on venue.
 
-**Key numbers.** GPT-4o succeeds on **<50%** of tasks; **pass^8 < 25%** in retail.
+**Method.** 165 tasks (115 retail, 50 airline). Grading is **strictly binary by construction**:
+"The reward of a task episode **r = r_action × r_output ∈ {0, 1}**" — the product of two binary
+indicators (correct DB state AND required info in the agent's reply). No partial credit exists.
+**pass^k**, verbatim: "the chance that **all** k i.i.d. task trials are successful, averaged
+across tasks", with a hypergeometric unbiased estimator.
 
-**RELATION TO US: METHOD-PRECEDENT for reporting consistency (adopt pass^k), but weak as a
-second substrate.** Binary end-state grading, no partial credit, and F6 reports that τ-bench
-**counts empty responses as successful** — a scoring bug that is actively hazardous for an
-experiment whose whole point is agents stopping early. If you use it, you must patch that
-first and report that you did.
+**Key numbers.** GPT-4o succeeds on <50% of tasks (blended across domains — per-domain pass^1
+is ~61% retail / ~35% airline, so the <50% is not true of retail alone); **pass^8 < 25%** in
+retail. Step limit is **not in the paper**; the reference implementation defaults to
+`max_num_steps = 30`.
+
+**RELATION TO US: METHOD-PRECEDENT for reporting consistency (adopt pass^k), but confirmed
+unsuitable as a second substrate — and the reason checks out at mechanism level.** F6's audit
+records against τ-bench: "**O.b.3 (score 0): A part of tasks has empty ground truth, which may
+lead to guessing**" and "**O.g.3 (score 0): …may lead to trivial state modifications**".
+Because r = r_action × r_output, a genuine well-reasoned refusal and a literally empty
+non-answer are **indistinguishable to the grader** on tasks whose ground truth is "do nothing".
+For an experiment whose entire subject is agents stopping early, that is disqualifying.
+
+**⚠ Scope the damning number correctly.** The trivial agent's 38% success, beating a GPT-4o
+agent, is on the **subset of intentionally impossible tasks** (38% of airline, 6% of retail) —
+not the whole 165-task benchmark. Overstating it would be the same overreach you are avoiding
+elsewhere.
+
+**Discussion (no separate limitations section), verbatim:** "the user instruction might contain
+typos or ambiguities… the user instruction may not contain all domain knowledge… the onus is
+on the agents to handle diverse users."
 
 ---
 
 ## G4. Xie et al. (2024) — *OSWorld* and G5. *OSWorld 2.0* (2026) `[ABS / SEC]`
 
-**OSWorld:** arXiv:2404.07972, 11 Apr 2024. **NeurIPS 2024 — refereed.** os-world.github.io
-369 tasks across real Ubuntu/Windows/macOS apps; each task = NL instruction + reproducible VM
-snapshot + execution script returning a **scalar reward**. Humans 72.36%, best model 12.24%.
+**OSWorld:** Tianbao Xie, Danyang Zhang, Jixuan Chen, Xiaochuan Li, Siheng Zhao, Ruisheng Cao,
+Toh Jing Hua, Zhoujun Cheng, Dongchan Shin, Fangyu Lei, Yitao Liu, Yiheng Xu, Shuyan Zhou,
+Silvio Savarese, Caiming Xiong, Victor Zhong, Tao Yu. arXiv:2404.07972, 11 Apr 2024.
+**NeurIPS 2024, Datasets & Benchmarks Track — refereed.** 369 tasks (+43 Windows).
+Humans 72.36%, best model (GPT-4) 12.24%. Max steps 15, 30-minute time limit.
 
-**OSWorld 2.0:** arXiv:2606.29537, 2026. **Unrefereed preprint.** 108 long-horizon tasks;
-**fine-grained partial rewards with task-specific checkpoints, averaging 27.25 checkpoints
-per task**, scored against final state rather than in fixed order; submissions scored at
-**150 / 300 / 500 agent-step budgets**; a single task averages ~318 tool calls for a frontier
-agent (vs ~30 in OSWorld 1.0). Best frontier agent: **20.6% task success at 500 steps, 54.8%
-partial-credit score.**
+**⚠ CORRECTION: OSWorld 1.0's reward is NOT binary.** Verbatim: "we implement an
+execution-based reward function **R : S×A → [0, 1]**. The reward function **awards a value of
+1 or a positive decimal under 1**… (i.e., the goal is successfully achieved or **partially
+achieved**)." Partial credit is in the formal definition. Many individual task checkers reduce
+to exact match in practice, so it is *near*-binary empirically — but the earlier claim that it
+is "effectively binary" is wrong as stated and must not reach the paper.
 
-**RELATION TO US: OSWorld 2.0 is the best *partial-progress* instrument available, and the
-only one that natively reports at multiple step budgets.** If your claim is specifically
-about *persistence*, a benchmark that scores the same trajectory at 150/300/500 steps is
-almost purpose-built for you: you can report how your interventions shift the step-budget
-curve rather than a single number. Cost is the obvious problem — ~318 tool calls/task ×
-your trajectory count is a different order of spend than SpreadsheetBench. **UNVERIFIED:**
-OSWorld 2.0 author list and the 27.25/318 figures come from secondary summaries; check the
-paper before relying on them.
+**OSWorld 2.0:** arXiv:2606.29537 **v2, 13 Jul 2026. Unrefereed arXiv preprint — no venue,
+no acceptance statement anywhere in the text.** Displayed byline is the collective "XLANG Lab
+and Collaborators"; the 30 named contributors appear only in Appendix A, led by Mengqi Yuan,
+Zilong Zhou, Xinzhuang Xiong (co-leads) and Tao Yu (corresponding). Some citation managers
+will choke on the group byline — warn your co-authors.
+
+108 long-horizon tasks. Checkpoints confirmed verbatim: "fine-grained partial rewards with
+task-specific checkpoints, averaging **27.25 checkpoints per task**… we score the **final
+environment state against all checkpoints rather than a fixed checkpoint order**" — so yes,
+order-independent and final-state scored. Only ~11.5% of checkpoints are LLM-judged, at >93%
+human agreement.
+
+**⚠ Two corrections to the numbers.** The best score — **20.6% binary / 54.8% partial** — is
+**Claude Opus 4.8**, not 4.7. The **~318 tool calls** figure is Opus **4.7 single-action**
+(the batched condition is 597.1). Easy to conflate when compressed.
+
+**⚠ The 150/300/500-step result is not a clean ablation table.** The headline results table
+reports the **500-step condition only**. The three budgets appear inside a cost-performance
+sweep figure, as **separate rollouts** (not post-hoc truncation), and are most cleanly
+demonstrated for GPT-5.5, whose "150-, 300-, and 500-step points all converg[e] near ~14%".
+For the Claude models the swept variable is *thinking effort*, not step budget. Describe it as
+"embedded in the cost-performance sweep", not as a ready-made persistence table.
+
+**⚠ RELATION TO US: DOWNGRADED to aspirational/future-work — the cost gap is 50–100×, not
+2–3×.** Per-trajectory cost runs **~$2.4 (MiniMax M3) to ~$76 (Claude Opus 4.8 single-action)**,
+with the best-performing config at **~$72/task** — against AppWorld's **~$0.7**. A thousand
+frontier-class trajectories is ≈ $70K; your current 11,850-trajectory SpreadsheetBench design
+has no OSWorld 2.0 equivalent at any realistic budget. Engineering is heavy too: **31
+self-hosted mock websites**, AWS orchestration, a residential proxy, and a human-in-the-loop
+user simulator. And with only 108 tasks, trajectory volume means re-running the same tasks
+many times — a multiple-comparisons problem AppWorld's 750 tasks avoid.
+
+**Limitations, verbatim:** "**Scaling the benchmark remains costly.** Each task requires
+realistic artifacts, reproducible environments, robust scoring logic, and human- and
+model-based quality control… agents may also learn to exploit benchmark-specific artifacts in
+self-hosted environments over time."
 
 **Recommendation for §G is in `02-synthesis.md`.**
 

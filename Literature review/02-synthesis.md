@@ -1,208 +1,229 @@
 # Synthesis
 
-Written to your five questions, bluntly, as asked.
+Written to your five questions, bluntly, as asked. **Revised after full-text verification of
+24 sources** — several claims in the first draft were wrong and are corrected here.
 
 ---
 
 ## 1. What preempts you
 
-### Nothing preempts your central claim.
+### Nothing preempts your central claim. This is now verified, not assumed.
 
-I found **no work** that:
+Full-text searches across every candidate found **no work** that:
 - manipulates tone or social register **mid-task inside an agentic loop**;
-- measures **agent persistence (number of steps before stopping)** as the dependent variable
-  for a register manipulation;
+- measures **agent persistence (steps before stopping)** as the DV for a register manipulation;
 - **decomposes politeness into affect and task-demand** as separate experimental factors;
 - connects **conversational closing sequences** to LLM agent termination.
 
-The tone literature (A1–A6, A8–A10, D1–D4) is single-turn question-answering, with one
-exception (A6, PLUM) that varies the register of *prior conversational history* but measures
-text quality, not agent behaviour, and injects no mid-task perturbation. **You are first on
-the design.** Say so plainly; it will survive scrutiny.
+Specific negatives worth knowing, because they are the places a preempt would have lived:
 
-### But four things are further along than your framing may assume.
+- **Weinberger & Hozez (2608.01347)** — exhaustive search of v6, *including all 18 prompt
+  templates in Appendix C*: zero instances of "polite", "rude", "tone" or "courteous". Their
+  manipulations are task-content only.
+- **Cuadron et al. (2502.08235)** — identify no prompt or discourse cue that triggers
+  premature disengagement. All their manipulations are model-side (reasoning-effort parameter,
+  function-calling on/off, model size).
+- **SYCON-Bench (2505.23840)** — the most likely preempt, being multi-turn sycophancy under
+  sustained pressure. Their pressure types are persuasion strategies and verbatim disagreement.
+  **Praise is never a pressure type**, and no output-length or effort measure appears anywhere.
+- **IHBench (2606.19595)** — the six interruption types are a taxonomy of *what the user does*
+  (correction, topic switch, backchannel, pushback), not *how they say it*. No register
+  manipulation, no closing cue.
+- **PLUM (2604.16275)** — register never changes part-way through a task; the three history
+  conditions are fixed top-level cells.
+
+**You are first on the design. Say so plainly; it will survive scrutiny.**
+
+### But four things are further along than the first draft assumed.
 
 **(a) The effect you are rebutting has already been rebutted by its own authors.**
-This is the most important fact in this review. Dobariya & Kumar's AMCIS 2026 full paper
-(A2) re-ran the identical 50-question GPT-4o experiment from the 2025 short paper (A1) and
-got Very Polite 82.2% vs Very Rude 82.6% — against 80.8% vs 84.8% originally. They label
-GPT-4o **"Weak / noisy"**. On the larger MMLU set, GPT-4o's total spread across all seven
-tones is **2.05 pp and Neutral is best** — the direction reverses. Your paper is not
-overturning a standing result; it is the agentic confirmation of a walk-back the authors
-already published. **Reframe accordingly, and cite A2 in your abstract.** A reviewer who
-knows A2 will otherwise think you are attacking a straw version of the literature.
+Dobariya & Kumar's AMCIS 2026 paper re-ran the identical 50-question GPT-4o experiment and got
+Very Polite 82.2% vs Very Rude 82.6%, against 80.8% vs 84.8% originally. They label GPT-4o
+**"Weak / noisy"**. On MMLU the total spread across seven tones is 2.05 pp and **Neutral is
+best** — the direction reverses. **Cite this in your abstract.**
 
-**(b) "Tone moves length, not accuracy" is published, in single-turn, with better numbers
-than a reviewer will expect.** Kumar & Dobariya (A3) report output-token ranges of 13.1%–44.3%
-across tones against accuracy ranges of <1.5%–2.99%, with RM-ANOVA F(6,54)=248.14, p<.001 on
-tokens for GPT-4o. Yin et al. (A4) reported tone-driven generation-length shifts in 2024.
-**Your §7 (accuracy never moves) is not a novel claim in kind.** It is novel as an agentic
-replication with a real execution-grounded evaluator. Present it that way.
+**(b) "Tone moves length, not accuracy" is published.** Kumar & Dobariya report token ranges of
+13.1–44.3% against accuracy ranges under 3%, with RM-ANOVA F(6,54)=248.14 on tokens. Yin et al.
+reported tone-driven length shifts in 2024. Vaugrante et al. add an independent instance: CoT
+changed response length from 531 to 931 characters with a **0.01%** accuracy difference.
+**Your §7 is not novel in kind.**
 
-**(c) An agentic, preregistered, 4,643-run study of prompt wording → agent spend at equal
-quality already exists.** Weinberger & Hozez (A7): six reasoning models, two harnesses,
-24 coding tasks, measuring reasoning tokens, tool calls **and agent turns**, with hidden
-tests. Effects up to 7.4× on reasoning at 92–100% success throughout. They do not test tone
-and they manipulate only the opening prompt — so they do not preempt your manipulation — but
-they own the general result "prompt wording changes agentic spend and not correctness."
-**Your §7, in the agentic setting, is a replication of A7 in a new substrate.** Cite it as
-such; claiming it fresh is the fastest way to lose a reviewer.
+**(c) An agentic, preregistered, 4,644-run study of prompt wording → agent spend at equal
+quality already exists.** Weinberger & Hozez measure reasoning tokens, tool calls *and agent
+turns* against hidden tests, with effects up to 7.4× at 92–100% success. **Your §7 in the
+agentic setting is a replication of theirs in a new substrate.** Claiming it fresh is the
+fastest way to lose a reviewer.
 
-**(d) Your closing-cue finding has an opening-prompt shadow in A7.** Their best-behaved arm,
-`bounded_efficiency`, is defined as scope + smallest-sufficient-change + **an explicit stop
-condition**, and it is the only variant that is free-or-better on all six models (0.48–1.16×).
-So "a stop condition in the prompt reduces agentic work" is established for the opening
-prompt. Your contribution is that a **content-free discourse cue delivered mid-task**
-("this is the final note, no further notes will follow") does it harder than anything else
-measured, **and that praise does it too, even when the same message says the task is
+**(d) Your closing-cue finding has an opening-prompt shadow in the same paper.** Their
+`bounded_efficiency` arm is defined as scope + smallest-sufficient-change + **an explicit stop
+condition**, and is the only variant free-or-better on all six models (0.48–1.16×). So "a stop
+condition in the prompt reduces agentic work" is established for the opening prompt. Your
+contribution is that a **content-free discourse cue delivered mid-task** does it harder than
+anything measured, **and that praise does it even when the message says the task is
 unfinished**. That second clause is the part nobody has. Lead with it.
 
-### Two near-misses worth knowing about
+### Two things the first draft got wrong in your favour
 
-- **A6 (PLUM):** in English, *interaction history* condition was significant
-  (F(2,60)=4.268, p=0.019, η²=0.111) while *current-prompt politeness category* was not
-  (p=0.211). That is the same qualitative ordering you report — where the register sits
-  matters more than what it is. It is an ally, not a preempt, because the DV is text quality.
-- **A12 (IHBench):** injects six interruption types at controlled mid-utterance points in
-  workflow-following voice agents. Different modality, different DV, interruptions are task
-  content rather than register — but it is the methodological precedent for controlled
-  mid-task injection, and you should cite it in your design section rather than let a
-  reviewer find it.
+**§6 is a stronger claim than originally framed.** Huang et al. **never test execution
+feedback.** They point to it as the expected fix, citing Self-Debug: "the code executor serves
+as the perfect verifier to judge the correctness of predicted programs." A naive reading of
+Huang et al. therefore *predicts your agent should improve across turns*. **Your §6 tests the
+escape hatch they proposed and never ran.**
+
+**And Balachandran's "perfect verifier" is oracle-assisted in both senses** — best-of-n is
+oracle selection over finished answers, and even their "sequential" critic "knows the
+ground-truth… and then uses it to offer textual feedback." Your agent's execution feedback is
+real but not oracle-informed. **So your flat accuracy is consistent with the scaling
+literature, not a contradiction of it.** That is a much safer framing than the first draft's.
+
+### Two near-misses to distinguish explicitly
+
+- **PLUM's Corollary A.1, "History Anchoring"** — argues prior-turn tone anchors behaviour more
+  than the immediate prompt's tone. Conceptually adjacent to your §1–§2 ordering. Distinguish on
+  DV (response quality on isolated Q&A, no task success measure) and on the fact that their
+  history-construction protocol is **genuinely underspecified**: one sentence of method, no turn
+  count, no code, and an empty README on the released corpus. You can cite that as a limitation
+  of theirs.
+- **IHBench** — cite as design precedent for controlled mid-task injection, but note the
+  mechanism differs: their interruptions are scripted into pre-generated conversations and the
+  model produces **a single next response**, with no subsequent turns to persist through. Yours
+  is a live rollout. The resemblance is "inject something mid-task", not "measure downstream
+  persistence".
 
 ---
 
 ## 2. What contradicts you
 
-### (a) Praise shortening work — this is your exposed flank.
+### (a) Praise shortening work — still your exposed flank, but weaker than it looked.
 
-Three independent findings say positive framing makes models produce **more**, not less:
+| Source | Finding | How much weight it carries |
+|---|---|---|
+| Kumar & Dobariya 2026 | Sycophantic is the **longest** condition for GPT-4o (290.59t vs Rude 223.18t) | Real. Peer-adjacent, 10 runs, temperature 0. Must be addressed. |
+| Yin et al. 2024 | Summarization length generally shortens as politeness decreases | Real. Largest-n study in the area. |
+| Gandhi & Gandhi 2025 | Positive prompts → responses **8.1% longer** | **Much weaker than the first draft implied — see below.** |
 
-| Source | Finding |
-|---|---|
-| A3 (Kumar & Dobariya 2026) | Sycophantic is the **longest** condition for GPT-4o (290.59t vs Rude 223.18t) and near-longest for Gemini 2.5 Flash Lite (1942.92t vs Neutral 1221.76t) |
-| A10 (Gandhi & Gandhi 2025) | Positive prompts produce responses **8.1% longer** than neutral |
-| A4 (Yin et al. 2024) | Summarization output length generally **shortens as politeness decreases** |
+**On Gandhi & Gandhi specifically, full text changes the picture.** The 8.1% is scoped **only
+to "essays and blog-style responses"**, not all tasks. There is **no significance test, no CI,
+no SD, no per-condition n** anywhere in the paper — for that or any other headline number. The
+model list includes "Claude v1.3" described as a latest version in March 2025 (retired in 2023),
+and "ChatGPT (v4)". No code or data release. **Treat it as a descriptive claim in an unreviewed
+preprint with no statistical backing; do not hedge §5 on its account.** Note also that the same
+paper reports negative prompts producing **17.6% shorter** responses, which it calls
+"disengagement or terseness" — cutting against a simple valence-length story.
 
-A reviewer will put these next to your §5 and ask why praise shortens work in your setting
-and lengthens it in everyone else's.
-
-**The answer you should give, and it is a good one:** these are different quantities.
-They measure *verbosity within a single response*; you measure *persistence across turns*.
-Schegloff & Sacks (B6) predicts exactly this dissociation — an appreciation is a canonical
-**pre-closing** move, so it is closing-implicative at the level of the *exchange* while
-being expansive at the level of the *turn*. If your data can show that praise conditions
-produce a **longer final turn but fewer total turns**, you have converted a contradiction
-into your strongest positive result. **Check this before you write §5.** If it does not hold,
-you need to soften the praise claim.
+**The reconciliation to argue, and it is a good one:** these measure *verbosity within a
+response*; you measure *persistence across turns*. Schegloff & Sacks predicts exactly that
+dissociation — an appreciation is a canonical **pre-closing** move, closing-implicative at the
+level of the *exchange* while expansive at the level of the *turn*.
+**Check whether your praise conditions produce a longer final turn but fewer total turns
+before you write §5.** If they do, you have converted the contradiction into your best result.
 
 ### (b) Your opening-prompt null, against Yin et al.
 
-Yin et al. (A4) is the largest-n study in the area (5,700 MMLU / 5,200 C-Eval / 5,591 JMMLU
-items, native-speaker-validated 8-level scale) and they find real effects at the rude extreme:
-GPT-3.5 MMLU 60.02 → 51.93 (level 8 → 1), Llama2-70B 55.11 → **28.44**. Someone will cite
-this against you.
+GPT-3.5 MMLU 60.02 → 51.93 (level 8 → 1); Llama2-70B 55.11 → **28.44**. Defences, in order:
+(i) effects concentrate at the extreme and in weaker models — **GPT-4 in their own Table 1 is
+essentially flat** (75.82 at level 8, 76.47 at level 1); (ii) A2 and A5 both show modern models
+flattening; (iii) your DV is agentic behaviour, not MCQ accuracy. Make all three.
 
-Your defences, in order of strength: (i) their effects are concentrated at the extreme and in
-weaker/older models, and **GPT-4 in their own Table 1 is essentially flat** (75.82 at level 8,
-76.47 at level 1); (ii) A2 and A5 both show modern models flattening toward tone-insensitivity;
-(iii) your DV is agentic behaviour, not MCQ accuracy, so their result and yours are not in
-direct conflict. Make all three; do not rely on (iii) alone.
+### (c) Flat per-step thinking, against Kumar & Dobariya's token results
 
-### (c) Flat per-step thinking, against A3's token results.
+They move output tokens 13–44% within a single response. Both can be true — CoT-inducing system
+prompt on MCQs with the thinking budget forced to zero is a very different regime from a ReAct
+step — but state the comparison rather than leaving it unremarked. Note their largest token
+effects sit in conditions carrying explicit brevity instructions.
 
-A3 finds tone moves output tokens by 13.1%–44.3% within a single response. You find
-thinking-per-step is flat. These can both be true — they use a CoT-inducing system
-instruction on MCQs with the Gemini thinking budget forced to zero, which is a very different
-regime from a ReAct step — but **you should state the comparison explicitly and explain the
-difference**, rather than letting it sit as an unremarked inconsistency. Note also that A3's
-largest token effects sit in conditions carrying explicit brevity instructions, which is
-itself an explanation.
+### (d) Reflexion, if cited uncritically
 
-### (d) The emotional-prompting literature, if taken at face value.
+AlfWorld improves steadily **to trial 12**. That runs against §6. Its "trials" are independent
+episode restarts with an accumulating memory buffer, not extra turns in one trajectory, and it
+requires a genuine binary reward — so it is not commensurate. **Either cut it or cite only its
+WebShop failure case** ("after only four trials, we terminate the runs as the agent does not
+show signs of improvement").
 
-D1 (EmotionPrompt, 115% on BIG-Bench) and D2 (NegativePrompt, IJCAI 2024, 46.25% on
-BIG-Bench) both claim large affect-driven gains. **Do not argue with them directly — cite D3.**
-Vaugrante et al. show the 115% comes from selecting the single best cue, and that averaging
-over stimuli gives 4.42% on BIG-Bench and 2.58% overall, with "a general lack of statistically
-significant differences across nearly all techniques tested" across six models. That is a
-cleaner rebuttal than anything you would construct yourself.
+### (e) The number that sits closest to yours
 
-### (e) Nothing contradicts §2, §3, §4 or §6.
+**Huang et al.'s "No Change" rates: GPT-4 90.5% / 90.5%, GPT-4-Turbo 96.0% / 88.0%.** These are
+not your statistic — theirs is "answer unchanged after two rounds of intrinsic correction on
+reasoning QA", yours is "first attempt was the best of those made, in a 20-turn
+execution-grounded agent". **But they sit right beside your 86% and a reviewer will notice.
+Distinguish them in the text.**
 
-Your mid-task effect, your demand-not-politeness decomposition, your persistence-not-effort
-mechanism and your first-attempt-is-best result have no contradicting literature that I found.
-§6 is actively corroborated (C1, B4).
+### (f) Nothing contradicts §2, §3 or §4.
 
 ---
 
 ## 3. The 5–8 sources a reviewer will demand
 
-Cite all of these or expect an objection. Ranked.
+1. **Dobariya & Kumar 2026, AMCIS** (arXiv:2605.29027) — **non-negotiable.** Their own failure
+   to replicate their own headline effect.
+2. **Dobariya & Kumar 2025** (arXiv:2510.04950) — the target. Quote their Table 1.
+3. **Kumar & Dobariya 2026** (arXiv:2607.23915) — length-not-accuracy, plus the VADER scores.
+4. **Weinberger & Hozez 2026** (arXiv:2608.01347) — **cite a specific version, see §7.**
+5. **Yin et al. 2024, SICon** (10.18653/v1/2024.sicon-1.2) — the origin, largest n.
+6. **Meincke et al. 2025** (arXiv:2508.00614) — the existing null, *and* the Mom Cancer result.
+7. **Vaugrante et al. 2024** (arXiv:2409.20303) — the failed replication; your §8 template.
+8. **Cuadron et al. 2025** (arXiv:2502.08235) — "premature disengagement".
 
-1. **Dobariya & Kumar 2026, AMCIS** (arXiv:2605.29027) — **the non-negotiable one.** Their own
-   failure to replicate their own headline effect. If this is not in your paper, the paper
-   looks uninformed.
-2. **Dobariya & Kumar 2025** (arXiv:2510.04950) — the target. Quote their Table 1 prefixes;
-   the demand/affect confound is legible in it.
-3. **Kumar & Dobariya 2026** (arXiv:2607.23915) — establishes length-not-accuracy in
-   single-turn, and its VADER scores (Rude −0.09, Very Rude −0.10 vs Sycophantic +0.95) are
-   the best external evidence for your §3 that exists.
-4. **Weinberger & Hozez 2026** (arXiv:2608.01347) — the agentic prompt-wording precedent, with
-   turns as a DV and a stop-condition arm. Your nearest neighbour.
-5. **Yin et al. 2024, SICon** (10.18653/v1/2024.sicon-1.2) — the origin of the line, the
-   largest n, and the first report that tone moves output length.
-6. **Meincke et al. 2025, Report 3** (arXiv:2508.00614) — the existing tone-adjacent null from
-   a credible group; your precedent for publishing one.
-7. **Vaugrante, Niepert & Hagendorff 2024** (arXiv:2409.20303) — the failed replication of the
-   emotional-prompting literature; your §8 framing.
-8. **Cuadron et al. 2025** (arXiv:2502.08235) — "premature disengagement", 4,018 trajectories;
-   the mechanism vocabulary for your stopping results.
-
-Strongly recommended beyond the eight: **Sharma et al. 2024 (ICLR)** for sycophancy,
-**Huang et al. 2024 (ICLR)** for §6, **Miller 2024** and **Sclar et al. 2024** for the
-statistics of your null, **Schegloff & Sacks 1973** for §5's theory.
+Beyond the eight: **Sharma et al. 2024 (ICLR)**, **Huang et al. 2024 (ICLR)**, **Miller 2024**
+and **Sclar et al. 2024** for the statistics, **Schegloff & Sacks 1973** for §5's theory, and
+**Ma et al. 2024** for your own substrate — including their multi-round decline result.
 
 ---
 
 ## 4. Gaps — what is actually yours
 
-Stated as the claims you can make without qualification.
+1. **Positional dependence of register effects in agentic loops.** Verified unoccupied.
+   **Your headline.**
 
-1. **Positional dependence of register effects in agentic loops.** Nobody has shown that the
-   same words have no effect in the opening prompt and a replicable effect mid-task. A6 gestures
-   at it for text quality in one language; nobody has it for agent behaviour. **This is your
-   headline.**
-2. **Decomposition of tone into affect and demand, with double dissociation.** An affect-free
-   demand reproducing the whole effect *and* a demand-free insult producing nothing is a clean
-   factorial result that no one in this literature has run. Everyone else's stimuli confound
-   the two — demonstrably so, in A1's Table 1 ("Try to focus and try to answer this question:"
-   filed under *Rude*) and in A3's Table 2 (every hostile prefix contains a brevity instruction;
-   no polite prefix does). **Your second-strongest contribution, and the one most likely to be
-   cited by others.**
-3. **Persistence, not effort, as the moved quantity.** A3 and A7 both moved *tokens*. Nobody has
-   separated tokens-per-step from number-of-steps and shown the effect lives entirely in the
-   latter. This also constitutes a direct empirical test of A2's "thinking budget / soft
-   trigger" conjecture, which its authors explicitly flag as unvalidated. **Say that you are
-   testing their conjecture and that it does not survive.**
-4. **Closing cues as a termination lever, and the praise-as-pre-closing account.** No prior
-   work connects conversation-analytic closing sequences to agent termination. The result that
-   a bare closing cue with no praise stops the agent hardest of anything measured is entirely
-   new, and the theoretical frame (B6) is unclaimed. **The most distinctive part of the paper —
-   develop it properly rather than leaving it as an observation.**
-5. **Praise-induced early termination as a sycophancy phenomenon.** The sycophancy literature
-   (E1–E3) measures agreement bias and stance-flipping. D4 links positive stimuli to increased
-   sycophancy but not to effort. **Nobody has linked praise to reduced work or early stopping.**
-   Frame via E2's face-preservation account: continuing to work after a satisfied user's
-   appreciation is face-threatening. Note that E4's "effortful" is the *human's* effort — do
-   not miscite it.
-6. **Per-turn regrading against the benchmark's own evaluator.** B4's oracle-round result is
-   the nearest analogue, at n=60 on HotpotQA. Your ~86% figure on ~11,850 graded trajectories
-   with a real execution-based evaluator is a much stronger version of the same claim.
+2. **Decomposition of tone into affect and demand, with double dissociation — and it is now
+   corroborated three times over by other people's data.** This is the contribution most likely
+   to be cited by others.
+   - **A1's own Table 1** files *"Try to focus and try to answer this question:"* under **Rude**.
+   - **A3's own Table 2**: every hostile prefix carries a brevity instruction ("Do not waste my
+     time or give any extra text"); no polite prefix does. Their own VADER scores put Rude at
+     **−0.09** and Very Rude at **−0.10** against Sycophantic at **+0.95** — the conditions with
+     the largest token effects are affectively neutral.
+   - **EmotionPrompt's EP01–EP11**: at least **6 of 11** carry an explicit verification or
+     persistence demand ("You'd better be sure", "take another look", "Stay focused and
+     dedicated", "give it your best", "Stay determined and keep moving forward"). Exactly one
+     (EP08) is close to pure affect. **Reproduce the table.**
+   - **Meincke et al.**: of eight threat/tip prompts, the only one that moved performance
+     (+8.8 pp, CI [0.033, 0.142]) is **Mom Cancer** — the only one containing a
+     scope-and-completeness instruction. Pure-affect threats and tips did nothing.
+     **Your dissociation, reproduced independently, in a different paradigm, without the
+     authors noticing.**
 
-**What is *not* a gap, and should be framed as replication rather than discovery:** the
-accuracy null (§7, see A3/A7), and "extra turns don't help" as a general proposition
-(C1/C3/B4). Both are still worth reporting — just position them as confirmation in a new
-substrate.
+3. **Persistence, not effort, as the moved quantity — but narrow the claim.** Weinberger &
+   Hozez already separate the channels: `deep_thinking` raises reasoning volume 2.2× with "no
+   new functional units" (effort-per-step), while `max_certainty` adds "+1.75 post-success
+   calls" (step count). The tokens-vs-turns distinction is not itself new. **Your contribution
+   is that a mid-task social-register demand loads *exclusively* onto persistence**, against
+   their mixed picture. It also directly tests A2's "thinking budget / soft trigger"
+   conjecture, which its authors flag as unvalidated.
+
+4. **Closing cues as a termination lever, and the praise-as-pre-closing account.** No prior work
+   connects closing-sequence pragmatics to agent termination. Entirely new. **The most
+   distinctive part of the paper — develop it properly.**
+
+5. **Praise-induced early termination as a sycophancy phenomenon — the gap is verified.**
+   Full-text checks of all four sycophancy papers: Sharma measures agreement bias only (its
+   "concise" preference feature ranks **21st of 23**, so you are not restating a known length
+   bias); ELEPHANT's four dimensions all concern softening content; SYCON-Bench never uses
+   praise as pressure; Ibrahim's "effort" is the **human's**. **Word the claim precisely:**
+   *no work links praise or sycophancy to the AI's own reduced task effort, shortened output, or
+   early termination — prior work establishes sycophancy as an agreement/content bias, or as a
+   driver of human relational effort.*
+   **⚠ But the face-threat explanation is YOUR extension, not ELEPHANT's.** Nothing in their
+   framework concerns curtailing work. Present it as your own reading of Goffman and cite
+   ELEPHANT only for the construct.
+
+6. **Per-turn regrading against the benchmark's own evaluator.** No equivalent statistic exists
+   in an agentic, execution-grounded setting. The nearest analogues are Huang et al.'s "no
+   change" rates and Self-Refine's diminishing per-iteration deltas — both single-turn, neither
+   pass/fail-per-turn. **Novel, with the caveats in §2(e).**
+
+**Not gaps — frame as replication:** the accuracy null (§7), and "extra turns don't help" as a
+general proposition.
 
 ---
 
@@ -210,64 +231,78 @@ substrate.
 
 | Your term | Adopt | Source | Why |
 |---|---|---|---|
-| **"no-op turn"** | **"redundant step"** | B3, RedundancyBench (arXiv:2605.29893) | The established term, with a benchmark behind it and an explicit definition: steps labelled *by informational contribution to task completion*. "No-op" reads as a tool-call that failed; "redundant step" is exactly your concept. Keep "no-op" only if you mean a turn with no tool call at all — and then define both. |
-| "agent stops early" | **"premature disengagement"** | B1, Cuadron et al. | One of their three named failure modes, validated against human expert judgement over 4,018 trajectories. Also gives you **"analysis paralysis"** for the opposite pattern. |
-| "tone" | **"social register"** (with "tone" as the informal gloss) | A3 uses it; standard in linguistics | Sharper, and it is the term that makes your affect/demand decomposition sayable: register is the variable, affect and demand are its components. A3 defines it for you. |
-| "how many turns before the register change takes effect" | **"turn of flip"**-style naming | E3, SYCON-Bench | The accepted way to report *when* in a multi-turn interaction a social pressure bites. Coin by analogy (e.g. "turn of stop") and cite them. |
-| "sensitivity to rewording" | **"sensitivity" / "consistency"** as defined | F3, Errica et al. (NAACL 2025) | Defined metrics, ground-truth-free, already refereed. |
-| "consistency across repeated runs" | **pass^k** | G3, τ-bench | Standard, and relevant given your §8 point-estimate instability. |
-| "turns" as a cost unit | **"agent turns"/"agent steps"**, reported alongside cost | F5, A7 | A7 reports turns as a first-class billed quantity; F5 is the argument that you must. |
-| "effort" | split into **"reasoning tokens per step"** and **"trajectory length in steps"** | A7 | A7 measures both separately and so should you; "effort" unqualified is what lets A3's and your results look contradictory when they aren't. |
+| **"no-op turn"** | **"redundant step"**, and **"Duplicated Step"** for pure repetition | RedundancyBench (2605.29893) | Their counterfactual definition: a step is redundant iff removing it does not flip success to failure. Four subtypes — Abnormal, **Duplicated** ("identical tool name/args/output… providing no additional information gain"), Incorrect, Exploratory. **"Duplicated Step" is the exact match for what §6 measures.** ⚠ Do not compare base rates: some of their redundant steps are synthetically injected, and they report no overall redundant fraction. |
+| "agent stops early" | **"premature disengagement"** | Cuadron et al. | Their coinage, verbatim: "LRMs sometimes terminate tasks based solely on their internal simulation… either through direct abandonment or by delegating hypothetical action sequences." Also gives you **"analysis paralysis"**. |
+| "tone" | **"social register"** | A3 defines it | Makes the affect/demand decomposition sayable: register is the variable, affect and demand its components. |
+| "when the cue bites" | **"turn of stop"**, by explicit analogy to **Turn of Flip** | SYCON-Bench | Same estimator design (mean earliest turn of divergence from expected behaviour). ⚠ **Say the analogy is structural, not substantive** — they measure stance conformity, not work quantity. Better still, use them as the mirror image: disagreement changes what the model says; praise changes how much it does. |
+| "consistency across runs" | **pass^k** | τ-bench | "the chance that all k i.i.d. task trials are successful, averaged across tasks." Standard. |
+| "effort" | split into **reasoning tokens per step** and **trajectory length in steps** | Weinberger & Hozez | Unqualified "effort" is what makes your result look inconsistent with A3's when it isn't. |
+| ~~"sensitivity"/"consistency"~~ | **don't** | Errica et al. | ⚠ Both metrics are classification-only — sensitivity normalises by `ln(C)`, consistency is a TVD between categorical distributions. The authors say so: "they work for classification problems only". Consider dropping the citation. |
 
-Two more conventions worth adopting:
-- **Report ranges, not point estimates**, for anything prompt-dependent (F1, F2). This is also
-  the cleanest way to present your §8 honestly: direction and significance replicated, point
-  estimates did not.
-- **Report cluster-adjusted standard errors** (F4). Miller shows cluster adjustment can inflate
-  SEs by up to 3×. Since your trajectories cluster within tasks, this is not optional for a
-  well-powered-null claim, and it is precisely what A1's uncorrected paired t-tests lack.
+Two conventions: **report ranges, not point estimates** (Sclar, Mizrahi), and **report
+cluster-adjusted standard errors** (Miller).
 
 ---
 
-## 6. Second substrate — recommendation
+## 6. Second substrate — recommendation confirmed, with sharper numbers
 
-You asked which benchmark best supports measuring **turn count and partial progress**.
+**AppWorld, primary. This got stronger under verification.**
 
-**Recommendation: AppWorld (G2), with OSWorld 2.0 (G5) as the ambitious alternative.**
+The crux held up against the evaluator source code: `TestTracker` keeps `passes` and `failures`
+lists, each entry carrying a `requirement` and a `label`, and serialises both. **You can compute
+a per-turn "fraction of unit tests passed" DV from the stock evaluator without modifying it.**
+Add: 100-LLM-call ReAct ceiling (verified verbatim — compare against ReAct's 100, not parallel
+function calling's 15), avg. 8 and max 22 grading tests per task, 750 tasks, **~$0.7 per
+example**, Dockerised, ACL 2024 Best Resource Paper.
 
-**AppWorld** is the pragmatic choice. It is a native ReAct loop with a **100-LLM-call
-ceiling** — five times your current 20-turn headroom, which matters because a persistence
-experiment with a 20-turn ceiling is measuring a censored variable. It has ~8 unit tests per
-task that you can regrade per turn exactly as you already do on SpreadsheetBench, and it has
-something no other candidate offers: **collateral-damage detection**. That gives you a second
-DV with real stakes — *does an agent nagged into persisting start breaking things?* — which
-turns a measurement paper into one with a safety claim. The caveat is honest: AppWorld's
-*reported* metrics (TGC/SGC) are binary per task, so your partial-credit measure would be
-computed from the unit tests yourself. Define it and preregister it.
+Two corrections to carry into the writeup: **collateral damage is not a separate metric** — it
+is extra entries in the same unit-test battery, so splitting it out is engineering you must do
+and describe; and **do not cite "GPT-4 Turbo 32.7 / 17.5" as one row** — it is a cross-method
+splice of two different methods' best TGC figures.
 
-**OSWorld 2.0** is the better instrument if you can afford it: **fine-grained partial rewards
-with ~27 checkpoints per task**, and submissions scored at **150/300/500 agent-step budgets**.
-A benchmark that natively reports the same trajectory at three step budgets is close to
-purpose-built for a persistence claim — you could report how each intervention shifts the
-step-budget curve instead of a single number. The cost is the problem: ~318 tool calls per
-task for a frontier agent. Verify its numbers against the paper (marked UNVERIFIED in G5)
-before committing.
+**OSWorld 2.0 — downgrade to aspirational/future work. The cost gap is 50–100×, not 2–3×.**
+Per-trajectory cost is **~$2.4–76**, with the best config at **~$72** against AppWorld's ~$0.7.
+A thousand frontier-class trajectories is ≈$70K; your 11,850-trajectory design has no
+equivalent at any realistic budget. Add 31 self-hosted mock websites, AWS orchestration and a
+residential proxy. It is also an **unrefereed preprint**, and the attractive 150/300/500-step
+result is **embedded in a cost-performance sweep figure, not a standalone table** — most cleanly
+demonstrated for GPT-5.5 only. And with 108 tasks, trajectory volume means re-running the same
+tasks repeatedly.
 
-**Avoid:** τ-bench (binary end-state grading, and F6 reports it **counts empty responses as
-successful** — actively hazardous when your experiment is about agents stopping early);
-WebArena (14% baseline ceiling makes turn effects uninterpretable); SWE-bench Verified
-(F6/F7: insufficient tests, ~59% of audited failures attributable to test flaws, solution
-leakage, publicly retired by OpenAI).
+**Avoid τ-bench — but for the right reason.** It is **ICLR 2025, refereed**, so the case must
+rest entirely on design. It does: reward is `r = r_action × r_output ∈ {0,1}` by construction,
+and because a genuine refusal and an empty non-answer both leave the database unchanged, they
+are indistinguishable to the grader on tasks whose ground truth is "do nothing". The ABC audit
+records this as two separate scoring failures. **Scope the damning statistic correctly** — the
+trivial agent's 38% is on the intentionally-impossible subset, not the whole benchmark.
+
+**Also correct:** OSWorld 1.0's reward is **not** binary — it is `R : S×A → [0,1]` awarding "a
+positive decimal under 1" for partial achievement. Near-binary in practice, not by definition.
 
 ---
 
-## 7. Three things to fix before submission
+## 7. Things to fix before submission
 
-1. **Check whether praise lengthens your final turn while shortening the trajectory.** If yes,
-   §5 becomes your best result and the A3/A10/A4 contradiction dissolves. If no, soften §5.
-2. **Reframe §7 and the accuracy null as replication** of A3 (single-turn) and A7 (agentic),
-   not as discovery. You lose nothing — §1–§5 carry the paper.
-3. **Quote A1's Table 1 and A3's Table 2 in your confound section.** The confound you are
-   claiming is visible in the prior work's own stimulus tables, and in A3's own VADER scores
-   (Rude −0.09, Very Rude −0.10 — affectively neutral, yet carrying the largest effects).
-   That is far more persuasive than asserting it.
+1. **Pick a version of arXiv:2608.01347 and stick to it.** Six versions exist. v6 changed the
+   title, reports 4,644 runs not 4,643, and dropped the "$166", the "92–97% success" range and
+   **both quotes** this review originally attributed to it. Cite `v1` explicitly for those, or
+   move wholesale to v6.
+2. **Check whether praise lengthens your final turn while shortening the trajectory.** If yes,
+   §5 becomes your best result and the §2(a) contradiction dissolves.
+3. **Reframe §7 and the accuracy null as replication**, and **reframe §6 as testing Huang et
+   al.'s untested escape hatch** rather than as confirming them.
+4. **Quote the three confound tables** (A1 Table 1, A3 Table 2 + VADER, EmotionPrompt EP01–EP11)
+   and the Meincke Mom Cancer result. The confound is visible in other people's materials.
+5. **State that your 20-turn ceiling is your own choice.** SpreadsheetBench's official
+   multi-round protocol caps at **five rounds** — and their own GPT-4o *declines* from
+   single- to multi-round (soft 18.35 → 16.96), which the authors attribute to redundant
+   re-fetching. **Cite that: it is prior evidence for your mechanism from your own substrate.**
+6. **Quote SpreadsheetBench's evaluator self-audit** (4% instruction-level false negatives) in
+   your validity section — it bounds the noise floor on per-turn regrading.
+7. **Statistics for the well-powered null.** Miller has **no TOST or equivalence testing** —
+   do not cite him for it. Use his clustered SE formula (paired-and-clustered variant, since
+   your trajectories cluster within tasks) and his MDE inversion to report the realized minimum
+   detectable effect at your n, then state that your CI excludes effects at or above the prior
+   literature's size. For equivalence-testing language you need a separate source (Lakens 2017).
+   And compare against Sclar's **median 7.5–10 point** spread, not the 76-point single-task
+   maximum.

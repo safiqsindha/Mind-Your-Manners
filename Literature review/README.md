@@ -8,7 +8,21 @@ Prepared 2026-09-14 for the workshop paper.
 |---|---|
 | [`01-sources.md`](01-sources.md) | 38 source entries, grouped A–G per the brief. Citation, claim, method, numbers, relation to us, quotable line. |
 | [`02-synthesis.md`](02-synthesis.md) | The five requested summaries: preempts, contradictions, must-cites, gaps, terminology. **Read this first.** |
-| [`03-verification-log.md`](03-verification-log.md) | What was read in full, what came from abstracts, what is UNVERIFIED. |
+| [`03-verification-log.md`](03-verification-log.md) | Every error found and corrected, claims downgraded, and what remains UNVERIFIED. |
+
+**All 28 cited sources have been read in full text.** A second verification pass over the 24
+that had only been read at abstract level found 15 citation-level errors, downgraded 7 claims,
+and strengthened 8 — all recorded in the log. Three corrections change the paper rather than a
+footnote:
+
+- **arXiv:2608.01347 has six versions.** The current v6 changed the title, reports 4,644 runs
+  not 4,643, and cut both quotes previously attributed to it. Cite a specific version.
+- **Our 20-turn ceiling is our own.** SpreadsheetBench's official multi-round protocol caps at
+  **five** rounds — and their own GPT-4o *declines* from single- to multi-round, which the
+  authors attribute to redundant re-fetching. That is prior evidence for our mechanism, from
+  our own substrate.
+- **The face-threat account of closing is ours, not ELEPHANT's.** Presenting it as theirs would
+  be a misattribution.
 
 ## The one-paragraph answer
 
