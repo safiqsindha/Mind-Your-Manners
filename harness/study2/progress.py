@@ -281,11 +281,13 @@ def progress_for_run(
 ) -> list[dict]:
     """Per-turn progress for every trajectory in one raw log. No model calls.
 
-    ONE LOG AT A TIME, deliberately. `TrajectoryKey` carries no arm identity,
+    ONE LOG AT A TIME, deliberately. Logs written before agent_loop put
+    `interjection_key` on each row carry no arm identity in `TrajectoryKey`,
     so merging several arms' logs before grouping collapses them onto each
     other -- 1,600 probe trajectories group down to 400. Each run writes one
     log per arm, so per-log is the correct unit and the arm label comes from
-    the caller.
+    the caller. Newer logs key on the arm as well, but the per-log contract
+    is kept so every existing run regrades the same way.
     """
     from .regrade import group_trajectories, load_raw_rows
 
