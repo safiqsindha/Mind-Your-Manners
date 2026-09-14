@@ -40,18 +40,26 @@ buys is repetition.
 
 ### Two things a draft must not overstate
 
-**"The extra turns are pure thrashing" is not settled.** Per-turn regrading
-of the ceiling-10 runs found the extra turns produce no measurable progress
-(+0.006 match, p=0.77). A separate run of the same contrast found +0.049
-(p=0.0065). Same tasks, same model, opposite verdicts, and the difference is
-not the turn ceiling -- truncating the second run's own analysis to ten turns
-preserves its effect. Write it as unresolved, or write only the
-ceiling-10 result with the disagreement named.
+**Persistence buys no better outcome -- now resolved, and safe to say.**
+Three measurements of the same contrast: the turn effect replicates (+6.20
+then +5.77, both p<0.0001) while final match is null in two of three and
+accuracy went +7.0 points then -1.8 points on identical tasks. A continue
+signal buys turns and tokens, not results. Say that; do NOT say the extra
+turns are "pure thrashing", which is true of Luna and not of GLM.
 
-**Nothing has established an accuracy effect.** One run showed +7 points
-(p=0.0043) with a second instrument agreeing inside that run. That run does
-not replicate. Report accuracy as not established, as every previous run
-required.
+**Nothing has established an accuracy effect, across seven runs.** This is
+the study's cleanest result and should be stated positively rather than as a
+limitation.
+
+**Do not report `best_match` as progress.** It favours whichever arm takes
+more turns, since more attempts means more chances for the maximum to be
+high. Report final match -- what the agent ended with.
+
+**The waste is model-specific.** Luna thrashes under a continue signal
+(+1.11 no-op turns); GLM barely does (+0.23, p=0.087) because it barely
+persists. How wasteful the signal is depends on the model's own stopping
+behaviour. A draft that generalises Luna's thrashing to agents in general is
+overclaiming.
 
 ### The instability is itself a finding worth reporting
 
@@ -82,7 +90,7 @@ register matters at all. Marked where numbers must be swapped in.
 > against a real spreadsheet, sees what happened, and tries again. Graded by
 > the benchmark's own evaluator. No string matching.
 >
-> 5,150 trajectories. One model so far. $28.
+> 11,850 trajectories. Two models. $62.
 >
 > **Finding one: how you open does not matter.** Rude, polite, grovelling,
 > threatening — the agent works exactly as hard. Not "we could not detect a
@@ -349,9 +357,9 @@ CRediT taxonomy. To be completed.
 
 - [x] ~~Demand/affect probe resolved~~ — done. Demand drives cost; insult is
       inert; praise shortens work because it is a closing move
-- [ ] **A third measurement of the progress contrast** — one run says the
-      extra turns achieve nothing, another says +5 points. No draft may claim
-      either until a third run breaks the tie
+- [x] ~~A third measurement of the progress contrast~~ — done. Turn effect
+      replicates; outcome effects do not. Persistence buys no better result
+- [ ] DeepSeek and Qwen (~$35 in credits) for four-model generality
 - [ ] Per-turn progress reported alongside turn count — turns and progress
       move independently, so turn count alone overstates what persistence buys
 - [ ] Four-model run complete, testing *interruptions* rather than opening
