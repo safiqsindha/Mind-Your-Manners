@@ -223,7 +223,7 @@ insult show no detectable heterogeneity (p = 0.196 and p = 0.246), though Q on 2
 power to detect any.
 
 **No accuracy effect in this study has replicated.** Two nominal hits exist (§2.6); the larger
-of them, a +7.0-point movement on the continue-signal contrast, came back at −1.8 points on
+of them, a +6.6-point movement on the continue-signal contrast, came back at −1.8 points on
 identical tasks and ceiling (§2.9). That is the honest version of "accuracy never moves".
 
 ## 2.9 Ranges, not point estimates
@@ -231,7 +231,7 @@ identical tasks and ceiling (§2.9). That is the honest version of "accuracy nev
 Seven quantities in this study moved materially when measured again on the same tasks, model
 and ceiling. The praise contrast gave −0.59 turns in one run and −1.08 in another; the
 continue-signal effect on final match gave +0.014 (p = 0.50), then +0.061 (p = 0.0028), then
-+0.019 (p = 0.16); accuracy on that contrast gave +7.0 points and then −1.8.
++0.019 (p = 0.16); accuracy on that contrast gave +6.6 points and then −1.8.
 
 The pattern differs by outcome, and conflating them would flatter us. **For the turn-count
 effects, direction and significance replicated and the point estimates did not. For final

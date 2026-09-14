@@ -1047,7 +1047,8 @@ gives a clear null in one run and a clear positive in another. Whether a
 continue signal buys real progress is therefore **unresolved**. Both runs
 point the same direction, and only one of them reaches significance.
 
-The accuracy movement (+7 points, p=0.0043) comes from the run that also
+The accuracy movement (+6.6 points, p=0.004 -- see the correction below)
+comes from the run that also
 shows the match gain, so the two-instrument corroboration stands *within
 that run*. It does not survive the fact that the run itself does not
 replicate. **Accuracy should still be reported as not established.**
@@ -1170,13 +1171,23 @@ time, deliberately as the same contrast rather than a proxy:
 | Measurement | Extra turns | Final match | p | Accuracy | p |
 |---|---:|---:|---:|---:|---:|
 | Ceiling 10 | +1.85 | +0.014 | 0.50 | +2.4 pts | 0.24 |
-| Ceiling 20 | +6.20 | +0.061 | 0.0028 | +7.0 pts | 0.0043 |
+| Ceiling 20 | +6.20 | +0.061 | 0.0028 | **+6.6 pts** | 0.004 |
 | **Ceiling 20, third run** | **+5.77** | **+0.019** | **0.16** | **-1.8 pts** | 0.38 |
+
+**CORRECTED: the ceiling-20 accuracy figure was computed on the wrong
+population.** It was +7.0 pts (p=0.0043) over all 300 rows per arm, which
+includes 73 per arm on which the interjection never fired -- undosed
+trajectories that every other contrast in this study excludes. Fired-only, as
+the exclusion rule requires, it is **+6.57 pts (p=0.004)**; the table above
+now carries that. The sign flip against the third run is unaffected, and
+`results/analysis/replication_table.py` prints the corrected figure. The two
+ceiling-20 measurements are inconsistent with a common value (z=2.79,
+p=0.005), so at least one is wrong and the data do not say which.
 
 **The turn effect replicates** (+6.20 then +5.77 on the same instrument,
 both p<0.0001). **Neither outcome measure does.** Final match is null in two
-of three measurements. Accuracy came in at +7.0 points and then -1.8 points
-on identical tasks and ceiling -- opposite signs -- so the earlier p=0.0043
+of three measurements. Accuracy came in at +6.6 points and then -1.8 points
+on identical tasks and ceiling -- opposite signs -- so the earlier p=0.004
 was noise, and the "two independent instruments agree" argument was two
 measures agreeing inside one unreplicated run, which is weaker evidence than
 it felt like.
