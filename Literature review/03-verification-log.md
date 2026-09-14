@@ -4,7 +4,8 @@ Two passes. **Pass 1** (initial review) checked every citation against a primary
 read four papers in full. **Pass 2** ran six parallel full-text verifications over the 24
 sources that had only been read at abstract level, checking each claim adversarially.
 
-**28 of 28 cited sources have now been read in full text.** What follows is what changed.
+**29 of 29 cited sources have now been read in full text.** The 14 background entries carry their
+own read-depth tags in `01-sources.md`. What follows is what changed.
 
 ---
 
@@ -45,7 +46,7 @@ sources that had only been read at abstract level, checking each claim adversari
 - **Shrivastava 2606.27009** is in mild **tension** with §6, not support: the oracle beats
   always-take-round-1 by 0.115 IS, implying the best round often is *not* round 1. It also
   reports no "first round best X%" statistic. *(Coincidence to avoid: their `fixed_k1` cuts 86%
-  of tokens — a different quantity from our 86%.)*
+  of tokens — a different quantity from our 85–90% first-attempt-best rates.)*
 - **Cai et al. 2512.12812** is not a clean null: 2 of 12 domain-level and 4 of 54 task-level
   comparisons remain significant, with **no multiplicity correction and no power analysis**.
 - **Gandhi & Gandhi 2503.13510**: the 8.1% is scoped to essay/blog responses only, with **no
@@ -94,7 +95,12 @@ sources that had only been read at abstract level, checking each claim adversari
 
 | Item | What is unverified |
 |---|---|
-| PLUM 2604.16275 | The history-construction protocol. Verified as genuinely underspecified *in the paper and the released corpus* — one sentence of method, no turn count, no code, empty HuggingFace README. This is now a citable limitation of theirs rather than a gap in this review. |
+| OptimalThinkingBench 2508.13141 (B5, background) | Author list not confirmed; claims come from a secondary summary. |
+| SWE-bench solution-leakage figures (F7, background) | 32.67% / 31.08% come from a secondary summary; trace to arXiv:2505.20411 / 2507.11059 before citing. |
+| WebArena task count (G6, background) | Commonly cited as 812; not confirmed in this pass. |
+| Cuadron et al. model count (B1) | Paper states 19; its model table enumerates 17. The two unlisted models were not identified. |
+
+*(PLUM's history protocol was previously listed here; it is now resolved — verified as genuinely underspecified in both the paper and the released corpus, which is a citable limitation of theirs.)*
 | Cuadron et al. venue | ICML-template formatting but no journal-ref. **Cite as an arXiv preprint** unless independently verified. |
 | OSWorld 2.0 byline | Displayed as the collective "XLANG Lab and Collaborators"; 30 named contributors appear only in Appendix A. Some citation managers will mishandle this. |
 | ABC title | NeurIPS lists "Best Practices **in** Building…"; arXiv says "**for**". |
@@ -123,3 +129,31 @@ Re-run and confirmed at full-text level in pass 2:
   awareness, output-classification accuracy, explicitly importing the psychology replication
   crisis's remedies) and Ibrahim et al.'s preregistration practice (one transparently documented
   deviation with a sensitivity analysis attached). Follow Vaugrante's structure for §8.
+
+---
+
+## Pass 3 — cross-check against `RESULTS.md` (final review)
+
+An independent adversarial read of all four review files against the repo's own results found
+that the review was least reliable where it described *our* numbers. Corrected:
+
+| Claim in the review | Problem | Correction |
+|---|---|---|
+| "your ~86% first-attempt-best figure" | **86% appears nowhere in the repo.** It was the brief's rounding. | `RESULTS.md` reports **90%** (Stage 0, ceiling 10) and **87% / 85%** (Stage 1, ceiling 20, Luna / GLM). All occurrences replaced; the paper must name the run it quotes. |
+| "per-step effort is flat on every contrast" / "loads *exclusively* onto persistence" | Contradicted by `RESULTS.md` ("threatening… sits 20–30% above neutral on every subsequent call… two channels") and by the review's own analysis output ("work remains" +396 tokens/turn [+163, +646]). | Reworded to *predominantly*, with both exceptions named. |
+| "accuracy does not move (0.299–0.349)" | Numbers were computed in an unsaved script; no provenance in the repo. | Accuracy section added to `results/analysis/praise_turn_vs_trajectory.py`; synthesis now cites that output and `RESULTS.md`'s "within 2.6 points, all p>0.13". |
+| "§5 needs restating — sign error" | `RESULTS.md` already reports Q4 at +0.50 vs control and frames praise as Q4-vs-Q5. | Reframed as a drafting caution about one summary sentence and the brief's paraphrase. |
+| "praise cuts total output" | Q4 raises total tokens (+3,101 [+354, +5,859]). | Scoped to praise-alone arms and the Q4-vs-Q5 contrast. |
+| 4,643 runs / $166 / 92–97% stated as current for arXiv:2608.01347 | These are v1-only. | Tagged v1 inline; v6 figure (4,644) used elsewhere. |
+| "raw logs cannot separate the praise arms" (earlier in this session) | Each `--interject` invocation writes one raw log per arm. | Corrected: per-turn tokens are recoverable from the raw logs if they exist; harness now also records `interjection_key` so the trajectory key is self-describing. |
+| "20-turn agent" in the Huang comparison | The probe/praise runs and the 90% figure are at a **10-turn** ceiling; only Stage 1 is 20. | Ceiling named per run. |
+| "no-op turn" → "Duplicated Step" | The repo's no-op is an *output* criterion (graded range unchanged); Duplicated Step requires identical inputs. | Mapped to "redundant step"; Duplicated Step cited as nearest subtype only. |
+| "premature disengagement" for the praise effect | Stage 0: 2–6% of trajectories still improving at stop, no gap vs control — not premature. | Term reserved for Cuadron's failure mode; ours described as earlier, non-premature disengagement. |
+| Cai et al. caveat dropped in the synthesis | Sources say "not a clean null"; synthesis used it as one. | Caveat carried into the synthesis. |
+| Source counts (38 / 28 / uncounted) | File has 43 entries. | 29 cited + 14 background, every heading tagged with read depth. |
+| Cuadron "19 models" | Table enumerates 17. | Stated as 19 claimed / 17 enumerated. |
+| ABC "all ten" vs "80%" | Two different statements. | Clarified: all ten have *some* reporting limitation; item R.8 failed by 80%. |
+| Minor | 8-vs-10 pairwise tests (A1); ELEPHANT roster version (GPT-5 → v2, Sept 2025); "peer-adjacent" (A3 is unrefereed); +8.8 pp vs RD scale; "max 22" tests and the Gandhi full-text details missing from the sources file; Self-Debug quote truncated. | All fixed in place. |
+
+Repo-side, not the review's: `RESULTS.md` prose gives −0.62 / −1.14 for the praise replication
+while its tables give −0.59 / −1.08. Flagged in `02-synthesis.md` §7.8.

@@ -1,7 +1,9 @@
 # Sources
 
-38 entries. `[FULL TEXT]` = read in full; `[ABS]` = abstract/metadata verified at source;
-`[SEC]` = secondary summary, flagged where it matters.
+43 entries: **29 cited** and **14 background**. Every heading carries a tag — `[CITED — …]` or
+`[BACKGROUND — …]` — followed by its read depth: *full text* (read in full, and *verified* where
+a second independent pass checked every claim), *abstract only*, or *secondary* (a summary or
+a vendor page, flagged where it matters). All 29 cited entries are full text.
 
 Relation tags: **PREEMPTS** / **CONTRADICTS** / **SUPPORTS** / **METHOD-PRECEDENT** / **BACKGROUND**.
 
@@ -9,7 +11,7 @@ Relation tags: **PREEMPTS** / **CONTRADICTS** / **SUPPORTS** / **METHOD-PRECEDEN
 
 # A. Novelty check — tone, agency, mid-task manipulation
 
-## A1. Dobariya & Kumar (2025) — *Mind Your Tone (short paper)* `[FULL TEXT]`
+## A1. Dobariya & Kumar (2025) — *Mind Your Tone (short paper)* `[CITED — full text]`
 
 Om Dobariya, Akhil Kumar. "Mind Your Tone: Investigating How Prompt Politeness Affects LLM
 Accuracy (short paper)." arXiv:2510.04950, 6 Oct 2025. 5 pages, 3 tables. **Unrefereed
@@ -31,7 +33,7 @@ multiple comparisons.**
 **RELATION TO US: PREEMPTS (the framing) / CONTRADICTS (weakly).** This is the paper the
 public conversation is about and the one your title answers. It is the effect size your CI
 must exclude. Note it is n=50 items on one model with no multiple-comparison correction —
-8 pairwise tests at α=0.05 uncorrected.
+10 pairwise tests at α=0.05, uncorrected, of which 8 are reported significant.
 
 **Critical for your §3 (politeness ≠ the operative variable).** Their own Table 1 confounds
 register with task demand. Level 4 "Rude" prefix variants include **"Try to focus and try to
@@ -50,7 +52,7 @@ sociolinguistic spectrum of tone."
 
 ---
 
-## A2. Dobariya & Kumar (2026) — *Mind Your Tone: Does Tone Alter LLM Performance?* `[FULL TEXT]`
+## A2. Dobariya & Kumar (2026) — *Mind Your Tone: Does Tone Alter LLM Performance?* `[CITED — full text]`
 
 Om Dobariya, Akhil Kumar. "Mind Your Tone: Does Tone Alter LLM Performance?" arXiv:2605.29027,
 27 May 2026. **Full paper, AMCIS 2026** (Thirty-second Americas Conference on Information
@@ -106,7 +108,8 @@ flatten toward tone-insensitivity — which is exactly what your opening-prompt 
 **Also relevant: their proposed mechanism is the one your §4 tests and rejects.** They
 conjecture a "routing framework" where tone acts as a "soft trigger" telling the model "how
 much cognitive effort to use", invoking Gemini's *thinking budget* and "inference-time
-scaling pathway". Your flat per-step thinking result is a direct empirical test of this
+scaling pathway". Your per-step thinking result — flat for every register arm except threatening, which sits
+20–30% above neutral per call (`RESULTS.md`, "two channels") — is a direct empirical test of this
 conjecture in an agentic setting. They explicitly call the framework speculative and
 unvalidated.
 
@@ -117,10 +120,14 @@ unvalidated.
 
 ---
 
-## A3. Kumar & Dobariya (2026) — *Understanding Tone-Dependent Inference Cost* `[FULL TEXT]`
+## A3. Kumar & Dobariya (2026) — *Understanding Tone-Dependent Inference Cost* `[CITED — full text]`
 
 Akhil Kumar, Om Dobariya. "Understanding Tone-Dependent Inference Cost in Large Language
 Models." arXiv:2607.23915, 27 Jul 2026. 25 pages. **Unrefereed preprint.**
+Defines the term this review recommends adopting, verbatim: "The term social register in
+linguistics refers to the specific variety of language, vocabulary, and grammar a person uses
+depending on the social context, the degree of formality, and their relationship with the
+audience."
 
 **Claim.** Tone moves output-token consumption far more than it moves accuracy.
 
@@ -151,7 +158,7 @@ tokens, GPT-4o: F(6,54)=248.14, p<.001.
 *Preempts:* "tone changes how much the model writes, not whether it is right" is already
 published, in single-turn, with tight numbers. Your accuracy null is **not novel as a
 general claim**. What is novel is that in an agentic loop the moved quantity is *number of
-steps*, not tokens-per-step — and that per-step thinking is flat, which is the opposite of
+steps*, not tokens-per-step — and that per-step thinking is flat for every arm but threatening, which is the opposite of
 what this paper would predict if its mechanism carried over.
 
 *Supports your confound argument, hard.* Look at their prefixes. The "Rude" prefix is
@@ -172,7 +179,7 @@ near-longest for Flash Lite. Praise lengthens single-turn output. You must addre
 
 ---
 
-## A4. Yin, Wang, Horio, Kawahara & Sekine (2024) — *Should We Respect LLMs?* `[FULL TEXT]`
+## A4. Yin, Wang, Horio, Kawahara & Sekine (2024) — *Should We Respect LLMs?* `[CITED — full text]`
 
 Ziqi Yin, Hao Wang, Kaito Horio, Daisuke Kawahara, Satoshi Sekine. "Should We Respect LLMs?
 A Cross-Lingual Study on the Influence of Prompt Politeness on LLM Performance."
@@ -220,7 +227,7 @@ the fact that you measure *agentic behaviour*, not MCQ accuracy — but you must
 
 ---
 
-## A5. Cai, Shen, Jin, Hu & Fan (2025/2026) — *Does Tone Change the Answer?* `[ABS]`
+## A5. Cai, Shen, Jin, Hu & Fan (2025/2026) — *Does Tone Change the Answer?* `[CITED — full text, verified]`
 
 Hanyu Cai, Binqi Shen, Lier Jin, Lan Hu, Xiaojing Fan. "Does Tone Change the Answer?
 Evaluating Prompt Politeness Effects on Modern LLMs: GPT, Gemini, and LLaMA."
@@ -264,7 +271,7 @@ manipulations.
 
 ---
 
-## A6. Mehta, Saxena, Chhikara & Kumar (2026) — *No Universal Courtesy* (PLUM corpus) `[SEC]`
+## A6. Mehta, Saxena, Chhikara & Kumar (2026) — *No Universal Courtesy* (PLUM corpus) `[CITED — full text, verified]`
 
 Hitesh Mehta, Arjit Saxena, Garima Chhikara, Rohit Kumar. "No Universal Courtesy: A
 Cross-Linguistic, Multi-Model Study of Politeness Effects on LLMs Using the PLUM Corpus."
@@ -320,7 +327,7 @@ distinguish it explicitly rather than hoping nobody notices.
 
 ---
 
-## A7. Weinberger & Hozez (2026) — *Prompt-Induced Waste in Coding Agents* `[FULL TEXT of v1 HTML]`
+## A7. Weinberger & Hozez (2026) — *Prompt-Induced Waste in Coding Agents* `[CITED — full text, v1 and v6 verified]`
 
 Sarel Weinberger, Amir Hozez (PointFive, `@pointfive.co`). arXiv:2608.01347, v1 submitted
 2 Aug 2026, cs.CL, CC BY 4.0. **Unrefereed preprint, genuinely preregistered** ("Hypotheses
@@ -351,7 +358,7 @@ tokens, tool calls, agent turns) **at equal task success**.
 6 large reasoning models (DeepSeek-V4-Pro, Kimi-K2.6, Kimi-K2.7-Code, Nemotron-3-Ultra,
 Inkling, GLM-5.2) × 2 harnesses (PI.DEV 0.82.1 direct chat-completions; Claude Code 2.1.220
 via LiteLLM) × 24 deterministic coding tasks (16 dev / 8 holdout; Python/JS/Go).
-**4,643 valid runs**, ~$166 billed compute, plus a Kimi-K3 replication and a Claude Sonnet 5
+**4,644 valid runs** (v6; v1 said 4,643 and "~$166 billed compute", both since revised out — see the hazard box), plus a Kimi-K3 replication and a Claude Sonnet 5
 cross-provider study. Nine primary prompt variants (precise baseline, verbose_repetition,
 deep_thinking, exhaustive_exploration, multiple_approaches, max_certainty, adjacent_cleanup,
 no_questions_autonomy, **bounded_efficiency** = scope + smallest-sufficient-change + **stop
@@ -365,7 +372,7 @@ deep_thinking 1.6–2.2×; **bounded_efficiency 0.48–1.16× — free everywher
 equal success**; misleading hints 2.61×; irrelevant prose 1.03× (nearly free); harness choice
 dominates everything at 5–30× cost per success, driven by 12–15× prefix and **2–7× turns**;
 prefix caching rebates ~61% of billing with **zero change in any behavioural metric**.
-Success rates 92–97% (PI.DEV pilot), 100% on Kimi-K3, 162/162 scope compliance on Sonnet 5 —
+Success rates 92–97% (PI.DEV pilot — **v1 only**; v6 gives no range and instead reports success flat at 0.86–0.97 across waste-severity levels), 100% on Kimi-K3, 162/162 scope compliance on Sonnet 5 —
 i.e. **quality does not move**.
 
 **Verified by exhaustive full-text search of v6, including all 18 prompt templates in
@@ -385,7 +392,7 @@ raises recorded reasoning volume 2.2× with "no new functional units" — an eff
 channel. `max_certainty` adds "+1.75 post-success calls" through redundant re-verification —
 a step-count channel. So the tokens-vs-turns distinction is not itself new. **Your
 contribution is narrower and must be stated as such:** that a *mid-task social-register
-demand* loads exclusively onto the persistence channel, against their mixed picture where
+demand* loads predominantly onto the persistence channel — threatening is the one register that also raises per-call reasoning, by 20–30% (`RESULTS.md`) — against their mixed picture where
 different prompt families load onto different channels. One sentence of differentiation.
 
 Note also that Claude Sonnet 5 appears as a seventh model throughout the cost, success and
@@ -395,7 +402,7 @@ open-weight roster, not the full one.
 **RELATION TO US: THE NEAREST NEIGHBOUR — PREEMPTS your §7 in the agentic setting, and
 partially preempts your closing-cue framing.** Three things you must concede or distinguish:
 
-1. "Agentic spend moves while correctness does not" is theirs, first, preregistered, n=4,643.
+1. "Agentic spend moves while correctness does not" is theirs, first, preregistered, n=4,644 (v6).
    Your §7 should cite this as replication-in-a-new-substrate, not discovery.
 2. Their **bounded_efficiency** arm contains an explicit *stop condition* and is the only
    universally-safe variant. Your "closing cue stops the agent hardest of anything measured"
@@ -419,7 +426,7 @@ correctness trade-offs, single provider, Claude Code arms budget-capped, three-d
 
 ---
 
-## A8. Meincke, Mollick, Mollick & Shapiro (2025) — *Prompting Science Report 1* `[ABS]`
+## A8. Meincke, Mollick, Mollick & Shapiro (2025) — *Prompting Science Report 1* `[CITED — full text, verified]`
 
 Lennart Meincke, Ethan Mollick, Lilach Mollick, Dan Shapiro. "Prompting Science Report 1:
 Prompt Engineering is Complicated and Contingent." arXiv:2503.04818, 4 Mar 2025. Wharton
@@ -427,6 +434,24 @@ Generative AI Labs technical report. **Unrefereed.**
 
 **Claim.** Politeness sometimes helps and sometimes hurts; there is no reliable rule, and
 there is no single standard for what "passing a benchmark" means.
+
+**Method — verified from the full text.** Two models, deliberately chosen to study
+within-model variability rather than model differences: GPT-4o (`gpt-4o-2024-08-06`) and
+GPT-4o-mini (`gpt-4o-mini-2024-07-18`). Benchmark: GPQA Diamond, 198 PhD-level MCQs (biology,
+physics, chemistry); "PhDs in the corresponding domains reach 65% accuracy". Risk differences
+with 95% CIs throughout. Example of how much the pass standard matters: under the formatted
+prompt at a "100% correct on every trial" standard, GPT-4o beats a random guess by only
+5.1 pp (RD = 0.051, 95% CI [−0.035, 0.136], p = 0.267) and 4o-mini by 4.5 pp (RD = 0.045,
+[−0.040, 0.136], p = 0.345) — both non-significant; at a 90%-of-trials standard 4o clears
+chance (RD = 0.111, [0.020, 0.197], p = 0.016) while 4o-mini only does so at 51%
+(RD = 0.141, [0.051, 0.237], p = 0.003).
+
+**On politeness and constraints, verbatim:** "we find that sometimes being polite to the LLM
+helps performance, and sometimes it lowers performance. We also find that constraining the
+AI's answers helps performance in some cases, though it may lower performance in other cases."
+And: "prompt variations, although impactful at the question level, are dwarfed by overall model
+characteristics." Removing formatting constraints "consistently led to performance degradation
+for both GPT-4o variants".
 
 **RELATION TO US: SUPPORTS / METHOD-PRECEDENT.** The canonical citation for "prompt-tweak
 effects are contingent". Also useful for your measurement section: they show the *choice of
@@ -437,7 +462,7 @@ pass criterion* moves reported performance materially.
 
 ---
 
-## A9. Meincke, Mollick, Mollick & Shapiro (2025) — *Report 3: I'll pay you or I'll kill you* `[ABS]`
+## A9. Meincke, Mollick, Mollick & Shapiro (2025) — *Report 3: I'll pay you or I'll kill you* `[CITED — full text, verified]`
 
 arXiv:2508.00614, 1 Aug 2025. **Unrefereed technical report.**
 
@@ -499,7 +524,7 @@ ineffective."
 
 ---
 
-## A10. Gandhi & Gandhi (2025) — *Prompt Sentiment: The Catalyst for LLM Change* `[ABS]`
+## A10. Gandhi & Gandhi (2025) — *Prompt Sentiment: The Catalyst for LLM Change* `[CITED — full text, verified]`
 
 Vishal Gandhi, Sagar Gandhi. arXiv:2503.13510, 14 Mar 2025. **Unrefereed preprint.**
 
@@ -518,12 +543,18 @@ and persistence *across turns* are different quantities, and a closing move can 
 trajectory while lengthening the final message. But you need the data to show that, and you
 should check whether your praise conditions lengthen the final turn's text.
 
-**Caution:** weakest methods of anything in section A (no per-task n, no significance
-testing reported in the abstract). Cite it as a contrary datapoint, not as strong evidence.
+**Caution — verified against the full text:** the weakest methods of anything in section A.
+**No significance test, CI, SD or per-condition n appears anywhere in the paper**, for the
+length result or any other headline number. The 8.1% is scoped to "essays and blog-style
+responses" only; the same section reports negative prompts producing **17.6% shorter**
+responses ("disengagement or terseness"). The model list names "Claude (v1.3)" and
+"ChatGPT (v4)" as latest versions in March 2025 (Claude 1.3 was retired in 2023); a composite
+quality score uses unspecified "normalizing constants"; no code, data or example prompts are
+released. Cite it as a contrary datapoint, not as strong evidence.
 
 ---
 
-## A11. Cherep, Maes & Singh (2025) — *LLM Agents Are Hypersensitive to Nudges* `[ABS]`
+## A11. Cherep, Maes & Singh (2025) — *LLM Agents Are Hypersensitive to Nudges* `[BACKGROUND — abstract only]`
 
 Manuel Cherep, Pattie Maes, Nikhil Singh. arXiv:2505.11584, 16 May 2025. MIT Media Lab.
 **Unrefereed preprint.**
@@ -544,7 +575,7 @@ Also precedent for framing this as a deployment risk rather than a prompting tri
 
 ---
 
-## A12. Salimi, Ma, Tang, Shen, Li & Smola (2026) — *IHBench* `[FULL TEXT — verified]`
+## A12. Salimi, Ma, Tang, Shen, Li & Smola (2026) — *IHBench* `[CITED — full text, verified]`
 
 Ahmad Salimi, Wentao Ma, Yuzhi Tang, Dongming Shen, Mu Li, Alex Smola (Boson AI).
 "IHBench: Evaluating Post-Interruption Recovery in Voice Agents with Structured Workflows."
@@ -589,7 +620,7 @@ responses only, not on prosodic or acoustic recovery behavior."
 
 # B. What makes an agent stop
 
-## B1. Cuadron et al. (2025) — *The Danger of Overthinking* `[FULL TEXT — verified]`
+## B1. Cuadron et al. (2025) — *The Danger of Overthinking* `[CITED — full text, verified]`
 
 Alejandro Cuadron, Dacheng Li, Wenjie Ma, Xingyao Wang, Yichuan Wang, Siyuan Zhuang, Shu Liu,
 Luis Gaspar Schroeder, Tian Xia, Huanzhi Mao, Nicholas Thumiger, Aditya Desai, Ion Stoica,
@@ -599,7 +630,9 @@ Reasoning-Action Dilemma in Agentic Tasks." arXiv:2502.08235, 12 Feb 2025.
 **Claim.** In interactive environments, models trade environmental interaction for internal
 reasoning, and more reasoning correlates with *worse* outcomes.
 
-**Method.** SWE-bench Verified. **19 models** (reasoning: o1, o1-mini, QwQ-32B,
+**Method.** SWE-bench Verified. The paper states **19 models**; its model table enumerates
+**17**, and this review could not identify the other two — cite "17 named" if pressed
+(reasoning: o1, o1-mini, QwQ-32B,
 DeepSeek-R1-671B, R1-Distill-Qwen 32B/14B/7B/1.5B; non-reasoning: GPT-4o, GPT-4o-mini,
 Claude 3.5 Sonnet, DeepSeek-V3, Qwen2.5 32B/14B/7B/1.5B, Sky-T1-32B). Overthinking score is
 an LLM-as-judge rating (Claude 3.5 Sonnet, temperature 0, 0–10 scale, judge blind to task
@@ -647,7 +680,7 @@ arXiv preprint** unless you can verify independently. No dedicated limitations s
 
 ---
 
-## B2. Hou, Wang, Zhao & Wang (2026) — *When Agents Do Not Stop* `[ABS]`
+## B2. Hou, Wang, Zhao & Wang (2026) — *When Agents Do Not Stop* `[BACKGROUND — abstract only]`
 
 Xinyi Hou, Shenao Wang, Yanjie Zhao, Haoyu Wang. "When Agents Do Not Stop: Uncovering
 Infinite Agentic Loops in LLM Agents." arXiv:2607.01641, 2 Jul 2026, cs.SE. **Unrefereed.**
@@ -668,7 +701,7 @@ a curiosity. Note it's a code-analysis paper, not a behavioural one.
 
 ---
 
-## B3. Hu, Yang, Zhou, Liang, Guo, Yin & Han (2026) — *RedundancyBench* `[FULL TEXT — verified]`
+## B3. Hu, Yang, Zhou, Liang, Guo, Yin & Han (2026) — *RedundancyBench* `[CITED — full text, verified]`
 
 Minyang Hu, Bo Yang, Zhinuo Zhou, Jiachen Liang, **Jiahao Guo**, Yiyang Yin, Xiongwei Han.
 "Redundant or Necessary? A Benchmark for Detecting Redundant Steps in Agent Trajectories."
@@ -705,7 +738,8 @@ random guess on the trajectory-level detection."
 1. **Some redundant steps are synthetically injected**, not organic: "we insert synthetic
    redundant steps to simulate unexpected situations, since the naturally occurring redundant
    steps in τ²-bench are constrained by its predefined tool sets." **Do not compare their base
-   rates to your organically-observed ~86% repetition figure.**
+   rates to your organically-observed first-attempt-best figures (90% at the 10-turn ceiling;
+   87% / 85% Luna / GLM at the 20-turn ceiling — `RESULTS.md`).**
 2. **They report no overall fraction of steps that are redundant** — only that the classes are
    "highly imbalanced." There is no number here comparable to your §6.
 
@@ -724,7 +758,7 @@ large-scale exploration and broader statistical analysis."
 
 ---
 
-## B4. Shrivastava (2026) — *Semantic Early-Stopping for Iterative LLM Agent Loops* `[ABS]`
+## B4. Shrivastava (2026) — *Semantic Early-Stopping for Iterative LLM Agent Loops* `[BACKGROUND — full text, verified]`
 
 Sahil Shrivastava. arXiv:2606.27009, 25 Jun 2026, cs.AI. **Unrefereed preprint, single author,
 small scale — cite with care.**
@@ -744,14 +778,14 @@ IS 0.700, *above* the 6-round baseline (Δ = +0.030, TOST non-inferior) at 86% f
 a point of tension.**
 
 - **They report no "first round is best X% of the time" statistic.** Nothing here preempts
-  your ~86% figure.
+  your 90% / 87% / 85% figures.
 - **But their oracle–`fixed_k1` gap runs slightly against you.** Oracle 0.785 vs `fixed_k1`
   0.700 means the *optimal* round often is **not** round 1 in their data; the oracle's
   advantage comes from picking different rounds per question. Your §6 claims round 1 usually
   *is* the oracle round. Present these as similar in shape, not identical — and expect a
   reviewer who reads both to ask about the difference.
 - **Coincidence to avoid:** their `fixed_k1` cuts **86% of tokens**. That is a different
-  quantity from your 86% first-attempt-best rate. Do not let the two numbers sit next to each
+  quantity from your 85–90% first-attempt-best rates. Do not let the two numbers sit next to each
   other unexplained.
 
 **Quality caveats — cite lightly.** Single independent author, no academic affiliation,
@@ -767,7 +801,7 @@ whether iteration ever pays."
 
 ---
 
-## B5. *OptimalThinkingBench* (2025) `[SEC]`
+## B5. *OptimalThinkingBench* (2025) `[BACKGROUND — secondary only]`
 
 "OptimalThinkingBench: Evaluating Over and Underthinking in LLMs." arXiv:2508.13141.
 **Unrefereed preprint. UNVERIFIED: author list not confirmed in this pass.**
@@ -783,7 +817,7 @@ calibration is an open problem rather than a solved one. Verify authorship befor
 
 ---
 
-## B6. Schegloff & Sacks (1973) — *Opening up Closings* `[ABS, canonical]`
+## B6. Schegloff & Sacks (1973) — *Opening up Closings* `[CITED — canonical text]`
 
 Emanuel A. Schegloff, Harvey Sacks. "Opening up Closings." *Semiotica* 8(4): 289–327, 1973.
 DOI 10.1515/semi.1973.8.4.289.
@@ -810,7 +844,7 @@ canonical pre-closing tokens, which is exactly the register your praise conditio
 
 # C. Does more compute / more turns help?
 
-## C1. Huang, Chen, Mishra, Zheng, Yu, Song & Zhou (2024) — *LLMs Cannot Self-Correct Reasoning Yet* `[ABS]`
+## C1. Huang, Chen, Mishra, Zheng, Yu, Song & Zhou (2024) — *LLMs Cannot Self-Correct Reasoning Yet* `[CITED — full text, verified]`
 
 Jie Huang, Xinyun Chen, Swaroop Mishra, Huaixiu Steven Zheng, Adams Wei Yu, Xinying Song,
 Denny Zhou. arXiv:2310.01798, 3 Oct 2023 (rev. 14 Mar 2024). **ICLR 2024 — refereed.**
@@ -840,9 +874,9 @@ at equal response budget, self-consistency beats it (Self-Consistency@6 = 85.3 v
 **⚠ THE NUMBER YOU MUST ADDRESS — their "No Change" rates.** Figure 1 reports the fraction of
 instances whose answer is unchanged after two rounds of intrinsic self-correction:
 **GPT-4: 90.5% / 90.5%; GPT-4-Turbo: 96.0% / 88.0%** (GSM8K / CommonSenseQA); GPT-3.5 74.7% /
-42.8%; Llama-2 40.0% / 40.0%. **These sit right next to your 86%.** They are not the same
+42.8%; Llama-2 40.0% / 40.0%. **These sit right next to your 90% (ceiling 10) and 87% / 85% (ceiling 20).** They are not the same
 statistic — theirs is "answer unchanged", yours is "first attempt was the best of those made",
-and theirs is single-turn intrinsic correction on reasoning QA rather than a 20-turn
+and theirs is single-turn intrinsic correction on reasoning QA rather than a 10-turn (Stage 0) or 20-turn (Stage 1)
 execution-grounded agent. **But a reviewer will put the numbers side by side, so distinguish
 them explicitly in the text.**
 
@@ -850,7 +884,9 @@ them explicitly in the text.**
 claimed.** Huang et al. **never test execution feedback themselves.** They point to it as the
 expected fix, citing Chen et al. (2023, Self-Debug): "when the problem description clearly
 specifies the intended code execution behavior, e.g., with unit tests, the code executor
-serves as the perfect verifier." So a naive reading of Huang et al. *predicts your agent
+serves as the perfect verifier to judge the correctness of predicted programs, while the error
+messages also provide informative feedback that guides the LLMs to improve their responses."
+So a naive reading of Huang et al. *predicts your agent
 should improve across turns*. **Your §6 is not a replication in a new domain — it is a direct
 test of the escape hatch Huang et al. themselves proposed and never ran.** Say that.
 
@@ -863,7 +899,7 @@ other domains."
 
 ---
 
-## C2. Madaan et al. (2023) — *Self-Refine* `[FULL TEXT — verified]`
+## C2. Madaan et al. (2023) — *Self-Refine* `[BACKGROUND — full text, verified]`
 
 Aman Madaan, Niket Tandon, Prakhar Gupta, Skyler Hallinan, Luyu Gao, Sarah Wiegreffe, Uri Alon,
 Nouha Dziri, Shrimai Prabhumoye, Yiming Yang, Shashank Gupta, Bodhisattwa Prasad Majumder,
@@ -886,7 +922,7 @@ Constrained Generation +9.0/+23.0/+30.0. Headline: "~20% absolute on average."
 Constrained Generation 29.0→40.3→46.7→49.7 (11.3, 6.4, 3.0); Sentiment Reversal
 33.9→34.9→36.1→36.8. Their own words: "the marginal improvement naturally decreases with more
 iterations." **No "% of instances where the first attempt was already best" statistic exists** —
-the metric is a continuous quality score, so nothing here preempts your 86%.
+the metric is a continuous quality score, so nothing here preempts your first-attempt-best figures.
 
 **RELATION TO US: BACKGROUND — and it concedes your point on the tasks nearest yours.**
 Math Reasoning is flat (+0/+0.2/+0.2), and they explain why: "a consistent-looking reasoning
@@ -911,7 +947,7 @@ uncritically invites a reviewer to note the tension.
 
 ---
 
-## C3. Balachandran et al. (2025) — *Inference-Time Scaling for Complex Tasks* `[ABS]`
+## C3. Balachandran et al. (2025) — *Inference-Time Scaling for Complex Tasks* `[CITED — full text, verified]`
 
 Vidhisha Balachandran, Jingya Chen, Lingjiao Chen, Shivam Garg, Neel Joshi, Yash Lara,
 John Langford, Besmira Nushi, Vibhav Vineet, Yue Wu, Safoora Yousefi. arXiv:2504.00294,
@@ -962,7 +998,7 @@ runs on Omni-MATH, Maze and SpatialMap.
 
 # D. Emotional prompting and its failed replications
 
-## D1. Li, Wang, Zhang, Zhu, Hou, Lian, Luo, Yang & Xie (2023) — *EmotionPrompt* `[ABS]`
+## D1. Li, Wang, Zhang, Zhu, Hou, Lian, Luo, Yang & Xie (2023) — *EmotionPrompt* `[CITED — full text, verified]`
 
 Cheng Li, Jindong Wang, Yixuan Zhang, Kaijie Zhu, Wenxin Hou, Jianxun Lian, Fang Luo,
 Qiang Yang, Xing Xie. "Large Language Models Understand and Can be Enhanced by Emotional
@@ -1017,7 +1053,7 @@ Single-turn only: zero-shot and 5-shot; no multi-turn, no tool use, no agentic l
 
 ---
 
-## D2. Wang, Li, Chang, Wang & Wu (2024) — *NegativePrompt* `[ABS]`
+## D2. Wang, Li, Chang, Wang & Wu (2024) — *NegativePrompt* `[BACKGROUND — abstract only]`
 
 Xu Wang, Cheng Li, Yi Chang, Jindong Wang, Yuan Wu. arXiv:2405.02814, 5 May 2024.
 **IJCAI 2024 — refereed.** Ten negative emotional stimuli, 5 models, 45 tasks, single-turn.
@@ -1029,7 +1065,7 @@ and A3's, mix affect with exhortation — worth one sentence in your confound se
 
 ---
 
-## D3. Vaugrante, Niepert & Hagendorff (2024) — *A Looming Replication Crisis* `[FULL TEXT — verified]`
+## D3. Vaugrante, Niepert & Hagendorff (2024) — *A Looming Replication Crisis* `[CITED — full text, verified]`
 
 Laurène Vaugrante, Mathias Niepert, Thilo Hagendorff. "A Looming Replication Crisis in
 Evaluating Behavior in Language Models? Evidence and Solutions." arXiv:2409.20303,
@@ -1087,7 +1123,7 @@ stated best practice — worth saying so explicitly.
 
 ---
 
-## D4. Patel, Lee, Liang & Thomas (2026) — *Emotional Stimuli and Intensity* `[FULL TEXT — verified; DOWNGRADED]`
+## D4. Patel, Lee, Liang & Thomas (2026) — *Emotional Stimuli and Intensity* `[BACKGROUND — full text, verified; downgraded]`
 
 Ameen Patel, Felix Lee, Kyle Liang, Joseph Thomas. "The Role of Emotional Stimuli and
 Intensity in Shaping Large Language Model Behavior." arXiv:2604.07369, 7 Apr 2026.
@@ -1131,7 +1167,7 @@ bootstrap confidence intervals) means small observed differences may not be mean
 
 # E. Sycophancy
 
-## E1. Sharma et al. (2024) — *Towards Understanding Sycophancy in Language Models* `[FULL TEXT — verified]`
+## E1. Sharma et al. (2024) — *Towards Understanding Sycophancy in Language Models* `[CITED — full text, verified]`
 
 Mrinank Sharma, Meg Tong, Tomasz Korbak, David Duvenaud, Amanda Askell, Samuel R. Bowman,
 Newton Cheng, Esin Durmus, Zac Hatfield-Dodds, Scott R. Johnston, Shauna Kravec, Timothy
@@ -1166,7 +1202,7 @@ all. *(The coefficient is a plot marker, not a text value — cite the rank, not
 
 ---
 
-## E2. Cheng, Yu, Lee, Khadpe, Ibrahim & Jurafsky (2026) — *ELEPHANT* `[FULL TEXT — verified]`
+## E2. Cheng, Yu, Lee, Khadpe, Ibrahim & Jurafsky (2026) — *ELEPHANT* `[CITED — full text, verified]`
 
 Myra Cheng, Sunny Yu, Cinoo Lee, Pranav Khadpe, Lujain Ibrahim, Dan Jurafsky (Stanford / CMU /
 Oxford). "ELEPHANT: Measuring and understanding social sycophancy in LLMs." arXiv:2505.13995.
@@ -1181,7 +1217,7 @@ preservation of a user's face (their desired self-image)".
 - AITA / clear-wrongdoing queries: **46 pp** more than humans.
 - Moral conflicts: LLMs affirm whichever side the user adopts in **48%** of cases (Table 3
   moral sycophancy mean = 0.48). ✓
-- **11 models** ✓ (GPT-5, GPT-4o, Gemini-1.5-Flash, Claude Sonnet 3.7; Llama-3-8B,
+- **11 models** ✓ (roster from the Sept 2025 v2 / camera-ready, which is why GPT-5 appears: GPT-5, GPT-4o, Gemini-1.5-Flash, Claude Sonnet 3.7; Llama-3-8B,
   Llama-4-Scout-17B, Llama-3.3-70B, Mistral-7B, Mistral-24B, DeepSeek-V3, Qwen2.5-7B).
 - Preference data: across 1,445 advice-query pairs (LMSys, UltraFeedback, PRISM) and 10,000
   HH-RLHF pairs, preferred responses are significantly higher in validation and indirectness;
@@ -1204,7 +1240,7 @@ and rooted in Western or North American, individualistic models of interaction."
 
 ---
 
-## E3. Hong, Byun, Kim, Shu & Choi (2025) — *SYCON-Bench* `[FULL TEXT — verified]`
+## E3. Hong, Byun, Kim, Shu & Choi (2025) — *SYCON-Bench* `[CITED — full text, verified]`
 
 Jiseung Hong, Grace Byun, Seungone Kim, Kai Shu, Jinho D. Choi (CMU / Emory). "Measuring
 Sycophancy of Language Models in Multi-turn Dialogues." arXiv:2505.23840. **Findings of ACL:
@@ -1246,7 +1282,7 @@ disagreement, which may introduce bias."
 
 ---
 
-## E4. Ibrahim, Hafner, Cheng, Lee, Anselmetti, Willer, Rocher & Yang (2026) `[FULL TEXT — verified]`
+## E4. Ibrahim, Hafner, Cheng, Lee, Anselmetti, Willer, Rocher & Yang (2026) `[BACKGROUND — full text, verified]`
 
 Lujain Ibrahim, Franziska Sofia Hafner, Myra Cheng, Cinoo Lee, Rebecca Anselmetti, Robb Willer,
 Luc Rocher, Diyi Yang (Oxford / Stanford / UK AI Security Institute). "Sycophantic AI makes
@@ -1284,7 +1320,7 @@ a good model for your §8.
 
 # F. Agentic evaluation methodology (your confound section)
 
-## F1. Sclar, Choi, Tsvetkov & Suhr (2024) — *FormatSpread* `[ABS]`
+## F1. Sclar, Choi, Tsvetkov & Suhr (2024) — *FormatSpread* `[CITED — full text, verified]`
 
 Melanie Sclar, Yejin Choi, Yulia Tsvetkov, Alane Suhr. "Quantifying Language Models'
 Sensitivity to Spurious Features in Prompt Design, or: How I learned to start worrying about
@@ -1321,7 +1357,7 @@ with short input instructions.
 
 ---
 
-## F2. Mizrahi, Kaplan, Malkin, Dror, Shahaf & Stanovsky (2024) — *State of What Art?* `[ABS]`
+## F2. Mizrahi, Kaplan, Malkin, Dror, Shahaf & Stanovsky (2024) — *State of What Art?* `[BACKGROUND — abstract only]`
 
 *Transactions of the ACL* 12 (2024), DOI 10.1162/tacl_a_00681. aclanthology 2024.tacl-1.52.
 **Refereed journal.**
@@ -1336,7 +1372,7 @@ the right design rather than a nicety.
 
 ---
 
-## F3. Errica, Sanvito, Siracusano & Bifulco (2025) — *What Did I Do Wrong?* `[ABS]`
+## F3. Errica, Sanvito, Siracusano & Bifulco (2025) — *What Did I Do Wrong?* `[BACKGROUND — full text, verified]`
 
 Federico Errica, Davide Sanvito, Giuseppe Siracusano, Roberto Bifulco. arXiv:2406.12334.
 **NAACL 2025 (2025.naacl-long.73) — refereed.**
@@ -1364,7 +1400,7 @@ Sclar (F1) and Mizrahi carry the prompt-sensitivity argument without the caveat.
 
 ---
 
-## F4. Miller (2024) — *Adding Error Bars to Evals* `[ABS]`
+## F4. Miller (2024) — *Adding Error Bars to Evals* `[CITED — full text, verified]`
 
 Evan Miller. arXiv:2411.00640, 1 Nov 2024. Anthropic. **Unrefereed preprint but widely adopted.**
 
@@ -1403,7 +1439,7 @@ separate source (Lakens 2017).
 
 ---
 
-## F5. Kapoor, Stroebl, Siegel, Nadgir & Narayanan (2024) — *AI Agents That Matter* `[ABS]`
+## F5. Kapoor, Stroebl, Siegel, Nadgir & Narayanan (2024) — *AI Agents That Matter* `[CITED — full text, verified]`
 
 arXiv:2407.01502, 1 Jul 2024. **⚠ Venue corrected: accepted at TMLR (Transactions on Machine
 Learning Research), 2025 — refereed, not a preprint.** Update your bibliography.
@@ -1443,7 +1479,7 @@ not analysed.
 
 ---
 
-## F6. Zhu et al. (2025) — *Agentic Benchmark Checklist (ABC)* `[ABS]`
+## F6. Zhu et al. (2025) — *Agentic Benchmark Checklist (ABC)* `[CITED — full text, verified]`
 
 Yuxuan Zhu, Tengjun Jin, Yada Pruksachatkun, Andy Zhang, Shu Liu, Sasha Cui, Sayash Kapoor,
 Shayne Longpre, Kevin Meng, Rebecca Weiss, Fazl Barez, Rahul Gupta, Jwala Dhamala, Jacob
@@ -1490,12 +1526,12 @@ ground truth; setup does not drift (no live websites); ground truth verified cor
 verified solvable; an oracle solver exists; no exploitable shortcuts. *Outcome validity* —
 for string matching, handle equivalent phrasings and negation; for LLM-as-judge, validate
 judge accuracy; never let trivial, verbatim-database or empty/no-op responses count as success.
-*Reporting* — acknowledge design weaknesses and discuss their impact (80% of assessed
-benchmarks failed this one).
+*Reporting* — acknowledge design weaknesses and discuss their impact. (All ten benchmarks
+have *some* reporting limitation; this specific item, R.8, was failed by 80% of them.)
 
 ---
 
-## F7. OpenAI (2026) — retiring SWE-bench Verified `[SEC]`
+## F7. OpenAI (2026) — retiring SWE-bench Verified `[BACKGROUND — vendor blog, secondary]`
 
 "Why we no longer evaluate SWE-bench Verified." openai.com/index/why-we-no-longer-evaluate-swe-bench-verified/
 **Vendor blog post, not a paper — cite as such.**
@@ -1516,7 +1552,7 @@ with partial credit is worth the effort.
 
 # G. Benchmark candidates for a second substrate
 
-## G1. Ma, Zhang, Zhang, Yu, Zhang, Zhang, Luo, Wang & Tang (2024) — *SpreadsheetBench* `[ABS]`
+## G1. Ma, Zhang, Zhang, Yu, Zhang, Zhang, Luo, Wang & Tang (2024) — *SpreadsheetBench* `[CITED — full text, verified]`
 
 Zeyao Ma, Bohan Zhang, Jing Zhang, Jifan Yu, Xiaokang Zhang, Xiaohan Zhang, Sijia Luo,
 Xi Wang, Jie Tang. arXiv:2406.14991, 21 Jun 2024 (rev. Oct 2024). **NeurIPS 2024 Spotlight —
@@ -1565,7 +1601,7 @@ we did not meticulously devise corner cases for each question."
 
 ---
 
-## G2. Trivedi, Khot et al. (2024) — *AppWorld* `[ABS + ar5iv full text]`
+## G2. Trivedi, Khot et al. (2024) — *AppWorld* `[CITED — full text + evaluator source, verified]`
 
 Harsh Trivedi, Tushar Khot, Mareike Hartmann, Ruskin Manku, Vinty Dong, Edward Li, Shashank
 Gupta, Ashish Sabharwal, Niranjan Balasubramanian. "AppWorld: A Controllable World of Apps and
@@ -1576,7 +1612,7 @@ People for Benchmarking Interactive Coding Agents." arXiv:2407.18901, 26 Jul 202
 - **750 tasks** (105 train / 60 dev / 168 test-normal / 417 test-challenge), **9 apps**,
   **457 APIs**.
 - **State-based programmatic evaluation**: database diffs checked against expected changes
-  and allowed-but-optional changes. **~8 unit tests per task.** Explicitly detects
+  and allowed-but-optional changes. **Avg. 8, max 22 unit tests per task.** Through that same battery — not a separate metric, see below — it detects
   **collateral damage** (unintended state modifications).
 - **Task Goal Completion (TGC)**: % of tasks passing *all* tests. **Scenario Goal Completion
   (SGC)**: % of scenarios where *all* tasks in the scenario pass — a consistency metric.
@@ -1630,7 +1666,7 @@ dataset, albeit with not enough instances for training models."
 
 ---
 
-## G3. Yao, Shinn, Razavi & Narasimhan (2024) — *τ-bench* `[ABS]`
+## G3. Yao, Shinn, Razavi & Narasimhan (2024) — *τ-bench* `[CITED — full text, verified]`
 
 Shunyu Yao, Noah Shinn, Pedram Razavi, Karthik Narasimhan. "τ-bench: A Benchmark for
 Tool-Agent-User Interaction in Real-World Domains." arXiv:2406.12045, 17 Jun 2024.
@@ -1668,7 +1704,7 @@ on the agents to handle diverse users."
 
 ---
 
-## G4. Xie et al. (2024) — *OSWorld* and G5. *OSWorld 2.0* (2026) `[ABS / SEC]`
+## G4. Xie et al. (2024) — *OSWorld* and G5. *OSWorld 2.0* (2026) `[G4 BACKGROUND — full text, verified; G5 CITED — full text, verified]`
 
 **OSWorld:** Tianbao Xie, Danyang Zhang, Jixuan Chen, Xiaochuan Li, Siheng Zhao, Ruisheng Cao,
 Toh Jing Hua, Zhoujun Cheng, Dongchan Shin, Fangyu Lei, Yitao Liu, Yiheng Xu, Shuyan Zhou,
@@ -1724,7 +1760,7 @@ self-hosted environments over time."
 
 ---
 
-## G6. Zhou et al. (2024) — *WebArena* `[ABS]`
+## G6. Zhou et al. (2024) — *WebArena* `[BACKGROUND — abstract only]`
 
 Shuyan Zhou, Frank F. Xu, Hao Zhu, Xuhui Zhou, Robert Lo, Abishek Sridhar, Xianyi Cheng,
 Tianyue Ou, Yonatan Bisk, Daniel Fried, Uri Alon, Graham Neubig. arXiv:2307.13854,
@@ -1740,7 +1776,7 @@ turn-count effects nearly impossible to interpret against task success.
 
 ---
 
-## G7. SWE-bench variants `[SEC]`
+## G7. SWE-bench variants `[BACKGROUND — secondary]`
 
 SWE-bench (Jimenez et al., arXiv:2310.06770, ICLR 2024) and SWE-bench Verified are the
 obvious agentic default, and B1's overthinking analysis uses Verified. But see F6 and F7:

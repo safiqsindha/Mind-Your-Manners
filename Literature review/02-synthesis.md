@@ -100,7 +100,7 @@ literature, not a contradiction of it.** That is a much safer framing than the f
 
 | Source | Finding | How much weight it carries |
 |---|---|---|
-| Kumar & Dobariya 2026 | Sycophantic is the **longest** condition for GPT-4o (290.59t vs Rude 223.18t) | Real. Peer-adjacent, 10 runs, temperature 0. Must be addressed. |
+| Kumar & Dobariya 2026 | Sycophantic is the **longest** condition for GPT-4o (290.59t vs Rude 223.18t) | Real. Unrefereed preprint, but 10 runs at temperature 0 with tight CIs. Must be addressed. |
 | Yin et al. 2024 | Summarization length generally shortens as politeness decreases | Real. Largest-n study in the area. |
 | Gandhi & Gandhi 2025 | Positive prompts → responses **8.1% longer** | **Much weaker than the first draft implied — see below.** |
 
@@ -118,8 +118,10 @@ must not be used.** See `results/analysis/praise_turn_vs_trajectory.py`.
 
 The hypothesis was that praise lengthens the final turn while shortening the trajectory, giving
 a turn-level/trajectory-level dissociation that Schegloff & Sacks predicts. **The data says
-otherwise.** Praise shortens the trajectory *and* reduces total output, with no compensating
-lengthening anywhere:
+otherwise.** Praise *alone* shortens the trajectory *and* reduces total output — on Q1, Q2 and in the
+Q4-vs-Q5 contrast — with no compensating lengthening anywhere. (Q4 itself sits *above* control on
+both turns and total tokens, +3,101 [+354, +5,859], because its continuation clause does; do not
+generalise "praise cuts output" past the praise-alone arms.)
 
 | Contrast (paired by task, cluster bootstrap) | Δ turns | Δ tokens/turn |
 |---|---|---|
@@ -153,7 +155,9 @@ remains a plausible mechanism for the *stopping* result, which is what the data 
 GPT-3.5 MMLU 60.02 → 51.93 (level 8 → 1); Llama2-70B 55.11 → **28.44**. Defences, in order:
 (i) effects concentrate at the extreme and in weaker models — **GPT-4 in their own Table 1 is
 essentially flat** (75.82 at level 8, 76.47 at level 1); (ii) A2 and A5 both show modern models
-flattening; (iii) your DV is agentic behaviour, not MCQ accuracy. Make all three.
+flattening — but describe A5 as "largely but not completely null, uncorrected for multiplicity"
+(2 of 12 domain-level and 4 of 54 task-level comparisons survive), or a reviewer who has read it
+will; (iii) your DV is agentic behaviour, not MCQ accuracy. Make all three.
 
 ### (c) Flat per-step thinking, against Kumar & Dobariya's token results
 
@@ -174,8 +178,8 @@ show signs of improvement").
 
 **Huang et al.'s "No Change" rates: GPT-4 90.5% / 90.5%, GPT-4-Turbo 96.0% / 88.0%.** These are
 not your statistic — theirs is "answer unchanged after two rounds of intrinsic correction on
-reasoning QA", yours is "first attempt was the best of those made, in a 20-turn
-execution-grounded agent". **But they sit right beside your 86% and a reviewer will notice.
+reasoning QA", yours is "first attempt was the best of those made, in a 10-turn (Stage 0) or 20-turn (Stage 1)
+execution-grounded agent". **But they sit right beside your 90% and 87% / 85%, and a reviewer will notice.
 Distinguish them in the text.**
 
 **Also pick one first-attempt figure and name its run.** `RESULTS.md` reports three: **90%**
@@ -184,7 +188,13 @@ already the best"), and **87% / 85%** (Stage 1, ceiling-20, Luna / GLM). The "~8
 the Stage 1 average. Quoting 86% next to Huang's 88–96% without saying which run and ceiling
 invites exactly the comparison you want to control.
 
-### (f) Nothing contradicts §2, §3 or §4.
+### (f) Nothing contradicts §2 or §3. The only pressure on §4 is (c) above — and your own data.
+
+State §4 as *predominantly* persistence, not *exclusively*. `RESULTS.md` reports thinking per
+turn flat across the seven register arms (250–299 tokens) **except threatening, which sits
+20–30% above neutral on every subsequent call — "two channels"**. And in the praise design the
+"work remains" arm raises tokens per turn (+396 [+163, +646], `praise_turn_vs_trajectory.txt`).
+Both exceptions belong in the paper; neither is in the brief.
 
 ---
 
@@ -224,7 +234,7 @@ and **Sclar et al. 2024** for the statistics, **Schegloff & Sacks 1973** for §5
      dedicated", "give it your best", "Stay determined and keep moving forward"). Exactly one
      (EP08) is close to pure affect. **Reproduce the table.**
    - **Meincke et al.**: of eight threat/tip prompts, the only one that moved performance
-     (+8.8 pp, CI [0.033, 0.142]) is **Mom Cancer** — the only one containing a
+     (RD = 0.088, 95% CI [0.033, 0.142], i.e. +8.8 pp) is **Mom Cancer** — the only one containing a
      scope-and-completeness instruction. Pure-affect threats and tips did nothing.
      **Your dissociation, reproduced independently, in a different paradigm, without the
      authors noticing.**
@@ -233,7 +243,9 @@ and **Sclar et al. 2024** for the statistics, **Schegloff & Sacks 1973** for §5
    Hozez already separate the channels: `deep_thinking` raises reasoning volume 2.2× with "no
    new functional units" (effort-per-step), while `max_certainty` adds "+1.75 post-success
    calls" (step count). The tokens-vs-turns distinction is not itself new. **Your contribution
-   is that a mid-task social-register demand loads *exclusively* onto persistence**, against
+   is that a mid-task social-register demand loads *predominantly* onto persistence — every
+   register arm but threatening is flat per call, and threatening's +20–30% is an exception you
+   must report, not bury —** against
    their mixed picture. It also directly tests A2's "thinking budget / soft trigger"
    conjecture, which its authors flag as unvalidated.
 
@@ -269,7 +281,7 @@ general proposition.
 |---|---|---|---|
 | **"no-op turn"** | **"redundant step"** | RedundancyBench (2605.29893) | `RESULTS.md` defines a no-op turn as one "after which the graded range is unchanged" — an *output* criterion. That maps onto their counterfactual definition (a step is redundant iff removing it does not flip success to failure), not onto their **"Duplicated Step"** subtype, which additionally requires *identical tool name, args and output* — your definition does not require identical code. Cite "Duplicated Step" as the nearest named subtype, not as equivalent. ⚠ Do not compare base rates: some of their redundant steps are synthetically injected, and they report no overall redundant fraction. |
 | "agent stops early" | **"premature disengagement"** — *for the failure mode, not for your effect* | Cuadron et al. | Their coinage, verbatim: "LRMs sometimes terminate tasks based solely on their internal simulation… either through direct abandonment or by delegating hypothetical action sequences." ⚠ **But your Stage 0 regrade shows the praise stop is *not* premature**: "the share of trajectories still improving when they stopped is 2–6% in every arm, with no gap between praise and control." So say praise induces *earlier* disengagement that the per-turn regrade shows is not premature — that is a sharper claim than borrowing a term for a failure you did not observe. Also gives you **"analysis paralysis"**. |
-| "tone" | **"social register"** | A3 defines it | Makes the affect/demand decomposition sayable: register is the variable, affect and demand its components. |
+| "tone" | **"social register"** | A3 defines it ("the specific variety of language, vocabulary, and grammar a person uses depending on the social context, the degree of formality, and their relationship with the audience") | Makes the affect/demand decomposition sayable: register is the variable, affect and demand its components. |
 | "when the cue bites" | **"turn of stop"**, by explicit analogy to **Turn of Flip** | SYCON-Bench | Same estimator design (mean earliest turn of divergence from expected behaviour). ⚠ **Say the analogy is structural, not substantive** — they measure stance conformity, not work quantity. Better still, use them as the mirror image: disagreement changes what the model says; praise changes how much it does. |
 | "consistency across runs" | **pass^k** | τ-bench | "the chance that all k i.i.d. task trials are successful, averaged across tasks." Standard. |
 | "effort" | split into **reasoning tokens per step** and **trajectory length in steps** | Weinberger & Hozez | Unqualified "effort" is what makes your result look inconsistent with A3's when it isn't. |
@@ -341,8 +353,11 @@ positive decimal under 1" for partial achievement. Near-binary in practice, not 
 
    What survives intact: the bare closing cue stops hardest (−1.443 [−1.860, −1.036]), praise
    shortens relative to control (−1.080 and −0.934), "work remains" alone lengthens (+1.849
-   [+1.387, +2.284]), per-turn effort is flat on every contrast, and accuracy does not move
-   (0.299–0.349, all CIs overlapping).
+   [+1.387, +2.284]), per-turn effort is flat on every *praise* contrast (the "work remains" arm is the exception,
+   +396 tokens/turn [+163, +646]), and accuracy does not move — per-arm pass rates with
+   cluster-bootstrap CIs and paired contrasts are in the accuracy section of
+   `results/analysis/praise_turn_vs_trajectory.txt`, and `RESULTS.md` puts it as "every arm
+   within 2.6 points of control, all p>0.13".
 3. **Reframe §7 and the accuracy null as replication**, and **reframe §6 as testing Huang et
    al.'s untested escape hatch** rather than as confirming them.
 4. **Quote the three confound tables** (A1 Table 1, A3 Table 2 + VADER, EmotionPrompt EP01–EP11)
@@ -360,3 +375,8 @@ positive decimal under 1" for partial achievement. Near-binary in practice, not 
    literature's size. For equivalence-testing language you need a separate source (Lakens 2017).
    And compare against Sclar's **median 7.5–10 point** spread, not the 76-point single-task
    maximum.
+8. **Reconcile `RESULTS.md`'s own replication numbers before quoting the §8 story.** Its prose
+   says the same praise text "gave −0.62 turns in the probe run and −1.14 here", while its own
+   tables give **−0.59** (probe) and **−1.08** (praise run). Direction and significance are
+   unaffected, but a paper about point estimates not replicating cannot afford to cite two
+   different pairs of point estimates for the same contrast.

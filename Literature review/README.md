@@ -6,13 +6,14 @@ Prepared 2026-09-14 for the workshop paper.
 
 | File | What's in it |
 |---|---|
-| [`01-sources.md`](01-sources.md) | 28 cited sources plus 10 background/cut entries, grouped A–G per the brief. Citation, claim, method, numbers, relation to us, quotable line. |
+| [`01-sources.md`](01-sources.md) | 43 entries grouped A–G per the brief — 29 cited, 14 background — every heading tagged `CITED` or `BACKGROUND` with its read depth. Citation, claim, method, numbers, relation to us, quotable line. |
 | [`02-synthesis.md`](02-synthesis.md) | The five requested summaries: preempts, contradictions, must-cites, gaps, terminology. **Read this first.** |
 | [`03-verification-log.md`](03-verification-log.md) | Every error found and corrected, claims downgraded, and what remains UNVERIFIED. |
 
-**All 28 cited sources have been read in full text.** A second verification pass over the 24
-that had only been read at abstract level found 15 citation-level errors, downgraded 7 claims,
-and strengthened 8 — all recorded in the log. Three corrections change the paper rather than a
+**All 29 cited sources have been read in full text.** A second verification pass over the 25
+that had only been read at abstract level found 15 citation-level errors, downgraded 8 claims,
+and strengthened 9 — all recorded in the log. A third pass cross-checked the review against
+`RESULTS.md` and corrected how it described our *own* numbers (see the log's "Pass 3"). Three corrections change the paper rather than a
 footnote:
 
 - **arXiv:2608.01347 has six versions.** The current v6 changed the title, reports 4,644 runs
@@ -51,7 +52,8 @@ See [`02-synthesis.md` §2](02-synthesis.md).
 
 **That contradiction has now been tested against our own data, and the escape route I proposed
 is closed** (`results/analysis/praise_turn_vs_trajectory.py`). Praise shortens the trajectory
-*and* cuts total output; there is no compensating longer final turn. (Per-turn tokens are not in
+*and* cuts total output on the praise-alone arms and in the Q4-vs-Q5 contrast; there is no
+compensating longer final turn. (Per-turn tokens are not in
 the graded records, but they *are* in the per-call raw logs, one log per arm — recovery is free
 if those logs still exist.)
 
@@ -63,7 +65,7 @@ Make sure the paper's prose follows the table. Details in `02-synthesis.md` §2(
 
 ## Rules followed
 
-- Every arXiv ID in the brief was checked against arXiv directly; all three exist.
-- All 28 cited papers were read in full text, not from abstracts — see the log.
+- Every arXiv ID cited was checked against arXiv directly, including the three named in the brief.
+- All 29 cited papers were read in full text, not from abstracts — see the log.
 - Negative results and failed replications are included and flagged.
 - Anything not verified is marked **UNVERIFIED** inline.
