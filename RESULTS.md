@@ -936,8 +936,17 @@ has ever moved accuracy.
 
 ### The magnitude does not replicate, and that is the sixth time
 
-The SAME praise text, model and tasks gave -0.62 turns in the probe run and
--1.14 here. Direction and significance replicate cleanly; the point estimate
+The SAME praise text, model and tasks gave **-0.59** turns in the probe run
+and **-1.08** here, task-clustered and paired -- the estimator used everywhere
+else in this study. (An earlier version of this paragraph quoted -0.62 and
+-1.14. Those are the same contrasts computed as unpaired arm-mean
+differences, which is a different estimator and was not the one the tables
+report. Both are correct; only one is comparable to the rest of the study,
+and a claim ABOUT point estimates failing to replicate cannot afford to cite
+two different pairs of point estimates for the same contrast. Verified by
+recomputing both ways from the archived records.)
+
+Direction and significance replicate cleanly; the point estimate
 is not stable, and should not be quoted as one. This is the sixth measured
 quantity in this study that moved materially on re-measurement, and the
 pattern is consistent enough to be a standing assumption rather than a
