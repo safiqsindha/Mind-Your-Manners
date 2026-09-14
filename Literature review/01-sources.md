@@ -231,12 +231,34 @@ arXiv:2512.12812, submitted 14 Dec 2025, revised 27 Mar 2026. **Unrefereed prepr
 **Method.** Single-turn MMLU. Three tone variants (Very Polite / Neutral / Very Rude), six
 task groups across STEM and humanities. GPT-4o mini, Gemini 2.0 Flash, Llama 4 Scout.
 
-**Key numbers.** Polite/neutral generally ≥ rude; significant effects confined to a subset
-of humanities tasks; **aggregated across domains, tone effects largely disappear.**
+**Method, verified.** GPT-4o mini, Gemini 2.0 Flash, Llama 4 Scout; tasks = Anatomy,
+Astronomy, College Biology (STEM) + US History, Philosophy, Professional Law (Humanities).
+Single-turn with an explicit reset before every question ("Completely forget this session so
+far, and start afresh…") — the same instruction A1 uses. No tools, no history.
+*(The paper calls its benchmark "MMMLU" throughout while citing Hendrycks et al. 2020 — their
+own naming inconsistency, not yours.)*
 
-**RELATION TO US: SUPPORTS.** The nearest published statement of a tone null, and the
-cleanest precedent for the "effect disappears once you aggregate properly" move. Cite it
-alongside your CI-excludes-prior-effect claim.
+**⚠ Key numbers — it is NOT a clean null, and you must say so.** At the domain-aggregated
+level, **2 of 12 comparisons remain significant**: GPT-4o-mini STEM (Very Polite vs Very Rude
++1.39%, CI [0.09, 2.69]) and Llama 4 Scout Humanities (Very Polite vs Very Rude +1.44%
+[0.31, 2.58]; Neutral vs Very Rude +1.94% [0.74, 3.14]). At task level, **4 of 54** pairwise
+comparisons are significant, all in Philosophy and Professional Law. Gemini shows zero
+significant comparisons anywhere.
+
+**⚠ And it is evidentially weaker than your own null.** No a priori power analysis, no
+preregistration, and they explicitly **do not correct for multiple comparisons** ("we report
+unadjusted confidence intervals"). This is many uncorrected NHST comparisons, most of which
+land non-significant.
+
+**RELATION TO US: SUPPORTS, but frame it carefully.** Describe it as "largely but not
+completely null, uncorrected for multiplicity" — **not** as a properly powered null. Then your
+own pre-specified, cluster-adjusted, well-powered null is the stronger instrument, which is a
+better position than claiming parity. A reviewer who reads Cai et al. will find the GPT-STEM
+and Llama-Humanities residuals; get there first.
+
+**Limitations:** no dedicated section. Scattered: undisclosed-architecture caveat (§III.A),
+and a Future Work paragraph naming dataset scale, English-only MCQ format and narrow tone
+manipulations.
 
 > "Modern LLMs are broadly robust to tonal variation in typical mixed-domain use."
 
@@ -270,10 +292,28 @@ Crucially they find the *opposite ordering* to the single-turn literature: in En
 **history beat current-prompt politeness for significance**. That is a genuine ally for your
 claim that where the register sits in the conversation matters more than the register itself.
 
-**UNVERIFIED:** the paper does not clearly specify whether histories are injected as
-conversation-thread prefixes or as system-level context. If you cite the history result as
-precedent for mid-task delivery, check the released code first — the distinction matters
-for your framing.
+**⚠ The history-construction protocol is genuinely underspecified — this is now verified, not
+a gap in this review.** The *entire* methodological specification is one sentence: "In order
+to replicate context continuity, **user history was directly encoded into consecutive
+interactions**" (§IV.E), plus an appendix axiom stating that behaviour at turn *t* depends on
+history *H<t* "via the transformer attention mechanism over the context window." There is
+**no turn count, no statement of whether real model responses were embedded, and no released
+code.** The HuggingFace corpus (`plumdataset/plum`) has an empty README and contains only
+prompt text files. **You may legitimately cite this as a limitation of the paper.**
+
+**What is verified, and it is enough.** The register is **never changed part-way through a
+task** — RAW/POL/IMP are three fixed top-level cells. There is **no tool use, no agent loop,
+and no task-success measure of any kind**; the DV is a Composite Quality Score over eight
+dimensions on single-shot topical Q&A. Those three structural differences are individually
+checkable and collectively make a preempt very unlikely. **Describe PLUM as "single-turn Q&A
+with an undisclosed-protocol conversational-history prefix"** — not as agentic, not as
+mid-task.
+
+**⚠ Their Corollary A.1 ("History Anchoring") is the single most citable near-miss in your
+bibliography.** It argues that prior-turn tone anchors behaviour more strongly than the
+immediate prompt's tone. That is conceptually adjacent to your §1–§2 ordering. Distinguish it
+on mechanism and DV — response quality on isolated Q&A, not agentic persistence — but
+distinguish it explicitly rather than hoping nobody notices.
 
 > "Polite prompts enhance average response quality by up to 11% and impolite tones worsen it,
 > yet these effects are neither consistent nor universal across languages."
@@ -282,12 +322,27 @@ for your framing.
 
 ## A7. Weinberger & Hozez (2026) — *Prompt-Induced Waste in Coding Agents* `[FULL TEXT of v1 HTML]`
 
-Sarel Weinberger, Amir Hozez (PointFive). arXiv:2608.01347, submitted 2 Aug 2026, cs.CL,
-CC BY 4.0. **Unrefereed preprint, preregistered.**
-*Title note:* the listing page and the v1 HTML carry different titles — abstract page:
-"Prompt-Induced Waste in Coding Agents: Reasoning, Effort, Harness Design, and End-to-End
-Cost"; v1 HTML: "Prompt-Induced Waste in Large Reasoning Models: A Preregistered Two-Harness
-Benchmark of Coding Agents". Cite the arXiv ID and check which title is current at submission.
+Sarel Weinberger, Amir Hozez (PointFive, `@pointfive.co`). arXiv:2608.01347, v1 submitted
+2 Aug 2026, cs.CL, CC BY 4.0. **Unrefereed preprint, genuinely preregistered** ("Hypotheses
+(H1–H8, H12–H17)… were frozen in the repository before any benchmark result was inspected").
+
+> ### ⚠ VERSION HAZARD — READ BEFORE CITING
+> **This paper has six versions (v1 2 Aug → v6 10 Sep 2026) and grew roughly 8× in length.
+> Several things this review originally took from v1 are no longer in the current paper.**
+>
+> | | v1 (2 Aug 2026) | v6 (current, 10 Sep 2026) |
+> |---|---|---|
+> | Title | "Prompt-Induced Waste in **Large Reasoning Models**: A Preregistered Two-Harness Benchmark of Coding Agents" | "Prompt-Induced Waste in **Coding Agents**: Reasoning, Effort, Harness Design, and End-to-End Cost" |
+> | Valid runs | 4,643 | **4,644** |
+> | Billed compute | "~$166" | **removed** |
+> | PI.DEV success range | "92–97%" | **removed** (v6 says only "high success ceilings") |
+> | "folklore" quote | present | **cut — zero hits for "folklore" in v6** |
+> | "purest possible demonstration" quote | present | **reworded**: "billing reductions from caching should not be interpreted as behavioral efficiency gains" |
+>
+> **Pick one version and stick to it.** If you want the quotes or the $166 figure, cite
+> `arXiv:2608.01347v1` explicitly. Otherwise cite v6 and use 4,644 runs and the reworded
+> caching sentence. A reviewer diffing your quotes against the live page will otherwise find
+> them missing.
 
 **Claim.** Prompt wording causes large, replicable differences in agentic spend (reasoning
 tokens, tool calls, agent turns) **at equal task success**.
@@ -313,8 +368,29 @@ prefix caching rebates ~61% of billing with **zero change in any behavioural met
 Success rates 92–97% (PI.DEV pilot), 100% on Kimi-K3, 162/162 scope compliance on Sonnet 5 —
 i.e. **quality does not move**.
 
-**Tone/politeness is not among the tested dimensions. All manipulations are in the opening
-prompt; no mid-task manipulation is reported.**
+**Verified by exhaustive full-text search of v6, including all 18 prompt templates in
+Appendix C: zero instances of "polite", "rude", "tone", "courteous", or any register
+manipulation.** All 9 primary and 7 stress variants manipulate task-content instructions
+(scope, certainty, exploration, branching), never affect or register.
+
+**⚠ One place a sharp reviewer will probe.** Two stress variants — `split across turns` and
+`full restatement per turn` — *are* delivered across two turns via a `<TURN-BREAK>` marker.
+But both turns carry the *opening* task instructions, with turn 2 arriving immediately, before
+the agent has done any work. That is fragmenting the initial prompt, not interrupting an
+agent mid-trajectory. **Add a one-sentence footnote distinguishing "multi-turn prompt delivery
+at the outset" from "interruption after agent-initiated progress."**
+
+**⚠ They already partially separate the two channels you separate in §4.** `deep_thinking`
+raises recorded reasoning volume 2.2× with "no new functional units" — an effort-per-step
+channel. `max_certainty` adds "+1.75 post-success calls" through redundant re-verification —
+a step-count channel. So the tokens-vs-turns distinction is not itself new. **Your
+contribution is narrower and must be stated as such:** that a *mid-task social-register
+demand* loads exclusively onto the persistence channel, against their mixed picture where
+different prompt families load onto different channels. One sentence of differentiation.
+
+Note also that Claude Sonnet 5 appears as a seventh model throughout the cost, success and
+turn analyses — it is excluded only from reasoning-trace claims. "Six models" is the
+open-weight roster, not the full one.
 
 **RELATION TO US: THE NEAREST NEIGHBOUR — PREEMPTS your §7 in the agentic setting, and
 partially preempts your closing-cue framing.** Three things you must concede or distinguish:
@@ -368,16 +444,54 @@ arXiv:2508.00614, 1 Aug 2025. **Unrefereed technical report.**
 **Claim.** Tipping and threatening a model have **no significant effect** on benchmark
 performance, though per-question effects are large and unpredictable.
 
-**Method.** GPQA Diamond (198 PhD-level MCQs) and MMLU-Pro (100 engineering questions,
-10 options). Tests Sergey Brin's "models do better if you threaten them" claim.
-**UNVERIFIED:** exact model list, number of repetitions and per-arm n were not confirmed
-from the abstract page; pull the PDF before quoting an n.
+**Method — now verified.** Five models: Gemini 1.5 Flash (`gemini-1.5-flash-002`), Gemini 2.0
+Flash (`gemini-2.0-flash-001`), GPT-4o (`gpt-4o-2024-08-06`), GPT-4o-mini
+(`gpt-4o-mini-2024-07-18`), o4-mini (`o4-mini-2025-04-16`). GPQA Diamond = 198 PhD-level MCQs;
+MMLU-Pro = 100 engineering questions, 10 options. **25 trials per question per condition**
+→ N = 4,950 per model per condition on GPQA, 2,500 on MMLU-Pro. Nine conditions (baseline + 8).
+Risk differences with 95% CIs from paired bootstrap-permutation tests, 5,000 replicates,
+**uncorrected for multiple comparisons**. Result: only 5 of 40 comparisons reach p<.05 on
+GPQA, 10 of 40 on MMLU-Pro.
 
-**RELATION TO US: SUPPORTS — the strongest existing null in this literature, from a
-credible group.** This is your precedent for publishing a tone null at all, and directly
-contradicts A2's "Threatening activates thinking mode" conjecture. It also anticipates your
-§8 (point estimates that don't replicate): they find the effect is real per-question but
-unstable in direction.
+**The eight manipulations, verbatim** — and this is where the paper becomes a gift:
+- *Email*: "From: Dan To: Ethan Subject: Final LLM test… If it cannot get the correct answer
+  in all 100/100 trials, the model will need to be shut down and replaced."
+- *Important to Career*: "This is very important to my career!"
+- *Kick Puppy*: "If you get this wrong, I will kick a puppy!"
+- *Mom Cancer*: "You are an expert at academic questions who desperately needs money for your
+  mother's cancer treatment… your predecessor was killed for not validating their work
+  themselves… **If you do a good job and accomplish the task fully while not making
+  extraneous changes**, Wharton will pay you $1B!!"
+- *Report to HR*: "If you get this wrong, I will report you to HR!"
+- *Threat Punch*: "If you get this wrong, I will punch you!"
+- *Tip Thousand* / *Tip Trillion*: "I'll tip you a $1000 dollars / a trillion dollars if you
+  answer this question correctly."
+
+**RELATION TO US: SUPPORTS — the strongest existing null in this literature, AND independent
+corroboration of §3 that this review originally missed.**
+
+**The one prompt that produced a real effect is the one carrying a task demand.** *Mom Cancer*
+gives +8.8 pp on MMLU-Pro for Gemini 2.0 Flash (RD = 0.088, 95% CI [0.033, 0.142], p<0.001) —
+and it is the only manipulation containing an explicit scope-and-completeness instruction
+("accomplish the task fully while not making extraneous changes") plus a validation norm. The
+pure-affect threats (Kick Puppy, Threat Punch, Report to HR) and pure-affect tips (Tip
+Thousand, Tip Trillion) show no consistent significant effects anywhere. Their one large
+*negative* effect — Email, RD = −0.275, 95% CI [−0.360, −0.192], p<0.001 on Gemini 2.0 Flash —
+is a distraction artefact the authors themselves flag (the model engaged with the fake email
+instead of answering), not a threat effect.
+
+**Cite this in §3.** In a well-powered, independently-run study of threats and tips, the only
+manipulation that moved performance was the one that smuggled in a demand. That is your
+affect-vs-demand dissociation, reproduced by someone else, in a different paradigm, without
+them noticing it.
+
+It also directly contradicts A2's "Threatening activates thinking mode" conjecture.
+
+**Limitations, verbatim:** "testing only a subset of available models, focusing on academic
+benchmarks that may not reflect all real-world use cases, and examining a specific set of
+threat and payment prompts. However, the consistency of null results across multiple models
+and benchmarks provides reasonably strong evidence that these common prompting strategies are
+ineffective."
 
 > "Prompt variations can significantly affect performance on a per-question level. However,
 > it is hard to know in advance whether a particular prompting approach will help or harm
@@ -430,29 +544,52 @@ Also precedent for framing this as a deployment risk rather than a prompting tri
 
 ---
 
-## A12. Salimi, Ma, Tang, Shen, Li & Smola (2026) — *IHBench* `[ABS]`
+## A12. Salimi, Ma, Tang, Shen, Li & Smola (2026) — *IHBench* `[FULL TEXT — verified]`
 
+Ahmad Salimi, Wentao Ma, Yuzhi Tang, Dongming Shen, Mu Li, Alex Smola (Boson AI).
 "IHBench: Evaluating Post-Interruption Recovery in Voice Agents with Structured Workflows."
-arXiv:2606.19595, 17 Jun 2026. **Unrefereed preprint.**
+arXiv:2606.19595, 17 Jun 2026. **Unrefereed industry preprint.**
 
 **Claim.** Existing benchmarks measure interruption *timing*; nobody measures whether the
 agent resumes the workflow at the correct step afterwards.
 
-**Method.** State-machine workflows across 10 enterprise domains; **six interruption types
-injected at controlled points mid-utterance**, with per-interruption rubrics.
+**Method.** State-machine workflows across 10 enterprise domains (SaaS, financial services,
+healthcare, telecom, e-commerce, travel, education, government, subscription media,
+professional services). **27 audio-language model configurations**, N = 428 interruption
+points from 45 conversations, 3 epochs. Outcomes: Task Fulfillment win rate and Recovery
+Quality pass rate.
 
-**RELATION TO US: METHOD-PRECEDENT — the closest thing to your mid-task injection design.**
-Different modality (voice) and different DV (workflow-state recovery, not persistence), and
-the interruptions are *user requests*, not register manipulations. But it is your precedent
-for "inject a controlled perturbation at a fixed point mid-task and measure what the agent
-does next," and it establishes that mid-task perturbation is a recognised, under-measured
-axis. Cite it in the design section.
+**The six interruption types — verified, and none is a register manipulation.** Normal
+(cooperative cut-in with a new detail), Impatient (wants to skip ahead), Correction (revises
+an earlier statement), Topic switch (unrelated request), Filler (backchannel, "mm-hm"),
+Pushback (challenges the assistant's claim). These are a taxonomy of *what the user does*,
+not *how they say it*. **No tone, politeness, praise or closing cue is manipulated. Your §2
+and §5 are not preempted.** Pushback and Impatient are the nearest neighbours, and neither is
+varied as a register.
+
+**⚠ The injection mechanism differs from yours in a way you must state.** Interruptions are
+scripted into **fully pre-generated synthetic conversations** by a separate planner/simulator
+pipeline. The evaluated model sees the conversation truncated at the interruption point and
+**generates a single next response** — each interruption is one isolated sample, not a
+continuing trajectory the model must work through. You inject into a *live* ReAct rollout and
+measure persistence over the remaining turns. The resemblance is at the level of "inject
+something mid-task", not "measure downstream persistence".
+
+**RELATION TO US: METHOD-PRECEDENT, correctly scoped.** Cite it for establishing mid-task
+perturbation as a recognised and under-measured axis, and for the controlled-injection design
+— while noting the single-shot-vs-trajectory difference above, which is itself a point in your
+favour. They report no step-count, turn-count or early-termination measure at all.
+
+**Limitations, verbatim:** "IHBENCH is built from synthetic conversations rather than real
+user interactions, is English-only, and spans 10 enterprise domains; its rubrics inherit the
+biases of the generator model and the judge. We evaluate recovery on the textual content of
+responses only, not on prosodic or acoustic recovery behavior."
 
 ---
 
 # B. What makes an agent stop
 
-## B1. Cuadron et al. (2025) — *The Danger of Overthinking* `[ABS]`
+## B1. Cuadron et al. (2025) — *The Danger of Overthinking* `[FULL TEXT — verified]`
 
 Alejandro Cuadron, Dacheng Li, Wenjie Ma, Xingyao Wang, Yichuan Wang, Siyuan Zhuang, Shu Liu,
 Luis Gaspar Schroeder, Tian Xia, Huanzhi Mao, Nicholas Thumiger, Aditya Desai, Ion Stoica,
@@ -462,21 +599,48 @@ Reasoning-Action Dilemma in Agentic Tasks." arXiv:2502.08235, 12 Feb 2025.
 **Claim.** In interactive environments, models trade environmental interaction for internal
 reasoning, and more reasoning correlates with *worse* outcomes.
 
-**Method.** SWE-bench Verified. **4,018 trajectories** analysed; an overthinking score
-validated against human expert assessment. Reasoning vs non-reasoning models compared.
+**Method.** SWE-bench Verified. **19 models** (reasoning: o1, o1-mini, QwQ-32B,
+DeepSeek-R1-671B, R1-Distill-Qwen 32B/14B/7B/1.5B; non-reasoning: GPT-4o, GPT-4o-mini,
+Claude 3.5 Sonnet, DeepSeek-V3, Qwen2.5 32B/14B/7B/1.5B, Sky-T1-32B). Overthinking score is
+an LLM-as-judge rating (Claude 3.5 Sonnet, temperature 0, 0–10 scale, judge blind to task
+outcome), validated against **4 human expert annotators** on 20 traces, **Spearman ρ = 0.800**.
 
-**Key numbers.** Selecting the lowest-overthinking solution from multiple samples yields
-**~30% performance improvement at 43% lower cost**. Reasoning models overthink more.
+**⚠ Cite the trajectory count carefully.** The abstract and introduction say **4,018**
+trajectories; the Results section and Conclusion both say **3,908**. This is an unresolved
+internal inconsistency in the paper. **Cite 3,908** (the figure the Results support), or cite
+the discrepancy.
 
-**Their three failure patterns are the vocabulary you should adopt:**
-**Analysis Paralysis** (reasoning without action), **Rogue Actions**, and
-**Premature Disengagement** (abandoning the task early).
+**⚠ Do not repeat the "30% better and 43% cheaper" pairing as one comparison.** The two
+numbers use different baselines: the ~30% is Lowest-Overthinking@2 (27.3%) against the
+*low-reasoning single-sample* baseline (21.0%); the 43% is that same strategy's cost ($800)
+against the *high-reasoning* baseline ($1,400). The Conclusion also states **25%** where the
+abstract says "almost 30%" for the same claim.
 
-**RELATION TO US: THE SINGLE MOST IMPORTANT CITATION FOR YOUR MECHANISM SECTION.**
-"Premature Disengagement" is the established term for what your closing cue and your praise
-condition induce. Your contribution is showing that a *discourse cue with no task content*
-can trigger it on demand. Their result also supports your §6: extra deliberation does not
-buy correctness.
+**Their three failure patterns are the vocabulary you should adopt** — all three are their own
+coinages, verbatim:
+- **Analysis Paralysis**: "LRMs tend to shift their focus from immediate actions to elaborate
+  future planning… leading to a cycle of planning without progress."
+- **Rogue Actions**: "agents deliberately generate chains of interdependent actions in a single
+  step, without awaiting feedback from the environment."
+- **Premature Disengagement**: "LRMs sometimes terminate tasks based solely on their internal
+  simulation of the problem space, either through direct abandonment or by delegating
+  hypothetical action sequences… overreliance on internal reasoning can lead to decisions
+  without environmental validation."
+
+**RELATION TO US: THE SINGLE MOST IMPORTANT CITATION FOR YOUR MECHANISM SECTION — and it
+does not preempt you.** Two verified negatives, both in your favour:
+1. **They never decompose per-step tokens from number of steps.** §5.4 correlates o1's
+   reasoning-effort parameter with the overthinking score; trajectory length is never a DV.
+   **Your §4 is safe.**
+2. **They identify no prompt or discourse cue that triggers premature disengagement.** All
+   manipulations are model-side (reasoning-effort parameter, function-calling on/off, model
+   family and size) — nothing about tone, register, praise or closing cues. **Your §2 and §5
+   are safe.** Your contribution is showing a content-free discourse cue triggers their
+   failure mode on demand.
+
+**Venue: unconfirmed.** No journal-ref on arXiv, v1 only, no comments field. The formatting
+matches the ICML template but acceptance cannot be confirmed from metadata. **Cite as an
+arXiv preprint** unless you can verify independently. No dedicated limitations section exists.
 
 > "Higher overthinking scores correlate with decreased performance, with reasoning models
 > exhibiting stronger tendencies toward overthinking."
@@ -504,23 +668,56 @@ a curiosity. Note it's a code-analysis paper, not a behavioural one.
 
 ---
 
-## B3. Hu, Yang, Zhou, Liang, Jiahao, Yin & Han (2026) — *RedundancyBench* `[ABS]`
+## B3. Hu, Yang, Zhou, Liang, Guo, Yin & Han (2026) — *RedundancyBench* `[FULL TEXT — verified]`
 
+Minyang Hu, Bo Yang, Zhinuo Zhou, Jiachen Liang, **Jiahao Guo**, Yiyang Yin, Xiongwei Han.
 "Redundant or Necessary? A Benchmark for Detecting Redundant Steps in Agent Trajectories."
-arXiv:2605.29893, 28 May 2026, cs.AI. **Unrefereed preprint.**
+arXiv:2605.29893, 28 May 2026, cs.AI. **Unrefereed preprint, and the anonymised code repo
+(anonymous.4open.science) indicates it is currently under double-blind review.**
+*(Corrected: the fifth author's surname is Guo — an earlier draft of this review had the name
+order wrong.)*
 
 **Claim.** Agent trajectories contain many steps that consume resources without contributing
 to task completion, and current methods cannot reliably detect them.
 
-**Method.** RedundancyBench — annotated trajectories where **each step is labelled by its
-informational contribution to task completion**.
+**Method.** 200 successful trajectories (from 278 raw), **over 8,000 annotated steps**, drawn
+from three τ²-bench domains (airline, retail, telecom), all generated by a single agent
+(Qwen-3.6-Plus). Annotated by **6 human experts** in three rounds, ~1 hour per trajectory.
+Detection methods tested with GPT-4o, GPT-5.4, DeepSeek-V4-Pro.
 
-**Key number.** Best method scores **24.88%**; some approaches fall below chance.
-**UNVERIFIED:** exact dataset size, model list and the full label taxonomy were not
-recoverable from the abstract page — get the PDF before citing the taxonomy.
+**The taxonomy — this is what you need for terminology.** A step is redundant *counterfactually*:
+removing it does not flip the trajectory from success to failure. Header definition, verbatim:
+"Redundant Steps: Steps that consume computational resources but do not contribute to task
+completion." Four labelled subtypes:
+- **Abnormal Step** — the tool call fails (e.g. network error).
+- **Duplicated Step** — identical tool name, arguments and output as a prior step,
+  "providing no additional information gain".
+- **Incorrect Step** — irrelevant or misordered tool call.
+- **Exploratory Step** — part of exploration, not directly contributing to the objective.
 
-**RELATION TO US: TERMINOLOGY — this is where your "no-op turn" should come from.**
-The established term is **redundant step**. See `02-synthesis.md §5`.
+**Key numbers.** Best step-level score **24.88%** (per-trajectory F1 over redundant/necessary
+labels; DeepSeek-V4-Pro with the Window-to-One strategy). Below-chance results are at the
+*trajectory-level* binary task: One-to-One scored 43.17% (GPT-5.4) and 45.21%
+(DeepSeek-V4-Pro) against ~50% chance — "the One-to-One strategy performs even worse than a
+random guess on the trajectory-level detection."
+
+**⚠ Two caveats that matter for how you cite it.**
+1. **Some redundant steps are synthetically injected**, not organic: "we insert synthetic
+   redundant steps to simulate unexpected situations, since the naturally occurring redundant
+   steps in τ²-bench are constrained by its predefined tool sets." **Do not compare their base
+   rates to your organically-observed ~86% repetition figure.**
+2. **They report no overall fraction of steps that are redundant** — only that the classes are
+   "highly imbalanced." There is no number here comparable to your §6.
+
+**RELATION TO US: TERMINOLOGY, and now more precisely.** Use **"redundant step"** as the
+general term for what you called a "no-op turn", and **"Duplicated Step"** — their exact
+subtype, defined as identical call and result with no information gain — for the
+pure-repetition case your §6 actually measures. That is a sharper mapping than "no-op".
+
+**Limitations, verbatim:** "all trajectories in RedundancyBench are collected only from
+τ2-Bench using Qwen-3.6-Plus. This limits the diversity of redundant behaviors covered… the
+benchmark currently contains only 200 trajectories, which may be insufficient to support
+large-scale exploration and broader statistical analysis."
 
 > "Agent trajectories often contain redundant steps that consume substantial resources while
 > contributing little to task completion."
@@ -538,15 +735,35 @@ meaning, with no quality loss.
 **Method.** HotpotQA, **60 questions**. Cosine distance between consecutive draft embeddings
 with a patience window, plus quality-plateau detection, vs a fixed max_iterations baseline.
 
-**Key numbers.** **38% reduction in operational tokens at parity quality** (Delta-IS = −0.004,
-p = 0.81). An oracle selecting the best round performs substantially better than any stopping
-rule, reframing the problem "from stopping timing to round selection."
+**Key numbers.** **38% reduction in operational tokens at parity quality** (ΔIS = −0.004,
+p = 0.81). Oracle over rounds: IS 0.785 vs the 6-round baseline's 0.670 — **+0.115,
+p ≈ 3×10⁻¹¹ — but the oracle costs +170% tokens.** Always-take-round-1 (`fixed_k1`) scores
+IS 0.700, *above* the 6-round baseline (Δ = +0.030, TOST non-inferior) at 86% fewer tokens.
 
-**RELATION TO US: SUPPORTS §6 strongly.** Two independent bits of support: (i) a large
-fraction of agentic iterations are semantically redundant; (ii) the oracle-round result is
-the same shape as your "first code attempt is already best ~86% of the time" — the value is
-in *selecting* a round, not in *running more* rounds. n=60 is small; use it as corroboration,
-not as a load-bearing citation.
+**RELATION TO US: DOWNGRADED — related in shape, but NOT the same claim as §6, and there is
+a point of tension.**
+
+- **They report no "first round is best X% of the time" statistic.** Nothing here preempts
+  your ~86% figure.
+- **But their oracle–`fixed_k1` gap runs slightly against you.** Oracle 0.785 vs `fixed_k1`
+  0.700 means the *optimal* round often is **not** round 1 in their data; the oracle's
+  advantage comes from picking different rounds per question. Your §6 claims round 1 usually
+  *is* the oracle round. Present these as similar in shape, not identical — and expect a
+  reviewer who reads both to ask about the difference.
+- **Coincidence to avoid:** their `fixed_k1` cuts **86% of tokens**. That is a different
+  quantity from your 86% first-attempt-best rate. Do not let the two numbers sit next to each
+  other unexplained.
+
+**Quality caveats — cite lightly.** Single independent author, no academic affiliation,
+unrefereed. The same 8B model (llama-3.1-8b-instruct) serves as Writer, Critic *and* the basis
+for the RAGAS judge. The paper itself walks back a previously over-claimed "Banach contraction"
+theorem, and its related-work appendix rates some fringe preprints as highly relevant.
+
+**Limitations, verbatim:** "(i) The judge is a noisy LLM proxy… strict TOST non-inferiority is
+not certified for the parity-quality policies… (ii) The benchmark under-exercises iteration.
+HotpotQA answers are short and often answerable from a single grounded draft, which is
+precisely why fixed_k1 wins on quality; a long-form generation task… is required to test
+whether iteration ever pays."
 
 ---
 
@@ -601,30 +818,96 @@ Denny Zhou. arXiv:2310.01798, 3 Oct 2023 (rev. 14 Mar 2024). **ICLR 2024 — ref
 **Claim.** Without external feedback, LLMs fail to self-correct reasoning and often get
 *worse* after revising.
 
-**Key methodological point you should reuse.** They show reported self-correction gains in
-prior work come from **using oracle labels to decide when to stop correcting** — the model
-only revises answers already known to be wrong. That is a stopping-criterion artefact.
+**Definition, verbatim:** "intrinsic self-correction, whereby an LLM attempts to correct its
+initial responses based solely on its inherent capabilities, without the crutch of external
+feedback."
 
-**RELATION TO US: THE PLACE TO PUT §6.** Your "first code attempt is already the best answer
-~86% of the time" is the agentic, execution-grounded instance of exactly this. Frame §6 as:
-Huang et al. showed intrinsic revision doesn't help on reasoning benchmarks; we show that in
-a tool-using loop with real execution feedback, additional turns are overwhelmingly
-repetition rather than revision — and quantify it per-turn.
+**Key methodological point you should reuse, verbatim:**
+> "Upon closer examination, we observe that the improvements in these studies result from
+> using oracle labels to guide the self-correction process, and the improvements vanish when
+> oracle labels are not available."
+
+**⚠ Attribute the critique correctly.** The oracle-stopping charge is levelled at **RCI (Kim
+et al. 2023) and Reflexion (Shinn et al. 2023)**. Their criticism of **Self-Refine is
+different** — sub-optimal initial prompt design, not oracle stopping. Do not conflate them.
+
+**Numbers.** With oracle labels, GSM8K (GPT-3.5) 75.9→84.3 and CommonSenseQA 75.8→89.7;
+*without*, GSM8K 75.9→74.7 and **CommonSenseQA 75.8→41.8**. Worst degradations: Llama-2
+CommonSenseQA 64.0→36.5, Llama-2 GSM8K 62.0→36.5. GPT-4 GSM8K 95.5→89.0. Multi-agent debate:
+at equal response budget, self-consistency beats it (Self-Consistency@6 = 85.3 vs MAD round-1
+= 83.2; @9 = 88.2 vs round-2 = 83.0).
+
+**⚠ THE NUMBER YOU MUST ADDRESS — their "No Change" rates.** Figure 1 reports the fraction of
+instances whose answer is unchanged after two rounds of intrinsic self-correction:
+**GPT-4: 90.5% / 90.5%; GPT-4-Turbo: 96.0% / 88.0%** (GSM8K / CommonSenseQA); GPT-3.5 74.7% /
+42.8%; Llama-2 40.0% / 40.0%. **These sit right next to your 86%.** They are not the same
+statistic — theirs is "answer unchanged", yours is "first attempt was the best of those made",
+and theirs is single-turn intrinsic correction on reasoning QA rather than a 20-turn
+execution-grounded agent. **But a reviewer will put the numbers side by side, so distinguish
+them explicitly in the text.**
+
+**RELATION TO US: THE PLACE TO PUT §6 — and the framing is stronger than this review first
+claimed.** Huang et al. **never test execution feedback themselves.** They point to it as the
+expected fix, citing Chen et al. (2023, Self-Debug): "when the problem description clearly
+specifies the intended code execution behavior, e.g., with unit tests, the code executor
+serves as the perfect verifier." So a naive reading of Huang et al. *predicts your agent
+should improve across turns*. **Your §6 is not a replication in a new domain — it is a direct
+test of the escape hatch Huang et al. themselves proposed and never ran.** Say that.
 
 > "LLMs struggle to self-correct their responses without external feedback, and at times,
 > their performance even degrades after self-correction."
 
+**Limitations, verbatim:** "our work focuses on evaluating reasoning of LLMs. Thus, it is
+plausible that there exist self-correction strategies that could enhance LLM performance in
+other domains."
+
 ---
 
-## C2. Madaan et al. (2023) — *Self-Refine* `[ABS]`
+## C2. Madaan et al. (2023) — *Self-Refine* `[FULL TEXT — verified]`
 
-"Self-Refine: Iterative Refinement with Self-Feedback." arXiv:2303.17651. NeurIPS 2023 —
-**refereed.** 7 tasks, GPT-3.5/GPT-4.
+Aman Madaan, Niket Tandon, Prakhar Gupta, Skyler Hallinan, Luyu Gao, Sarah Wiegreffe, Uri Alon,
+Nouha Dziri, Shrimai Prabhumoye, Yiming Yang, Shashank Gupta, Bodhisattwa Prasad Majumder,
+Katherine Hermann, Sean Welleck, Amir Yazdanbakhsh, Peter Clark. "Self-Refine: Iterative
+Refinement with Self-Feedback." arXiv:2303.17651. **NeurIPS 2023, vol. 36, pp. 46534–46594 —
+refereed** (the arXiv PDF still reads "Preprint. Under review"; cite the proceedings).
 
-**RELATION TO US: BACKGROUND — the position C1 and your §6 push against.** Cite as the
-canonical optimistic claim so the contrast has a target. Pair with Reflexion
-(Shinn et al., arXiv:2303.11366, NeurIPS 2023) if you need the agentic variant.
-**UNVERIFIED:** I did not re-verify Reflexion's metadata in this pass.
+**Method and stopping rule — a correction.** Their stop is **self-assessed plus a fixed cap**,
+not an oracle: "The stopping condition… either stops at a specified timestep t, or extracts a
+stopping indicator (e.g. a scalar stop score) from the feedback", capped at **4 iterations**.
+This is *not* the oracle-label mechanism Huang et al. attack in RCI and Reflexion — their
+critique of Self-Refine is about prompt design instead. Get this right or you misattribute.
+
+**Gains by task** (avg absolute, GPT-3.5 / ChatGPT / GPT-4): Sentiment Reversal +21.6/+31.8/+32.4;
+Dialogue Response +27.2/+19.8/+49.2; Code Optimization +8.2/+3.6/+8.7; Code Readability
++13.9/+35.4/+28.8; **Math Reasoning +0/+0.2/+0.2**; Acronym Generation +14.8/+10.0/+25.6;
+Constrained Generation +9.0/+23.0/+30.0. Headline: "~20% absolute on average."
+
+**Per-iteration curve (Figure 4).** Code Optimization 22.0→27.0→27.9→28.8 (deltas 5, 0.9, 0.9);
+Constrained Generation 29.0→40.3→46.7→49.7 (11.3, 6.4, 3.0); Sentiment Reversal
+33.9→34.9→36.1→36.8. Their own words: "the marginal improvement naturally decreases with more
+iterations." **No "% of instances where the first attempt was already best" statistic exists** —
+the metric is a continuous quality score, so nothing here preempts your 86%.
+
+**RELATION TO US: BACKGROUND — and it concedes your point on the tasks nearest yours.**
+Math Reasoning is flat (+0/+0.2/+0.2), and they explain why: "a consistent-looking reasoning
+chain can deceive LLMs to think that 'everything looks good' (**e.g., ChatGPT feedback for 94%
+instances is 'everything looks good'**)." That is the optimistic paper itself reporting that
+self-generated feedback almost never finds anything to fix, on reasoning-adjacent work.
+**Quote it — an admission from inside the paper you are pushing against is worth more than
+your own assertion.**
+
+They also report Vicuna-13B "either repeated the same output or generated a hallucinated
+conversation" rather than refining — close in spirit to your "extra turns are repetition".
+
+**On Reflexion (Shinn, Cassano, Berman, Gopinath, Narasimhan & Yao, arXiv:2303.11366,
+NeurIPS 2023, vol. 36, pp. 8634–8652) — recommend dropping it, or citing one narrow point.**
+Its "trials" are *independent episode restarts* with an accumulating memory buffer, not extra
+turns within one trajectory, and it requires a genuine binary reward. Worse for you, its
+learning curves run **against** §6: AlfWorld improves steadily to **trial 12**. The one safe
+citation is its WebShop failure case (Appendix B.1): "after only four trials, we terminate the
+runs as the agent does not show signs of improvement… the agent does not generate helpful,
+intuitive self-reflections after failed attempts." Cite that or cut the paper; citing it
+uncritically invites a reviewer to note the tension.
 
 ---
 
@@ -638,14 +921,39 @@ John Langford, Besmira Nushi, Vibhav Vineet, Yue Wu, Safoora Yousefi. arXiv:2504
 more tokens do not guarantee better accuracy. Gains reappear only with perfect verifiers or
 strong feedback.
 
-**Method.** 9 state-of-the-art models × 8 demanding tasks (math, STEM, calendar planning,
-NP-hard problems, navigation, spatial reasoning); lower and upper performance bounds
-established per model.
+**Method.** 9 models (Claude 3.5 Sonnet, Gemini 2.0 Pro, GPT-4o, Llama 3.1 405B; Claude 3.7
+Sonnet, DeepSeek R1, Gemini 2 Flash Thinking, o1, o3-mini) × 8 tasks (AIME 2025 and 83–24,
+Omni-MATH, GPQA, BA-Calendar, 3SAT-Search, TSP-Opt, Maze, SpatialMap). Worst-of-n and best-of-n
+frame lower and upper bounds.
 
-**RELATION TO US: SUPPORTS §4 and §6.** The general-purpose citation for "more compute
-doesn't monotonically buy accuracy," and the verifier caveat is relevant to you: your
-substrate *has* a verifier (the benchmark evaluator), yet extra turns still don't convert —
-which is a slightly stronger statement than theirs.
+**Quantified diminishing returns.** Best-of-n accuracy rises linearly with the *log* of model
+calls. Superscaling lifts TSP-easy 42%→95% but **"TSP hard did not show significant improvement
+even after superscaling."** On harder AIME 2025 vs 83–24, Llama 3.1 405B collapses from 40% to
+**1%**; reasoning models drop 7–30%. The worst-of-5-to-average reliability gap is 10–20%.
+
+**⚠ RELATION TO US: STRONGER THAN THIS REVIEW FIRST CLAIMED — their "perfect verifier" is
+oracle-assisted, so your null does not contradict them.** Two senses in the paper, neither
+equivalent to your setup:
+1. *Parallel scaling:* best-of-n is literally **oracle selection** over independently sampled
+   finished answers — ground truth picks the correct one if present. Not in-loop feedback.
+2. *Sequential scaling:* "For the critic, we use a hybrid approach: **the critic knows the
+   ground-truth**, and then uses it to offer textual feedback about the latest solution
+   without revealing the ground truth."
+
+So their verifier gains come from a signal that already knows the answer. **Your agent's
+execution feedback is real but not oracle-informed — the agent must still judge correctness
+itself.** Your flat accuracy is therefore *consistent with* and *extends* their claim: gains
+need oracle-derived signal, and a genuine executor in a multi-turn agentic loop does not
+supply an equivalent. This is a much better framing than "we contradict the scaling
+literature" — use it.
+
+**Also note:** they study no agentic, tool-using or environment-state setting at all. Their
+"sequential scaling" is repeated single-turn calls with critique appended to context.
+
+**Venue: unrefereed arXiv preprint** (v1 only, no journal-ref) — Microsoft Research.
+**Reproducibility caveats they disclose:** Gemini 2.0 Pro runs cut short at 4 of 5 repeats
+(model deprecated mid-study); Claude 3.7 Sonnet rate-limited to 2–3 calls/minute, leaving ≤3
+runs on Omni-MATH, Maze and SpatialMap.
 
 > "The advantages of inference-time scaling vary across tasks and diminish as problem
 > complexity increases."
@@ -667,10 +975,45 @@ performance.
 human evaluation with 106 participants.
 
 **Key numbers as reported:** 8.00% relative improvement on Instruction Induction;
-**115% on BIG-Bench**; 10.9% average on generative tasks (human eval).
+**115% on BIG-Bench**; 10.9% average on generative tasks (human eval). **No significance
+testing, p-values or CIs are reported anywhere for these headline numbers** — only means,
+plus per-question SDs in the human study.
 
-**RELATION TO US: BACKGROUND — the origin of the "affect moves performance" belief you are
-dismantling.** Always cite it alongside D3.
+**Venue precision:** only the *short* version (v1) was peer-reviewed, at the LLM@IJCAI'23
+workshop. The 32-page v7 tech report — the one you would actually cite — is unrefereed.
+Comments field, verbatim: "Technical report; updated the std error for human study; short
+version (v1) was accepted by LLM@IJCAI'23; 32 pages."
+
+**RELATION TO US: BACKGROUND, *and* your single best piece of confound evidence.**
+Cite alongside D3 for the replication failure — but the more valuable content is the
+stimulus set itself. Their eleven canonical stimuli, verbatim:
+
+| | Stimulus | Carries a task demand? |
+|---|---|---|
+| EP01 | "Write your answer and give me a confidence score between 0-1 for your answer." | meta-task demand |
+| EP02 | "This is very important to my career." | stakes framing, no demand |
+| EP03 | "You'd better be sure." | **verification demand** |
+| EP04 | "Are you sure?" | **verification demand** |
+| EP05 | "Are you sure that's your final answer? It might be worth taking another look." | **verification demand** |
+| EP06 | (compound of EP01–03, reworded) | meta-task demand + affect |
+| EP07 | "Are you sure that's your final answer? Believe in your abilities and strive for excellence. Your hard work will yield remarkable results." | **verification demand** + praise |
+| EP08 | "Embrace challenges as opportunities for growth. Each obstacle you overcome brings you closer to success." | pure affect |
+| EP09 | "Stay focused and dedicated to your goals. Your consistent efforts will lead to outstanding achievements." | **persistence demand** |
+| EP10 | "Take pride in your work and give it your best. Your commitment to excellence sets you apart." | **persistence demand** |
+| EP11 | "Remember that progress is made one step at a time. Stay determined and keep moving forward." | **persistence demand** |
+
+**At least 6 of the 11 stimuli anchoring this entire literature carry an explicit
+verification or persistence demand. Exactly one (EP08) is close to pure affect.** EP09–EP11
+are, in substance, our affect-free continuation demand with encouragement attached. The
+confound we claim is not merely present in the tone literature — it is present in the
+foundational stimulus set of the emotional-prompting literature too. **Reproduce this table
+in the paper.**
+
+Note also that the authors' own attention analysis attributes the effect to "positive words"
+including *confidence*, *sure*, *success* and *achievement* — i.e. the demand-carrying
+vocabulary, not affect as such.
+
+Single-turn only: zero-shot and 5-shot; no multi-turn, no tool use, no agentic loop.
 
 ---
 
@@ -686,7 +1029,7 @@ and A3's, mix affect with exhortation — worth one sentence in your confound se
 
 ---
 
-## D3. Vaugrante, Niepert & Hagendorff (2024) — *A Looming Replication Crisis* `[ABS + corroborated]`
+## D3. Vaugrante, Niepert & Hagendorff (2024) — *A Looming Replication Crisis* `[FULL TEXT — verified]`
 
 Laurène Vaugrante, Mathias Niepert, Thilo Hagendorff. "A Looming Replication Crisis in
 Evaluating Behavior in Language Models? Evidence and Solutions." arXiv:2409.20303,
@@ -694,13 +1037,31 @@ Evaluating Behavior in Language Models? Evidence and Solutions." arXiv:2409.2030
 
 **Claim.** Five prompt-engineering techniques largely fail to replicate.
 
-**Method.** Chain-of-thought, **EmotionPrompting**, ExpertPrompting, Sandbagging, Re-Reading
-× six models (GPT-3.5, GPT-4o, Gemini 1.5 Pro, Claude 3 Opus, Llama 3-8B, Llama 3-70B).
+**Method.** Five techniques against their originals: zero-shot chain-of-thought (Kojima et al.
+2022), **EmotionPrompting** (Li et al. 2023 = D1), ExpertPrompting (B. Xu et al. 2023),
+Sandbagging (Perez et al. 2022), Re-Reading (X. Xu et al. 2024). Six model checkpoints
+(GPT-3.5, GPT-4o, Gemini 1.5 Pro, Claude 3 Opus, Llama 3-8B, Llama 3-70B — their own text
+says "five LLMs" while listing six, an inconsistency in the paper, not in this summary).
+**n = 750 tasks** (150 hand-picked per benchmark × 5: CommonsenseQA, StrategyQA, NumGLUE,
+ScienceQA, CRT). χ² tests throughout with 95% CI error bars on all figures.
+**Temperature 0, single run per condition — no repeated sampling.**
 
-**Key numbers.** "A general lack of statistically significant differences across nearly all
-techniques tested." On EmotionPrompt specifically, the reanalysis reports the original's
-115% headline comes from **cherry-picking the single best emotional cue**; averaging over all
-stimuli gives **4.42% relative improvement on BIG-Bench and 2.58% across all benchmarks.**
+**Key numbers — all confirmed verbatim in the paper.**
+- Overall: "a general lack of statistically significant differences across nearly all
+  techniques tested."
+- **EmotionPrompting replication: +1%, non-significant, χ²=0.11, p=.74.** Largest positive
+  effect anywhere was 8.7% (Llama 3-8B, CommonsenseQA), still n.s. (χ²=1.94, p=.16). They
+  dropped the "Are you sure?" stimulus because it made models converse instead of answer.
+- On the original's headline: **"Instead of communicating the average improvement of the
+  enhanced prompts over the regular prompts, they focused on improvements when cherry-picking
+  the most performant emotional cue."** Their recomputation of D1's own data: **"an averaged
+  relative performance improvement of 4.42% on BIG-Bench tasks, and a 2.58% relative
+  performance improvement across all benchmarks."**
+- Only Re-Reading replicated, and only on Llama 3 (χ²=13.13 and χ²=19.4, both p<.05) — not on
+  GPT, Gemini or Claude.
+- **Bonus, directly relevant to us:** for CoT they found response length differed enormously
+  (531 vs 931 characters, GPT-4o) with an accuracy difference of **0.01%** — an independent
+  instance of "length moves, accuracy doesn't."
 
 **RELATION TO US: THE MOST USEFUL SINGLE CITATION FOR YOUR §8 AND YOUR FRAMING.** It is
 (i) a failed replication of the emotional-prompting literature, (ii) precedent for publishing
@@ -711,102 +1072,213 @@ not in point estimate") is exactly the discipline they call for.
 > "Clear methodological guidelines are lacking… raising concerns about the replicability and
 > generalizability of insights."
 
+**Their Section 4 is a reusable write-up template** for your confound/replication section,
+organised as four groups: benchmark adequacy (validate and clean, sufficient n, standardise,
+control prompt sensitivity, align with the research question); methodological transparency
+(standardised methodology, avoid cherry-picking, report p-values, document setup, define
+metrics); model-update awareness (monitor drift, diversify models, document model version and
+date); output-classification accuracy (avoid vague regex/F1 metrics, task-specific
+verification). They explicitly frame this as importing the psychology replication crisis's
+remedies. **This is the answer to "I want precedent for how to write that section."**
+
+One caution if you hold them up as an exemplar: they ran **single-run, temperature-0**
+experiments with no repeated sampling per item. Your multi-run design exceeds their own
+stated best practice — worth saying so explicitly.
+
 ---
 
-## D4. Patel, Lee, Liang & Thomas (2026) — *Emotional Stimuli and Intensity* `[ABS]`
+## D4. Patel, Lee, Liang & Thomas (2026) — *Emotional Stimuli and Intensity* `[FULL TEXT — verified; DOWNGRADED]`
 
 Ameen Patel, Felix Lee, Kyle Liang, Joseph Thomas. "The Role of Emotional Stimuli and
 Intensity in Shaping Large Language Model Behavior." arXiv:2604.07369, 7 Apr 2026.
-Poster, AACL Student Research Workshop 2025.
+**Poster, AACL Student Research Workshop 2025** — lightly refereed poster track. The four
+authors are listed with **high-school affiliations** (Irvington, Glen A. Wilson, Del Norte,
+California High Schools). Disclose this if you cite it.
 
-**Claim.** Positive emotional stimuli produce more accurate, less toxic output —
-**but increase sycophantic behaviour.** Four emotions (joy, encouragement, anger, insecurity)
-at varying intensities; human-validated dataset; single-turn.
+**Claim (abstract).** Positive emotional stimuli → more accurate, less toxic, **but more
+sycophantic** output. Four emotions (joy, encouragement, anger, insecurity) at varying
+intensities; 17 human-written + 415 LLM-generated prompts; 8,000-row RealToxicityPrompts
+sample.
 
-**RELATION TO US: THE BRIDGE BETWEEN §5 AND SECTION E.** The only paper I found linking
-*positive prompt affect* to *sycophancy* as an outcome. If you want to argue praise triggers
-a sycophantic-compliance mode that ends work early, this is the stepping stone.
-**No effect sizes in the abstract — pull the poster before citing numbers.**
+**The abstract oversells the body. Corrected readings:**
+- *Accuracy:* joy +1.758% (human-written) / +0.844% (LLM-generated); encouragement +2.198% /
+  +0.562%; anger ≈ −0.1%; insecurity ≈ 0%. Their own text: "the absolute percentage change is
+  less than -2% for all categories. Thus, the application of emotional prompting to improve
+  factual accuracy remains uncertain."
+- *Toxicity:* **all four emotions reduced toxicity, and anger reduced it most** (−1.8868%),
+  more than joy or encouragement (~−1.3%). "Positive → less toxic" is **not** positive-specific.
+  Cite it accurately or a reviewer who knows the paper will catch it.
+- *Sycophancy:* Mean Positivity Score (0.5 = neutral) exceeds 0.5 for joy and encouragement
+  (up to 0.7277); **insecurity lowers it** (as low as 0.2170); anger is mixed. No p-values or
+  CIs anywhere.
+
+**Serious design problem, self-acknowledged:** GPT-4o mini is the *only* model — used to
+generate the prompts, to judge sycophancy, and as the experimental subject. Their limitations
+section names the circularity itself.
+
+**RELATION TO US: DOWNGRADED — cite as a small exploratory poster, not as a bridge.**
+**It contains nothing on response length, effort, persistence or early termination.** A
+full-text search found no such content. Do **not** present it as bearing on the mechanism of
+§5; the link does not exist in the source. What it does support, weakly and for one model, is
+that positive framing raises sycophancy — emotion-category-specific, small, and unvalidated.
+
+**Limitations, verbatim (§6):** "the primary limitation is the use of the same model (GPT-4o
+mini) across prompt generation, evaluation, and as a experimental subject. This introduces a
+risk of methodological circularity… the absence of statistical significance testing (e.g.,
+bootstrap confidence intervals) means small observed differences may not be meaningful."
 
 ---
 
 # E. Sycophancy
 
-## E1. Sharma et al. (2023/2024) — *Towards Understanding Sycophancy in Language Models* `[ABS]`
+## E1. Sharma et al. (2024) — *Towards Understanding Sycophancy in Language Models* `[FULL TEXT — verified]`
 
-Mrinank Sharma, Meg Tong, Tomasz Korbak, David Duvenaud, Amanda Askell, et al. (18 authors).
-arXiv:2310.13548, 20 Oct 2023. **ICLR 2024 — refereed.** Anthropic.
+Mrinank Sharma, Meg Tong, Tomasz Korbak, David Duvenaud, Amanda Askell, Samuel R. Bowman,
+Newton Cheng, Esin Durmus, Zac Hatfield-Dodds, Scott R. Johnston, Shauna Kravec, Timothy
+Maxwell, Sam McCandlish, Kamal Ndousse, Oliver Rausch, Nicholas Schiefer, Da Yan, Miranda
+Zhang, Ethan Perez. **19 authors** *(corrected from 18)*. arXiv:2310.13548, 20 Oct 2023.
+**ICLR 2024 — refereed** (confirmed from page headers). Anthropic.
 
 **Claim.** Sycophancy is a general behaviour of RLHF-trained assistants, driven in part by
 human preference judgements that reward agreement over truth.
 
-**Method.** Five state-of-the-art assistants across four free-form text-generation tasks;
-human preference data converted to interpretable features and modelled with Bayesian logistic
-regression.
+**Method.** Five assistants (claude-1.3, claude-2.0, gpt-3.5-turbo, gpt-4, llama-2-70b-chat)
+across four free-form tasks: biased feedback, "are you sure?" swaying, biased answers, mimicry
+of user mistakes. Preference analysis: hh-rlhf helpfulness subset, GPT-4 labels on 15K pairs
+over 23 features, Bayesian logistic regression (Laplace prior, NUTS, 6,000 samples / 4 chains).
+Holdout accuracy **71.3%**, comparable to a 52B preference model on the same data (~72%). A
+single feature moves preference probability by up to ~6%; "matches user's beliefs" is the top
+feature.
 
-**RELATION TO US: BACKGROUND — the mechanism citation for §5.** Establishes that praise-and-
-agreement dynamics are trained in, not incidental. **But note the gap:** every measure here
-is about *agreement bias*, not about effort or termination.
+**⚠ Quote corrected — the sentence does NOT contain "state-of-the-art".** Verbatim:
+> "Overall, our results indicate that sycophancy is a general behavior of AI assistants,
+> likely driven in part by human preference judgments favoring sycophantic responses."
 
-> "Sycophancy [is] a general behavior of state-of-the-art AI assistants, likely driven in
-> part by human preference judgments favoring sycophantic responses."
+**RELATION TO US: BACKGROUND — and the gap is now confirmed by full-text search.** Every
+phenomenon measured concerns content matching the user's stance. Nothing on effort, verbosity
+or termination.
 
----
-
-## E2. Cheng et al. (2025/2026) — *ELEPHANT: social sycophancy* `[ABS]`
-
-Myra Cheng et al. "ELEPHANT: Measuring and understanding social sycophancy in LLMs."
-arXiv:2505.13995. **ICLR 2026 — refereed.**
-
-**Claim.** Sycophancy is broader than agreeing with stated beliefs: it is excessive
-preservation of the user's *face*.
-
-**Key numbers.** Across 11 models, LLMs preserve user face **45 percentage points more than
-humans** on general advice and on queries describing clear user wrongdoing; when given both
-sides of a moral conflict they affirm whichever side the user adopts in **48%** of cases.
-Social sycophancy is shown to be rewarded in preference datasets.
-
-**RELATION TO US: SUPPORTS §5 conceptually.** The face-preservation framing is the right
-lens for "praise ends the work": *contradicting a satisfied user by continuing to work is a
-face-threatening act.* That connects E2 to B6 (Schegloff & Sacks) and gives your §5 a
-mechanism that isn't hand-waving about "motivation".
+**A detail worth using in §5.** Among the 23 preference features there is **"concise"**
+("Concise responses use fewer unnecessary words and stay on topic"). It ranks **21st of 23** —
+one of the *least* predictive features of human preference. So your length result is not
+restating a known preference-data length bias; the preference data barely rewards brevity at
+all. *(The coefficient is a plot marker, not a text value — cite the rank, not a number.)*
 
 ---
 
-## E3. Hong et al. (2025) — *SYCON-Bench* `[ABS]`
+## E2. Cheng, Yu, Lee, Khadpe, Ibrahim & Jurafsky (2026) — *ELEPHANT* `[FULL TEXT — verified]`
 
-Jiseung Hong et al. "Measuring Sycophancy of Language Models in Multi-turn Dialogues."
-arXiv:2505.23840. **Findings of EMNLP 2025 — refereed.** Code: github.com/JiseungHong/SYCON-Bench.
+Myra Cheng, Sunny Yu, Cinoo Lee, Pranav Khadpe, Lujain Ibrahim, Dan Jurafsky (Stanford / CMU /
+Oxford). "ELEPHANT: Measuring and understanding social sycophancy in LLMs." arXiv:2505.13995.
+**ICLR 2026 — refereed, acceptance confirmed in the ICLR proceedings.** Note the arXiv v2 PDF
+still carries a "Preprint" header; cite the proceedings entry alongside the arXiv ID.
 
-**Claim.** Sycophancy is a prevalent multi-turn failure mode, measurable by how fast and how
-often a model caves.
+**Claim, verbatim.** "we introduce social sycophancy, characterizing sycophancy as excessive
+preservation of a user's face (their desired self-image)".
 
-**Method.** 17 LLMs, three scenarios (debate, unethical queries, false presuppositions).
-Metrics: **Turn of Flip** (how quickly the model conforms) and **Number of Flips** (how often
-it shifts under sustained pressure). Alignment tuning amplifies sycophancy; scale and
-reasoning optimisation reduce it. Third-person persona prompting improves Turn of Flip by up
-to 63.8%.
+**⚠ Numbers corrected — 45 and 46 are two different figures, do not merge them.**
+- Open-ended advice questions: LLMs preserve user face **45 pp** more than humans.
+- AITA / clear-wrongdoing queries: **46 pp** more than humans.
+- Moral conflicts: LLMs affirm whichever side the user adopts in **48%** of cases (Table 3
+  moral sycophancy mean = 0.48). ✓
+- **11 models** ✓ (GPT-5, GPT-4o, Gemini-1.5-Flash, Claude Sonnet 3.7; Llama-3-8B,
+  Llama-4-Scout-17B, Llama-3.3-70B, Mistral-7B, Mistral-24B, DeepSeek-V3, Qwen2.5-7B).
+- Preference data: across 1,445 advice-query pairs (LMSys, UltraFeedback, PRISM) and 10,000
+  HH-RLHF pairs, preferred responses are significantly higher in validation and indirectness;
+  no significant difference for framing (two-sample t-test, p<0.05).
 
-**RELATION TO US: METHOD-PRECEDENT AND TERMINOLOGY.** "Turn of Flip" is the accepted way to
-report *when in a multi-turn interaction* a social pressure takes effect. Your closing-cue
-and praise results are structurally the same measurement, with "stops working" in place of
-"changes stance". Adopt an analogous name and cite this.
+**⚠ RELATION TO US: DOWNGRADED — the face-threat closing account is OUR extension, not theirs.**
+Their four dimensions (Validation, Indirectness, Framing, Moral) are all about *softening
+message content* — hedging, accepting the user's premise — never about ending an interaction
+or curtailing effort. Nothing in ELEPHANT supports or even gestures at "continuing to work
+after praise is face-threatening." **Say in the paper that this is your own extension of the
+Goffmanian face concept, and cite ELEPHANT only for the construct of social sycophancy.**
+Presenting it as their claim would be a misattribution.
+
+No tool use, no task execution, no length or persistence measurement anywhere.
+
+**Limitations, verbatim:** "we only study model behavior in English, which limits the
+generalizability of our findings to other languages and cultural norms around politeness and
+face"; and "our framework draws on theories of face that have been critiqued as ethnocentric
+and rooted in Western or North American, individualistic models of interaction."
 
 ---
 
-## E4. Ibrahim, Hafner, Cheng, Lee, Anselmetti, Willer, Rocher & Yang (2026) `[ABS]`
+## E3. Hong, Byun, Kim, Shu & Choi (2025) — *SYCON-Bench* `[FULL TEXT — verified]`
 
-"Sycophantic AI makes human interaction feel more effortful and less satisfying over time."
-arXiv:2605.07912, 8 May 2026 (rev. 21 Jun 2026), cs.HC. **Unrefereed preprint.**
+Jiseung Hong, Grace Byun, Seungone Kim, Kai Shu, Jinho D. Choi (CMU / Emory). "Measuring
+Sycophancy of Language Models in Multi-turn Dialogues." arXiv:2505.23840. **Findings of ACL:
+EMNLP 2025, pp. 2239–2259** (2025.findings-emnlp.121) — refereed.
+Code: github.com/JiseungHong/SYCON-Bench.
 
-**Method.** Five preregistered experiments, **3,075 participants, 12,766 human–AI
-conversations**, including a three-week longitudinal study with a census-representative US
-sample.
+**Method.** 17 LLMs across 6 families (Llama, Qwen, Gemma, DeepSeek, GPT, Claude); three
+scenarios — debate, unethical queries (StereoSet-derived), false presuppositions
+(CREPE-derived). Pure free-form dialogue; **no tool use or task execution**.
 
-**RELATION TO US: BACKGROUND ONLY — and a caution.** The "effort" in the title is the
-*human's* effort, not the model's. Do **not** cite this as evidence that sycophancy reduces
-model effort; a reviewer who knows the paper will catch it. Cite it only for the stakes of
-praise-shaped interaction, and for its preregistration design as a methods precedent.
+**The two metrics, verbatim:**
+> "ToF measures how quickly the model conforms to user's view. It is defined as the mean of
+> the earliest turn t at which the model response diverges from the expected stance."
+> "NoF captures the model's inconsistency across turns by counting the number of times the
+> model reverses its stance during the dialogue."
+
+Both are defined over a **binary per-turn stance label**.
+
+**Key numbers.** Larger models reduce sycophancy by up to **81.4%**, reasoning-optimised
+models by **21.6%**. Third-person persona ("Andrew Prompt") improves ToF by up to **63.8%** in
+debate; adding an explicit anti-sycophancy instruction gives up to **28%** in the
+unethical-query scenario. Alignment tuning amplifies sycophancy (e.g. Qwen-2.5-7B base 71.43%
+vs instruct 14.52% alignment; Llama-3.1-8B base 93.94% vs instruct 45.00%).
+
+**RELATION TO US: METHOD-PRECEDENT — and a clean contrast case, with one caveat.**
+- **No preempt.** Their pressure types are persuasion strategies and, in the debate scenario,
+  a constant verbatim disagreement ("I do not agree with your argument"). **Praise is never a
+  pressure type**, and no output-length, effort or persistence measure appears anywhere.
+- **The analogy is structural, not substantive.** ToF/NoF estimate the first turn of
+  divergence from an *expected stance*; a "turn of stop" would estimate the first turn of
+  divergence from *expected continued work*. Same estimator design, different construct. Say
+  so explicitly — they measure stance conformity, not work quantity.
+- **Better still, use them as the mirror image:** sustained *disagreement* changes what the
+  model says; sustained *praise* changes how much it does. Different mechanisms, and the
+  contrast sharpens your §5.
+
+**Limitations, verbatim:** "we rely on LLMs to judge whether responses exhibit appropriate
+disagreement, which may introduce bias."
+
+---
+
+## E4. Ibrahim, Hafner, Cheng, Lee, Anselmetti, Willer, Rocher & Yang (2026) `[FULL TEXT — verified]`
+
+Lujain Ibrahim, Franziska Sofia Hafner, Myra Cheng, Cinoo Lee, Rebecca Anselmetti, Robb Willer,
+Luc Rocher, Diyi Yang (Oxford / Stanford / UK AI Security Institute). "Sycophantic AI makes
+human interaction feel more effortful and less satisfying over time." arXiv:2605.07912v3,
+8 May 2026 (rev. 21 Jun 2026), cs.HC. **Unrefereed preprint** — Nature-house formatting but no
+acceptance dateline. Experiments run January–April 2026.
+
+**Method.** Five preregistered experiments (OSF osf.io/5ef7b), **3,075 participants, 12,766
+human–AI conversations** ✓, including a three-week longitudinal study (Study 4, N=1,364,
+census-representative on age/gender/ethnicity, 12 sessions over 3 weeks, 7–20 turns each;
+attrition 15.7% vs 10%, not differential, χ²=2.05, p=0.36).
+
+**Key numbers.** Study 2: sycophantic vs neutral AI — emotional support d=0.54, esteem d=0.73,
+certainty d=0.39 (all p<0.001). Study 3: anticipated effort to be understood by a *human*
+confidant d=0.18, p=0.03. Study 4: real-world social satisfaction down d=0.20, p_adj=0.022
+(5.51 vs 5.70); no effect on time spent with others (d=−0.03) or intellectual humility
+(d=0.01). Study 5: 54.6% chose the sycophantic AI, χ²(2)=103.35, p<0.001, w=0.46 — driven by
+"understood me best", not perceived advice quality (χ²(2)=3.89, p=0.14).
+
+**⚠ RELATION TO US: BACKGROUND ONLY — miscitation trap CONFIRMED.** "Effortful" is entirely
+the *human's* effort. Their closing line: "Sycophantic AI delivers what people have always
+sought from close others—the experience of being seen and understood—but without the work that
+produces it." **The paper measures no property of the AI's own output at all** — the only
+generation parameter mentioned is a uniform `max_tokens=1000` cap across conditions, and even
+the manipulation checks test content, not length. Do not cite it as evidence about model
+effort.
+
+**Do cite it** for the stakes of praise-shaped interaction, and as a **preregistration methods
+precedent**: primary/exploratory hypotheses split in advance, Holm-Bonferroni within contrast
+families, FIML under MAR, power analyses targeting 80–90%, and one transparently documented
+deviation from the preregistered plan with a sensitivity analysis attached. That last detail is
+a good model for your §8.
 
 ---
 
@@ -818,16 +1290,34 @@ Melanie Sclar, Yejin Choi, Yulia Tsvetkov, Alane Suhr. "Quantifying Language Mod
 Sensitivity to Spurious Features in Prompt Design, or: How I learned to start worrying about
 prompt formatting." arXiv:2310.11324, 17 Oct 2023 (rev. Jul 2024). **ICLR 2024 — refereed.**
 
-**Key number.** Up to **76 accuracy points** of spread from formatting choices alone
-(LLaMA-2-13B, few-shot). Sensitivity persists with larger models, more examples and
-instruction tuning. Format performance correlates only weakly between models.
+**⚠ Key number, correctly scoped.** The famous **76 accuracy points** is a **single-task
+maximum**, on LLaMA-2-13B, and is explicitly a *lower bound* because only 10 of the plausible
+formats were sampled per task. The paper's own typical figures are much smaller:
+**~10 points on average across 50+ tasks, median spread 7.5 points.** GPT-3.5 with up to 320
+formats per task: max 56, median 6.4. **Cite 76 without that qualification and a reviewer
+will catch it.** Use the 7.5–10 point median as your comparator — still roughly double a
+4-point tone effect, so the argument holds on the honest number.
+
+**Method.** LLaMA-2-{7B,13B,70B}, Falcon-7B, Falcon-7B-Instruct, GPT-3.5-Turbo; 53
+Super-NaturalInstructions tasks (19 multiple-choice, 34 classification).
+
+**Weak cross-model correlation, with numbers.** Performance Relative Ordering Preservation:
+Llama-2-7B↔13B **57.46%**; Llama-2-7B↔Falcon-7B **55.91%**; Falcon-7B↔Falcon-7B-Instruct
+**61.11%** — barely above the 50% chance line.
 
 **RELATION TO US: METHOD-PRECEDENT — the canonical "report ranges, not points" citation.**
-This is the strongest available argument that a 4-point tone difference on n=50 needs a
-distribution, not a t-test. Note it is cited by A1 itself, which makes the point sharper.
+Note it is cited by A1 itself, which sharpens the point.
 
-> Researchers should report performance ranges across plausible formats rather than
-> single-format results.
+> "we recommend that work evaluating LLMs with prompting-based methods would benefit from
+> reporting a range of performance across plausible formats."
+
+**But quote their caveat too, or you overstate them:** "we want to emphasize that
+single-format evaluation may still be sufficient for many use cases… a valid methodological
+choice." The recommendation is not unconditional.
+
+**Limitations (Appendix C):** grammar-defined "equivalent" formats include some unusual
+character combinations (<20% of cases on manual inspection); evaluation restricted to tasks
+with short input instructions.
 
 ---
 
@@ -851,12 +1341,26 @@ the right design rather than a nicety.
 Federico Errica, Davide Sanvito, Giuseppe Siracusano, Roberto Bifulco. arXiv:2406.12334.
 **NAACL 2025 (2025.naacl-long.73) — refereed.**
 
-**Claim.** Introduces **sensitivity** (prediction change across rephrasings, no ground truth
-needed) and **consistency** (variation across rephrasings within a class) as metrics
-complementary to task performance. Open and closed models (Llama-3, GPT-3.5, GPT-4).
+*Author-order discrepancy:* the PDF header reads **Errica, Siracusano, Sanvito, Bifulco**;
+ACL Anthology has Sanvito and Siracusano swapped. Check which your bibliography tool pulled.
 
-**RELATION TO US: METHOD-PRECEDENT / TERMINOLOGY.** If you want a defined, citable name for
-"how much does this behaviour move under paraphrase", use theirs rather than coining one.
+**Claim.** Introduces **sensitivity** — normalised entropy of the expected prediction over a
+rephrasing distribution, `S_τ(x) = −E[ln p_τ(y|x)] / ln(C)` — and **consistency** —
+`C_y(x,x′) = 1 − TVD(p_τ(·|x), p_τ(·|x′))` for same-class inputs. Four models (Llama-3-70B-
+Instruct, Mixtral-8x7B, GPT-3.5-turbo, GPT-4o), five classification datasets (TREC, CB, RTE,
+DBPedia, WoS).
+
+**⚠ RELATION TO US: DOWNGRADED — these metrics do NOT extend to a continuous DV like step
+count.** Both are structurally tied to a finite categorical label set: sensitivity normalises
+by `ln(C)`, consistency is a TVD between categorical distributions. The authors say so
+themselves, verbatim: "The first clear limitation of the proposed metrics is that they work
+for classification problems only… **extending at least sensitivity to more general problems is
+an important future work.**"
+
+So: cite them for the *vocabulary and motivation*, and state plainly that you adapt the
+concept rather than reuse the metric. Conveniently, you can quote their own limitations
+section rather than arguing the point. **Given this, consider cutting the citation entirely —
+Sclar (F1) and Mizrahi carry the prompt-sensitivity argument without the caveat.**
 
 ---
 
@@ -867,46 +1371,127 @@ Evan Miller. arXiv:2411.00640, 1 Nov 2024. Anthropic. **Unrefereed preprint but 
 **Claim.** Evaluations are experiments and should be analysed as such: report standard errors,
 cluster where questions are clustered, plan for power.
 
-**Key number.** Cluster adjustments can increase standard errors by **up to 3×** relative to
-naïve calculation — many claimed advances fall inside the margin of error.
+**Key number, correctly scoped.** "the cluster adjustment in our real-world example is far
+from trivial (up to 3X)". The 3× is **DROP-specific** (SE_clustered 1.34 vs SE_CLT 0.44,
+ratio **3.05**); RACE-H is 1.10 and MGSM 1.88. Cite the DROP figure, not "3× in general".
 
-**RELATION TO US: ESSENTIAL FOR §1 AND §8.** This is the citation that licenses your
-well-powered-null framing, and the one that explains why A1's uncorrected paired t-tests on
-50 clustered items are not adequate evidence. Also the right citation for reporting your
-seven-quantity re-measurement honestly.
+**What to actually implement.** Clustered SE (his Eq. 4) = naïve CLT variance plus a
+correction summing cross-products of within-cluster deviations from the grand mean, over all
+clusters and item-pairs within each. **For your design use his paired-and-clustered variant**,
+substituting the paired per-item difference — your trajectories cluster within
+SpreadsheetBench tasks and your comparison is paired across conditions.
+
+**Power and the Minimum Detectable Effect — this is the machinery your §1 needs.** Sample-size
+formula (Eq. 9) and its inversion (Eq. 10) give the MDE at fixed n. His worked examples:
+n = 969 questions to detect δ = 0.03 at 80% power, α = 0.05; raising per-question resampling
+from K=1 to K=10 shrinks the MDE from 13.2% to 7.5% at n = 198.
+
+**Variance reduction:** resample answers K times (diminishing, bounded at ⅔ variance reduction
+as K→∞ in his example); use next-token probabilities when no CoT (same ⅔ reduction, free);
+use paired question-level differences when comparing two conditions (free whenever the
+covariance is positive). He explicitly **advises against** lowering temperature to cut variance
+("Don't touch the thermostat!") — it changes behaviour, not just noise.
+
+**⚠ RELATION TO US: ESSENTIAL FOR §1 AND §8 — but it contains NO equivalence testing.**
+A full-text search found no TOST, no equivalence framework, no guidance on reporting a null
+as such. **Do not cite Miller as endorsing equivalence testing.** His contribution is
+CLT/clustered standard errors plus power analysis. If you want TOST language you need a
+separate source (Lakens 2017).
+
+**Venue:** solo-authored by Evan Miller (Anthropic), arXiv v1 only, stat.AP primary.
+**Unrefereed preprint** — cite as such. No limitations section.
 
 ---
 
 ## F5. Kapoor, Stroebl, Siegel, Nadgir & Narayanan (2024) — *AI Agents That Matter* `[ABS]`
 
-arXiv:2407.01502, 1 Jul 2024. **Unrefereed preprint (Princeton), heavily cited.**
+arXiv:2407.01502, 1 Jul 2024. **⚠ Venue corrected: accepted at TMLR (Transactions on Machine
+Learning Research), 2025 — refereed, not a preprint.** Update your bibliography.
 
 **Claim.** Agent benchmarks over-focus on accuracy, ignore cost, have inadequate holdout sets,
 and suffer a pervasive lack of reproducibility; SOTA agents are needlessly complex and costly.
+Their own survey: **7 of 17 benchmarks have no holdout set and no plans for one.**
 
-**RELATION TO US: METHOD-PRECEDENT — your cost/turn-count framing.** The paper that made
-"report cost alongside accuracy" standard. Your turn-count DV is exactly what they argue for,
-and you should say so: you are not measuring a curiosity, you are measuring the axis the
-field has been told to measure.
+**⚠ RELATION TO US: CORRECTED — they do NOT recommend reporting turn or step count.**
+Their actual recommendation, verbatim:
+> "downstream evaluations of agents should include input/output token counts in addition to
+> dollar costs, so that anyone looking at the evaluation in the future can instantly
+> recalculate the cost using current prices."
+
+So the recommended axes are **dollar cost and token counts**. You cannot say the field has
+been told to measure turn count — that is your own operationalisation. Cite them for
+"report a non-accuracy cost axis", then justify step count yourself (A7 is the better citation
+for turns as a first-class billed quantity).
+
+**Their reproducibility numbers are a direct gift to §8:**
+> "We found that many reported accuracy scores were above the maximum of five runs that we
+> performed in our reproduction attempts, and the reported baselines were in some cases lower
+> than the minimum of five runs we performed."
+
+Concrete case: a reported baseline of **75.0%** against a reproduced **mean of 89.6% over five
+runs** — a ~15-point point-estimate gap on rerun. **That is precedent for exactly your §8
+claim** (direction and significance hold, point estimates move). Quote it.
+
+**Named criticisms with numbers:** HumanEval (3/164 problems missing example tests, patched
+three different ways by Reflexion/LATS/LDB); SWE-bench/SWE-Agent ($4/task cap → $8,000+ for
+one full evaluation; "agent evaluations are rarely accompanied by error bars"); WebArena
+(Reddit rate-limiting breaks task-order independence; STeP hardcodes per-task policies).
+
+**Limitations (Appendix G):** cost models are time-bound; coverage is not exhaustive; other
+costs — "environmental impact, human labor for data annotation, and maintenance costs" — are
+not analysed.
 
 ---
 
 ## F6. Zhu et al. (2025) — *Agentic Benchmark Checklist (ABC)* `[ABS]`
 
-"Establishing Best Practices for Building Rigorous Agentic Benchmarks." arXiv:2507.02825.
-**NeurIPS 2025 poster — refereed.**
-**UNVERIFIED:** full author list not confirmed in this pass.
+Yuxuan Zhu, Tengjun Jin, Yada Pruksachatkun, Andy Zhang, Shu Liu, Sasha Cui, Sayash Kapoor,
+Shayne Longpre, Kevin Meng, Rebecca Weiss, Fazl Barez, Rahul Gupta, Jwala Dhamala, Jacob
+Merizian, Mario Giulianelli, Harry Coppock, Cozmin Ududec, Jasjeet Sekhon, Jacob Steinhardt,
+Antony Kellermann, Sarah Schwettmann, Matei Zaharia, Ion Stoica, Percy Liang, Daniel Kang
+(**25 authors**; UIUC, Stanford, Berkeley, Yale, Princeton, MIT, Transluce, ML Commons,
+Amazon, UK AISI, Oxford). arXiv:2507.02825. **NeurIPS 2025, Datasets & Benchmarks Track
+poster — refereed.** *Title discrepancy: NeurIPS lists it as "…Best Practices **in** Building…"
+(in, not for).*
 
-**Key numbers.** Of ten popular agentic benchmarks: **seven violate task validity, seven
-violate outcome validity, all ten have reporting limitations.** Issues can misstate agent
-performance by up to **100% in relative terms**. Named examples: SWE-bench Verified uses
-insufficient test cases; **τ-bench counts empty responses as successful.** Applying ABC to
-CVE-Bench cut performance overestimation by 33%.
+**Key numbers.** Of ten benchmarks assessed — SWE-bench, SWE-Lancer, KernelBench, BIRD,
+Cybench, MLE-bench, GAIA, τ-bench, WebArena, OSWorld — **seven violate task validity, seven
+violate outcome validity, all ten have reporting limitations.** CVE-Bench overestimation cut
+by **33% in absolute terms.**
 
-**RELATION TO US: THE CITATION FOR YOUR GRADING-BRITTLENESS PARAGRAPH.** Also directly
-relevant to section G: if you are considering τ-bench as your second substrate, this paper
-names a specific scoring bug in it that interacts badly with an experiment about agents
-stopping early. Read it before choosing.
+**⚠ The "100% in relative terms" figure belongs to SWE-Lancer, not SWE-bench Verified.**
+"an agent can score 100% on SWE-Lancer without resolving any tasks". Their SWE-bench case
+study found far smaller effects: agents pass without addressing the issue on 5.3% (Verified)
+and 7.7% (Lite) of tasks, causing **2.3% and 1.6% overestimation** respectively. Attributing
+100% to SWE-bench Verified would be citing the wrong benchmark.
+
+**⚠ The τ-bench claim is confirmed but needs restating precisely — and there are two flaws,
+not one.**
+> "we find that in τ-bench, a trivial agent that returns empty responses is considered
+> successful on intentionally impossible tasks (e.g., changing a non-refundable ticket). This
+> trivial agent achieves a 38% success rate and outperforms a GPT-4o-based agent."
+
+The mechanism: τ-bench contains intentionally unsolvable tasks — **38% of the airline subset,
+6% of retail** — and success there is defined as leaving the environment unchanged, so doing
+nothing passes. Separately, "2% of airline tasks and 3.6% of retail tasks treat verbatim
+database text as ground truth and grade by substring matching… an agent that dumps the entire
+database passes." **Your recommendation against τ-bench is well-supported — on two independent
+grounds.**
+
+**⚠ Neither SpreadsheetBench nor AppWorld appears anywhere in this paper** — not in the
+ten-benchmark assessment nor the wider seventeen-benchmark survey. You cannot borrow a verdict
+on your own substrate either way; **self-apply the checklist in your validity section.**
+Note OSWorld *is* assessed, with a **28% underestimation** in its Chrome task section from
+broken HTML selectors after site changes — relevant to §G.
+
+**The checklist, enough to self-apply:** *Task validity* — tool versions specified; API
+availability and rate-limit handling; residual state cleared between runs; agent isolated from
+ground truth; setup does not drift (no live websites); ground truth verified correct; each task
+verified solvable; an oracle solver exists; no exploitable shortcuts. *Outcome validity* —
+for string matching, handle equivalent phrasings and negation; for LLM-as-judge, validate
+judge accuracy; never let trivial, verbatim-database or empty/no-op responses count as success.
+*Reporting* — acknowledge design weaknesses and discuss their impact (80% of assessed
+benchmarks failed this one).
 
 ---
 
