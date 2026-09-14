@@ -1439,6 +1439,32 @@ separate source (Lakens 2017).
 
 ---
 
+## F4b. Lakens (2017) — *Equivalence Tests: A Practical Primer* `[CITED — added for the statistics section]`
+
+Daniel Lakens. "Equivalence Tests: A Practical Primer for t Tests, Correlations, and
+Meta-Analyses." *Social Psychological and Personality Science* 8(4), 2017, 355–362.
+DOI 10.1177/1948550617697177. **Refereed journal.**
+
+**Why it is here.** Miller (F4) supplies clustered standard errors and the MDE inversion but
+contains **no equivalence framework** — a full-text search found no TOST. This is the source
+for stating a null as a null.
+
+**What to implement.** Two one-sided tests against a pre-specified smallest effect size of
+interest (SESOI): reject "the effect is at least +Δ" and "the effect is at most −Δ"
+separately; equivalence is declared when both are rejected. Equivalent to checking whether the
+90% CI (for α = .05 TOST) falls entirely inside (−Δ, +Δ).
+
+**⚠ The SESOI must be specified in advance and justified**, not chosen after seeing which
+bound the data clear. Our SESOI is **±4 accuracy points**, the polite-vs-rude gap of
+A1 (80.8% vs 84.8%) — the effect this paper is positioned against. Reporting additional
+bounds post hoc is descriptive, not a test, and must be labelled as such.
+
+**Relation to us:** ESSENTIAL FOR §2.8. Cite Lakens for the equivalence framing and Miller for
+the clustered SE and power inversion; never conflate the two.
+
+---
+
+
 ## F5. Kapoor, Stroebl, Siegel, Nadgir & Narayanan (2024) — *AI Agents That Matter* `[CITED — full text, verified]`
 
 arXiv:2407.01502, 1 Jul 2024. **⚠ Venue corrected: accepted at TMLR (Transactions on Machine
