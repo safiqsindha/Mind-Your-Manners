@@ -208,6 +208,7 @@ def _call_and_record(
     phase: str,
     turn: int,
     interjection_turn: Optional[int] = None,
+    interjection_key: Optional[str] = None,
 ):
     provider = get_provider(model.provider)
     tracker.check_before_call(estimated_cost_usd=0.02)
@@ -260,7 +261,22 @@ def _call_and_record(
         # times, once per injection turn -- so without this field a regrade
         # would splice three separate trajectories into one and grade the
         # result. Free recovery of a paid run depends on this being here.
-        extra={"turn": turn, "interjection_turn": interjection_turn},
+        #
+        # interjection_key is here for the same reason, one factor further
+        # out. The probe, praise, cross7 and stage1 designs cross several
+        # interjection ARMS over one (task, tone, trial): six praise arms all
+        # run at tone L4_neutral, so the row's tone_level cannot tell them
+        # apart. Today that is survivable only because --interject takes one
+        # arm per invocation and each invocation writes its own raw log
+        # (progress.py relies on exactly that, one log at a time). Putting
+        # the arm label on the row makes the trajectory key self-describing,
+        # so a merged or concatenated log regrades correctly instead of
+        # silently splicing six trajectories into one.
+        extra={
+            "turn": turn,
+            "interjection_turn": interjection_turn,
+            "interjection_key": interjection_key,
+        },
     )
     tracker.record(row)
     return response, row
@@ -311,6 +327,7 @@ def run_react_multi_round(
     trial: int,
     interjection: Optional[str] = None,
     interjection_turn: Optional[int] = None,
+    interjection_key: Optional[str] = None,
     max_turns: int = 10,  # was 6. Raised while chasing a 0/5 gate that turned out to be sandbox.py's
     # path bug, not a turn shortage (see _agent_system_prompt's CORRECTED note). Kept at 10 on the
     # post-fix evidence rather than reverted: with execution actually working, 4 of 5 gate tasks
@@ -325,6 +342,7 @@ def run_react_multi_round(
         response, row = _call_and_record(
             tracker, model, system_prompt, messages, task_id, tone_level, trial, "multi_round_react", turn,
             interjection_turn=interjection_turn,
+            interjection_key=interjection_key,
         )
         traj.result_rows.append(row)
 

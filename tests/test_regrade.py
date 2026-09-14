@@ -60,6 +60,31 @@ def test_rows_group_into_trajectories_by_model_task_tone_trial():
     assert len(group_trajectories(rows)) == 4, "each condition is its own trajectory"
 
 
+def test_interjection_arms_at_one_tone_level_are_separate_trajectories():
+    """The praise design runs six arms at tone L4_neutral, so (model, task,
+    tone, trial, injection turn) does not separate them. The arm label on
+    the raw row must -- otherwise a merged log splices six trajectories into
+    one and regrades a thing the model never produced."""
+    def arm(key, turn):
+        r = _row(turn, SAVE_42, tone="L4_neutral")
+        r["extra"] = {"turn": turn, "interjection_turn": 1, "interjection_key": key}
+        return r
+    rows = [arm("Q0_control", 0), arm("Q0_control", 1), arm("Q3_closing_neutral", 0), arm("Q3_closing_neutral", 1)]
+    grouped = group_trajectories(rows)
+    assert len(grouped) == 2, "two arms, two trajectories"
+    assert all(len(turns) == 2 for turns in grouped.values())
+
+
+def test_rows_logged_before_the_arm_field_existed_still_group_as_before():
+    """A log written before interjection_key was recorded keys with None,
+    exactly as it always did -- one log per arm, arm label from the caller."""
+    rows = [_row(0, SAVE_42, tone="L4_neutral"), _row(1, SAVE_99, tone="L4_neutral")]
+    grouped = group_trajectories(rows)
+    assert len(grouped) == 1
+    (key,) = grouped
+    assert key.interjection_key is None and key.interjection_turn is None
+
+
 def test_turns_are_ordered_even_when_the_log_is_not():
     rows = [_row(2, SAVE_99), _row(0, SAVE_42), _row(1, NO_CODE)]
     turns = next(iter(group_trajectories(rows).values()))

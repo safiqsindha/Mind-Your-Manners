@@ -53,6 +53,12 @@ class TrajectoryKey:
     # regrade grades a thing the model never produced. None for every run
     # made before the field existed, which keys exactly as it used to.
     interjection_turn: Optional[int] = None
+    # The interjection ARM, for the same reason one factor further out: the
+    # praise/probe/cross designs run several arms at one tone level, so
+    # (model, task, tone, trial, turn) does not separate them. None for every
+    # row logged before agent_loop started writing it, which keys exactly as
+    # before -- and which is why progress.py still takes one log per arm.
+    interjection_key: Optional[str] = None
 
 
 def load_raw_rows(path: Path) -> list[dict]:
@@ -90,6 +96,7 @@ def group_trajectories(rows: Iterable[dict]) -> dict[TrajectoryKey, list[dict]]:
             tone_level=r.get("tone_level", "none"),
             trial=int(r.get("trial") or 0),
             interjection_turn=((r.get("extra") or {}).get("interjection_turn")),
+            interjection_key=((r.get("extra") or {}).get("interjection_key")),
         )
         grouped[key].append(r)
     for turns in grouped.values():
