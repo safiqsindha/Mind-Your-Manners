@@ -117,22 +117,37 @@ def recalculate_with_libreoffice(paths: list[Path], soffice_bin: Optional[str] =
     for path in paths:
         path = Path(path)
         with tempfile.TemporaryDirectory() as tmpdir:
-            proc = subprocess.run(
-                [
-                    soffice_bin,
-                    "--headless",
-                    "--norestore",
-                    f"-env:UserInstallation=file://{tmpdir}/.lo_profile",
-                    "--convert-to",
-                    "xlsx:Calc MS Excel 2007 XML",
-                    "--outdir",
-                    tmpdir,
-                    str(path),
-                ],
-                capture_output=True,
-                text=True,
-                timeout=LIBREOFFICE_TIMEOUT_S,
-            )
+            try:
+                proc = subprocess.run(
+                    [
+                        soffice_bin,
+                        "--headless",
+                        "--norestore",
+                        f"-env:UserInstallation=file://{tmpdir}/.lo_profile",
+                        "--convert-to",
+                        "xlsx:Calc MS Excel 2007 XML",
+                        "--outdir",
+                        tmpdir,
+                        str(path),
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=LIBREOFFICE_TIMEOUT_S,
+                )
+            except subprocess.TimeoutExpired:
+                # This function's contract is log-and-continue: a caller
+                # grading a batch must not lose the whole batch to one
+                # pathological workbook. subprocess.run(timeout=...) RAISES,
+                # so without this the contract was a comment rather than a
+                # behaviour -- and one 120s timeout killed a 450-trajectory
+                # regrade arm outright. The unconverted file keeps its
+                # uncached formulas and reads as unmeasurable, which is the
+                # correct outcome for a workbook LibreOffice cannot open.
+                failures.append(f"{path}: timed out after {LIBREOFFICE_TIMEOUT_S}s")
+                continue
+            except OSError as exc:
+                failures.append(f"{path}: {exc}")
+                continue
             combined_output = (proc.stdout or "") + (proc.stderr or "")
             converted = Path(tmpdir) / (path.stem + ".xlsx")
             if proc.returncode != 0 or "Error" in combined_output or not converted.exists():

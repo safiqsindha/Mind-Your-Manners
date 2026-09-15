@@ -5,7 +5,7 @@
 > against the primary PDFs before submission and are marked in §3.7: the full prefix set of
 > [kumar-dobariya-2026] Table 2, and the full variant list per level of
 > [dobariya-kumar-2025] Table 1. The **demand** coding in the right-hand column of each table
-> is ours, not theirs; §3.1 states the rule. Citation keys are placeholders.
+> is ours, not theirs; §3.1 states the rule. Citation keys resolve to §9.
 
 ## 3.1 The claim
 
@@ -90,7 +90,7 @@ against Very Rude 78.0. That second paper is not only a non-replication: on Gemi
 Lite it reports a 12.46-point spread with Sycophantic 10.35 points below Neutral at Holm
 p = 2.67e-9, and on ChatGPT-5-nano an 11.12-point spread. Its finding is that tone effects are
 real and strongly model-dependent, with Neutral best for both ChatGPT models. We return to the
-non-replication in Section 8.
+non-replication in Section 7.
 
 ## 3.4 The emotional-prompting literature rests on demand-carrying stimuli
 
@@ -173,8 +173,8 @@ not reported, and it is not shown for Dobariya & Kumar 2025, whose effect did no
 
 **Does not establish.** That every published effect in these papers is an artefact of demand.
 We have not re-run their experiments, and three of the four report effects on accuracy, which
-our own design does not test; only Kumar & Dobariya's length effect is on a quantity adjacent
-to ours. What we claim is narrower: **the factor these papers vary is not the factor they
+our own design is underpowered to resolve below about four points (§2.7); only Kumar &
+Dobariya's length effect is on a quantity adjacent to ours. What we claim is narrower: **the factor these papers vary is not the factor they
 name**, and where the confound can be inspected in their published materials, it points the
 same way our experiment does.
 

@@ -3,7 +3,7 @@
 > **Draft status.** Numbers verified against `RESULTS.md` and the archived records in
 > `results_archive/`. All contrasts are paired within task and clustered by task, per §2.4;
 > accuracy contrasts, the family they belong to, and their power are in §2.6–§2.8. Citation
-> keys are placeholders.
+> keys resolve to §9.
 
 ## 4.1 A cost curve that is not the register scale
 
@@ -182,14 +182,19 @@ Nor is the effect confined to tasks the agent was about to abandon. Splitting by
 control arm ever solved the task, threatening gives +42.2% on never-solved tasks against +30.8%
 on solvable ones, and polite +31.5% against +24.2%.
 
-**The extra turns are mostly repetition.** The per-turn regrade of §6 is the evidence: the
-demand arm adds +0.96 redundant steps at a 10-turn ceiling and +1.11 at 20 (p < 0.0001 and
-p = 0.012) while moving final match by +0.006 (p = 0.77). In 90% of multi-turn trajectories at
-the 10-turn ceiling the first code turn is already the best the agent ever produces. That said,
-the continue-signal contrast on final match has been measured three times — +0.014 (p = 0.50),
-+0.061 (p = 0.0028), +0.019 (p = 0.16) — so "no progress" is what two of three measurements
-show and the third did not replicate (§2.9). A continue signal buys attempts; on the measure we
-report, the attempts are repetitions.
+**The extra turns are mostly, but not only, repetition.** The per-turn regrade of §6 is the
+evidence: the demand arm adds +0.75 redundant steps at a 10-turn ceiling and +1.03 at 20
+(p < 0.0001 and p = 0.0063), which is roughly 60% of its turn effect. Among trajectories that
+could improve, the first gradable attempt is already the best in 80–91% depending on the run.
+
+The remaining third is not nothing, and §6.4 is where this section's claim has to be qualified.
+The *explicit* continue signal — "there is still more work remaining" — raises the graded fraction
+by +0.028 (95% CI [+0.005, +0.052], p = 0.022), replicated across three runs with no detectable
+heterogeneity. The affect-free demand tested here does not: it pools to +0.009, p = 0.42. So a
+demand interjection buys attempts that are largely repetitions, and a blunter statement that work
+remains buys a small amount of real progress as well. The direct contrast between the two texts
+is +0.023 (p = 0.23) on the one run carrying both, so we read this as consistent with explicitness
+mattering rather than as a demonstrated gradient (§6.4).
 
 ## 4.6 The apparent timing effect is a proxy
 
@@ -252,14 +257,16 @@ Demand above control above praise, insult indistinguishable from control, on two
 different labs. The ordering is what replicates; the magnitudes are not, and GLM's praise arm
 does not reach significance on its own — it is also below 80% power at its observed size
 (§2.7), so the replication rests on the demand arm. GLM's effects are roughly half of Luna's,
-and its control runs 3.08 turns against Luna's 5.22 — a model that stops early has less room to
-be pushed into continuing.
+and its control runs 2.94 turns against Luna's 4.95 at this ceiling — a model that stops early has
+less room to be pushed into continuing. (Both figures are means of per-task means over fired
+control trajectories, the estimator §2.4 uses throughout; the corresponding raw trajectory means
+are 3.08 and 5.22.)
 
-Two structural facts hold on both models: the first code turn is already the best in 87% (Luna)
-and 85% (GLM) of trajectories at this ceiling, and the first turn is inspection rather than
-production (0% and 5% produce a candidate answer at turn 0). The *waste* is mostly Luna's.
-Control redundant steps run 1.88 on Luna against 0.35 on GLM, and the demand arm adds +1.11
-(p = 0.012) against +0.23 (p = 0.087). How wasteful a continue signal is scales with how
+Two structural facts hold on both models: among trajectories that could improve, the first
+gradable attempt is already the best in 84% on each at this ceiling (§6.5), and the first turn is
+inspection rather than production (0% and 5% produce a candidate answer at turn 0). The *waste* is
+mostly Luna's. Control redundant steps run 1.51 on Luna against 0.26 on GLM, and the demand arm
+adds +1.03 (p = 0.0063) against +0.19 (p = 0.086). How wasteful a continue signal is scales with how
 inclined the model already was to keep going: it is a property of the model's stopping
 behaviour, not of the signal.
 
@@ -290,9 +297,15 @@ read as a demand gradient that happened to correlate with politeness because of 
 were written.
 
 **Establishes what the moved quantity is.** Trajectory length, not reasoning per step — with
-threatening as a reported exception — and the extra length is, on the measure we report,
-redundant work rather than detectable progress. This holds on two models. The ordering is what
-holds; the magnitudes are not stable.
+threatening as a reported exception. On Luna, roughly 55–65% of that length is redundant work; on
+GLM, which barely repeats itself, the redundant-step effect is small and does not reach
+significance (+0.19, p = 0.086, §6.3). The turn-count ordering is what holds on both models; the
+magnitudes are not stable.
+
+**Establishes, with the qualification §6.4 adds, that the remainder is real.** An explicit
+statement that work remains buys +0.028 of the graded fraction, 95% CI [+0.005, +0.052], across
+three measurements. Accuracy does not move, but §2.7's minimum detectable effect there is 3.7–7.8
+points, so an accuracy gain of this size is unresolvable rather than excluded.
 
 **Does not establish why praise stops the agent.** That praise is heard as a completion signal
 is one reading; that it raises the agent's confidence in work already produced is another. This
