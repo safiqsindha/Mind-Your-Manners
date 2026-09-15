@@ -269,6 +269,10 @@ overwrite one another's output workbooks; and a LibreOffice timeout that killed 
 arm because a documented log-and-continue contract was a comment rather than a behaviour. A fifth
 near miss came during this rewrite's own rollout: comparing a freshly regraded control against
 not-yet-regraded arms produced a −0.36 final-match "effect" at p < 0.0001 in three arms at once.
+The guard written against that has since been fixed too — it compared file modification times, and
+`git checkout` rewrites those without changing a byte, so the first merge after it was written
+declared all 28 valid regraded arms stale. It now compares a hash of the instrument's source,
+recorded per arm when the arm is regraded.
 
 **The honest scope of §6 is therefore narrower than its numbers suggest.** Its redundant-step
 measure is exact and needs no recalculation. Its progress measure depends on a recalculation path
