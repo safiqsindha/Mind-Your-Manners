@@ -1,10 +1,10 @@
-# 8. What replicated, and what only looked like it did
+# 7. What replicated, and what only looked like it did
 
-> **Draft status.** Every figure in §8.2–§8.4 is printed by
+> **Draft status.** Every figure in §7.2–§7.4 is printed by
 > `results/analysis/replication_table.py`, which recomputes each contrast from the archived
-> records under the estimator of §2.4. Citation keys are placeholders.
+> records under the estimator of §2.4. Citation keys resolve to §9.
 
-## 8.1 Why this section exists
+## 7.1 Why this section exists
 
 This study measured several of its contrasts more than once, not by design at first but because
 the design kept changing — a micro-experiment, a seven-register run, a probe, a follow-up with
@@ -25,7 +25,7 @@ headline of 115% on BIG-Bench [li-2023]. Their own design is single-run at tempe
 repeated sampling, so repeated measurement is a step past their practice rather than a borrowing
 of it.
 
-## 8.2 The replication table
+## 7.2 The replication table
 
 Every arm that appears against a control in more than one run on Luna, under the estimator of
 §2.4, on the primary outcome. Each cell is 50 tasks.
@@ -57,9 +57,9 @@ Two caveats about how to read magnitudes off this table. First, the cross-ceilin
 magnitude comparisons: the arms that persist longest are the ones a 10-turn ceiling truncates
 hardest, and "work remains" has a mean of 6.37 turns against a ceiling of 10, so most of the
 +1.85-to-+6.20 gap is censoring rather than instability. Second, a ratio of estimates is a poor
-summary — it is scale-dependent and meaningless near zero. §8.3 uses a test instead.
+summary — it is scale-dependent and meaningless near zero. §7.3 uses a test instead.
 
-## 8.3 Matched-ceiling pairs: a test, not an impression
+## 7.3 Matched-ceiling pairs: a test, not an impression
 
 Three contrasts were measured twice at the *same* ceiling, which is the only fair magnitude
 comparison. For each we report the difference in standard errors of the difference, treating the
@@ -87,7 +87,7 @@ Reasoning tokens behave the same way, and the praise pair is consistent there (�
 z = 0.95, p = 0.34), which is a further reason to treat the turn-count result as marginal rather
 than as established drift.
 
-## 8.4 An instability that was the instrument
+## 7.4 An instability that was the instrument
 
 The continue-signal arm is the one contrast measured three times, and it was, until we rebuilt the
 instrument, this paper's showpiece for run-to-run instability. It is now something more useful: a
@@ -103,8 +103,9 @@ worked example of a defective measure producing the *appearance* of instability.
 Read the two middle rows against each other. Under the defective regrade the three measurements
 looked like one hit between two nulls, spanning 4.4×, and we wrote a subsection about what that
 implied. Corrected, they are +0.026, +0.034 and +0.025 — pooling to **+0.028, 95% CI
-[+0.009, +0.048], p = 0.0038, with Cochran's Q = 0.20 on 2 df (heterogeneity p = 0.91)**. They are
-the most consistent set of repeated measurements in this study.
+[+0.005, +0.052], p = 0.022, with Cochran's Q = 0.20 on 2 df (heterogeneity p = 0.91)**, under the
+joint task bootstrap of §2.8. Their *point estimates* agree more closely than anything else in
+this study, though only one of the three reaches significance on its own (§6.4).
 
 The defect is described in §6.8: the regrade never recalculated the agent's formula-writing turns,
 so a majority of final answers read as empty and scored zero. That is a *noise* injection, and
@@ -126,9 +127,11 @@ run-level noise but the underlying object. Their agreement carries almost no ind
 information.
 
 **So the corrected statement is:** a continue signal buys more turns on two models, most of them
-redundant, and buys about 2.8 points of the graded range, replicated three times. It does not buy
-a better pass rate, because 2.8 points of partial credit does not cross an all-or-nothing
-threshold that accuracy is anyway underpowered to detect (§6.4, §2.7).
+redundant, and buys about 2.8 points of the graded range, replicated three times. It does not show
+up as a better pass rate — but that is because accuracy is underpowered to resolve a gain of this
+size (§2.7's MDE is 3.7–7.8 points), not because partial credit cannot cross the pass threshold.
+The share of trajectories ending *fully* correct rises by 2.6–6.0 points across the same three
+measurements (§6.4).
 
 One note on population. The per-turn regrade outputs carry no record of whether the interjection
 fired, so these contrasts are over all rows with a readable final match — 48 tasks — rather than
@@ -137,11 +140,11 @@ arm (§2.5), so we do not expect bias, but it is a different population and we s
 
 **What we would have concluded without the fix.** That extra persistence buys nothing, and that
 our own measurements of it were unstable. Both were wrong, in the same direction, from one
-unrecalculated workbook. §8.6 lists the claims we withdrew after re-analysing data we already had;
+unrecalculated workbook. §7.6 lists the claims we withdrew after re-analysing data we already had;
 this is the one we withdrew after fixing the thing that produced it, which is a different and
 more expensive category.
 
-## 8.5 The reasoning-token outcome, including an inconvenient row
+## 7.5 The reasoning-token outcome, including an inconvenient row
 
 The first run's pre-registered outcome was reasoning tokens, and a section called "what
 replicated" should not quietly report only the outcome that behaved.
@@ -163,7 +166,7 @@ selective reporting cannot practise it, and we do not build on it.
 Praise on tokens likewise loses significance at stage 1 (p = 0.17), which §4.7's turn-count table
 does not show.
 
-## 8.6 Claims this study withdrew about itself
+## 7.6 Claims this study withdrew about itself
 
 Instability is one failure mode; analysis error is another. We discuss four here, chosen because
 each changed a substantive claim. They are not the complete list — the arithmetic and estimator
@@ -185,8 +188,11 @@ and large at turns 1 and 2, which looks like position. §4.6 shows it is not: ho
 fixed and varying whether a candidate answer exists changes the effect from +0.34 to +1.97, while
 holding the moderator fixed and varying the turn index changes it from +1.97 to +1.66.
 
-**A ceiling explanation we tested and withdrew.** §8.4 above: the correction was written, then
-checked, then withdrawn.
+**A ceiling explanation we tested and withdrew.** When the continue signal's progress effect
+looked like one hit between two nulls, the natural reading was that the 10-turn ceiling had
+truncated real progress. Truncating the ceiling-20 run's own analysis to ten turns left the effect
+intact, so the ceiling explained almost none of the gap. The correction was written, then checked,
+then withdrawn — and §7.4 now shows the gap itself was the instrument.
 
 **A productive window that was a rate on a small denominator.** A per-turn improvement rate of
 1–5% at turn indices around 10–14 was read as evidence that the productive window extended that
@@ -194,7 +200,7 @@ far. The rate was real; the conclusion was not. In absolute terms those turns co
 improvements — 98.3% of trajectories have reached their best answer by turn 10, at a median turn
 of 2 (§6.6).
 
-## 8.7 Two infrastructure failures worth recording
+## 7.7 Two infrastructure failures worth recording
 
 Neither changed a conclusion; both are the kind of thing that corrupts a result without announcing
 itself.
@@ -212,7 +218,7 @@ range on a sheet that does not exist. Every affected lookup returned `None`, whi
 *unmeasurable* rather than as *broken*. It was caught by validating the regrade against a real task
 before scaling up, and it is why §6.2 describes that validation step.
 
-## 8.8 What we would ask of this literature
+## 7.8 What we would ask of this literature
 
 Nothing here is a new methodological proposal; it is the discipline [vaugrante-2024], [sclar-2024]
 and [miller-2024] already ask for, applied to a study small enough that applying it is cheap.
@@ -226,9 +232,9 @@ Three things, in order of what they cost.
 2. **Measure at least one contrast twice, on the same instrument.** It cost us nothing we would not
    have spent anyway, and it changed what we were willing to claim about four results: the
    continue-signal progress effect, the accuracy movement that accompanied it, the praise magnitude,
-   and the timing effect of §8.6.
+   and the timing effect of §7.6.
 3. **Report ranges where you have them and say so where you do not.** We quote a range wherever a
-   quantity was measured more than once and flag the single measurements as single (§9.6).
+   quantity was measured more than once and flag the single measurements as single (§8.6).
    [sclar-2024] recommend this while also noting that single-format evaluation "may still be
    sufficient for many use cases", so it is a reporting discipline rather than a design requirement.
 

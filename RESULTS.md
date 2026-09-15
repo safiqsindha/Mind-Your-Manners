@@ -987,7 +987,7 @@ Records: `results_archive/core_gpt-luna_praise_records.json` (1,800 graded).
 > |---|---|---|
 > | Redundant-step effects | +0.96 / -0.76 / -1.01 | +0.75 / -0.61 / -0.86 (all signs and p held; 55-65% of the turn effect, not two-thirds to four-fifths) |
 > | "Work remains" on final match | +0.014 / **+0.061** / +0.019 | **+0.026 / +0.034 / +0.025** |
-> | Conclusion | extra turns buy nothing | **+0.028 [+0.009, +0.048], p=0.0038, Q=0.20/2df** |
+> | Conclusion | extra turns buy nothing | **+0.028 [+0.005, +0.052], p=0.022, Q=0.20/2df** |
 >
 > **The headline below is reversed.** "The extra persistence is thrashing" is
 > wrong as stated: roughly 55-65% of the turn effect is redundant, and the explicit continue signal buys a small, tightly replicated

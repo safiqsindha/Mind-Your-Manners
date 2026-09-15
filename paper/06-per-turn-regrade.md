@@ -3,7 +3,7 @@
 > **Draft status.** Every figure is printed by `results/analysis/regrade_summary.py` from the
 > archived regrade in `results_archive/progress_regrade_corrected/`. **This section was rewritten
 > after the instrument it describes was found to be defective; §6.8 records what changed and what
-> the earlier version claimed.** Citation keys are placeholders.
+> the earlier version claimed.** Citation keys resolve to §9.
 
 ## 6.1 The question the binary grade cannot answer
 
@@ -103,11 +103,11 @@ p = 0.0025), which is the praise pattern and strengthens the split.
 
 This is where the corrected instrument changed the paper's answer.
 
-Pooling each contrast's final-match measurements by inverse variance:
-
-Intervals come from a bootstrap that resamples **tasks jointly across runs**, as §2.8 does for
-accuracy, because the runs share their 50 tasks. Treating the runs as independent would give
-p = 0.0038 on the first row; it is reported here at the weaker and more defensible figure.
+Pooling each contrast's final-match measurements across runs. Point estimates are
+inverse-variance weighted; intervals and p-values come from a bootstrap that resamples **tasks
+jointly across runs**, as §2.8 does for accuracy, because the runs share their 50 tasks. Treating
+the runs as independent would give p = 0.0038 on the first row; it is reported here at the weaker
+and more defensible figure.
 
 | Contrast | k | Pooled Δ final match | 95% CI | p | Cochran's Q |
 |---|---:|---:|---|---:|---:|
@@ -257,14 +257,14 @@ What the correction did:
 | Conclusion | extra turns buy nothing | extra turns buy 2.8 points, replicated |
 
 The middle row is the paper's. The redundant-step finding survived the correction with every sign
-and significance level intact, about 20% smaller. The bottom row is the reversal: what §8
+and significance level intact, about 20% smaller. The bottom row is the reversal: what §7
 originally presented as this study's most consequential instance of run-to-run instability — one
 significant measurement between two nulls — was the instrument. Corrected, the three agree
-(Q = 0.20 on 2 df). §8.4 now reports the defect as the explanation rather than the instability.
+(Q = 0.20 on 2 df). §7.4 now reports the defect as the explanation rather than the instability.
 
 This is the latest of four failures in this subsystem that presented as data rather than as an
 error. The others: a range parser that read `"P2:P7"` as a sheet named `P2:` and returned `None`
-for every affected lookup (§8.7); a scratch-directory collision that let concurrent processes
+for every affected lookup (§7.7); a scratch-directory collision that let concurrent processes
 overwrite one another's output workbooks; and a LibreOffice timeout that killed a 450-trajectory
 arm because a documented log-and-continue contract was a comment rather than a behaviour. A fifth
 near miss came during this rewrite's own rollout: comparing a freshly regraded control against

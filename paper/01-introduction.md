@@ -1,7 +1,7 @@
 # 1. Introduction
 
 > **Draft status.** Every empirical figure here is carried from a later section and is sourced
-> there. Citation keys are placeholders.
+> there. Citation keys resolve to §9.
 
 ## 1.1
 
@@ -98,7 +98,7 @@ than the four points the tone literature reports (§2.8).
 **And our own magnitudes are unstable.** Direction and significance reproduce wherever the
 effect is large; point estimates span 1.5× to 3.4× across re-measurements of the same contrast on
 the same model, though most of that spread is across different turn ceilings. At a matched
-ceiling the two larger effects reproduce within 10% and the smallest does not (§8.3).
+ceiling the two larger effects reproduce within 10% and the smallest does not (§7.3).
 
 ## 1.4 What this means
 
@@ -116,12 +116,13 @@ ones that moved, with the qualifications §3 states.
 
 We make one methodological contribution and one audit of ourselves. The contribution is a
 per-turn regrade against an execution-grounded benchmark's own evaluator, which turns a binary
-verdict into a curve and makes "did the extra turn help?" answerable (§6). The audit is §8: this
-study withdrew four of its own claims, and its point estimates moved on re-measurement often
-enough that we report ranges by default.
+verdict into a curve and makes "did the extra turn help?" answerable (§6). The audit is §7, and it
+is not decorative: this study withdrew six substantive claims about its own data, including one
+that reversed when a defect in that same regrade was found and fixed (§6.8). Its point estimates
+moved on re-measurement often enough that we report ranges by default.
 
 ## 1.5 Scope
 
 Two models, one benchmark, fifty tasks, one agent scaffold. Everything here is a claim about what
-these agents did on these tasks, and §9 is explicit about which findings we expect to generalise
+these agents did on these tasks, and §8 is explicit about which findings we expect to generalise
 and which we do not.

@@ -2,7 +2,7 @@
 
 > **Draft status.** Numbers verified against `results/analysis/praise_turn_vs_trajectory.txt`
 > (paired by task, cluster bootstrap over tasks, 8,000 reps) and `RESULTS.md`. Citation keys
-> are placeholders. arXiv:2608.01347 is cited at **v6** throughout, per the version hazard in
+> resolve to §9. arXiv:2608.01347 is cited at **v6** throughout, per the version hazard in
 > the literature review: v6 reports 4,644 runs, drops the "~$166" figure and the "92–97%"
 > range, and cuts both quotes earlier drafts of our review attributed to it.
 

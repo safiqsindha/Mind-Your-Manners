@@ -3,7 +3,7 @@
 > **Draft status.** `results/analysis/accuracy_null_mde.py` reads the archived records and
 > prints every contrast, pooled estimate, MDE, TOST, Cochran's Q and turn-count figure quoted
 > in §2.6–§2.8, plus the firing-rate check in §2.5. Design facts in §2.1–§2.3 come from
-> `RESULTS.md` and `harness/`. Citation keys are placeholders.
+> `RESULTS.md` and `harness/`. Citation keys resolve to §9.
 
 ## 2.1 Substrate, sample, and the turn ceiling
 
@@ -24,14 +24,15 @@ interjection runs used ten; the cross-model run used twenty, after the ten-turn 
 found to censor the continue-signal arms hardest. Where a contrast pools across runs the
 ceilings differ, and §2.8 says which.
 
-Twenty is defended empirically in §6: among trajectories that ran to the 20-turn ceiling, the
-best answer was first reached at a median turn of 2, and 98.3% had peaked by turn 10 with 100%
+Twenty is defended empirically in §6: across the dedicated ceiling-20 run, the best answer was
+first reached at a median turn of 2, and 98.3% of trajectories had peaked by turn 10 with 100%
 by turn 14 (§6.6).
 
 One property of the loop matters for every per-turn measure in this paper: **each turn receives
-the original instruction, never the previous turn's output.** Turns are independent attempts at
-the same problem rather than refinements of a running draft, which is what makes "did attempt
-*k+1* land closer than attempt *k*" well posed.
+the original input workbook, never the previous turn's output.** Turns are independent attempts
+at the same problem in *workbook state* rather than refinements of a running draft — the message
+history does accumulate, so attempt *k+1* is conditioned on the text of attempts 1…*k* — which is
+what makes "did attempt *k+1* land closer than attempt *k*" well posed (§6.2).
 
 ## 2.2 The manipulation
 
@@ -76,8 +77,7 @@ present as the original plan.
 turns, so an arm that takes more turns gets more draws from the same distribution and a higher
 maximum for free. In the run where we compared them, best match gives +0.045 (p = 0.0012) for
 the continue-signal arm where final match gives +0.025 (p = 0.085). Best match is biased toward
-exactly the arms this study makes longer: more turns means more draws from the same distribution
-and a higher maximum for free.
+exactly the arms this study makes longer.
 
 For redundant turns we adopt **redundant step** from [redundancybench]. Our criterion — the
 graded range is unchanged after the turn — sits between their counterfactual definition
@@ -116,7 +116,7 @@ One consequence deserves stating because it affected our own earlier drafts. The
 difference of arm means and the paired task-clustered difference are **two estimators of the
 same contrast, and they do not give the same number.** The praise contrast is −0.62 and −1.14
 turns under the first and −0.59 and −1.08 under the second. Both are correct; only one is
-comparable to the rest of this paper, and a paper whose §8 concerns point estimates failing to
+comparable to the rest of this paper, and a paper whose §7 concerns point estimates failing to
 replicate cannot quote two different pairs for one contrast. Every number here is the paired,
 task-clustered one.
 
@@ -228,11 +228,12 @@ identical tasks and ceiling (§2.9). That is the honest version of "accuracy nev
 
 ## 2.9 Ranges, not point estimates
 
-Seven quantities in this study moved materially when measured again on the same tasks, model
-and ceiling. The praise contrast gave −0.59 turns in one run and −1.08 in another; accuracy on the
-continue-signal contrast gave +6.6 points and then −1.8. (A fourth apparent instability, that
-contrast's effect on final match, turned out to be a defective instrument rather than a property
-of the runs — see §6.8 and §8.4.)
+Several quantities in this study moved materially when measured again on the same tasks, model
+and ceiling; §7.2 tabulates every contrast we measured more than once. The praise contrast gave
+−0.59 turns in one run and −1.08 in another; accuracy on the continue-signal contrast gave +6.6
+points and then −1.8; the insult arm flipped sign on both turns and reasoning tokens. (A fourth
+apparent instability, that contrast's effect on final match, turned out to be a defective
+instrument rather than a property of the runs — see §6.8 and §7.4.)
 
 The pattern differs by outcome, and conflating them would flatter us. **For the turn-count
 effects, direction and significance replicated and the point estimates did not. For final match,

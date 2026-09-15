@@ -1,21 +1,21 @@
-# 9. Limitations, and what we expect to generalise
+# 8. Limitations, and what we expect to generalise
 
-> **Draft status.** Cross-references are to the sections named. Citation keys are placeholders.
+> **Draft status.** Cross-references are to the sections named. Citation keys resolve to §9.
 
-## 9.1 The short version
+## 8.1 The short version
 
 Two models, one benchmark, fifty tasks, one agent scaffold. Everything in this paper is a claim
 about what these agents did on these tasks. We separate below what we expect to survive a change
 of setting from what we do not, because those are different bets and a reader should be able to
 disagree with them separately.
 
-## 9.2 What we expect to generalise
+## 8.2 What we expect to generalise
 
 **The dissociation.** That demand without evaluative language produces the effect, that negative
 register without demand does not, and that positive register without demand produces the opposite
 effect (§4.9) is a claim about what part of a message an agent acts on. Two of its three legs held
 on a second model from a different lab with very different stopping behaviour; the praise leg was
-directionally consistent but below power there (§4.7, §9.3). And in the two published stimulus
+directionally consistent but below power there (§4.7, §8.3). And in the two published stimulus
 sets whose per-condition outcomes can be inspected, the demand-bearing conditions are the ones
 that moved (§3.6). We would be surprised if it were specific to spreadsheets.
 
@@ -23,8 +23,9 @@ that moved (§3.6). We would be surprised if it were specific to spreadsheets.
 already published for single-turn settings [kumar-dobariya-2026; yin-2024], and our contribution
 is to replicate it where the moved quantity is *steps* rather than tokens within one response. Two
 independent lines of evidence converging is a reasonable basis for expecting it elsewhere. Note
-the bound: our design excludes accuracy effects of four points and above, not of one or two
-(§2.7).
+the bound, and that it is a bound on the *pooled* estimates: a single contrast here cannot
+exclude a four-point effect (§2.7), while the pooled contrasts of §2.8 can. Neither excludes an
+effect of a point or two.
 
 **Closing cues as a termination lever.** This is the most distinctive result (§5) and the one
 whose generalisation we hold most loosely, because it rests on one run on one model. What the data
@@ -34,12 +35,12 @@ ordering is not demonstrated, and the one implication of a pre-closing account t
 failed (§5.4). What travels, if anything does, is that an agent's stopping behaviour is movable by
 a cue carrying no information about the task.
 
-## 9.3 What we do not expect to generalise
+## 8.3 What we do not expect to generalise
 
-**Every magnitude.** §8 is explicit: point estimates in this study span 1.5× to 3.4× across
+**Every magnitude.** §7 is explicit: point estimates in this study span 1.5× to 3.4× across
 re-measurements of the same contrast on the same model, most of it across different turn ceilings.
 At matched ceiling the two larger effects reproduce within 10% while the smallest is marginally
-inconsistent with a common value (§8.3). Quoting any number here as *the* size of a register
+inconsistent with a common value (§7.3). Quoting any number here as *the* size of a register
 effect would repeat the error the paper is about.
 
 **The waste.** That a continue signal buys mostly repeated work is, on our own data, a property of
@@ -52,7 +53,7 @@ wastefulness to scale with how inclined the model already was to continue.
 (p = 0.062) and is below 80% power at its observed size (§2.7). The replication of §4.7 rests on
 the demand arm.
 
-## 9.4 The substrate
+## 8.4 The substrate
 
 SpreadsheetBench was chosen because it is execution-grounded — the grade comes from running the
 agent's code against real test cases, not from a model's judgement — and because its tasks are
@@ -81,7 +82,7 @@ instrument as §6, on a different task family, at roughly $0.70 per trajectory. 
 engineering it would require: what that benchmark treats as collateral damage is not a separate
 metric but additional entries in the same test battery, so separating it is work.
 
-## 9.5 The scaffold
+## 8.5 The scaffold
 
 One agent loop, ReAct with code execution and execution feedback. Three properties of it are load
 bearing and a different scaffold could change any of them.
@@ -99,12 +100,12 @@ channel is untested and is a plausible moderator of the closing-cue result in pa
 on GLM, 90% and 5% (§4.6, §4.7). The finding that an interjection is inert until work exists to be
 about is, on our data, a finding about this scaffold's opening move.
 
-## 9.6 Things we measured once
+## 8.6 Things we measured once
 
-Because §8 treats a single measurement as a draw:
+Because §7 treats a single measurement as a draw:
 
 - The **bare closing cue, praise-the-work, and the Q4−Q5 praise isolation** (§5) — one run, one
-  model. Two arms of that run were later re-measured and replicated in direction (§8.2); the three
+  model. Two arms of that run were later re-measured and replicated in direction (§7.2); the three
   that carry the section's argument have not been.
 - The **opening-tone null** (§2.6) — one run, and on an instrument the paper itself declares
   confounded: its seven wrappers were not length-matched, and its reference level carried an extra
@@ -116,7 +117,7 @@ Because §8 treats a single measurement as a draw:
   (31 tasks at turn 1, 8 at turn 2).
 - **GLM**, on everything. One run at one ceiling.
 
-## 9.7 Four objections we expect, and do not have answers to
+## 8.7 Four objections we expect, and do not have answers to
 
 **One stimulus per construct.** Every construct in this paper — demand, praise, insult, closing
 cue, "work remains" — is a single 28-token sentence. We cite [sclar-2024] and [mizrahi-2024] for
@@ -136,13 +137,13 @@ primary outcome — are uncorrected, and several load-bearing p-values are not l
 0.062, stage-1 Luna praise at 0.017, L2 very polite at 0.0055, L6 very rude at 0.012. The largest
 effects would survive any reasonable correction; these would not all.
 
-**Run-level drift is not excluded as an explanation of §8.** Provider drift was checked *within*
+**Run-level drift is not excluded as an explanation of §7.** Provider drift was checked *within*
 the opening run (r = −0.003 with elapsed time) but not *between* runs, which span three days. The
 roster is provider-pinned and the served provider was asserted on every call, but temperature 0 is
 not deterministic on any roster model (§2.2), and we cannot separate sampling variation from drift
-for the one matched-ceiling pair that disagrees (§8.3).
+for the one matched-ceiling pair that disagrees (§7.3).
 
-## 9.8 What we did not test
+## 8.8 What we did not test
 
 **Whether any of this affects a human's experience of the agent.** We measured what the agent did.
 Whether users prefer, trust, or are better served by an agent that persists is a different
@@ -169,7 +170,7 @@ run's 1,050 trajectories under every register including threatening, and the mod
 to the user's tone across its 4,647 calls. Refusal counts for the interjection runs are recorded
 but were not analysed. That is an observation, not a test.
 
-## 9.9 Summary
+## 8.9 Summary
 
 The result we are most confident in is a negative one: **rudeness without a demand
 does not make an agent work harder, and politeness without a demand does not either.** The arms

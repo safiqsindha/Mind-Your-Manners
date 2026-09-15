@@ -29,8 +29,10 @@ The redundant-step effects all survived, roughly 20% smaller, with the same
 signs and significance. The progress effect did not survive as a null: the
 three measurements of the continue signal on `final_match` went from
 +0.014 / +0.061 / +0.019 (one hit, two nulls) to **+0.026 / +0.034 / +0.025**,
-pooling to **+0.028, 95% CI [+0.009, +0.048], p = 0.0037**, Cochran's Q = 0.20
-on 2 df. What the paper had reported as run-to-run instability was the
+pooling to **+0.028, 95% CI [+0.005, +0.052], p = 0.022** under a bootstrap
+that resamples tasks jointly across runs (the runs share their 50 tasks), with
+Cochran's Q = 0.20 on 2 df. Treating the runs as independent would give
+p = 0.0038; the paper reports the weaker figure. What the paper had reported as run-to-run instability was the
 instrument.
 
 ## Reproducing
