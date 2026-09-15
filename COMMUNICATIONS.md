@@ -1,8 +1,9 @@
 # Communications
 
 Drafts for external write-up. **The paper itself is written** — `paper/`,
-nine sections, each drafted and independently reviewed — and one item stands
-between it and submission: the single primary-PDF check in §3.7 item 1. The drafts
+nine sections, each drafted and independently reviewed — and **no verification
+items remain open**: both §3.7 primary-PDF checks were closed on 15 Sep 2026.
+What stands between the draft and submission is an author block and a venue. The drafts
 below are the popular-audience versions and are downstream of it; where they
 disagree with `paper/`, the paper is right.
 
@@ -284,19 +285,27 @@ replicates.
 
 **Target venue:** TBD. A workshop on agent evaluation remains the honest fit.
 
-**Outstanding before submission:** one primary-PDF check, §3.7 item 1 — whether
-any of Kumar & Dobariya's four non-hostile prefixes (arXiv:2607.23915, the
-inference-cost paper) contains a brevity instruction. It needs the PDF, not compute.
+**Outstanding before submission:** an author block, CRediT contributions, and a
+venue. No verification items remain.
 
-**A correction worth carrying into any popular draft.** §3.7's second check was
-closed on 15 Sep 2026 against the primary PDF of Dobariya & Kumar's AMCIS paper,
-and the answer went against us. Their prefix pool has two or three variants per
-level, not one; only **two of six** hostile variants carry a demand, and the
-earlier draft had quoted exactly those two. §3.3 now prints the whole pool and
-rests nothing on the case. Do not use "their own rude prompt says *try to focus*"
-as a punchy line — it is one of three, and the other two are pure insult. The
-strong versions of the demand argument are §4 (our own dissociation), §3.2
-(Kumar & Dobariya's token table) and §3.4 (EmotionPrompt's 7 of 11).
+**Two corrections worth carrying into any popular draft**, because both landed
+after the sections were written and both cut against an easy line.
+
+*Do not say* "their own rude prompt says *try to focus*." §3.7 item 2 closed
+against Dobariya & Kumar's AMCIS PDF and the answer went against us: the prefix
+pool has two or three variants per level, and only **two of six** hostile
+variants carry a demand — the earlier draft had quoted exactly those two. §3.3
+now rests nothing on that paper.
+
+*Do say*, and it is the strongest line in §3: in Kumar & Dobariya's
+inference-cost paper, **every condition whose prefix constrains output length is
+shorter than every condition whose prefix does not, on all four models** —
+and affect does not order the result (Rude at VADER −0.09 is shortest on three
+of four; Threatening at −0.77 is shortest on none and longest of all on Flash).
+The catch, which must travel with it: this is true only once the **Neutral**
+prefix is coded correctly. It asks for "the single letter", so it is a
+no-*affect* baseline, not a no-*instruction* one — our own draft got that wrong
+and conceded an anomaly because of it. Say so; the correction is the point.
 
 **Two things about the bibliography worth knowing when pitching this.** Eleven
 of the twenty works cited are unrefereed preprints, including both papers the
@@ -343,7 +352,7 @@ Self-Debug rather than a quotation from Chen et al.
 
 **Outstanding**
 
-- [ ] **§3.7 item 1** (one primary-PDF check, arXiv:2607.23915) — the only blocker
+- [x] **Both §3.7 primary-PDF checks** — closed 15 Sep 2026, neither as assumed
 - [ ] Author block and CRediT contributions
 - [ ] DeepSeek and Qwen (~$35) for four-model generality — parked, buys breadth not identification
 - [ ] A second substrate (AppWorld) — a different paper

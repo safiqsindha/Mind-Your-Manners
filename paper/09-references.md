@@ -54,11 +54,13 @@ text. Cited in §6.5.
 
 **[kumar-dobariya-2026]** Akhil Kumar, Om Dobariya. "Understanding Tone-Dependent Inference Cost
 in Large Language Models." arXiv:2607.23915, 27 Jul 2026. 25 pages. *Unrefereed preprint.* —
-**Verified:** full text. Source of the *social register* definition this paper adopts, and of
-§3.2's table. **⚠ §3.7 item 1 — the one remaining open item in the paper:** their four
-non-hostile prefixes are not quoted in our source, so §3.2's "no brevity instruction" column is
-an assertion pending a PDF check. Distinct from [dobariya-kumar-2026]: different arXiv number,
-author order, and dependent variable (inference cost, not accuracy).
+**Verified: full text, primary PDF, read end to end.** Source of the *social register* definition
+this paper adopts, and of §3.2's two tables — their Table 2 (all seven prefixes, word counts,
+VADER scores) and Table 3 (accuracy and output tokens, four models, ten runs). **§3.7 item 1 is
+closed against this PDF, and it corrected us:** their Neutral prefix asks for "the single letter",
+making it the most explicit output-length instruction of the seven rather than the
+no-instruction baseline our draft called it. Distinct from [dobariya-kumar-2026]: different arXiv
+number, author order, and dependent variable (inference cost, not accuracy).
 
 **[lakens-2017]** Daniel Lakens. "Equivalence Tests: A Practical Primer for t Tests,
 Correlations, and Meta-Analyses." *Social Psychological and Personality Science* 8(4), 2017,
@@ -150,17 +152,19 @@ question.
 
 ## Outstanding before submission
 
-One item remains, and it needs a primary PDF:
+**No verification items remain open.** Both §3.7 primary-PDF checks are closed, against
+arXiv:2605.29027 and arXiv:2607.23915. Neither confirmed the draft as written, and both
+corrections are stated in place in §3.2 and §3.3 rather than quietly absorbed: the first
+strengthened the argument after exposing a mis-coding of ours, the second weakened a case we now
+rest nothing on.
 
-1. **§3.7 item 1** — whether any of [kumar-dobariya-2026]'s four non-hostile prefixes contains a
-   brevity instruction (§3.2's "no" column is currently an assertion). This is arXiv:2607.23915,
-   the inference-cost paper.
-
-Four earlier items are now closed. **§3.7 item 2 is resolved against the primary PDF of
-[dobariya-kumar-2026]** (arXiv:2605.29027): its Table 1 prints two or three variants per level
-for the 50-question dataset, not one. The result went against our reading — only two of six
-hostile variants carry a demand, and the previous draft quoted exactly those two — so §3.3 has
-been rewritten, the counts printed, and the case explicitly downgraded to one we rest nothing on. **[chen-2023] has been dropped**: the words §6.5 quoted for it
+Five earlier items are now closed. **§3.7 item 2** (arXiv:2605.29027): its Table 1 prints two or
+three variants per level for the 50-question dataset, not one — only two of six hostile variants
+carry a demand, and the previous draft quoted exactly those two, so §3.3 is rewritten and the case
+downgraded. **§3.7 item 1** (arXiv:2607.23915): their Table 2 is now quoted in full in §3.2; no
+polite prefix constrains output length, but the *Neutral* one does, which removes the anomaly our
+draft had conceded and makes the separation complete on all four models. **[chen-2023] has been
+dropped**: the words §6.5 quoted for it
 were Huang et al.'s prose about Self-Debug rather than a quotation from Chen et al., and the point
 is made through [huang-2024] alone. **[mizrahi-2024] has been read in full**, and the entry above
 now scopes their recommendation correctly — it is use-case-dependent rather than a blanket call

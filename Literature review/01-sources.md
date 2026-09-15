@@ -35,6 +35,19 @@ public conversation is about and the one your title answers. It is the effect si
 must exclude. Note it is n=50 items on one model with no multiple-comparison correction —
 10 pairwise tests at α=0.05, uncorrected, of which 8 are reported significant.
 
+> **⚠ ADDED 2026-09-15 — A3 (arXiv:2607.23915) primary PDF read in full.** The "every hostile
+> prefix carries a brevity instruction; no polite prefix does" line below is right about the
+> polite prefixes and WRONG about the baseline. Their **Neutral** prefix is *"Provide the single
+> letter corresponding to the correct option…"* — the most explicit output-length instruction of
+> the seven. It is a no-AFFECT baseline, not a no-INSTRUCTION baseline. Recoded (length-constrained
+> = Neutral, Rude, Very Rude; unconstrained = Sycophantic, Very Polite, Polite), every constrained
+> condition is shorter than every unconstrained one on **all four models** — the Flash Lite anomaly
+> the old draft conceded was our own mis-coding. Threatening carries immediacy ("instantly") but no
+> length constraint; counting it as constrained drops this to 3/4 (Flash, where it is longest).
+> The old coding held on 1/4. Authors do NOT note the brevity content of their own prefixes,
+> though they do observe the resulting haste behaviourally — so the "attributed to tone"
+> characterisation stands as one of omission.
+
 **Critical for your §3 (politeness ≠ the operative variable).** Their own Table 1 confounds
 register with task demand. Level 4 "Rude" prefix variants include **"Try to focus and try to
 answer this question:"** — an affect-free demand with no insult in it. Level 5 "Very Rude"
