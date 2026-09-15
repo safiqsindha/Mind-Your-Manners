@@ -88,17 +88,32 @@ def main() -> None:
         ("turn 2, no answer yet", 2, False),
         ("turn 2, answer exists", 2, True),
     ]
+    got = {}
     for label, turn, answer in rows:
         est, p, n = contrast(cell(treat, turn, answer=answer),
                              cell(control, turn, answer=answer), rng)
         if est is None:
             print(f"  {label:<24} -- only {n} paired tasks, not reported")
             continue
+        got[label] = (est, p)
         print(f"  {label:<24} {est:+.2f}  p = {p:.4f}  ({n} tasks)")
 
+    # Computed from `got`, never hardcoded: a literal here would silently print
+    # a prior run's numbers if the underlying records were ever regraded.
     print("\nThe two comparisons that matter:")
-    print("  Same turn index, moderator varied  -> turn 1: +0.34 (n.s.) vs +1.97")
-    print("  Same moderator, turn index varied  -> answer exists: +1.97 vs +1.66")
+
+    def show(label):
+        est, p = got[label]
+        return f"{est:+.2f}" + ("" if p < 0.05 else " (n.s.)")
+
+    need = {"turn 1, no answer yet", "turn 1, answer exists", "turn 2, answer exists"}
+    if need <= got.keys():
+        print(f"  Same turn index, moderator varied  -> turn 1: "
+              f"{show('turn 1, no answer yet')} vs {show('turn 1, answer exists')}")
+        print(f"  Same moderator, turn index varied  -> answer exists: "
+              f"{show('turn 1, answer exists')} vs {show('turn 2, answer exists')}")
+    else:
+        print("  not reportable: " + ", ".join(sorted(need - got.keys())) + " missing")
 
 
 if __name__ == "__main__":

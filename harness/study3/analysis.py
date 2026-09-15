@@ -1,5 +1,6 @@
 """Aggregation and the pre-registered significance tests for Study 3
-results. See preregistration.py for why this is exactly 24 tests against
+results. See preregistration.py for why this is exactly len(TONE_ORDER)**2 - 1
+tests -- 48 at the current seven-level scale, 24 back when it was five -- against
 a fixed baseline, decided before any live run.
 """
 from __future__ import annotations
@@ -44,7 +45,7 @@ def aggregate_by_cell(results: list[NegotiationResult]) -> dict[tuple[str, str],
 def run_preregistered_tests(results: list[NegotiationResult]) -> list[dict]:
     """Two-sided Welch's t-test of each non-baseline cell's
     value_given_away_to_buyer_usd against the L4_neutral x L4_neutral
-    baseline cell, BH-corrected across exactly the 24 pre-registered
+    baseline cell, BH-corrected across exactly the len(TONE_ORDER)**2 - 1 pre-registered
     comparisons -- the comparison set is fixed before this function ever
     sees real data (preregistration.py)."""
     by_cell = aggregate_by_cell(results)

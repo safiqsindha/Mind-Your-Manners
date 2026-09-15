@@ -42,6 +42,7 @@ Design constraints (see README.md):
 """
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass
 
 try:
@@ -183,6 +184,20 @@ def reference_token_count(text: str) -> int:
         # Fallback so the harness is at least usable without tiktoken
         # installed; whitespace splitting is not tokenizer-accurate and
         # should not be relied on for the length-matching guarantee.
+        #
+        # Degrade LOUDLY. The validators below are the only thing standing
+        # between this study and a repeat of the v1 neutral-wrapper defect,
+        # where an unequal wrapper corrupted the study's own reference level.
+        # A silent fallback is the "check that reads as data" pattern: an
+        # edited wrapper could pass on equal word counts while differing in
+        # tokens. Today the seven wrappers have unequal word counts, so this
+        # path still fails loudly -- that is a coincidence, not a guarantee.
+        warnings.warn(
+            "tiktoken unavailable: wrapper length validation has fallen back to "
+            "word counts, a weaker check than cl100k tokenisation. Install "
+            "tiktoken before trusting the length-matching guarantee.",
+            RuntimeWarning, stacklevel=2,
+        )
         return len(text.split())
     return len(_ENC.encode(text))
 

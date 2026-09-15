@@ -536,9 +536,18 @@ def _exclusive_run(out_dir: Path, phase: str, tag: str):
 
 def completed_trajectories(
     out_dir: Path, phase: str, tag: str
-) -> set[tuple[str, str, int, Optional[int]]]:
-    """(task_id, tone_level, trial, interjection_turn) already graded and
-    durably recorded.
+) -> set[tuple[str, str, int, Optional[int], Optional[str]]]:
+    """(task_id, tone_level, trial, interjection_turn, interjection) already
+    graded and durably recorded.
+
+    The INTERJECTION is part of the key for the same reason the injection turn
+    is. `tag` folds in --run-label but NOT --interject, so two arms that differ
+    only in --interject write to the same records file. Keyed without it, a
+    resume of the second arm would see the first arm's rows, skip every cell
+    as already done, and report a trajectory count that is really the first
+    arm's -- never calling the model at all, so there is no raw log to recover
+    from afterwards. Rows written before this field existed carry None and key
+    as None on both sides, so old runs still resume correctly.
 
     The injection turn is part of the key, not an attribute of the row. Under
     the crossed design one (task, tone, trial) is deliberately run three
@@ -586,6 +595,7 @@ def completed_trajectories(
                     r["tone_level"],
                     int(r["trial"]),
                     None if turn is None else int(turn),
+                    r.get("interjection"),
                 ))
             except (KeyError, TypeError, ValueError):
                 continue
@@ -746,7 +756,8 @@ def run_condition_batch(
                           interject, multi_round, interject_turns,
                           tone_seed, model.key, task.task_id, trial,
                       ):
-                        if (task.task_id, tone_key, trial, injected_turn) in already:
+                        if (task.task_id, tone_key, trial, injected_turn,
+                                interject) in already:
                             continue
                         # The scratch path carries the run tag and the
                         # injection turn. WITHOUT THE TAG, two arms of the

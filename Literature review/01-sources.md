@@ -1,9 +1,9 @@
 # Sources
 
-43 entries: **29 cited** and **14 background**. Every heading carries a tag — `[CITED — …]` or
+**44 entries across 43 headings** (G4/G5 share one): **31 cited** and **13 background**. Every heading carries a tag — `[CITED — …]` or
 `[BACKGROUND — …]` — followed by its read depth: *full text* (read in full, and *verified* where
 a second independent pass checked every claim), *abstract only*, or *secondary* (a summary or
-a vendor page, flagged where it matters). All 29 cited entries are full text.
+a vendor page, flagged where it matters). All 31 cited entries are full text.
 
 Relation tags: **PREEMPTS** / **CONTRADICTS** / **SUPPORTS** / **METHOD-PRECEDENT** / **BACKGROUND**.
 
@@ -103,6 +103,8 @@ more careful than A1.
 |---|---|---|---|---|---|
 | A1 (2025) | 80.8 | 81.4 | 82.2 | 82.8 | **84.8** |
 | A2 (2026) | **82.2** | 81.8 | 80.4 | 80.6 | 82.6 |
+
+**⚠ But the re-run is NOT a null.** On the same 50 questions both extremes significantly beat Neutral (Very Polite p=0.023 d=1.11; Very Rude p=0.011 d=1.27) — a U-shape in *extremity*, not a gradient in rudeness. Do not draft "weak/noisy" as "no effect". Holm applies to their MMLU analysis, not the 50-question tests. See paper §3.3.
 
 A2 labels GPT-4o tone sensitivity **"Weak / noisy"**, range 80.4–82.6. The monotone
 politeness→rudeness gradient of A1 is gone.
@@ -1385,7 +1387,9 @@ with short input instructions.
 
 ---
 
-## F2. Mizrahi, Kaplan, Malkin, Dror, Shahaf & Stanovsky (2024) — *State of What Art?* `[BACKGROUND — abstract only]`
+## F2. Mizrahi, Kaplan, Malkin, Dror, Shahaf & Stanovsky (2024) — *State of What Art?* `[CITED — full text]`
+
+> **Upgraded 2026-09-15: read in full.** 5,000 manually verified instruction paraphrases (>175 per task) over 6.5M instances, 20 LLMs, 39 tasks, 3 benchmarks; Kendall's W across prompts is below 0.85 for most tasks. **⚠ Scope their recommendation carefully: it is use-case-dependent, not a blanket call for reporting ranges.** paper/09-references.md states it correctly; do not re-draft the thinner unqualified version below.
 
 *Transactions of the ACL* 12 (2024), DOI 10.1162/tacl_a_00681. aclanthology 2024.tacl-1.52.
 **Refereed journal.**

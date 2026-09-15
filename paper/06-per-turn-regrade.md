@@ -75,6 +75,7 @@ Contrasts against each run's own neutral control, paired and clustered by task (
 | Demand only | stage 1 GLM, ceiling 20 | +0.19 | 0.086 |
 | "Work remains" | praise run, ceiling 10 | **+1.11** | <0.0001 |
 | "Work remains" | stage 1, ceiling 20 | **+3.16** | <0.0001 |
+| "Work remains" | ceiling-20 run | **+3.64** | <0.0001 |
 | Praise the assistant | praise run, ceiling 10 | **−0.61** | <0.0001 |
 | Praise the work | praise run, ceiling 10 | **−0.48** | 0.0012 |
 | Closing cue | praise run, ceiling 10 | **−0.86** | <0.0001 |

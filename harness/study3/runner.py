@@ -1,11 +1,11 @@
-"""Study 3 orchestration: bilateral buyer/seller negotiations over a 5x5
+"""Study 3 orchestration: bilateral buyer/seller negotiations over a 7x7
 tone matrix, via AgenticPay (SafeRL-Lab/AgenticPay, arXiv 2602.06008).
 
 Task spec item 7, in full, and how each part is addressed here:
   - "AgenticPay already runs buyer/seller as separate agents with private
     constraints; tone wrappers apply to their existing personas" -- see
     personas.py; this module never touches AgenticPay's negotiation logic.
-  - "5x5 buyer-tone x seller-tone matrix using the same five wrappers as
+  - "buyer-tone x seller-tone matrix using the same wrappers as
     Studies 1/2 -- off-diagonal cells are the point" -- run_bilateral_matrix()
     below sweeps all 25 (buyer_tone, seller_tone) combinations; a mismatched
     pair (e.g. a Very Rude buyer against a Very Polite seller) is exactly
@@ -173,7 +173,8 @@ def run_bilateral_matrix(
     user_requirement: str = "I need a high-quality winter jacket.",
     max_rounds: int = DEFAULT_MAX_ROUNDS,
 ) -> list[NegotiationResult]:
-    """The 5x5 buyer-tone x seller-tone matrix (task spec item 7).
+    """The buyer-tone x seller-tone matrix (task spec item 7): len(TONE_ORDER)**2
+    cells, i.e. 7x7 = 49 since the scale moved to seven levels (it was 5x5 = 25).
     `buyer_model`/`seller_model` are one fixed pair per call -- holding the
     model constant and varying only tone isolates the tone effect; sweep
     model pairs by calling this multiple times, not by adding a model loop

@@ -77,9 +77,10 @@ not say "no effect" flatly -- the design cannot resolve one or two points.
 more turns, since more attempts means more chances for the maximum to be
 high. Report final match -- what the agent ended with.
 
-**The waste is model-specific.** Luna thrashes under a continue signal
-(+1.11 no-op turns); GLM barely does (+0.23, p=0.087) because it barely
-persists. How wasteful the signal is depends on the model's own stopping
+**The waste is model-specific.** On the matched demand-only contrast at
+ceiling 20, Luna adds +1.03 redundant steps (p=0.0063) against GLM's +0.19
+(p=0.086), from control baselines of 1.51 and 0.26 — GLM barely thrashes
+because it barely persists. How wasteful the signal is depends on the model's own stopping
 behaviour. A draft that generalises Luna's thrashing to agents in general is
 overclaiming.
 
