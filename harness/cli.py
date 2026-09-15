@@ -831,6 +831,22 @@ def cmd_study3_bilateral_matrix(args: argparse.Namespace) -> None:
     from .study3.runner import run_bilateral_matrix
 
     buyer_model, seller_model = resolve_models([args.buyer_model, args.seller_model], args.live)
+    if args.live:
+        # Every other live-capable subcommand confirms before spending; this one
+        # did not, so `study3 bilateral-matrix --live` reached billed calls with
+        # no projection and no prompt. A negotiation is two agents alternating
+        # for up to --max-rounds, so budget 2 calls per round per cell.
+        from .tone_wrappers import TONE_ORDER
+        n_cells = len(TONE_ORDER) ** 2  # buyer tone x seller tone
+        confirm_projection(
+            "study3 bilateral-matrix",
+            estimate_cost_usd(
+                [buyer_model, seller_model],
+                n_cells * args.n_trials_per_cell * args.max_rounds,
+                900, 300,
+            ),
+            cap_usd=args.budget_cap, assume_yes=args.yes,
+        )
     ensure_agenticpay_repo(Path("data"))
 
     out_path = RESULTS_ROOT / "raw" / "study3_bilateral_matrix.jsonl"

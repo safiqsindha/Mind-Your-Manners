@@ -39,7 +39,7 @@ Specific negatives worth knowing, because they are the places a preempt would ha
 **(a) The effect you are rebutting has already been rebutted by its own authors.**
 Dobariya & Kumar's AMCIS 2026 paper re-ran the identical 50-question GPT-4o experiment and got
 Very Polite 82.2% vs Very Rude 82.6%, against 80.8% vs 84.8% originally. They label GPT-4o
-GPT-4o's tone sensitivity **"Weak / noisy"**. On MMLU with GPT-4o the total spread across
+GPT-4o's tone sensitivity **"Weak / noisy"**. **⚠ But the re-run is NOT a null.** On the same 50 questions both extremes significantly beat Neutral (Very Polite p=0.023 d=1.11; Very Rude p=0.011 d=1.27) — a U-shape in *extremity*, not a gradient in rudeness. Do not draft "weak/noisy" as "no effect". Holm applies to their MMLU analysis, not the 50-question tests. See paper §3.3. On MMLU with GPT-4o the total spread across
 seven tones is 2.05 pp and **Neutral is best** — the monotone gradient is gone rather than
 reversed (Very Rude 81.2 ≥ Very Polite 81.0). It *does* reverse on ChatGPT-5-nano: Very
 Polite 80.3 vs Very Rude 78.0. **Cite this in your abstract**, with the model named.
@@ -207,7 +207,9 @@ Both exceptions belong in the paper; neither is in the brief.
 
 1. **Dobariya & Kumar 2026, AMCIS** (arXiv:2605.29027) — **non-negotiable.** Their own failure
    to replicate their own headline effect.
-2. **Dobariya & Kumar 2025** (arXiv:2510.04950) — the target. Quote their Table 1.
+2. **Dobariya & Kumar 2025** (arXiv:2510.04950) — the target. Quote the prefix pool
+   from **A2's Table 1** (arXiv:2605.29027), which prints it for this same 50-question
+   dataset. ⚠ We have NOT seen A1's own Table 1 — see paper §3.3 for the residual gap.
 3. **Kumar & Dobariya 2026** (arXiv:2607.23915) — length-not-accuracy, plus the VADER scores.
 4. **Weinberger & Hozez 2026** (arXiv:2608.01347) — **cite a specific version, see §7.**
 5. **Yin et al. 2024, SICon** (10.18653/v1/2024.sicon-1.2) — the origin, largest n.
@@ -229,7 +231,9 @@ and **Sclar et al. 2024** for the statistics, **Schegloff & Sacks 1973** for §5
 2. **Decomposition of tone into affect and demand, with double dissociation — and it is now
    corroborated three times over by other people's data.** This is the contribution most likely
    to be cited by others.
-   - **A1's own Table 1** files *"Try to focus and try to answer this question:"* under **Rude**.
+   - **A2's Table 1** (arXiv:2605.29027, printing the pool for A1's 50-question dataset —
+     *not* A1's own table, which we have not seen) files *"Try to focus and try to answer
+     this question:"* under **Rude**.
      ⚠ But see the correction in `01-sources.md`: that is one of **three** Rude variants, and
      only 2 of 6 hostile variants across Levels 4–5 carry a demand (0 of 5 non-hostile do).
      This corroboration is the weakest of the three and the paper (§3.3) now says so.
@@ -371,7 +375,8 @@ positive decimal under 1" for partial achievement. Near-binary in practice, not 
    within 2.6 points of control, all p>0.13".
 3. **Reframe §7 and the accuracy null as replication**, and **reframe §6 as testing Huang et
    al.'s untested escape hatch** rather than as confirming them.
-4. **Quote the three confound tables** (A1 Table 1, A3 Table 2 + VADER, EmotionPrompt EP01–EP11)
+4. **Quote the three confound tables** (A2 Table 1 for A1's dataset, A3 Table 2 + VADER,
+   EmotionPrompt EP01–EP11)
    and the Meincke Mom Cancer result. The confound is visible in other people's materials.
 5. **State that your 20-turn ceiling is your own choice.** SpreadsheetBench's official
    multi-round protocol caps at **five rounds** — and their own GPT-4o *declines* from

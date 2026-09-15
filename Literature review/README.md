@@ -6,11 +6,11 @@ Prepared 2026-09-14 for the workshop paper.
 
 | File | What's in it |
 |---|---|
-| [`01-sources.md`](01-sources.md) | 43 entries grouped A–G per the brief — 29 cited, 14 background — every heading tagged `CITED` or `BACKGROUND` with its read depth. Citation, claim, method, numbers, relation to us, quotable line. |
+| [`01-sources.md`](01-sources.md) | 44 entries across 43 headings grouped A–G per the brief — 31 cited, 13 background — every heading tagged `CITED` or `BACKGROUND` with its read depth. Citation, claim, method, numbers, relation to us, quotable line. |
 | [`02-synthesis.md`](02-synthesis.md) | The five requested summaries: preempts, contradictions, must-cites, gaps, terminology. **Read this first.** |
 | [`03-verification-log.md`](03-verification-log.md) | Every error found and corrected, claims downgraded, and what remains UNVERIFIED. |
 
-**All 29 cited sources have been read in full text.** A second verification pass over the 25
+**All 31 cited sources have been read in full text.** A second verification pass over the 25
 that had only been read at abstract level found 15 citation-level errors, downgraded 8 claims,
 and strengthened 9 — all recorded in the log. A third pass cross-checked the review against
 `RESULTS.md` and corrected how it described our *own* numbers (see the log's "Pass 3"). Three corrections change the paper rather than a
@@ -35,7 +35,9 @@ head-on:
 1. **The paper you are rebutting has already largely rebutted itself.** Dobariya & Kumar's
    AMCIS 2026 full paper ([2605.29027](https://arxiv.org/abs/2605.29027)) re-ran their own
    GPT-4o experiment and got 82.2% (Very Polite) vs 82.6% (Very Rude) — the 80.8→84.8
-   effect from the short paper did not replicate, and they label GPT-4o "Weak / noisy".
+   effect from the short paper did not replicate, and they label GPT-4o "Weak / noisy" — but the
+   re-run is **not a null**: both extremes significantly beat Neutral on the same 50 questions,
+   a U-shape in extremity rather than a rudeness gradient (paper §3.3).
 2. **"Tone moves length, not accuracy" is already published** — in single-turn
    ([2607.23915](https://arxiv.org/abs/2607.23915), and Yin et al. 2024 on summarization
    length). Your accuracy null and your effort measures are novel only in their *agentic*
@@ -66,6 +68,6 @@ Make sure the paper's prose follows the table. Details in `02-synthesis.md` §2(
 ## Rules followed
 
 - Every arXiv ID cited was checked against arXiv directly, including the three named in the brief.
-- All 29 cited papers were read in full text, not from abstracts — see the log.
+- All 31 cited papers were read in full text, not from abstracts — see the log.
 - Negative results and failed replications are included and flagged.
 - Anything not verified is marked **UNVERIFIED** inline.

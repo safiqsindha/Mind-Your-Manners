@@ -7,7 +7,7 @@
 
 # Mind Your Manners — Tone Effects on Agentic Work
 
-**Three papers found that tone changes what a model *says*. This asks whether it changes what an agent *does*. Tone in the opening prompt does not. A mid-task interruption does — but not for the reason anyone would guess.**
+**Four papers found that tone changes what a model *says*. This asks whether it changes what an agent *does*. Tone in the opening prompt does not. A mid-task interruption does — but not for the reason anyone would guess.**
 
 This extends Dobariya & Kumar's *Mind Your Tone* line one rung up the autonomy ladder: same seven-tone scale, but the model now writes and executes Python against real spreadsheets and is graded by the benchmark's own evaluator, not by a string match. Single-turn QA measures the answer. This measures the work.
 
@@ -24,11 +24,11 @@ This extends Dobariya & Kumar's *Mind Your Tone* line one rung up the autonomy l
 ![Models](https://img.shields.io/badge/models-2%20of%204-f59e0b?style=flat-square)
 ![Trajectories](https://img.shields.io/badge/trajectories-11%2C850-7C3AED?style=flat-square)
 ![Spend](https://img.shields.io/badge/spend-%2461.53-7C3AED?style=flat-square)
-![Tests](https://img.shields.io/badge/tests-315%20passing-22c55e?style=flat-square)
+![Tests](https://img.shields.io/badge/tests-362%20passing-22c55e?style=flat-square)
 
 **[Paper](paper/)** · **[Results](RESULTS.md)** · **[Communications](COMMUNICATIONS.md)** · **[Tone wrappers](harness/tone_wrappers.py)** · **[Analysis](harness/study2/analysis.py)** · **[Harness](harness/study2/runner.py)**
 
-> **Status: two models of four; the causal variable is identified; the paper is written.** The interruption effect replicates on GPT-5.6 Luna and GLM 5.3 Flash, and a four-arm probe shows it is driven by **implied task demand, not social register** — with one exception, praise, which acts on its own. **Do not write "rude interruptions cost more"**: the insult-only arm is null and the polite arms only cost more because they nagged.
+> **Status: two models of four; the causal variable is identified; the paper is written and its prior-work claims are verified against the primary PDFs.** The interruption effect replicates on GPT-5.6 Luna and GLM 5.3 Flash, and a four-arm probe shows it is driven by **implied task demand, not social register** — with one exception, praise, which acts on its own. **Do not write "rude interruptions cost more"**: the insult-only arm is null and the polite arms only cost more because they nagged.
 
 ## Where it stands
 
@@ -38,8 +38,10 @@ This extends Dobariya & Kumar's *Mind Your Tone* line one rung up the autonomy l
 | Graded trajectories | **11,850** across eight runs, plus 9,850 regraded turn by turn |
 | Total spend | **$61.53** across ~48,000 model calls |
 | Substrate | SpreadsheetBench, graded by the authors' own evaluator |
-| Tests | **335 passing** |
+| Tests | **362 passing** |
 | Write-up | **`paper/` — nine sections, drafted and reviewed** |
+| Prior-work verification | **complete** — both primary-PDF checks closed, 15 Sep 2026 |
+| Open blockers | **none** — an author block, CRediT contributions and a venue remain |
 
 ## The three findings, in descending confidence
 
@@ -92,7 +94,7 @@ The agent is not thinking harder per step. It is declining to stop. And sycophan
 
 **Nothing makes it more careful.** Inspection-before-acting sits at 0.95–0.97 in every arm and self-checking is ~0 everywhere. The only behavioural measure that moves is running out of turns, which threatening roughly doubles. Extra effort buys more attempts, not more care.
 
-## The confound that is not yet resolved
+## The confound that nearly sank it, and how it was resolved
 
 Every arm that costs more says some version of *"keep working"* or *"get it right"*. Every arm that does not either says nothing about the task or tells the model to hurry up.
 
@@ -106,7 +108,7 @@ Every arm that costs more says some version of *"keep working"* or *"get it righ
 | L3 polite | "keep on helping me out with this one" | +272 |
 | L7 threatening | "get this exactly right" | **+357** |
 
-The split is clean without needing a correlation to make it: **the four demand-carrying arms span +0.70 to +1.80 turns and the three without span −0.68 to +0.09, with no overlap.** Register rank does not separate them — the most hostile arm on the scale and the second most polite sit on opposite sides. Polite costs +28%; rude costs +6.7%, not significant. (Earlier drafts quoted r = +0.88 against +0.51 for tone rank. That was computed on a superseded pooled-token analysis, it is n = 7 with a coding made after seeing the effects, and the paper reports the non-overlap instead.)
+The split is clean without needing a correlation to make it: **the four demand-carrying arms span +0.70 to +1.80 turns and the three without span −0.68 to +0.09, with no overlap.** Register rank does not separate them — the rude arm sits with the no-demand group, while the two arms *above* it in hostility (very rude, threatening) sit with the demand group alongside polite. Polite costs +28%; rude costs +6.7%, not significant. (Earlier drafts quoted r = +0.88 against +0.51 for tone rank. That was computed on a superseded pooled-token analysis, it is n = 7 with a coding made after seeing the effects, and the paper reports the non-overlap instead.)
 
 So the honest claim is about **demand, not manners** — and this is the v1 wrapper-length mistake in a new costume. There, a five-token spread outpredicted tone rank. Here the lengths are exactly matched and a *semantic* nuisance variable took its place.
 
@@ -123,6 +125,49 @@ One comparison is clean, because the arms are matched on demand and differ only 
 Demand with **no affect at all** reproduces the entire cost effect. Insult with no demand does **nothing** — and that cell had never been run, because both rude arms above carried negative affect *with* a demand attached. Praise and insult are a structural minimal pair differing only in the evaluative words, and they differ from each other significantly (−0.50 turns, p = 0.0048).
 
 So the asymmetry is the result: **"keep going" is a continue signal, "you are excellent" is a stop signal, and "you are awful" is not a signal at all.** No account of tone as valence or arousal predicts that.
+
+## The same confound, in the published stimulus sets
+
+If implied demand rather than register is what moves an agent, the same entanglement should be
+visible in the materials of the papers this literature rests on — without re-running anything.
+It is, in four papers from three groups across three paradigms. Both claims that depended on a
+secondary reading have now been checked against the primary PDFs (15 Sep 2026), and **neither
+check confirmed our draft as written**.
+
+**Kumar & Dobariya's token table** is the strongest case, because their per-condition outcomes
+are fully inspectable. Their seven prefixes are length-matched at 18–25 words and VADER-scored,
+and three of them instruct the model about output length: *"do not… give any extra text"* (Rude),
+*"without any useless commentary"* (Very Rude) — and *"provide the single letter"* (**Neutral**).
+
+> **On all four of their models, every condition whose prefix constrains output length produces
+> fewer output tokens than every condition whose prefix does not.** Affect does not order the
+> result: Rude at VADER −0.09 is shortest on three of four, while Threatening at −0.77 is
+> shortest on none and the longest of all on Gemini 2.5 Flash.
+
+That separation only appears once the Neutral prefix is coded correctly, and our own draft had
+it wrong — it called Neutral a no-*instruction* baseline and conceded an anomaly on that basis.
+It is a no-*affect* baseline. Under our previous coding the separation held on 1 of 4 models;
+corrected, 4 of 4. The paper states the correction in place rather than quietly banking it,
+and discloses which coding decisions predate the data and which do not.
+
+**The other three cases are weaker, and the paper says so.** EmotionPrompt's eleven canonical
+stimuli include seven carrying an explicit verification or persistence demand — *"You'd better
+be sure"*, *"Stay focused and dedicated"* — but their per-stimulus results are not reported, so
+the confound is visible while its consequence is not. In Meincke et al.'s threat-and-tip study,
+the largest positive effect in an 80-cell table lands on the one prompt of eight that instructs
+the model about the task at all, which is roughly a one-in-eight coincidence under a null —
+evidence, and weak evidence. And in the paper the public argument is actually about, the check
+went **against** us: its prefix pool holds two or three variants per level rather than one, only
+two of six hostile variants carry a demand, and our earlier draft had quoted exactly those two.
+That case is now downgraded to one the paper rests nothing on.
+
+The claim is narrow and worth stating precisely: **the factor these papers vary is not the
+factor they name.** Not that every published effect is an artefact — we have not re-run their
+experiments, and three of the four report effects on accuracy, which this design is underpowered
+to resolve below about four points.
+
+None of this is a criticism of the authors. The confound was not tested until someone had reason
+to separate the factors, and one of these papers is the reason we had one.
 
 ## What the agent actually does with the extra turns
 
@@ -226,9 +271,10 @@ The regrade subsystem alone produced four silent failures and one near miss, eac
 1. ~~The demand/affect probe~~ — **done**. Demand drives the cost effect; insult is inert; praise shortens work.
 2. ~~Why praise stops the agent~~ — **done**. It is a closing move. Praise plus an explicit *"there is still more work remaining"* still cuts 1.35 turns (p<0.0001) against that sentence alone, which refutes the completion reading; praising the output is no stronger than praising the assistant (p=0.40), which rules out confidence; and a pure closing cue with no praise stops the agent harder than praise does.
 3. ~~The write-up~~ — **done**. `paper/`, nine sections, each drafted and independently reviewed.
-4. ~~Primary-PDF checks~~ — **both done** (15 Sep 2026). Neither confirmed the draft. §3.7 item 2 went *against* us: the prefix pool has 2–3 variants per level, only 2 of 6 hostile ones carry a demand, §3.3 weakened. Item 1 went *for* us, after exposing our own error: the Neutral prefix asks for "the single letter", so it was never the no-instruction baseline we called it — recoded, every length-constrained condition is shorter than every unconstrained one on all four models. **No verification items remain; what's left is the author block and a venue.**
-5. **DeepSeek and Qwen** — ~$35 for four-model generality. Deliberately parked: the causal variable is now named, so this would buy breadth rather than identification.
-6. **A second substrate.** AppWorld is the candidate — its stock evaluator supports the same per-turn measure as §6, on a different task family, at roughly $0.70 per trajectory.
+4. ~~The primary-PDF checks~~ — **done** (15 Sep 2026). Both closed; see *The same confound, in the published stimulus sets* above for what they found.
+5. **An author block, CRediT contributions, and a venue** — the only things now standing between the draft and submission. None of it is compute.
+6. **DeepSeek and Qwen** — ~$35 for four-model generality. Deliberately parked: the causal variable is now named, so this would buy breadth rather than identification.
+7. **A second substrate.** AppWorld is the candidate — its stock evaluator supports the same per-turn measure as §6, on a different task family, at roughly $0.70 per trajectory.
 
 ## Reproducing
 
@@ -238,7 +284,7 @@ Every subcommand defaults to **dry-run** — it forces the mock provider regardl
 pip install -r requirements.txt
 cp .env.example .env          # OpenRouter key
 
-python -m pytest -q           # 264 tests, no keys needed
+python -m pytest -q           # 362 tests, no keys needed
 ```
 
 Committed records recompute every table above with no API access:

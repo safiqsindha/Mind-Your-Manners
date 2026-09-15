@@ -1,7 +1,10 @@
-import json, collections, statistics, random
+import json, collections, statistics, random, pathlib
 import numpy as np
 
-d = json.load(open('/home/user/Mind-Your-Manners/results_archive/core_gpt-luna_praise_records.json'))
+# Repo-relative, like every other script here. This was an absolute path into a
+# differently-named checkout, so the script could not be re-run as committed.
+ROOT = pathlib.Path(__file__).resolve().parents[2]
+d = json.load(open(ROOT / 'results_archive' / 'core_gpt-luna_praise_records.json'))
 D = [r for r in d if r['interjection_fired'] and not r['crashed']]
 
 def task_means(cond, field):
@@ -22,9 +25,12 @@ def paired(a, b, field='n_turns', B=8000, seed=1):
         s = [diffs[rng.randrange(len(diffs))] for _ in range(len(diffs))]
         boots.append(statistics.mean(s))
     lo, hi = np.percentile(boots, [2.5, 97.5])
-    # two-sided bootstrap p: fraction of boots on the other side of 0, doubled
-    p = 2 * min(sum(x <= 0 for x in boots), sum(x >= 0 for x in boots)) / B
-    return len(tasks), statistics.mean(diffs), lo, hi, max(p, 1/B)
+    # Two-sided bootstrap p in the Phipson & Smyth (count+1)/(draws+1) form, as
+    # every other p-value in this project uses. The previous count/B form with a
+    # max(p, 1/B) floor was a different statistic.
+    tail = min(sum(x <= 0 for x in boots), sum(x >= 0 for x in boots))
+    p = min(1.0, 2 * (tail + 1) / (B + 1))
+    return len(tasks), statistics.mean(diffs), lo, hi, p
 
 print("="*80)
 print("PAIRED-BY-TASK CONTRASTS on n_turns  (cluster bootstrap over tasks, 8000 reps)")

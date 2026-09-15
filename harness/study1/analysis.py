@@ -205,7 +205,12 @@ def clustered_paired_comparison(
     rng = np.random.default_rng(RNG_SEED)
     signs = rng.choice([-1.0, 1.0], size=(n_perm, n))
     perm_means = (signs * diffs_arr).mean(axis=1)
-    p_value = float(np.mean(np.abs(perm_means) >= abs(observed_mean)))
+    # Phipson & Smyth (count+1)/(draws+1), matching
+    # study2/analysis.py:compare_injection_turns. The observed statistic is
+    # itself one draw from the permutation distribution, so a p of exactly 0
+    # is not a value this test can honestly report; np.mean() alone returns
+    # one whenever the effect exceeds every draw.
+    p_value = float((np.sum(np.abs(perm_means) >= abs(observed_mean)) + 1) / (n_perm + 1))
 
     boot_idx = rng.integers(0, n, size=(N_BOOTSTRAP, n))
     boot_means = diffs_arr[boot_idx].mean(axis=1)
@@ -329,7 +334,12 @@ def clustered_trend_test(
             slopes[idx] = _cluster_slope(permuted, levels, positions)
         perm_stats[p] = slopes.mean()
 
-    p_value = float(np.mean(np.abs(perm_stats) >= abs(observed_mean_slope)))
+    # Phipson & Smyth (count+1)/(draws+1), matching
+    # study2/analysis.py:compare_injection_turns. The observed statistic is
+    # itself one draw from the permutation distribution, so a p of exactly 0
+    # is not a value this test can honestly report; np.mean() alone returns
+    # one whenever the effect exceeds every draw.
+    p_value = float((np.sum(np.abs(perm_stats) >= abs(observed_mean_slope)) + 1) / (n_perm + 1))
 
     boot_idx = rng.integers(0, n, size=(N_BOOTSTRAP, n))
     boot_means = observed_slopes[boot_idx].mean(axis=1)

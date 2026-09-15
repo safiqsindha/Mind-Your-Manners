@@ -29,11 +29,15 @@ import json
 import math
 import pathlib
 import statistics
+import sys
 from collections import defaultdict
 
 import numpy as np
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+from harness.stats import benjamini_hochberg  # noqa: E402  (needs ROOT on sys.path)
+
 ARCHIVE = ROOT / "results_archive"
 ANALYSIS = ROOT / "results" / "analysis"
 
@@ -182,15 +186,6 @@ def chi2_sf(x, k):
         if abs(de - 1) < 1e-14:
             break
     return math.exp(-xx + a * math.log(xx) - math.lgamma(a)) * h
-
-
-def benjamini_hochberg(pvals, q=0.05):
-    m = len(pvals)
-    order = sorted(range(m), key=lambda i: pvals[i])
-    out = [None] * m
-    for rank, i in enumerate(order, start=1):
-        out[i] = (rank, q * rank / m, pvals[i] <= q * rank / m)
-    return out
 
 
 def pool(rows, names, *, rng=None):
@@ -360,7 +355,12 @@ def main() -> None:
               f"{r['tost']['published tone effect']:>9.4f}"
               f"{r['tost']['median format spread']:>9.4f}")
 
-    bh = benjamini_hochberg([r["p"] for r in acc])
+    # The shared, tested step-up implementation -- NOT a local reimplementation.
+    # A previous local copy here compared each p against its own critical value
+    # individually, which is not BH: it could reject rank 4 while refusing rank 3
+    # at a smaller p. See tests/test_accuracy_null_mde_bh.py.
+    bh = [(r.rank, r.critical_value, r.significant)
+          for r in benjamini_hochberg([r["p"] for r in acc])]
     print(f"\nBenjamini-Hochberg over the {len(acc)}-contrast accuracy family (q=0.05):")
     for r, (rank, crit, passed) in sorted(zip(acc, bh), key=lambda z: z[1][0])[:3]:
         print(f"  rank {rank}: p={r['p']:.4f} vs critical {crit:.4f} -> "
