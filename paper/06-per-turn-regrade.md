@@ -272,9 +272,9 @@ not-yet-regraded arms produced a −0.36 final-match "effect" at p < 0.0001 in t
 
 **The honest scope of §6 is therefore narrower than its numbers suggest.** Its redundant-step
 measure is exact and needs no recalculation. Its progress measure depends on a recalculation path
-that was silently broken until this rewrite — and which **still has no regression test of its
-own**: the tests added in response cover the timeout and the staleness guard, not the formula
-blindness that caused the reversal. The validation check of §6.2 is what stands in for one, and it
+that was silently broken until this rewrite. It now carries a regression test that pins the
+failure directly — a workbook answering with `=A1*2` scores 0.0 without recalculation and 1.0 with
+it — alongside tests for the timeout and the staleness guard. The validation check of §6.2 still
 leaves seven trajectories on one task unexplained. Readers should weight the two measures
 accordingly.
 
