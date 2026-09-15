@@ -30,6 +30,7 @@ import json
 import math
 import pathlib
 import statistics
+import sys
 from collections import defaultdict
 
 import numpy as np
@@ -83,28 +84,41 @@ RUNS = {
 }
 
 
-INSTRUMENT = ROOT / "harness" / "study2" / "progress.py"
+MANIFEST = ANALYSIS / "regrade_manifest.json"
+
+
+def _current_fingerprint():
+    sys.path.insert(0, str(ROOT))
+    from harness.study2.progress import instrument_fingerprint
+
+    return instrument_fingerprint()
 
 
 def load(stem):
-    """Load one arm's regrade, refusing anything older than the instrument.
+    """Load one arm's regrade, refusing anything a different instrument made.
 
-    A regrade produced before the last change to progress.py was produced by a
-    different instrument, and comparing one against another is how you
-    manufacture an effect out of nothing. While the formula-recalculation fix
-    was rolling out, a freshly regraded control against stale treatment arms
+    A regrade is only comparable to another regrade produced by the same
+    version of progress.py. While the formula-recalculation fix was rolling
+    out, a freshly regraded control compared against stale treatment arms
     produced a clean -0.36 final-match "effect" at p < 0.0001 in three arms at
-    once -- identical in all three, which is the only reason it was obvious.
-    Cross-instrument comparison fails loudly here rather than reading as a
-    result.
+    once -- identical in all three, which is the only reason it was caught.
+
+    The check is on the instrument's CONTENT HASH, recorded per arm in
+    `regrade_manifest.json` when the arm is regraded. An earlier version
+    compared file mtimes, which `git checkout` bumps without changing a byte:
+    every clone and branch switch then declared four machine-hours of valid
+    regrade stale.
     """
     path = ANALYSIS / f"study2_core_{stem}_progress.json"
     if not path.exists():
         return None
-    if path.stat().st_mtime < INSTRUMENT.stat().st_mtime:
+    manifest = json.loads(MANIFEST.read_text()) if MANIFEST.exists() else {}
+    recorded, current = manifest.get(path.name), _current_fingerprint()
+    if recorded != current:
         raise SystemExit(
-            f"STALE: {path.name} predates {INSTRUMENT.name}. Re-run the "
-            f"regrade for this arm before comparing it to anything."
+            f"STALE: {path.name} was regraded by instrument "
+            f"{recorded or '(unrecorded)'}, but progress.py is now {current}. "
+            f"Re-run the regrade for this arm before comparing it to anything."
         )
     return json.loads(path.read_text())
 

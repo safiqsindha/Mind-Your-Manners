@@ -422,6 +422,16 @@ def cmd_study2_progress(args: argparse.Namespace) -> None:
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(rows, indent=2, default=str))
 
+    # Stamp which instrument produced this arm. Analyses refuse to compare
+    # arms regraded by different versions -- comparing a fresh control
+    # against stale arms once manufactured a -0.36 effect at p < 0.0001.
+    from .study2.progress import instrument_fingerprint
+
+    manifest_path = RESULTS_ROOT / "analysis" / "regrade_manifest.json"
+    manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
+    manifest[out_path.name] = instrument_fingerprint()
+    manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True))
+
     measured = [r for r in rows if r["final_match"] is not None]
     print(f"  trajectories       : {len(rows)}")
     print(f"  with a measurement : {len(measured)}")

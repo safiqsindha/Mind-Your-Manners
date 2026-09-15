@@ -17,6 +17,11 @@ results/spend_log.jsonl
 results/scratch/
 !results/raw/.gitkeep
 !results/analysis/.gitkeep
+# The regrade manifest records WHICH instrument version produced each arm's
+# per-turn regrade. The regrade outputs themselves are too large to track, but
+# their provenance is small and must survive a clone -- without it every arm
+# reads as unstamped and the analyses refuse to run.
+!results/analysis/regrade_manifest.json
 
 # Large cloned/downloaded benchmark data
 data/spreadsheetbench/

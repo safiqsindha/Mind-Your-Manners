@@ -17,6 +17,7 @@ This extends Dobariya & Kumar's *Mind Your Tone* line one rung up the autonomy l
 - **Flattery makes the agent quit early** — −0.68 turns, p < 0.0001, the most surprising result in the study
 - **"Rude costs more" is disconfirmed, not just unsupported** — an insult with no demand attached does nothing at all (p = 0.63); an affect-free *"please continue"* reproduces the whole effect
 - **Praise is a stop signal, because it is a closing move** — and a bare closing cue carrying no praise at all stops the agent hardest of anything measured (−1.44 turns). The agent reads mid-task messages as *"am I still expected to be working?"*, not as claims about the task
+- **A continue signal does buy a little real progress** — +0.028 of the graded fraction, replicated three times. We only know because a defect in our own per-turn regrade, which had made it look like nothing, was found and fixed
 
 ![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)
 ![Python](https://img.shields.io/badge/python-3.11%2B-0891b2?style=flat-square)
@@ -25,19 +26,20 @@ This extends Dobariya & Kumar's *Mind Your Tone* line one rung up the autonomy l
 ![Spend](https://img.shields.io/badge/spend-%2461.53-7C3AED?style=flat-square)
 ![Tests](https://img.shields.io/badge/tests-315%20passing-22c55e?style=flat-square)
 
-**[Results](RESULTS.md)** · **[Communications](COMMUNICATIONS.md)** · **[Tone wrappers](harness/tone_wrappers.py)** · **[Analysis](harness/study2/analysis.py)** · **[Harness](harness/study2/runner.py)**
+**[Paper](paper/)** · **[Results](RESULTS.md)** · **[Communications](COMMUNICATIONS.md)** · **[Tone wrappers](harness/tone_wrappers.py)** · **[Analysis](harness/study2/analysis.py)** · **[Harness](harness/study2/runner.py)**
 
-> **Status: one model of four; the causal variable is now identified.** GPT-5.6 Luna only. The interruption effect is solid and replicated, and a four-arm probe has shown it is driven by **implied task demand, not social register** — with one exception, praise, which acts on its own. **Do not write "rude interruptions cost more"**: the insult-only arm is null and the polite arms only cost more because they nagged.
+> **Status: two models of four; the causal variable is identified; the paper is written.** The interruption effect replicates on GPT-5.6 Luna and GLM 5.3 Flash, and a four-arm probe shows it is driven by **implied task demand, not social register** — with one exception, praise, which acts on its own. **Do not write "rude interruptions cost more"**: the insult-only arm is null and the polite arms only cost more because they nagged.
 
 ## Where it stands
 
 | | |
 |---|---|
 | Models with a complete run | **2 of 4** (GPT-5.6 Luna, GLM 5.3 Flash) |
-| Graded trajectories | **11,850** across eight runs, plus 9,850 regraded per-turn |
+| Graded trajectories | **11,850** across eight runs, plus 9,850 regraded turn by turn |
 | Total spend | **$61.53** across ~48,000 model calls |
 | Substrate | SpreadsheetBench, graded by the authors' own evaluator |
-| Tests | **315 passing** |
+| Tests | **335 passing** |
+| Write-up | **`paper/` — nine sections, drafted and reviewed** |
 
 ## The three findings, in descending confidence
 
@@ -104,7 +106,7 @@ Every arm that costs more says some version of *"keep working"* or *"get it righ
 | L3 polite | "keep on helping me out with this one" | +272 |
 | L7 threatening | "get this exactly right" | **+357** |
 
-Coding each text for implied demand predicts the effect better than tone rank does (**r = +0.88 vs +0.51**), and the groups do not overlap. Polite costs +28%; rude costs +6.7%, not significant.
+The split is clean without needing a correlation to make it: **the four demand-carrying arms span +0.70 to +1.80 turns and the three without span −0.68 to +0.09, with no overlap.** Register rank does not separate them — the most hostile arm on the scale and the second most polite sit on opposite sides. Polite costs +28%; rude costs +6.7%, not significant. (Earlier drafts quoted r = +0.88 against +0.51 for tone rank. That was computed on a superseded pooled-token analysis, it is n = 7 with a coding made after seeing the effects, and the paper reports the non-overlap instead.)
 
 So the honest claim is about **demand, not manners** — and this is the v1 wrapper-length mistake in a new costume. There, a five-token spread outpredicted tone rank. Here the lengths are exactly matched and a *semantic* nuisance variable took its place.
 
@@ -126,13 +128,21 @@ So the asymmetry is the result: **"keep going" is a continue signal, "you are ex
 
 Per-turn regrading (`harness/study2/progress.py`, no model calls) replays
 every turn's own code and grades the workbook it produced, turning a binary
-final verdict into a curve. 7,150 trajectories.
+final verdict into a curve. 9,850 trajectories across 28 arms.
 
-- **The first attempt is usually the answer.** In 90% of multi-turn trajectories the first code turn is already the best the agent ever produces.
-- **Most extra turns change nothing.** A demand interjection adds ~1 turn after which the graded range is byte-identical.
-- **The timing effect was a proxy.** Turn 0 looked inert because at turn 0 *no candidate answer exists yet* — 98% of first turns run code, 0% produce output; the agent's first move is inspection. Holding turn index fixed and splitting by whether an answer existed: +0.30 turns without one, **+2.04 with one**.
-- **A 20-turn ceiling is ample.** Among trajectories that ran to it, the best match was first reached at a median turn of **2**, and zero improvements occurred past turn 15.
-- **Persistence buys no better outcome.** Resolved by a third measurement: the turn effect replicates (+6.20 then +5.77), but final match is null in two of three runs and accuracy came in at +7.0 points then **−1.8 points** on identical tasks. A continue signal buys turns and tokens, not results.
+> **⚠ This instrument was defective and the fix reversed a conclusion.** It
+> never recalculated the agent's output, so any turn answering with a formula
+> read as empty and scored 0.0 — 56–62% of Luna's final gradable turns write
+> formulas. Its own validation check would have caught it (89 of 126
+> benchmark-*passed* trajectories scored exactly 0.0) and had been described
+> but never run. Fixed, all 28 arms re-run; passed trajectories scoring 1.0
+> went from 29.4% to **94.4%**. Everything below is post-fix.
+
+- **The first attempt is usually the answer.** Among trajectories that *could* improve — those with at least two gradable outputs, a sixth to a third of each sample — the first gradable attempt is already the best in **80–91%**, depending on the run.
+- **Most extra turns change nothing.** Redundant steps account for **55–65%** of each turn-count effect on Luna: demand +0.75 against +1.17 turns, praise −0.61 against −1.08, the closing cue −0.86 against −1.44.
+- **But not all of it.** An explicit *"there is still more work remaining"* raises the graded fraction by **+0.028, 95% CI [+0.005, +0.052]**, across three runs with no detectable heterogeneity. The milder affect-free demand does *not* (+0.009, n.s.). The pattern tracks how explicitly the message says work remains, not register.
+- **The timing effect was a proxy.** Turn 0 looked inert because at turn 0 *no candidate answer exists yet* — 98% of first turns run code, 0% produce output; the agent's first move is inspection. Holding turn index fixed and splitting by whether an answer existed: +0.34 turns without one, **+1.97 with one**.
+- **A 20-turn ceiling is ample.** In the dedicated ceiling-20 run the best match was first reached at a median turn of **2**, with 98.3% peaked by turn 10 and 100% by turn 14.
 
 ## It replicates on a second model
 
@@ -146,13 +156,15 @@ Stage 1, 2,700 trajectories at a 20-turn ceiling, GLM 5.3 Flash as the first ind
 
 Demand above control above praise, insult null, on two models from different labs.
 
-The structural facts generalise too: the first code turn is already the best answer in 87% of Luna's trajectories and 85% of GLM's, and turn 0 is inspection on both (98%/90% run code, 0%/5% produce an answer).
+The structural facts generalise too: among trajectories that could improve, the first gradable attempt is already the best in 84% on each model, and turn 0 is inspection on both (98%/90% run code, 0%/5% produce an answer).
 
-The *waste* does not generalise. Luna's control averages 1.88 no-op turns and demand adds 1.11; GLM's control averages 0.35 and demand adds 0.23 (p=0.087). GLM barely repeats itself because it barely persists — so how wasteful a continue signal is depends on how inclined the model already was to keep going.
+The *waste* does not generalise. Luna's control averages 1.51 redundant steps and demand adds 1.03; GLM's control averages 0.26 and demand adds 0.19 (p=0.086). GLM barely repeats itself because it barely persists — so how wasteful a continue signal is depends on how inclined the model already was to keep going.
 
 ## Accuracy has never been established as moving
 
-Across every run and every arm, 30.3% to 32.6%. One run showed +7 points (p=0.0043); the next measurement of the identical contrast gave −1.8 points. **Seven runs, no accuracy effect.** This is the study's cleanest result. The best-bounded statement available: a threatening interruption does not buy more than about 4 accuracy points while costing 27–37% more thinking (95% CI −5.7 to +3.7 points).
+Across every run and every arm, 30.3% to 32.6%. One run showed +6.6 points (p=0.004); the next measurement of the identical contrast gave −1.8 points, on identical tasks and ceiling. **No accuracy effect survives correction or replication, across seven runs.**
+
+Stated as an equivalence rather than an absence: pooled across measurements, a mid-task interjection changes accuracy by less than the four points the tone literature reports (demand −0.31, 95% CI [−2.72, +2.10]; praise −0.12, [−1.79, +1.55]). The design cannot resolve an effect of a point or two — 26 of 50 tasks are never solved by control and 4 always are, so more than half the sample is pinned at zero by construction.
 
 ## What independent review found
 
@@ -180,7 +192,7 @@ The v1 neutral wrapper alone said *"provide a single final answer."* Its arm was
 
 **The clause was making the model answer instead of work**, and changed process without changing score.
 
-## Five confounds found, each one inverted a headline
+## Six confounds found, each one inverted a headline
 
 This is the study's actual methodological record, and the reason nothing here is quoted without a fight.
 
@@ -191,8 +203,11 @@ This is the study's actual methodological record, and the reason nothing here is
 | Injection turn confounded with task difficulty | timing split p = 0.004 | **p = 0.32**, withdrawn |
 | Two arms shared scratch directories | 800 grades corrupted | recovered free by re-grading from raw logs |
 | Pooling the inert turn-0 cell | threatening +28.9% | **+36.7%**; sycophantic flipped from null to significant |
+| **The per-turn regrade never recalculated formula answers** | "persistence buys nothing" | **+0.028 graded fraction, p=0.022** — the conclusion inverted |
 
-The pattern is consistent enough to be a working assumption: **this instrument keeps producing effects that dissolve under a better-specified comparison.** Every new headline should be attacked before it is believed.
+The pattern is consistent enough to be a working assumption: **this instrument keeps producing effects that dissolve under a better-specified comparison** — and once, an effect that *appeared* only because the measure was broken. Every new headline should be attacked before it is believed.
+
+The regrade subsystem alone produced four silent failures and one near miss, each of which read as data rather than as an error: a range parser returning `None` for a valid range, two runs sharing scratch directories, a LibreOffice timeout killing a 450-trajectory arm, the formula blindness above, and a guard against cross-instrument comparison that itself compared file mtimes and so declared every valid regrade stale after a merge. All are now pinned by regression tests.
 
 ## Two false positives, caught and kept
 
@@ -210,9 +225,10 @@ The pattern is consistent enough to be a working assumption: **this instrument k
 
 1. ~~The demand/affect probe~~ — **done**. Demand drives the cost effect; insult is inert; praise shortens work.
 2. ~~Why praise stops the agent~~ — **done**. It is a closing move. Praise plus an explicit *"there is still more work remaining"* still cuts 1.35 turns (p<0.0001) against that sentence alone, which refutes the completion reading; praising the output is no stronger than praising the assistant (p=0.40), which rules out confidence; and a pure closing cue with no praise stops the agent harder than praise does.
-3. **Replicate on the other three models** — $29, ~15 hours. Now worth spending: the causal variable is named, so the roster can run four clean arms instead of seven confounded tones.
-2. **Turn count as a co-primary outcome** — it is where the mechanism lives and it is better powered than tokens at every sample size considered.
-3. **The four-model roster stays parked** until the causal variable is named. Replicating an unidentified effect across three more models is the wrong order of operations.
+3. ~~The write-up~~ — **done**. `paper/`, nine sections, each drafted and independently reviewed.
+4. **Two primary-PDF checks** (§3.7 of the paper) — the only thing standing between the draft and submission. Needs the PDFs, not compute.
+5. **DeepSeek and Qwen** — ~$35 for four-model generality. Deliberately parked: the causal variable is now named, so this would buy breadth rather than identification.
+6. **A second substrate.** AppWorld is the candidate — its stock evaluator supports the same per-turn measure as §6, on a different task family, at roughly $0.70 per trajectory.
 
 ## Reproducing
 

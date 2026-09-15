@@ -1,11 +1,14 @@
 # Communications
 
-Drafts for external write-up. **Nothing here is ready to publish**: the study
-has one model of four, and the causal variable behind its one positive
-finding is not yet identified. Each draft is written against what is
-currently established and marks in-line what is still pending.
+Drafts for external write-up. **The paper itself is written** — `paper/`,
+nine sections, each drafted and independently reviewed — and one item stands
+between it and submission: the two primary-PDF checks in §3.7. The drafts
+below are the popular-audience versions and are downstream of it; where they
+disagree with `paper/`, the paper is right.
 
-Four rules apply to every draft below, and they are not stylistic:
+Two models of four completed, and the causal variable *is* now identified, so
+the hedges that governed earlier drafts have lifted. Five rules apply to every
+draft below, and they are not stylistic:
 
 1. **Never quote a v1 effect size as an estimate.** The v1 wrappers carried
    two confounds. The v1 primary *null* stands; the v1 accuracy numbers do
@@ -13,43 +16,61 @@ Four rules apply to every draft below, and they are not stylistic:
 2. **Do not say "rude costs more."** It is the most shareable sentence
    available and the data does not support it. The rude interruption arm is
    null (+6.7%, p = 0.13) while the *polite* arm is +28%. What predicts cost
-   is whether the interruption implies the work must continue or be correct,
-   not how rude it is (r = +0.88 vs +0.51 for tone rank).
+   is whether the interruption implies the work must continue or be correct.
+   State that as the **non-overlap**: the four demand-carrying arms span +0.70
+   to +1.80 turns and the three without span −0.68 to +0.09. Do **not** quote
+   the old r = +0.88 vs +0.51 — that correlation was computed on a superseded
+   pooled-token analysis, it is n = 7 with a coding made after seeing the
+   effects, and the paper downgraded it for both reasons.
 3. **Two headlines, and they point opposite ways.** Tone in the opening
    prompt is null. Interruption mid-task is not. A draft that reports only
    one of these is misleading whichever one it picks.
 4. **Cite all three prior papers.** arXiv 2510.04950, arXiv 2605.29027,
    arXiv 2607.23915. Mandatory, not courteous — the whole design extends
    theirs.
+5. **The regrade reversal is part of the story, not an embarrassment to
+   omit.** The per-turn instrument was defective, the fix inverted a
+   conclusion, and it was caught by a validation check the write-up had
+   *described but never run*. Any draft that presents the progress finding
+   without saying how close it came to being reported backwards is selling a
+   cleaner process than we had.
 
 ### The current state of the claim, in one paragraph
 
-Opening tone does not change what the agent does (p=0.36, effect of the
-published size excluded). Interrupting the agent partway through does, and
-has replicated. The operative variable is NOT politeness: an affect-free
-"please continue and make sure it is correct" reproduces the whole effect,
-while an insult carrying no demand does nothing at all. The mechanism is
-persistence rather than effort -- thinking per step is flat and turn count is
-what moves. Praise shortens the work, and does so because it reads as a
+Opening tone does not change what the agent does (p=0.36; the 44%-scale
+effect the pre-registered hypothesis targeted is excluded, though not the
+smallest published ones). Interrupting the agent partway through does, and has
+replicated on two models. The operative variable is NOT politeness: an
+affect-free "please continue and make sure it is correct" reproduces the
+effect, while an insult carrying no demand does nothing at all. The mechanism
+is persistence rather than effort -- thinking per step is flat and turn count
+is what moves. Praise shortens the work, and does so because it reads as a
 closing move: a bare closing cue with no praise in it stops the agent hardest
-of anything measured, and praise still shortens work even when the same
-message explicitly says the task is unfinished. Accuracy has never been
-established as moving. And per-turn regrading shows the agent's first code
-turn is usually already its best answer, so most of what a continue signal
-buys is repetition.
+of anything measured, and praise removes 1.35 turns relative to the identical
+message without it, even when that message says the task is unfinished. No
+accuracy effect survives correction or replication across seven runs.
+Per-turn regrading shows the agent's first gradable attempt is usually already
+its best, so **most** of what a continue signal buys is repetition -- 55-65%
+of the turn effect -- but not all of it: an explicit "there is still more work
+remaining" raises the graded fraction by +0.028 [+0.005, +0.052], replicated
+three times.
 
 ### Two things a draft must not overstate
 
-**Persistence buys no better outcome -- now resolved, and safe to say.**
-Three measurements of the same contrast: the turn effect replicates (+6.20
-then +5.77, both p<0.0001) while final match is null in two of three and
-accuracy went +7.0 points then -1.8 points on identical tasks. A continue
-signal buys turns and tokens, not results. Say that; do NOT say the extra
-turns are "pure thrashing", which is true of Luna and not of GLM.
+**⚠ "Persistence buys no better outcome" WAS WRONG AND IS WITHDRAWN.** Earlier
+drafts of this file said it was resolved and safe to say. It was an artefact
+of a defective instrument. Corrected, the three measurements of the continue
+signal on final match are +0.026 / +0.034 / +0.025, pooling to **+0.028, 95%
+CI [+0.005, +0.052], p = 0.022**. The honest line is: a continue signal buys
+more turns, most of them repetition, **and** a small real gain in how much of
+the graded range is right -- too small to move the pass/fail rate, which
+accuracy is anyway underpowered to resolve. Do NOT say the extra turns are
+"pure thrashing": it was never true of GLM and is now not wholly true of Luna.
 
-**Nothing has established an accuracy effect, across seven runs.** This is
-the study's cleanest result and should be stated positively rather than as a
-limitation.
+**No accuracy effect survives correction or replication, across seven runs.**
+State it as an equivalence, not an absence: pooled, a mid-task interjection
+changes accuracy by less than the four points the tone literature reports. Do
+not say "no effect" flatly -- the design cannot resolve one or two points.
 
 **Do not report `best_match` as progress.** It favours whichever arm takes
 more turns, since more attempts means more chances for the maximum to be
@@ -63,21 +84,31 @@ overclaiming.
 
 ### The instability is itself a finding worth reporting
 
-Seven measured quantities in this study have moved materially on
-re-measurement: the wrapper-length confound, pooled vs task-clustered tests,
-injection-turn selection, corrupted grades from shared scratch directories,
-an inert cell diluting every effect, the praise magnitude (-0.62 vs -1.14
-turns for identical text), and now a progress effect that is null in one run
-and significant in another. Directions and significance have replicated;
-point estimates have not, once. Any write-up should give intervals and
-directions, never point estimates, and should say why.
+Several measured quantities in this study moved materially on re-measurement,
+and `paper/07-what-replicated.md` tabulates every contrast measured more than
+once. The praise magnitude gave -0.59 and -1.08 turns for identical text; the
+insult arm flipped sign on both turns and reasoning tokens; accuracy on the
+continue-signal contrast gave +6.6 points and then -1.8.
+
+**One apparent instability was not one.** The progress effect that looked
+"null in one run and significant in another" was the defective regrade
+injecting noise. Corrected, the three measurements agree closely (Cochran's
+Q = 0.20 on 2 df). That is a sharper story than the original and drafts should
+use it: a broken measure does not merely widen intervals, it can manufacture
+the *appearance* of irreproducibility.
+
+Directions and significance replicated wherever an effect was large; point
+estimates did not. Any write-up should give intervals and directions, never
+bare point estimates, and should say why. Note the two praise measurements at
+matched ceiling are marginally *inconsistent* with a common value (z = 2.03,
+p = 0.042) -- sampling noise and run-to-run drift are not separable there.
 
 ---
 
 ## 1. LinkedIn post
 
-**Status:** hold. Publishable once the demand/affect probe resolves whether
-register matters at all. Marked where numbers must be swapped in.
+**Status:** ready to draft. The probe resolved, the mechanism is named, and
+the paper is written. Numbers below are current as of the corrected regrade.
 
 > Everyone has an opinion about whether you should be polite to AI. There are
 > now three papers on it. All three measure the same thing: what the model
@@ -109,9 +140,19 @@ register matters at all. Marked where numbers must be swapped in.
 >
 > **Finding four came from reading the tape.** We replayed every turn of
 > every run to see what the workbook actually looked like as the agent
-> worked. In nine cases out of ten, the agent's *first* attempt is the best
-> answer it ever produces. Most of what an interruption buys is the agent
-> rewriting the same answer again.
+> worked. Among trajectories that could improve at all, the agent's *first*
+> attempt is the best answer it ever produces about 80–90% of the time, and
+> 55–65% of what an interruption buys is the agent rewriting the same answer
+> again.
+>
+> **And finding five is the one that nearly went out backwards.** That replay
+> tool had a bug: it never recalculated spreadsheet formulas, so any turn that
+> answered with a formula looked blank and scored zero. More than half of them
+> do. I only caught it because the write-up claimed a validation check that,
+> when I finally ran it, failed on 89 of 126 cases. Fixed and re-run, the
+> conclusion inverted: a blunt *"there is still more work remaining"* does buy
+> a small real improvement, replicated three times. The version of this post I
+> would have written a week ago said the opposite.
 >
 > Here is the part I would rather not write. When I looked at *which*
 > interruptions cost more, it was not the rude ones. Polite cost 28% more.
@@ -120,17 +161,21 @@ register matters at all. Marked where numbers must be swapped in.
 >
 > Which means my own prompts were confounded. I matched them all to the same
 > length, and a *meaning* difference walked in where the length difference
-> used to be. The honest headline is that nagging costs compute, and
-> politeness was along for the ride.
+> used to be. So I built four new ones that pull them apart: a demand with no
+> feelings in it, a compliment with no task in it, an insult with no task in
+> it, and a neutral control.
 >
-> [PENDING: the four-arm probe separating demand from register.]
+> The demand reproduces the whole effect. The insult does nothing —
+> statistically indistinguishable from the neutral note. The compliment makes
+> the agent *stop early*. Rudeness is not the variable. Nagging is.
 >
-> None of it made the agent more accurate. Not once, in any run.
+> Nothing made the agent more accurate. Not once, in seven runs.
 >
-> Repo, data and the five confounds that each inverted a headline: [link]
+> Repo, data, the full paper, and the six confounds that each inverted a
+> headline: [link]
 
-**Do not post if:** the probe shows register is inert and the draft still
-implies tone matters. Rewrite around the completion-signal framing instead.
+**Do not post if:** any number here has drifted from `paper/`. This file is
+downstream of it.
 
 ---
 
@@ -138,9 +183,8 @@ implies tone matters. Rewrite around the completion-signal framing instead.
 
 **Working title:** *The agent was not thinking harder. It was refusing to stop.*
 
-**Status:** the methodology spine is written and true today. The results
-section is now substantive rather than a null, but the causal claim waits on
-the probe.
+**Status:** ready to draft. The methodology spine, the results and the causal
+claim are all settled; `paper/` is the source of record for every number.
 
 **Angle.** Not "here is what we found about tone." Two better ones, and they
 can be the same piece: what it takes to get a trustworthy result out of an
@@ -185,19 +229,22 @@ at tokens.
 
 **7. The part I would rather not have found**
 It was not the rude interruptions that cost more. Polite cost 28%, rude cost
-nothing. Implied demand outpredicted politeness at r = +0.88 vs +0.51, with
-no overlap between groups. **Our own prompts were confounded** — and it was
-the same failure as an earlier one we had already fixed. We matched the
-lengths exactly, and a semantic difference moved into the space the lexical
-one had occupied.
+nothing. The four demand-carrying arms span +0.70 to +1.80 turns; the three
+without span −0.68 to +0.09; the groups do not overlap. **Our own prompts were
+confounded** — and it was the same failure as an earlier one we had already
+fixed. We matched the lengths exactly, and a semantic difference moved into
+the space the lexical one had occupied. (Do not quote the old r = +0.88 vs
++0.51 here; see rule 2.)
 
-**8. Five confounds, each of which inverted a headline**
+**8. Six confounds, each of which inverted a headline**
 A table: wrapper length outpredicting tone rank; pooled vs task-clustered
 tests giving p = 0.81 vs 0.03 on identical data; injection turn confounded
 with difficulty, turning p = 0.004 into p = 0.32; two concurrent arms sharing
-scratch directories and corrupting 800 grades; and pooling an inert cell that
-diluted every effect by a third. The lesson is not "we were careful." It is
-that this instrument keeps producing effects that dissolve under a
+scratch directories and corrupting 800 grades; pooling an inert cell that
+diluted every effect by a third; and a per-turn regrade that never
+recalculated formula answers and so reported a real progress gain as nothing.
+The lesson is not "we were careful." It is that this instrument keeps
+producing effects that dissolve under a
 better-specified comparison.
 
 **9. What we still do not know**
@@ -218,162 +265,84 @@ replicates.
 
 ---
 
-## 3. Preprint skeleton
+## 3. The paper
 
-**Target venue:** TBD — a workshop on agent evaluation is the honest fit.
-**Status:** cannot be written until the roster completes. Structure below is
-pre-registered in spirit; deviations get their own section, as §0.
+**Superseded — the preprint is written.** `paper/`, nine sections:
 
-### Title options
+| File | Section |
+|---|---|
+| `00-abstract.md` | Title and abstract |
+| `01-introduction.md` | §1 Introduction |
+| `02-design-and-statistics.md` | §2 Design, estimators, what the nulls exclude |
+| `03-confound-in-prior-materials.md` | §3 The confound in the published stimulus sets |
+| `04-demand-not-manners.md` | §4 Demand, not manners |
+| `05-closing-cues.md` | §5 Closing cues terminate agents |
+| `06-per-turn-regrade.md` | §6 What the extra turns contain |
+| `07-what-replicated.md` | §7 What replicated, and what only looked like it did |
+| `08-limitations.md` | §8 Limitations |
+| `09-references.md` | §9 References — 20 works, each with venue and verification status |
 
-1. *Interruptions, Not Instructions: Where Prompt Tone Acts on an Agent*
-2. *The Agent Was Not Thinking Harder, It Was Refusing to Stop*
-3. *Tone Effects Do Not Survive the Move From Answering to Acting — Except Mid-Task*
-4. *Mind Your Manners: Prompt Tone and Agentic Task Execution*
+**Target venue:** TBD. A workshop on agent evaluation remains the honest fit.
 
-Title 1 is the honest framing if the probe shows register matters; title 2 if
-the mechanism is the contribution; title 3 only if the probe shows register
-is inert and the effect is purely a completion signal, in which case "tone"
-should leave the title entirely.
+**Outstanding before submission:** the two primary-PDF checks in §3.7 —
+whether any of Kumar & Dobariya's four non-hostile prefixes contains a brevity
+instruction, and how many variants per level Dobariya & Kumar's Table 1 prints.
+Both need the PDFs, not compute.
 
-### Abstract skeleton
+**Two things about the bibliography worth knowing when pitching this.** Eleven
+of the twenty works cited are unrefereed preprints, including both papers the
+study is positioned against — which is itself part of the argument for
+repeated measurement. And `[chen-2023]` was dropped during the final pass
+because the words quoted for it turned out to be Huang et al.'s prose *about*
+Self-Debug rather than a quotation from Chen et al.
 
-> Prior work reports that prompt tone affects LLM accuracy and output length
-> in single-turn question answering [1,2,3], with output-token variation
-> reaching 44.3% across a seven-level tone scale [3]. We test whether these
-> effects persist when the model must *execute* rather than *answer*. Using
-> SpreadsheetBench in a multi-turn agentic loop where the model writes
-> Python, observes execution output, and iterates, graded by the benchmark's
-> own evaluator, we separate two placements of the same tone scale: tone in
-> the opening instruction, and tone delivered as an interruption partway
-> through the trajectory. Across [N] trajectories, **opening tone has no
-> effect on token cost** (task-clustered permutation trend test, p = 0.36),
-> with a confidence interval excluding effects of the previously reported
-> magnitude. **Mid-task interruption does**, replicating across two
-> independent runs (+27.5%, +36.7% reasoning tokens for a threatening
-> against a neutral interruption). The mechanism is not increased effort per
-> step, which is flat across all seven registers, but increased persistence:
-> the agent takes more steps before stopping. Sycophantic interruption
-> reverses the effect, shortening trajectories. The effect is also
-> position-dependent: an interruption after the agent's first response is
-> inert, while the same text two steps later costs 55% more. **No placement
-> or register changed task accuracy.** We further show that our own
-> seven-level instrument confounds social register with implied task demand,
-> that implied demand is the better predictor (r = +0.88 vs +0.51), and
-> report a four-arm probe separating them. We document five confounds found
-> during the study, each of which inverted or erased a headline result.
+### What the paper says that these drafts must not soften
 
-### Section plan
-
-| § | Content | Status |
-|---|---|---|
-| 0 | **Deviations from pre-registration** — the wrapper change mid-study, why, and what it invalidates | Written; see RESULTS.md |
-| 1 | Introduction — the three prior papers; the answering/acting distinction | Outline |
-| 2 | Related work — tone effects; agentic benchmarks; TERMS-BENCH, NegotiationArena | Outline |
-| 3 | Design — seven tones, length-matched exactly; SpreadsheetBench; the loop; randomisation | **Can write now** |
-| 4 | Outcome measures — cost primary, accuracy secondary, the behavioural measures, why | **Can write now** |
-| 5 | Results — the opening-tone null; the interruption effect and its replication; position dependence; the persistence mechanism; accuracy | **Can mostly write now**; roster for generality |
-| 5b | The register/demand confound and the probe that separates them | Probe running |
-| 6 | Threats to validity | **Mostly written** |
-| 7 | The two false positives, as a methods contribution | **Can write now** |
-| 8 | Limitations and future work | Outline |
-
-### §6 Threats to validity — already enumerated
-
-1. **Instrument confounds (v1).** Neutral wrapper carried a task instruction;
-   wrapper lengths were U-shaped and out-predicted tone rank. Both fixed in
-   v2; the fix's effect was measured directly (150-trajectory control arm).
-1b. **Instrument confound (interjections).** The seven mid-task texts vary
-   social register and implied task demand together. Demand is the better
-   predictor (r = +0.88 vs +0.51) and the groups do not overlap, so the
-   headline effect cannot be attributed to register on this data. A four-arm
-   probe (neutral / demand-only / praise-only / insult-only, structural
-   minimal pairs, all 28 tokens) separates them. **This is the same class of
-   failure as (1), recurring after it was believed fixed** — lengths were
-   matched and a semantic nuisance variable replaced the lexical one.
-1c. **Censoring at the turn ceiling.** Turn count is the outcome the
-   mechanism acts on, and the loop caps at 10 turns against a median of ~3.8.
-   Threatening roughly doubles turn-limit hits, so the arms with the largest
-   effects are the most censored, biasing the measured effect *downward*.
-2. **Multiplicity.** Twelve outcomes each received a trend test.
-3. **Fragility.** The accuracy trend rests on 19 of 50 tasks.
-4. **Floor effects.** 26 of 50 tasks are never solved by the model tested.
-5. **Non-determinism.** temperature=0 does not produce identical outputs on
-   any roster model; measured directly, three distinct outputs from three
-   byte-identical calls.
-6. **Single provider.** All inference through OpenRouter with provider
-   pinning enforced and asserted per call; an unpinned call to the same model
-   was served by a different provider at materially different speed.
-7. **Model version drift.** Moving slugs are checked against the catalog's
-   dated snapshot before every live run.
-
-### §7 The confounds as a contribution
-
-This is the section most likely to be the paper's actual value. Five
-confounds, each documented with the number it produced before it was found
-and the number after:
-
-| Confound | Before | After |
-|---|---|---|
-| Wrapper length outpredicted tone rank | accuracy trend p = 0.023 | withdrawn |
-| Pooled test where task-clustered was needed | p = 0.81 | p = 0.03 |
-| Injection turn confounded with task difficulty | timing split p = 0.004 | p = 0.32, withdrawn |
-| Two concurrent arms sharing scratch directories | 800 grades corrupted | recovered by re-grading from raw logs |
-| Pooling an inert cell (turn 0) | threatening +28.9% | +36.7%; sycophantic flipped from null to significant |
-
-Plus the two interim false positives, with their p-value trajectories and the
-stopping decision.
-
-The argument is not "we were careful." It is that **four of these five
-produced a plausible, publishable, wrong number rather than a crash**, and
-that the same class of instrument confound recurred after being fixed once.
-An agentic eval with this many researcher degrees of freedom should be
-assumed to contain one until someone has attacked it.
-
-### Data availability
-
-All records committed: gate, core, the wrapper control, the mid-task
-micro-experiment (both arms, plus clean re-grades), and the seven-level
-crossed run — 5,150 graded trajectories, with `wrapper_set`, `interjection`,
-`interjection_turn` and `interjection_fired` on every applicable row. Every
-table recomputes with no API access.
-
-### Author contributions
-
-CRediT taxonomy. To be completed.
-
-### Citations required
-
-- [1] Dobariya & Kumar, arXiv 2510.04950
-- [2] Dobariya & Kumar, arXiv 2605.29027 (AMCIS 2026)
-- [3] Dobariya & Kumar, arXiv 2607.23915
-- SpreadsheetBench
-- TERMS-BENCH, arXiv 2605.13909
-- NegotiationArena, ICML 2024
+- §5.3: `Q4` (praise + "work remains") sits **above** control, +0.502 turns.
+  The claim is that praise removes 1.35 turns *relative to the identical
+  message without praise*. Compressing it to "praise shortens work even when
+  the task is unfinished" reverses the sign of that arm and is false.
+- §5.4: that praise works *through* pre-closing structure is **not
+  demonstrated**. It is the hypothesis the pattern is consistent with, and the
+  one implication we could test failed.
+- §6.7: whether praise's early stop is *premature* is **unresolved**. Praise
+  and closing-cue arms are 2–3× more likely than control to have been still
+  improving when they stopped — in all seven comparisons, none individually
+  significant. Underpowered with the sign against us.
+- §8.7: four objections we have no answer to, including one stimulus per
+  construct and no multiplicity correction on the primary outcome.
 
 ---
 
 ## Pre-publication checklist
 
-- [x] ~~Demand/affect probe resolved~~ — done. Demand drives cost; insult is
-      inert; praise shortens work because it is a closing move
-- [x] ~~A third measurement of the progress contrast~~ — done. Turn effect
-      replicates; outcome effects do not. Persistence buys no better result
-- [ ] DeepSeek and Qwen (~$35 in credits) for four-model generality
-- [ ] Per-turn progress reported alongside turn count — turns and progress
-      move independently, so turn count alone overstates what persistence buys
-- [ ] Four-model run complete, testing *interruptions* rather than opening
-      tone (opening tone is null; replicating a null across models is not
-      where the $50 should go)
-- [ ] Every number regenerated from committed records, not transcribed
-- [ ] Independent re-analysis of the final dataset, as was done for v1
-- [ ] No v1 effect size quoted anywhere as an estimate
-- [ ] Both headlines present: opening tone null AND interruption effect. A
-      draft carrying only one is misleading whichever it picks
-- [ ] Turn count reported as the mechanism, not buried under token counts
-- [ ] The sentence "rude interruptions cost more" appears nowhere — the rude
-      arm is null and the polite arm is +28%
-- [ ] Accuracy reported as a bound, never as "no effect"
-- [ ] Turn-ceiling censoring stated as a limitation on the effect size
-- [ ] All three prior papers cited in every artifact
-- [ ] Deviations section written before the results section
+**Done**
+
+- [x] Demand/affect probe — demand drives cost; insult is inert; praise shortens work
+- [x] Why praise stops the agent — it is a closing move; a bare closing cue stops it hardest
+- [x] A third measurement of the progress contrast
+- [x] **The per-turn regrade defect found, fixed, and all 28 arms re-run** — it had inverted the progress conclusion
+- [x] The paper written and independently reviewed, section by section
+- [x] Bibliography with venue and verification status for every work
+- [x] Every number regenerated from committed records by a committed script
+- [x] No v1 effect size quoted anywhere as an estimate
+- [x] Both headlines present: opening tone null AND interruption effect
+- [x] Turn count reported as the mechanism, not buried under token counts
+- [x] Accuracy reported as an equivalence against a pre-specified bound, never as "no effect"
+- [x] Turn-ceiling censoring stated as a limitation
+- [x] "Rude interruptions cost more" appears nowhere
+
+**Outstanding**
+
+- [ ] **The two §3.7 primary-PDF checks** — the only blocker
+- [ ] Author block and CRediT contributions
+- [ ] DeepSeek and Qwen (~$35) for four-model generality — parked, buys breadth not identification
+- [ ] A second substrate (AppWorld) — a different paper
+
+**Standing rules for any draft**
+
+- [ ] Every number traced to `paper/`, which is traced to a script
+- [ ] `Q4` sits above control; never write the sentence that reverses its sign
+- [ ] The pre-closing *mechanism* is not demonstrated — say "consistent with"
+- [ ] Whether praise's stop is costly is unresolved, with the sign against us
+- [ ] The regrade reversal included, not omitted — a study arguing others' effects are artefacts owes the reader its own

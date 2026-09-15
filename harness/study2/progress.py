@@ -64,6 +64,21 @@ _RANGE = re.compile(
 )
 
 
+def instrument_fingerprint() -> str:
+    """SHA-256 of this module's source, as the regrade's version stamp.
+
+    A regrade is only comparable to another regrade produced by the same
+    instrument. The first version of that check compared FILE MTIMES, which
+    is wrong in a way that costs four machine-hours to discover: `git
+    checkout` rewrites this file's mtime without changing a byte, so any
+    clone or branch switch declared every existing regrade stale. Content is
+    the thing that matters, so content is what is hashed.
+    """
+    import hashlib
+
+    return hashlib.sha256(Path(__file__).read_bytes()).hexdigest()[:16]
+
+
 def parse_answer_position(answer_position: str) -> tuple[Optional[str], str, str]:
     """Split SpreadsheetBench's answer_position into (sheet, first, last).
 
