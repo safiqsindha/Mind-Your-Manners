@@ -34,6 +34,10 @@ TWO MEASURES, deliberately:
     This is the progress signal. It needs the answer file recalculated (the
     shipped ground truth contains uncached formulas -- see grader.py) and, when
     the agent writes formulas rather than values, the output recalculated too.
+    BOTH are now done. An earlier version recalculated only the answer file,
+    so every formula-writing turn read as None and scored 0.0 -- 89 of 126
+    benchmark-passed control trajectories in the probe run, and 56-62% of
+    Luna's final gradable turns write formulas. See `_has_uncached_formula`.
 
 `match_fraction` is deliberately NOT the benchmark's own pass/fail. It is a
 finer instrument for a different question, and a trajectory can climb from
@@ -77,13 +81,61 @@ def parse_answer_position(answer_position: str) -> tuple[Optional[str], str, str
     return (sheet.strip() if sheet else None), first, last
 
 
-def range_values(path: Path, answer_position: str) -> Optional[dict[str, Any]]:
+def _has_uncached_formula(path: Path, answer_position: str) -> bool:
+    """Does the graded range hold a formula with no cached value?
+
+    openpyxl writes formulas without a cached result, so a turn that answers
+    with `=SUMIFS(...)` reads back as None under `data_only=True` and scores
+    0.0 -- indistinguishable from a turn that wrote nothing. That is the
+    "silent None" failure mode this module already warns about for the range
+    parser, and it hit the regrade itself: 89 of 126 benchmark-PASSED control
+    trajectories in the probe run scored exactly 0.0 before this check
+    existed. `grader.py` recalculates output workbooks with LibreOffice for
+    exactly this reason; the regrade has to as well.
+
+    Recalculation is expensive, so it is done only when this returns True --
+    a cheap structural read of the same range with formulas left intact.
+    """
+    try:
+        sheet_name, first, last = parse_answer_position(answer_position)
+        wb = openpyxl.load_workbook(str(path), data_only=False)
+    except Exception:
+        return False
+    try:
+        if sheet_name and sheet_name in wb.sheetnames:
+            ws = wb[sheet_name]
+        elif sheet_name:
+            return False
+        else:
+            ws = wb.active
+        for row in ws[f"{first}:{last}"]:
+            for cell in row:
+                if isinstance(cell.value, str) and cell.value.startswith("="):
+                    return True
+        return False
+    except Exception:
+        return False
+    finally:
+        wb.close()
+
+
+def range_values(path: Path, answer_position: str, *, recalculate: bool = False) -> Optional[dict[str, Any]]:
     """Cell values over the graded range, as {coordinate: value}.
 
     Returns None when the workbook cannot be opened or the sheet is absent --
     a turn whose code crashed leaves no readable output, which is a fact about
     that turn, not an error to raise.
+
+    With `recalculate=True`, a range containing an uncached formula is sent
+    through LibreOffice first, in place, so that formula-writing turns are
+    graded on their values rather than read as unmeasurable. Callers grading
+    agent output should pass it; the shipped answer files are handled by
+    `answer_values_for`, which recalculates a copy.
     """
+    if recalculate and _has_uncached_formula(path, answer_position):
+        from .grader import recalculate_with_libreoffice
+
+        recalculate_with_libreoffice([path])
     try:
         sheet_name, first, last = parse_answer_position(answer_position)
         wb = openpyxl.load_workbook(str(path), data_only=True)
@@ -234,7 +286,11 @@ def replay_trajectory(
             out.append(TurnProgress(idx, False, False, None, None))
             continue
         res = execute_python_on_workbook(code, input_path, workdir / f"turn_{idx}")
-        vals = range_values(res.output_workbook_path, task.answer_position) if res.output_workbook_path else None
+        vals = (
+            range_values(res.output_workbook_path, task.answer_position, recalculate=True)
+            if res.output_workbook_path
+            else None
+        )
         out.append(TurnProgress(
             turn=idx,
             had_code=True,
