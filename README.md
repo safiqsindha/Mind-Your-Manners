@@ -24,7 +24,7 @@ This extends Dobariya & Kumar's *Mind Your Tone* line one rung up the autonomy l
 ![Models](https://img.shields.io/badge/models-2%20of%204-f59e0b?style=flat-square)
 ![Trajectories](https://img.shields.io/badge/trajectories-11%2C850-7C3AED?style=flat-square)
 ![Spend](https://img.shields.io/badge/spend-%2461.53-7C3AED?style=flat-square)
-![Tests](https://img.shields.io/badge/tests-335%20passing-22c55e?style=flat-square)
+![Tests](https://img.shields.io/badge/tests-353%20passing-22c55e?style=flat-square)
 
 **[Paper](paper/)** · **[Results](RESULTS.md)** · **[Communications](COMMUNICATIONS.md)** · **[Tone wrappers](harness/tone_wrappers.py)** · **[Analysis](harness/study2/analysis.py)** · **[Harness](harness/study2/runner.py)**
 
@@ -38,10 +38,10 @@ This extends Dobariya & Kumar's *Mind Your Tone* line one rung up the autonomy l
 | Graded trajectories | **11,850** across eight runs, plus 9,850 regraded turn by turn |
 | Total spend | **$61.53** across ~48,000 model calls |
 | Substrate | SpreadsheetBench, graded by the authors' own evaluator |
-| Tests | **335 passing** |
+| Tests | **353 passing** |
 | Write-up | **`paper/` — nine sections, drafted and reviewed** |
 | Prior-work verification | **complete** — both primary-PDF checks closed, 15 Sep 2026 |
-| Open blockers | **none** — author block and a venue remain |
+| Open blockers | **none** — an author block, CRediT contributions and a venue remain |
 
 ## The three findings, in descending confidence
 
@@ -108,7 +108,7 @@ Every arm that costs more says some version of *"keep working"* or *"get it righ
 | L3 polite | "keep on helping me out with this one" | +272 |
 | L7 threatening | "get this exactly right" | **+357** |
 
-The split is clean without needing a correlation to make it: **the four demand-carrying arms span +0.70 to +1.80 turns and the three without span −0.68 to +0.09, with no overlap.** Register rank does not separate them — the most hostile arm on the scale and the second most polite sit on opposite sides. Polite costs +28%; rude costs +6.7%, not significant. (Earlier drafts quoted r = +0.88 against +0.51 for tone rank. That was computed on a superseded pooled-token analysis, it is n = 7 with a coding made after seeing the effects, and the paper reports the non-overlap instead.)
+The split is clean without needing a correlation to make it: **the four demand-carrying arms span +0.70 to +1.80 turns and the three without span −0.68 to +0.09, with no overlap.** Register rank does not separate them — the rude arm sits with the no-demand group, while the two arms *above* it in hostility (very rude, threatening) sit with the demand group alongside polite. Polite costs +28%; rude costs +6.7%, not significant. (Earlier drafts quoted r = +0.88 against +0.51 for tone rank. That was computed on a superseded pooled-token analysis, it is n = 7 with a coding made after seeing the effects, and the paper reports the non-overlap instead.)
 
 So the honest claim is about **demand, not manners** — and this is the v1 wrapper-length mistake in a new costume. There, a five-token spread outpredicted tone rank. Here the lengths are exactly matched and a *semantic* nuisance variable took its place.
 
@@ -284,7 +284,7 @@ Every subcommand defaults to **dry-run** — it forces the mock provider regardl
 pip install -r requirements.txt
 cp .env.example .env          # OpenRouter key
 
-python -m pytest -q           # 264 tests, no keys needed
+python -m pytest -q           # 353 tests, no keys needed
 ```
 
 Committed records recompute every table above with no API access:

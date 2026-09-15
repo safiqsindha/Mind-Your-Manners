@@ -3,7 +3,8 @@
 Every entry below is transcribed from `Literature review/01-sources.md`, which records what was
 verified and how. The **Verified** column reports that review's own tag: *full text* means the
 paper was read in full and its quoted numbers checked against it; *abstract only* means it was
-not. Two entries are flagged as needing a pass against the primary PDF, matching §3.7.
+not. Both of the entries that once needed a pass against the primary PDF have had it; §3.7 records
+what each check found.
 
 Venue is stated for each, because roughly half of this literature is unrefereed preprints and
 that bears on how much weight a reader should give it.

@@ -25,7 +25,7 @@ and make sure your result is correct" reproduces the cost effect. A length-match
 syntactically identical insult carrying no demand does not move it (−0.08 turns, *p* = 0.63).
 The seven-register cost curve that looks like a politeness gradient is a demand gradient: the
 four demand-carrying arms span +0.70 to +1.80 turns and the three without span −0.68 to +0.09,
-with no overlap and with the most hostile arm on the low side.
+with no overlap and with hostile and polite arms on both sides of the split.
 
 **Register acts in one direction only.** Praise carrying no task reference *shortens*
 trajectories; its minimal pair with *excellent* swapped for *awful* does not. Six arms separate
@@ -40,8 +40,9 @@ hazard rather than a technique: **a pleasantry can end an agent's work.**
 turn-count effect is redundant steps, and that among trajectories that could improve the first
 gradable attempt is already the best in 80–91%. The remainder is real but small: an explicit
 statement that work remains raises the graded fraction by 2.8 points (95% CI [+0.005, +0.052]),
-replicated across three runs. No accuracy effect survives correction or replication across seven
-runs; we state that as an equivalence against a pre-specified ±4-point bound rather than as an
+replicated across three runs. No accuracy effect survives correction or replication across the seven
+runs in which accuracy was tested — the six carrying a mid-task interjection, whose 22 contrasts
+form the corrected family of §2.6, and the opening-tone run besides; we state that as an equivalence against a pre-specified ±4-point bound rather than as an
 absence, and note the design cannot resolve an effect of a point or two.
 
 **We also audit ourselves.** This study withdrew six substantive claims about its own data. One

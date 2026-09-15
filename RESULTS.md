@@ -1,20 +1,36 @@
 # Results
 
-**Status: NOT YET RUN.** No API keys were available in the environment
-this harness was built in, and per an explicit decision with the
-requester, this build stopped at "harness built and tested against a mock
-provider" rather than spending real money without credentials or a
-live-spend confirmation. Everything below is a template plus the honest
-state of each precondition -- fill in the actual numbers as each stage
-runs.
+**Status: COMPLETE.** 11,850 graded trajectories across eight runs and two
+models (GPT-5.6 Luna, GLM 5.3 Flash), $61.53 spent. 9,850 of those were
+additionally regraded turn by turn. The write-up is in `paper/`, which is
+authoritative: where this file disagrees with it, the paper is right.
+
+This is a lab notebook, kept in chronological order. **It deliberately
+retains superseded analyses under `⚠ SUPERSEDED` banners** so that every
+correction stays auditable -- six confounds were found here, each of which
+had inverted a headline. A figure inside a banner is history, not a current
+result.
+
+> **⚠ The block below is the original pre-run header, from before any live
+> run, and is retained only for provenance. Its "NOT YET RUN" status was
+> true on 2026-09-09 and false from 2026-09-10 onward.**
+>
+> **Status: NOT YET RUN.** No API keys were available in the environment
+> this harness was built in, and per an explicit decision with the
+> requester, this build stopped at "harness built and tested against a mock
+> provider" rather than spending real money without credentials or a
+> live-spend confirmation. Everything below is a template plus the honest
+> state of each precondition -- fill in the actual numbers as each stage
+> runs.
 
 **Pre-registered hypothesis** (see README "The pre-registered
 hypothesis", written before any live run): the cost effect (output-token
 variation across tone conditions) should be *larger* in this study's
 agentic setting than the 44.3% single-turn figure Dobariya & Kumar's
 paper 3 reported, because every agentic turn is a fresh inference and
-errors compound across turns. Not yet testable -- no live run has
-happened.
+errors compound across turns. **Tested, and it failed**: the cost effect is
+null on opening tone (p = 0.36), with the 44% target excluded by the
+interval. See "Cost was pre-registered as the primary outcome" below.
 
 ## Phase 0 -- Gates
 
@@ -648,7 +664,17 @@ model to hurry up:
 
 Coding each text for whether it implies a performance demand predicts the
 effect better than tone rank does (r=+0.88 vs r=+0.51 on the pooled
-figures). This is the v1 wrapper-length mistake in a new costume: lengths
+figures).
+
+> **⚠ SUPERSEDED — the correlation, not the conclusion.** Those two r values
+> came from a pooled-token analysis this file later replaces, and the paper
+> **does not rely on any correlation here**: with n = 7 and a coding made
+> after seeing the effects, it is close to curve-fitting. The paper's
+> statement is the *non-overlap* instead — the four demand-carrying arms span
+> +0.70 to +1.80 turns, the three without span −0.68 to +0.09, and the two
+> groups do not overlap (paper §4.2, which recomputes the correlation on
+> corrected data as r = +0.85 against +0.42 and still declines to lean on it).
+> The conclusion below stands; only its supporting statistic changed. This is the v1 wrapper-length mistake in a new costume: lengths
 are now exactly matched, and a SEMANTIC nuisance variable took the place of
 the lexical one. So:
 
@@ -1178,6 +1204,17 @@ into continuing. GLM's praise arm does not reach significance on its own
 (p=0.062); the replication rests on the demand arm.
 
 ### The mechanism generalises; the waste does not
+
+> **⚠ SUPERSEDED (no-op/redundant-step figures only).** This table was
+> computed on 2026-09-14, one day before the `progress.py` formula-blindness
+> defect was found, so every **no-op turn** and **first-code-turn-is-best**
+> figure in it is a defective-instrument output. Corrected values, from
+> paper §4.7 and §6.3: control redundant steps **1.51** on Luna against
+> **0.26** on GLM; the demand arm adds **+1.03** (p = 0.0063) against
+> **+0.19** (p = 0.086); first gradable attempt already best **84%** on both
+> models. The turn-count figures in this section are unaffected — turn count
+> comes from the harness, not from `progress.py` — and the conclusion that
+> the mechanism generalises while the waste does not is unchanged.
 
 | | Luna | GLM |
 |---|---:|---:|
@@ -1977,11 +2014,16 @@ uncertainty, not a number the run is expected to actually spend; `--live`
 still prints a real projection and requires confirmation before the first
 paid call (see `confirm_projection()` in `cli.py`).
 
-## What's needed to actually run this
+## What was needed to actually run this
 
-1. **An OpenRouter API key.** All target models route through OpenRouter
-   on one key (see README.md "Single provider path") -- only remaining
-   hard blocker that requires the repo owner specifically.
+> **⚠ HISTORICAL — all items resolved.** This was the pre-run blocker list.
+> The key arrived 2026-09-10 (first real OpenRouter call logged above) and
+> the study ran to completion: 11,850 trajectories, eight runs, $61.53.
+> Retained for provenance.
+
+1. ~~**An OpenRouter API key.**~~ **Resolved 2026-09-10.** All target models
+   route through OpenRouter on one key (see README.md "Single provider
+   path").
 2. ~~A cloned `SpreadsheetBench` checkout and grader sanity check~~ --
    **resolved**: cloned, and the grader/dataset code was rewritten to
    match the real repo (see "Study 2" above). LibreOffice's formula
