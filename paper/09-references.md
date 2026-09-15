@@ -26,14 +26,19 @@ disengagement*, a term we deliberately decline to borrow.
 **[dobariya-kumar-2025]** Om Dobariya, Akhil Kumar. "Mind Your Tone: Investigating How Prompt
 Politeness Affects LLM Accuracy (short paper)." arXiv:2510.04950, 6 Oct 2025. 5 pages.
 *Unrefereed preprint; comments field says submitted to Findings of ACL 2025.* Penn State. —
-**Verified:** full text. **⚠ §3.7 item 2:** the variant count per level in their Table 1 is not
-established from our secondary source and must be checked against the PDF. This is the paper the
-study is positioned against.
+**Verified:** full text. This is the paper the study is positioned against. **§3.7 item 2 is now
+closed:** the prefix pool for its 50-question dataset is printed in [dobariya-kumar-2026] Table 1
+and gives two or three variants per level, not one. The check went against our reading and §3.3
+is weakened accordingly. Residual gap recorded in §3.3: we have seen the 2026 paper's table for
+that dataset, not the 2025 paper's own.
 
 **[dobariya-kumar-2026]** Om Dobariya, Akhil Kumar. "Mind Your Tone: Does Tone Alter LLM
 Performance?" arXiv:2605.29027, 27 May 2026. *AMCIS 2026 (Thirty-second Americas Conference on
-Information Systems, Reno) — refereed.* — **Verified:** full text. The same authors' own
-re-run. Cited in §1.1, §3.3 and §7.8.
+Information Systems, Reno) — refereed.* — **Verified: full text, primary PDF, read end to end.**
+The same authors' own re-run: four models, two datasets (the original 50 questions at five tones;
+570 MMLU questions at seven), ten runs each. Source of §3.3's complete prefix pool and of the
+shared-preamble brevity instruction. Reports no token counts — do not confuse it with
+[kumar-dobariya-2026], which is a different paper. Cited in §1.1, §3.3 and §7.8.
 
 **[gandhi-2025]** Vishal Gandhi, Sagar Gandhi. "Prompt Sentiment: The Catalyst for LLM Change."
 arXiv:2503.13510, 14 Mar 2025. *Unrefereed preprint.* — **Verified:** full text. Reports that
@@ -49,9 +54,13 @@ text. Cited in §6.5.
 
 **[kumar-dobariya-2026]** Akhil Kumar, Om Dobariya. "Understanding Tone-Dependent Inference Cost
 in Large Language Models." arXiv:2607.23915, 27 Jul 2026. 25 pages. *Unrefereed preprint.* —
-**Verified:** full text. Source of the *social register* definition this paper adopts, and of
-§3.2's table. **⚠ §3.7 item 1:** their four non-hostile prefixes are not quoted in our source,
-so §3.2's "no brevity instruction" column is an assertion pending a PDF check.
+**Verified: full text, primary PDF, read end to end.** Source of the *social register* definition
+this paper adopts, and of §3.2's two tables — their Table 2 (all seven prefixes, word counts,
+VADER scores) and Table 3 (accuracy and output tokens, four models, ten runs). **§3.7 item 1 is
+closed against this PDF, and it corrected us:** their Neutral prefix asks for "the single letter",
+making it the most explicit output-length instruction of the seven rather than the
+no-instruction baseline our draft called it. Distinct from [dobariya-kumar-2026]: different arXiv
+number, author order, and dependent variable (inference cost, not accuracy).
 
 **[lakens-2017]** Daniel Lakens. "Equivalence Tests: A Practical Primer for t Tests,
 Correlations, and Meta-Analyses." *Social Psychological and Personality Science* 8(4), 2017,
@@ -143,13 +152,19 @@ question.
 
 ## Outstanding before submission
 
-One item remains, and it needs the primary PDFs:
+**No verification items remain open.** Both §3.7 primary-PDF checks are closed, against
+arXiv:2605.29027 and arXiv:2607.23915. Neither confirmed the draft as written, and both
+corrections are stated in place in §3.2 and §3.3 rather than quietly absorbed: the first
+strengthened the argument after exposing a mis-coding of ours, the second weakened a case we now
+rest nothing on.
 
-1. **The two §3.7 primary-PDF checks** — whether any of [kumar-dobariya-2026]'s four non-hostile
-   prefixes contains a brevity instruction (§3.2's "no" column is currently an assertion), and how
-   many variants per level [dobariya-kumar-2025]'s Table 1 actually prints (§3.3 quotes one).
-
-Three earlier items are now closed. **[chen-2023] has been dropped**: the words §6.5 quoted for it
+Five earlier items are now closed. **§3.7 item 2** (arXiv:2605.29027): its Table 1 prints two or
+three variants per level for the 50-question dataset, not one — only two of six hostile variants
+carry a demand, and the previous draft quoted exactly those two, so §3.3 is rewritten and the case
+downgraded. **§3.7 item 1** (arXiv:2607.23915): their Table 2 is now quoted in full in §3.2; no
+polite prefix constrains output length, but the *Neutral* one does, which removes the anomaly our
+draft had conceded and makes the separation complete on all four models. **[chen-2023] has been
+dropped**: the words §6.5 quoted for it
 were Huang et al.'s prose about Self-Debug rather than a quotation from Chen et al., and the point
 is made through [huang-2024] alone. **[mizrahi-2024] has been read in full**, and the entry above
 now scopes their recommendation correctly — it is use-case-dependent rather than a blanket call
