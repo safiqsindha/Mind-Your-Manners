@@ -62,7 +62,7 @@ interchangeable and a perfect final match is not a pass.
 This check is the one that caught the defect in §6.8, and it is the reason to run it before
 trusting any number here.
 
-28 arms were regraded, across six runs and two models.
+9,850 trajectories were regraded across 28 arms, six runs and two models.
 
 ## 6.3 What an interjection does to redundant steps
 

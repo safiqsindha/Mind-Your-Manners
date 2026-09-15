@@ -17,8 +17,8 @@ what social register does to an agent *while it is working*.
 We put a coding agent on SpreadsheetBench and varied the register of a single 28-token
 interjection delivered mid-task, alongside an execution observation. Every interjection is
 length-matched and opens with the same stem, so being interrupted does not covary with what the
-interruption says; the injection turn is crossed rather than sampled. 11,250 archived
-trajectories, eight runs, two models from different labs.
+interruption says; the injection turn is crossed rather than sampled. 11,850 graded trajectories,
+eight runs, two models from different labs.
 
 **Manners are not the operative variable; demand is.** An affect-free "please continue working
 and make sure your result is correct" reproduces the cost effect. A length-matched,

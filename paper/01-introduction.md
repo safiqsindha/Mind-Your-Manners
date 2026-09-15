@@ -45,8 +45,9 @@ observation, while the agent was working.
 Every interjection in every arm is exactly 28 tokens, opens with the same `Checking in.` stem,
 and leaves the opening instruction unchanged, so that *being interrupted* does not covary with
 what the interruption says. The injection turn is crossed rather than sampled in every run after
-the first micro-experiment (§2.2). **11,250 archived trajectories across eight runs and two models
-from different labs**; the five register runs reported in §4–§6 cost $48.47 in API spend.
+the first micro-experiment (§2.2). **11,850 graded trajectories across eight runs and two models
+from different labs**, of which 9,850 were additionally regraded turn by turn (§6); the five
+register runs reported in §4–§6 cost $48.47 in API spend.
 
 The design is, as far as a 43-source review with full-text term searches could establish,
 unoccupied. No prior work manipulates register mid-task inside an agentic loop, measures agent
