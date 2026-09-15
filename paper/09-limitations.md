@@ -43,8 +43,8 @@ inconsistent with a common value (§8.3). Quoting any number here as *the* size 
 effect would repeat the error the paper is about.
 
 **The waste.** That a continue signal buys mostly repeated work is, on our own data, a property of
-the model rather than of the signal. The Luna control produces 1.88 redundant steps to GLM's 0.35,
-and a demand interjection adds +1.11 to Luna against +0.23 to GLM (§4.7). A model that stops early
+the model rather than of the signal. The Luna control produces 1.51 redundant steps to GLM's 0.26,
+and a demand interjection adds +1.03 to Luna against +0.19 to GLM (§4.7). A model that stops early
 has little repetition available to be pushed into. Expect the *direction* to hold and the
 wastefulness to scale with how inclined the model already was to continue.
 
@@ -66,10 +66,10 @@ an equivalence against a pre-specified bound rather than as a measured zero, and
 the primary outcome.
 
 **The turn ceiling is ours, not the benchmark's.** SpreadsheetBench's official multi-round
-protocol caps at five rounds; we used ten and then twenty. §6.5 defends twenty empirically — the
-median best turn among ceiling-bound trajectories is 2, and zero of 43 improvements occurred at
-turn 15 or later — but the choice is ours and comparisons to the benchmark's published numbers
-should not be made across it.
+protocol caps at five rounds; we used ten and then twenty. §6.6 defends twenty empirically — the
+median turn at which the best answer is first reached is 2, and 98.3% of trajectories have peaked
+by turn 10 — but the choice is ours and comparisons to the benchmark's published numbers should
+not be made across it.
 
 **The evaluator has a floor.** Its own audit reports a 4% instruction-level false-negative rate
 and a 3.8% test-case-level false-omission rate [ma-2024]. Our per-turn regrade inherits it (§2.10).

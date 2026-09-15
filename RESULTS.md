@@ -985,13 +985,12 @@ Records: `results_archive/core_gpt-luna_praise_records.json` (1,800 graded).
 >
 > | | Defective | Corrected |
 > |---|---|---|
-> | Redundant-step effects | +0.96 / -0.76 / -1.01 | +0.75 / -0.61 / -0.86 (all signs and p held) |
+> | Redundant-step effects | +0.96 / -0.76 / -1.01 | +0.75 / -0.61 / -0.86 (all signs and p held; 55-65% of the turn effect, not two-thirds to four-fifths) |
 > | "Work remains" on final match | +0.014 / **+0.061** / +0.019 | **+0.026 / +0.034 / +0.025** |
 > | Conclusion | extra turns buy nothing | **+0.028 [+0.009, +0.048], p=0.0038, Q=0.20/2df** |
 >
 > **The headline below is reversed.** "The extra persistence is thrashing" is
-> wrong as stated: roughly two-thirds to four-fifths of the turn effect is
-> redundant, and the explicit continue signal buys a small, tightly replicated
+> wrong as stated: roughly 55-65% of the turn effect is redundant, and the explicit continue signal buys a small, tightly replicated
 > progress gain that does not reach the pass/fail threshold. The
 > "ceiling-dependent / run-to-run instability" analysis further down was
 > chasing an artefact of this defect.
@@ -1198,7 +1197,17 @@ barely persists. So the wastefulness of a continue signal scales with how
 inclined a model already was to keep going -- it is a property of the
 model's stopping behaviour, not of the signal.
 
-### Does persistence buy progress? No -- resolved against, on three measurements
+### Does persistence buy progress? [SUPERSEDED -- see below]
+
+> ⚠ **This subsection is superseded for the same reason as Stage 0: it was
+> measured with the defective `progress.py` (see the banner on the Stage 0
+> section above). Corrected, the three measurements of the continue signal on
+> `final_match` are +0.026 / +0.034 / +0.025, pooling to +0.028, 95% CI
+> [+0.005, +0.052], p=0.022 under the joint-task bootstrap. "Resolved against"
+> is wrong: a continue signal does buy a small, consistently-measured progress
+> gain. The accuracy sign flip below (+6.6 then -1.8) is unaffected and stands.**
+
+#### Original text, kept for audit
 
 The contrast whose two prior measurements disagreed was measured a third
 time, deliberately as the same contrast rather than a proxy:
@@ -1207,6 +1216,7 @@ time, deliberately as the same contrast rather than a proxy:
 |---|---:|---:|---:|---:|---:|
 | Ceiling 10 | +1.85 | +0.014 | 0.50 | +2.4 pts | 0.24 |
 | Ceiling 20 | +6.20 | +0.061 | 0.0028 | **+6.6 pts** | 0.004 |
+<!-- final-match column superseded: corrected values are +0.026 / +0.034 / +0.025 -->
 | **Ceiling 20, third run** | **+5.77** | **+0.019** | **0.16** | **-1.8 pts** | 0.38 |
 
 **CORRECTED: the ceiling-20 accuracy figure was computed on the wrong

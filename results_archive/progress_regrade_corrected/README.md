@@ -8,9 +8,11 @@ nothing. `grader.py` had always recalculated through LibreOffice; the regrade
 had not.
 
 **Validation of the fix.** Benchmark-passed trajectories scoring a final match
-of 1.0 went from **29.4% to 94.4%** on the probe control arm. The residual ~5%
-is consistent with the benchmark's own audited 4% instruction-level
-false-negative rate.
+of 1.0 went from **29.4% to 94.4%** (119/126) on the probe control arm. The
+residual seven are all on one task (54513, a one-cell graded range) and all
+score exactly 0.0 -- a systematic regrade miss on that task, undiagnosed. It is
+NOT the benchmark's audited false-negative rate: that error runs the other way,
+and the benchmark's audited false-discovery rate is 0%.
 
 These files are archived here because `results/analysis/*.json` is gitignored
 and the regrade costs about four machine-hours to reproduce. They are gzipped

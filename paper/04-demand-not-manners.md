@@ -184,16 +184,17 @@ on solvable ones, and polite +31.5% against +24.2%.
 
 **The extra turns are mostly, but not only, repetition.** The per-turn regrade of §6 is the
 evidence: the demand arm adds +0.75 redundant steps at a 10-turn ceiling and +1.03 at 20
-(p < 0.0001 and p = 0.0063), which is roughly two-thirds of its turn effect. Among trajectories
-that could improve, the first gradable attempt is already the best in 80–91% depending on the run.
+(p < 0.0001 and p = 0.0063), which is roughly 60% of its turn effect. Among trajectories that
+could improve, the first gradable attempt is already the best in 80–91% depending on the run.
 
 The remaining third is not nothing, and §6.4 is where this section's claim has to be qualified.
 The *explicit* continue signal — "there is still more work remaining" — raises the graded fraction
 by +0.028 (95% CI [+0.009, +0.048], p = 0.0038), replicated across three runs with no detectable
 heterogeneity. The affect-free demand tested here does not: it pools to +0.009, p = 0.42. So a
 demand interjection buys attempts that are largely repetitions, and a blunter statement that work
-remains buys a small amount of real progress as well — a dose–response in the explicitness of the
-continue signal, not in register.
+remains buys a small amount of real progress as well. The direct contrast between the two texts
+is +0.023 (p = 0.23) on the one run carrying both, so we read this as consistent with explicitness
+mattering rather than as a demonstrated gradient (§6.4).
 
 ## 4.6 The apparent timing effect is a proxy
 
@@ -259,11 +260,11 @@ does not reach significance on its own — it is also below 80% power at its obs
 and its control runs 3.08 turns against Luna's 5.22 — a model that stops early has less room to
 be pushed into continuing.
 
-Two structural facts hold on both models: the first code turn is already the best in 87% (Luna)
-and 85% (GLM) of trajectories at this ceiling, and the first turn is inspection rather than
-production (0% and 5% produce a candidate answer at turn 0). The *waste* is mostly Luna's.
-Control redundant steps run 1.88 on Luna against 0.35 on GLM, and the demand arm adds +1.11
-(p = 0.012) against +0.23 (p = 0.087). How wasteful a continue signal is scales with how
+Two structural facts hold on both models: among trajectories that could improve, the first
+gradable attempt is already the best in 84% on each at this ceiling (§6.5), and the first turn is
+inspection rather than production (0% and 5% produce a candidate answer at turn 0). The *waste* is
+mostly Luna's. Control redundant steps run 1.51 on Luna against 0.26 on GLM, and the demand arm
+adds +1.03 (p = 0.0063) against +0.19 (p = 0.086). How wasteful a continue signal is scales with how
 inclined the model already was to keep going: it is a property of the model's stopping
 behaviour, not of the signal.
 
@@ -294,13 +295,12 @@ read as a demand gradient that happened to correlate with politeness because of 
 were written.
 
 **Establishes what the moved quantity is.** Trajectory length, not reasoning per step — with
-threatening as a reported exception — and two-thirds to four-fifths of that length is redundant
-work. This holds on two models. The ordering is what holds; the magnitudes are not stable.
+threatening as a reported exception — and roughly 55–65% of that length is redundant work. This holds on two models. The ordering is what holds; the magnitudes are not stable.
 
 **Establishes, with the qualification §6.4 adds, that the remainder is real.** An explicit
-statement that work remains buys +0.028 of the graded fraction, replicated three times. It does
-not move the pass rate, because that much partial credit does not cross an all-or-nothing
-threshold.
+statement that work remains buys +0.028 of the graded fraction, 95% CI [+0.005, +0.052], across
+three measurements. Accuracy does not move, but §2.7's minimum detectable effect there is 3.7–7.8
+points, so an accuracy gain of this size is unresolvable rather than excluded.
 
 **Does not establish why praise stops the agent.** That praise is heard as a completion signal
 is one reading; that it raises the agent's confidence in work already produced is another. This

@@ -25,8 +25,8 @@ found to censor the continue-signal arms hardest. Where a contrast pools across 
 ceilings differ, and §2.8 says which.
 
 Twenty is defended empirically in §6: among trajectories that ran to the 20-turn ceiling, the
-best answer was first reached at a median turn of 2, 97% had peaked by turn 10, and no
-improvement anywhere in the run occurred at turn 15 or later.
+best answer was first reached at a median turn of 2, and 98.3% had peaked by turn 10 with 100%
+by turn 14 (§6.6).
 
 One property of the loop matters for every per-turn measure in this paper: **each turn receives
 the original instruction, never the previous turn's output.** Turns are independent attempts at
@@ -74,10 +74,10 @@ present as the original plan.
 
 **We report `final_match`, not `best_match`.** Best match takes the maximum over a trajectory's
 turns, so an arm that takes more turns gets more draws from the same distribution and a higher
-maximum for free. In the run where we compared them, best match gives +0.035 (p = 0.0046) for
-the continue-signal arm where final match gives +0.019 (p = 0.16), and within that arm best
-match rises monotonically with turn count (0.273 → 0.293 → 0.330) while within control it does
-not. Best match is biased toward exactly the arms this study makes longer.
+maximum for free. In the run where we compared them, best match gives +0.045 (p = 0.0012) for
+the continue-signal arm where final match gives +0.025 (p = 0.085). Best match is biased toward
+exactly the arms this study makes longer: more turns means more draws from the same distribution
+and a higher maximum for free.
 
 For redundant turns we adopt **redundant step** from [redundancybench]. Our criterion — the
 graded range is unchanged after the turn — sits between their counterfactual definition
@@ -229,13 +229,15 @@ identical tasks and ceiling (§2.9). That is the honest version of "accuracy nev
 ## 2.9 Ranges, not point estimates
 
 Seven quantities in this study moved materially when measured again on the same tasks, model
-and ceiling. The praise contrast gave −0.59 turns in one run and −1.08 in another; the
-continue-signal effect on final match gave +0.014 (p = 0.50), then +0.061 (p = 0.0028), then
-+0.019 (p = 0.16); accuracy on that contrast gave +6.6 points and then −1.8.
+and ceiling. The praise contrast gave −0.59 turns in one run and −1.08 in another; accuracy on the
+continue-signal contrast gave +6.6 points and then −1.8. (A fourth apparent instability, that
+contrast's effect on final match, turned out to be a defective instrument rather than a property
+of the runs — see §6.8 and §8.4.)
 
 The pattern differs by outcome, and conflating them would flatter us. **For the turn-count
-effects, direction and significance replicated and the point estimates did not. For final
-match, direction replicated and significance did not. For accuracy, neither did.** We therefore
+effects, direction and significance replicated and the point estimates did not. For final match,
+direction and magnitude replicated once the instrument was fixed, though only one of three
+measurements is individually significant. For accuracy, neither did.** We therefore
 treat a point estimate quoted once as provisional by default rather than by exception, and say
 where only one measurement exists.
 

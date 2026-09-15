@@ -121,11 +121,15 @@ question*. We measure *steps taken on a task*. These are different dependent var
 different paradigms. Our result does not contradict theirs and we do not claim a dissociation
 within one dataset; we claim that the quantity we move is not the quantity they move.
 
-**Not premature.** The earlier stop is not the failure mode Cuadron et al. describe as premature
-disengagement [cuadron-2025]. Per-turn regrading (§6) shows 2–6% of trajectories in *every* arm
-were still improving when they stopped, with no gap between praise and control. Praise induces
-*earlier* disengagement that is not premature — a sharper claim than borrowing their term for a
-failure we did not observe.
+**Earlier, but whether premature is unresolved.** An earlier version of this paragraph claimed the
+stop was demonstrably not premature. The corrected per-turn regrade does not support that (§6.7):
+among trajectories that could improve, 3.1–7.1% of controls were still improving when they
+stopped against 7.5–12.3% of the praise and closing-cue arms — higher in all seven comparisons,
+none individually significant on 19–34 tasks. The absolute counts are small (6 of 53 under praise
+against 3 of 97 in control), and the test is underpowered with the sign against us. We therefore
+do not borrow Cuadron et al.'s **premature disengagement** [cuadron-2025] — their term names a
+different trigger, internal simulation without environmental validation, where ours is a discourse
+cue — and we do not claim the stop is harmless either.
 
 **A scope condition.** The praise arms ran at a 10-turn ceiling, with maximum observed turns
 equal to 10. That censors the continue-signal arms hardest — `Q5` sits at 6.37 mean turns — so

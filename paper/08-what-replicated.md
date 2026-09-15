@@ -128,7 +128,7 @@ information.
 **So the corrected statement is:** a continue signal buys more turns on two models, most of them
 redundant, and buys about 2.8 points of the graded range, replicated three times. It does not buy
 a better pass rate, because 2.8 points of partial credit does not cross an all-or-nothing
-threshold (§6.4).
+threshold that accuracy is anyway underpowered to detect (§6.4, §2.7).
 
 One note on population. The per-turn regrade outputs carry no record of whether the interjection
 fired, so these contrasts are over all rows with a readable final match — 48 tasks — rather than
@@ -190,9 +190,9 @@ checked, then withdrawn.
 
 **A productive window that was a rate on a small denominator.** A per-turn improvement rate of
 1–5% at turn indices around 10–14 was read as evidence that the productive window extended that
-far. The rate was real. In absolute terms those turns contain almost no improvements: zero of 43
-improvements in the run occurred at turn 15 or later, and 97% of trajectories had peaked by turn
-10 (§6.5).
+far. The rate was real; the conclusion was not. In absolute terms those turns contain almost no
+improvements — 98.3% of trajectories have reached their best answer by turn 10, at a median turn
+of 2 (§6.6).
 
 ## 8.7 Two infrastructure failures worth recording
 

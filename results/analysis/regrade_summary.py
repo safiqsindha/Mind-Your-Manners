@@ -253,17 +253,57 @@ def pool_progress(rng):
             continue
         w = [1.0 / m["se"] ** 2 for m in ms]
         est = sum(wi * m["est"] for wi, m in zip(w, ms)) / sum(w)
-        se = math.sqrt(1.0 / sum(w))
         q = sum(wi * (m["est"] - est) ** 2 for wi, m in zip(w, ms))
-        z = est / se
+
+        # The runs share their 50 tasks, so an inverse-variance interval that
+        # treats them as independent understates the SE -- the paper's section
+        # 2.8 says so and uses a joint bootstrap for accuracy. Final match gets
+        # the same treatment: resample TASKS once and recompute every run's
+        # mean from that draw, and sign-flip a whole task across all runs at
+        # once. On the continue-signal contrast this moves p from 0.004 to
+        # 0.024; the effect survives, the confidence does not.
+        joint = joint_task_bootstrap(pairs, w, rng)
         out[label] = {
-            "k": len(ms), "est": est, "se": se,
-            "lo": est - 1.959963985 * se, "hi": est + 1.959963985 * se,
-            "p": math.erfc(abs(z) / math.sqrt(2.0)),
+            "k": len(ms), "est": est,
+            "lo": joint["lo"], "hi": joint["hi"], "p": joint["p"],
+            "iv_se": math.sqrt(1.0 / sum(w)),
             "q": q, "df": len(ms) - 1, "q_p": chi2_sf(q, len(ms) - 1),
-            "each": [m["est"] for m in ms],
+            "each": [m["est"] for m in ms], "shared_tasks": joint["n"],
         }
     return out
+
+
+def joint_task_bootstrap(pairs, weights, rng, reps=8000):
+    """Pool across runs resampling TASKS jointly, not runs independently."""
+    per_run = []
+    for treat_stem, control_stem in pairs:
+        t, c = load(treat_stem), load(control_stem)
+        if t is None or c is None:
+            continue
+        tt = per_task(t, lambda r: r["final_match"])
+        cc = per_task(c, lambda r: r["final_match"])
+        per_run.append({k: tt[k] - cc[k] for k in set(tt) & set(cc)})
+    shared = sorted(set.intersection(*[set(d) for d in per_run]))
+    mats = [np.array([d[k] for k in shared]) for d in per_run]
+    w = np.array(weights[: len(mats)], dtype=float)
+
+    def combine(rows):
+        return float((w * np.array([m[rows].mean() for m in mats])).sum() / w.sum())
+
+    idx = rng.integers(0, len(shared), size=(reps, len(shared)))
+    boot = np.array([combine(i) for i in idx])
+    observed = combine(np.arange(len(shared)))
+    flips = rng.choice([-1.0, 1.0], size=(reps, len(shared)))
+    null = np.abs(np.array([
+        float((w * np.array([(f * m).mean() for m in mats])).sum() / w.sum())
+        for f in flips
+    ]))
+    return {
+        "lo": float(np.percentile(boot, 2.5)),
+        "hi": float(np.percentile(boot, 97.5)),
+        "p": float((null >= abs(observed) - 1e-12).sum() + 1) / (reps + 1),
+        "n": len(shared),
+    }
 
 
 def main() -> None:
@@ -299,7 +339,9 @@ def main() -> None:
                 continue
             print(f"  {label:<24}{a['est']:>+13.2f}{a['p']:>9.4f}"
                   f"{b['est']:>+15.3f}{b['p']:>9.4f}"
-                  f"{100*st['first_is_best']:>11.0f}%{a['n']:>5}")
+                  f"{100*st['first_is_best']:>11.0f}%{a['n']:>5}"
+                  f"   still-improving {100*st['still_improving']:.1f}%"
+                  f" (control {100*cs['still_improving']:.1f}%)")
 
     pooled = pool_progress(rng)
     if pooled:
