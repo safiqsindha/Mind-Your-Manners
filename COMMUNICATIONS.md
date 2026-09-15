@@ -2,7 +2,7 @@
 
 Drafts for external write-up. **The paper itself is written** — `paper/`,
 nine sections, each drafted and independently reviewed — and one item stands
-between it and submission: the two primary-PDF checks in §3.7. The drafts
+between it and submission: the single primary-PDF check in §3.7 item 1. The drafts
 below are the popular-audience versions and are downstream of it; where they
 disagree with `paper/`, the paper is right.
 
@@ -284,10 +284,19 @@ replicates.
 
 **Target venue:** TBD. A workshop on agent evaluation remains the honest fit.
 
-**Outstanding before submission:** the two primary-PDF checks in §3.7 —
-whether any of Kumar & Dobariya's four non-hostile prefixes contains a brevity
-instruction, and how many variants per level Dobariya & Kumar's Table 1 prints.
-Both need the PDFs, not compute.
+**Outstanding before submission:** one primary-PDF check, §3.7 item 1 — whether
+any of Kumar & Dobariya's four non-hostile prefixes (arXiv:2607.23915, the
+inference-cost paper) contains a brevity instruction. It needs the PDF, not compute.
+
+**A correction worth carrying into any popular draft.** §3.7's second check was
+closed on 15 Sep 2026 against the primary PDF of Dobariya & Kumar's AMCIS paper,
+and the answer went against us. Their prefix pool has two or three variants per
+level, not one; only **two of six** hostile variants carry a demand, and the
+earlier draft had quoted exactly those two. §3.3 now prints the whole pool and
+rests nothing on the case. Do not use "their own rude prompt says *try to focus*"
+as a punchy line — it is one of three, and the other two are pure insult. The
+strong versions of the demand argument are §4 (our own dissociation), §3.2
+(Kumar & Dobariya's token table) and §3.4 (EmotionPrompt's 7 of 11).
 
 **Two things about the bibliography worth knowing when pitching this.** Eleven
 of the twenty works cited are unrefereed preprints, including both papers the
@@ -334,7 +343,7 @@ Self-Debug rather than a quotation from Chen et al.
 
 **Outstanding**
 
-- [ ] **The two §3.7 primary-PDF checks** — the only blocker
+- [ ] **§3.7 item 1** (one primary-PDF check, arXiv:2607.23915) — the only blocker
 - [ ] Author block and CRediT contributions
 - [ ] DeepSeek and Qwen (~$35) for four-model generality — parked, buys breadth not identification
 - [ ] A second substrate (AppWorld) — a different paper

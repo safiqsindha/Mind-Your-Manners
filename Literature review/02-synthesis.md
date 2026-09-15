@@ -230,6 +230,9 @@ and **Sclar et al. 2024** for the statistics, **Schegloff & Sacks 1973** for §5
    corroborated three times over by other people's data.** This is the contribution most likely
    to be cited by others.
    - **A1's own Table 1** files *"Try to focus and try to answer this question:"* under **Rude**.
+     ⚠ But see the correction in `01-sources.md`: that is one of **three** Rude variants, and
+     only 2 of 6 hostile variants across Levels 4–5 carry a demand (0 of 5 non-hostile do).
+     This corroboration is the weakest of the three and the paper (§3.3) now says so.
    - **A3's own Table 2**: every hostile prefix carries a brevity instruction ("Do not waste my
      time or give any extra text"); no polite prefix does. Their own VADER scores put Rude at
      **−0.09** and Very Rude at **−0.10** against Sycophantic at **+0.95** — the conditions with

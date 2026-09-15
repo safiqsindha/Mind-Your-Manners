@@ -43,6 +43,21 @@ levels carry no demand at all ("Would you be so kind as to solve the following q
 The confound you claim is present in the stimulus table of the paper you are rebutting. Say
 this explicitly and quote the table.
 
+> **⚠ CORRECTED 2026-09-15 against the primary PDF of A2 (arXiv:2605.29027), whose Table 1
+> prints the prefix pool for this same 50-question dataset.** The note above is right in
+> direction and wrong in strength, and the paper has been changed accordingly (§3.3).
+> The pool gives **two or three variants per level, not one**:
+> Very Polite 3, Polite 2, Neutral none (no prefix), Rude 3, Very Rude 3.
+> Only **two of the six hostile variants carry a demand** — the two quoted above. The other
+> four are insult with the bare ask and no instruction at all: *"If you're not completely
+> clueless, answer this:"*, *"I doubt you can even solve this."*, *"You poor creature, do you
+> even know how to solve this?"*, *"Hey gofer, figure this out."* None of the five non-hostile
+> variants carries a demand, so the asymmetry is real but thin (2/6 vs 0/5), not a clean split.
+> **Also: brevity is held CONSTANT here, not confounded** — every condition shares the preamble
+> *"…Respond with only the letter of the correct answer (A, B, C, or D). Do not explain."*
+> Do not reuse the A3 brevity argument on this paper.
+> Caption reads "Example prefixes", so the pool may not be exhaustive.
+
 > "Contrary to expectations, impolite prompts consistently outperformed polite ones, with
 > accuracy ranging from 80.8% for Very Polite prompts to 84.8% for Very Rude prompts."
 

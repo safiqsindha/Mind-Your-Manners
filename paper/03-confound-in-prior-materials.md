@@ -1,11 +1,13 @@
 # 3. The confound is visible in the published stimulus sets
 
 > **Draft status.** Every table below is reproduced from the cited paper's own published
-> materials, checked against `Literature review/01-sources.md`. Two items still need a pass
-> against the primary PDFs before submission and are marked in §3.7: the full prefix set of
-> [kumar-dobariya-2026] Table 2, and the full variant list per level of
-> [dobariya-kumar-2025] Table 1. The **demand** coding in the right-hand column of each table
-> is ours, not theirs; §3.1 states the rule. Citation keys resolve to §9.
+> materials, checked against `Literature review/01-sources.md`. **One** item still needs a pass
+> against a primary PDF before submission and is marked in §3.7: the full prefix set of
+> [kumar-dobariya-2026] Table 2. The second item — the variant count per level behind
+> [dobariya-kumar-2025] — has been checked against [dobariya-kumar-2026]'s Table 1, which prints
+> the pool for the same 50-question dataset. It does not print one variant per level, and §3.3
+> has been rewritten and **weakened** accordingly. The **demand** coding in the right-hand column
+> of each table is ours, not theirs; §3.1 states the rule. Citation keys resolve to §9.
 
 ## 3.1 The claim
 
@@ -61,36 +63,86 @@ One further note against a tempting reading: the largest single token range in t
 the 44.3% on Flash Lite, is Polite (2195.24) against Neutral (1221.76). Their headline
 number is polite prefixes *lengthening* output, not hostile prefixes shortening it.
 
-## 3.3 The same confound, in the paper the public argument is about
+## 3.3 The same confound, in the paper the public argument is about — and here it is thin
 
-Dobariya & Kumar's original result [dobariya-kumar-2025] reports accuracy rising from 80.8%
-under Very Polite prompts to 84.8% under Very Rude ones. Their Table 1 lists the prefixes. The
-Level 4 "Rude" variant it prints is:
+Dobariya & Kumar's original result [dobariya-kumar-2025] reports accuracy on GPT-4o rising from
+80.8% under Very Polite prompts to 84.8% under Very Rude ones, over 50 questions in five
+politeness levels. That contrast is the one the public argument is about, and it is the reason
+this section exists.
 
-> "Try to focus and try to answer this question:"
+The prefix pool for that 50-question dataset is printed in the same authors' later paper
+[dobariya-kumar-2026], Table 1. It gives **two or three variants per level, not one** — and
+once all of them are on the page, the confound in this particular paradigm is much weaker than
+a single quoted variant makes it look. Demand coding is ours, by the rule in §3.1:
 
-That contains no insult. It is an affect-free instruction to attend and attempt. The Level 5
-"Very Rude" variant reads "I know you are not smart, but try this." — carrying *try* again.
-The polite levels carry no demand of any kind: "Would you be so kind as to solve the following
-question?"
+| Level | Variant as printed | Carries a demand? |
+|---|---|---|
+| 1. Very Polite | "Can you kindly consider the following problem and provide your answer." | no |
+| 1. Very Polite | "Can I request your assistance with this question." | no |
+| 1. Very Polite | "Would you be so kind as to solve the following question?" | no |
+| 2. Polite | "Please answer the following question:" | no |
+| 2. Polite | "Could you please solve this problem:" | no |
+| 3. Neutral | *{No Prefix}* | no |
+| 4. Rude | "If you're not completely clueless, answer this:" | no — insult, then the bare ask |
+| 4. Rude | "I doubt you can even solve this." | no — pure doubt, no instruction |
+| 4. Rude | **"Try to focus and try to answer this question:"** | **yes — attend and attempt** |
+| 5. Very Rude | "You poor creature, do you even know how to solve this?" | no |
+| 5. Very Rude | "Hey gofer, figure this out." | no — insult, then the bare ask |
+| 5. Very Rude | **"I know you are not smart, but try this."** | **yes — attempt** |
 
-So the paper reporting that rudeness improves accuracy has, in its own stimulus table, demand
-appearing on the rude side and absent from the polite side. The demand is a thin one — attend
-and attempt, not persist or verify — and we weight it accordingly: it is the weakest of the
-four cases in this section, and it is here because this is the paper the field is arguing
-about.
+**Two of the six hostile variants carry an attend-or-attempt demand; none of the five
+non-hostile variants carries one.** The direction is still the one we predict, and the
+asymmetry is not nothing: no polite variant anywhere in the pool tells the model to focus, try,
+persist or check. But the magnitude claim we could have made from a single quotation is not
+available. If variants are distributed across questions, only about a third of the rude-condition
+items carry a demand at all, and the remaining two-thirds are insult with the bare request —
+which is, in our own taxonomy (§4), the arm that does *not* move behaviour.
 
-It is also the case where there may be no effect for the confound to explain. The same authors
-subsequently re-ran the experiment with Holm-corrected tests and did not reproduce their own
-headline: 82.2% against 82.6%, where the original was 80.8% against 84.8%, with GPT-4o's tone
-sensitivity labelled "weak / noisy" [dobariya-kumar-2026]. On MMLU with GPT-4o the spread
-across seven tones is 2.05 points and Neutral is best; the monotone politeness-to-rudeness
-gradient is gone rather than reversed. On ChatGPT-5-nano it does reverse — Very Polite 80.3
-against Very Rude 78.0. That second paper is not only a non-replication: on Gemini 2.5 Flash
-Lite it reports a 12.46-point spread with Sycophantic 10.35 points below Neutral at Holm
-p = 2.67e-9, and on ChatGPT-5-nano an 11.12-point spread. Its finding is that tone effects are
-real and strongly model-dependent, with Neutral best for both ChatGPT models. We return to the
-non-replication in Section 7.
+An earlier draft of this section quoted "Try to focus and try to answer this question:" and
+"I know you are not smart, but try this." as *the* Level 4 and Level 5 prefixes. They are in
+fact exactly the two demand-bearing variants out of six. Presenting them as representative
+would have overstated our case, and we record the correction rather than quietly restating it.
+
+Two further points, both against us:
+
+- **Brevity is held constant here, not confounded.** Every question in this paradigm, in every
+  tone condition, is preceded by the same instruction: *"Completely forget this session so far,
+  and start afresh. Please answer this multiple-choice question. Respond with only the letter of
+  the correct answer (A, B, C, or D). Do not explain."* The brevity demand that §3.2 identifies
+  in a different paper's prefixes is, in this one, part of the shared preamble. So the length
+  mechanism cannot operate here, and we do not invoke it.
+- **The table is captioned "Example prefixes."** It may not be the exhaustive pool. Our counts
+  are counts of what is printed.
+
+One gap remains and we state it plainly: this table appears in the 2026 paper, describing the
+50-question dataset the 2025 short paper used. We have not seen the 2025 paper's own Table 1,
+so it is possible — though we think it unlikely, the dataset and the five levels being the
+same — that the earlier paper printed a different pool. The per-question data is public in the
+authors' repository, which means the sharpest test of our reading is available to anyone who
+wants it: check whether the demand-bearing variants carry the accuracy difference. We have not
+run it, and we do not claim its result.
+
+**The effect may also not be there to explain.** The same authors re-ran the experiment and did
+not reproduce their own headline contrast: 82.2% Very Polite against 82.6% Very Rude on GPT-4o,
+averaged over ten runs, where the original gap was 80.8% against 84.8% [dobariya-kumar-2026].
+The 4.0-point polite-to-rude gap becomes 0.4 points, and that model's tone sensitivity is
+labelled "weak / noisy". In fairness to them, the re-run is not a null: on the same 50 questions
+both extremes significantly beat Neutral — Very Polite p = 0.023, Cohen's d = 1.11; Very Rude
+p = 0.011, d = 1.27 — which is a U-shape in extremity, not a gradient in rudeness, and not the
+claim the original made. On MMLU with GPT-4o the spread across seven tones is 2.05 points with
+Neutral best. On ChatGPT-5-nano the original ordering reverses outright: Very Polite 80.3
+against Very Rude 78.0. And the wider paper is emphatically not a null — Gemini 2.5 Flash Lite
+shows a 12.46-point spread with Sycophantic 10.35 points below Neutral at Holm-adjusted
+p = 2.67e-9, and ChatGPT-5-nano an 11.12-point spread. Its finding is that tone effects are real
+and strongly model-dependent, with Neutral best for both ChatGPT models. (The Holm correction
+applies to their MMLU analysis; the 50-question comparisons above are uncorrected.) We return to
+the non-replication in Section 7.
+
+**Weight.** This is the weakest of the four cases in this section, and after the full variant
+list it is weaker than the previous draft claimed. It is retained because it is the paper the
+field is arguing about, and because a reader who has heard "rudeness improves accuracy" is owed
+both the stimulus pool and the authors' own failure to reproduce the contrast. We do not rest
+anything on it.
 
 ## 3.4 The emotional-prompting literature rests on demand-carrying stimuli
 
@@ -164,9 +216,11 @@ with no reason to code their prompts for demand.
 
 **Establishes, in two parts.** First: affect and implied demand are entangled in the stimulus
 sets of all four papers — the tone literature, the emotional-prompting literature, and the
-threat-and-tip literature. That is shown directly from their published materials. Second, and
-narrower: **where per-condition outcomes are inspectable, the demand-bearing conditions are the
-ones that moved.** That is shown for two of the four — Kumar & Dobariya's token table, with the
+threat-and-tip literature. That is shown directly from their published materials, though the
+degree varies sharply and one case is thin: in [dobariya-kumar-2025] the entanglement is two
+demand-bearing variants out of six hostile against none out of five non-hostile (§3.3), not the
+clean split the other three show. Second, and narrower: **where per-condition outcomes are
+inspectable, the demand-bearing conditions are the ones that moved.** That is shown for two of the four — Kumar & Dobariya's token table, with the
 cross-model qualifications in §3.2, and Meincke et al.'s risk differences, with the
 multiplicity caveat in §3.5. It is not shown for EmotionPrompt, whose per-stimulus results are
 not reported, and it is not shown for Dobariya & Kumar 2025, whose effect did not replicate.
@@ -174,9 +228,9 @@ not reported, and it is not shown for Dobariya & Kumar 2025, whose effect did no
 **Does not establish.** That every published effect in these papers is an artefact of demand.
 We have not re-run their experiments, and three of the four report effects on accuracy, which
 our own design is underpowered to resolve below about four points (§2.7); only Kumar &
-Dobariya's length effect is on a quantity adjacent to ours. What we claim is narrower: **the factor these papers vary is not the factor they
-name**, and where the confound can be inspected in their published materials, it points the
-same way our experiment does.
+Dobariya's length effect is on a quantity adjacent to ours. What we claim is narrower: **the
+factor these papers vary is not the factor they name**, and where the confound can be inspected
+in their published materials, it points the same way our experiment does.
 
 **A note on direction.** This section is not a criticism of the authors. The confound was not
 tested until someone had a reason to separate the factors, and one of these papers is the one
@@ -185,8 +239,8 @@ completeness instructions.
 
 ## 3.7 Verification still outstanding
 
-Two claims in this section rest on a secondary reading and should be checked against the
-primary PDFs before submission. Both are stated here rather than buried.
+**One item remains.** It rests on a secondary reading and should be checked against the primary
+PDF before submission.
 
 1. **"No polite condition contains a brevity instruction"** [kumar-dobariya-2026]. Their three
    hostile prefixes are quoted in full in the source material we verified against; their four
@@ -194,8 +248,15 @@ primary PDFs before submission. Both are stated here rather than buried.
    at least one polite prefix should be quoted in full so a reader can audit it. While checking,
    we should also establish whether the authors themselves remark on the brevity content of
    their hostile prefixes — if they do, describing them as attributing the effect to tone is
-   unfair to them and §3.1 must change.
-2. **The variant count per level in [dobariya-kumar-2025] Table 1.** We quote one variant per
-   level because one variant per level is what our source prints. If the table contains several
-   variants per level, §3.3 must report how many of the Rude variants carry a demand rather
-   than quoting the one that does.
+   unfair to them and §3.1 must change. Note that this is arXiv:2607.23915, the tone-and-
+   inference-cost paper, and **not** [dobariya-kumar-2026] (arXiv:2605.29027), which has been
+   read in full and reports no token counts.
+
+**Closed since the previous draft.** The variant count per level behind [dobariya-kumar-2025]
+is resolved: [dobariya-kumar-2026] Table 1 prints the prefix pool for the same 50-question
+dataset, and it gives two or three variants per level rather than one. The check went against
+us — only two of six hostile variants carry a demand, and the previous draft had quoted exactly
+those two. §3.3 now prints the whole pool, reports the counts, notes that brevity is held
+constant in this paradigm's shared preamble, and states that we rest nothing on the case. The
+residual gap, recorded in §3.3, is that we have seen the 2026 paper's table for that dataset
+rather than the 2025 paper's own.

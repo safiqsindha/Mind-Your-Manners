@@ -226,7 +226,7 @@ The regrade subsystem alone produced four silent failures and one near miss, eac
 1. ~~The demand/affect probe~~ — **done**. Demand drives the cost effect; insult is inert; praise shortens work.
 2. ~~Why praise stops the agent~~ — **done**. It is a closing move. Praise plus an explicit *"there is still more work remaining"* still cuts 1.35 turns (p<0.0001) against that sentence alone, which refutes the completion reading; praising the output is no stronger than praising the assistant (p=0.40), which rules out confidence; and a pure closing cue with no praise stops the agent harder than praise does.
 3. ~~The write-up~~ — **done**. `paper/`, nine sections, each drafted and independently reviewed.
-4. **Two primary-PDF checks** (§3.7 of the paper) — the only thing standing between the draft and submission. Needs the PDFs, not compute.
+4. **One primary-PDF check** (§3.7 item 1) — the only thing standing between the draft and submission. Needs the PDF, not compute. Item 2 closed on 15 Sep 2026 against Dobariya & Kumar's AMCIS paper, and it went *against* us: their prefix pool has 2–3 variants per level, only 2 of 6 hostile ones carry a demand, and §3.3 is weakened accordingly.
 5. **DeepSeek and Qwen** — ~$35 for four-model generality. Deliberately parked: the causal variable is now named, so this would buy breadth rather than identification.
 6. **A second substrate.** AppWorld is the candidate — its stock evaluator supports the same per-turn measure as §6, on a different task family, at roughly $0.70 per trajectory.
 
