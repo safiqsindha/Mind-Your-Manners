@@ -22,16 +22,24 @@ response is correct but **how much work the agent does and when it stops** — a
 tone literature measures that.
 
 **The manipulation is not the variable it is named after.** In the published stimulus sets, the
-conditions labelled rude also carry instructions — to be brief in one, to attend and attempt in
-another — and the conditions labelled emotional also instruct the model to verify or persist.
+conditions labelled rude also carry instructions — not to give extra text in one, to attend and
+attempt in another — and the conditions labelled emotional also instruct the model to verify or
+persist.
 Affect and task demand co-vary, and the movement is attributed to tone. This is visible in their
-own tables, without re-running anything (§3).
+own tables, without re-running anything (§3). The strength of the entanglement varies, and we
+report it case by case rather than uniformly: in one of the four papers only two of six hostile
+variants carry a demand, and we rest nothing on that case (§3.3). In the one paper whose
+per-condition outcomes are fully inspectable, the split is clean — on all four of its models,
+every condition whose prefix constrains output length is shorter than every condition whose
+prefix does not, and affect does not order the result (§3.2).
 
 **The effects are not stable.** The headline above was re-run by its own authors the following
 spring and did not reproduce on GPT-4o: 82.2% against 82.6%, with that model's tone sensitivity
-labelled "weak / noisy" — though the same paper reports 11–12-point spreads on two other models,
-so its finding is that register effects are real and strongly model-dependent, not that they are
-absent [dobariya-kumar-2026]. Independently, five prompt-engineering techniques including
+labelled "weak / noisy" — a 4.0-point polite-to-rude gap becoming 0.4. The re-run is not a null,
+and we are careful about this: on those same 50 questions both extremes significantly beat
+Neutral, which is a U-shape in extremity rather than the rudeness gradient the original claimed,
+and the same paper reports 11–12-point spreads on two other models. Its finding is that register
+effects are real and strongly model-dependent, not that they are absent [dobariya-kumar-2026]. Independently, five prompt-engineering techniques including
 emotional prompting were tested against their originals and largely failed to replicate
 [vaugrante-2024].
 

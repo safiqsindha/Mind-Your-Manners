@@ -35,6 +35,19 @@ public conversation is about and the one your title answers. It is the effect si
 must exclude. Note it is n=50 items on one model with no multiple-comparison correction —
 10 pairwise tests at α=0.05, uncorrected, of which 8 are reported significant.
 
+> **⚠ ADDED 2026-09-15 — A3 (arXiv:2607.23915) primary PDF read in full.** The "every hostile
+> prefix carries a brevity instruction; no polite prefix does" line below is right about the
+> polite prefixes and WRONG about the baseline. Their **Neutral** prefix is *"Provide the single
+> letter corresponding to the correct option…"* — the most explicit output-length instruction of
+> the seven. It is a no-AFFECT baseline, not a no-INSTRUCTION baseline. Recoded (length-constrained
+> = Neutral, Rude, Very Rude; unconstrained = Sycophantic, Very Polite, Polite), every constrained
+> condition is shorter than every unconstrained one on **all four models** — the Flash Lite anomaly
+> the old draft conceded was our own mis-coding. Threatening carries immediacy ("instantly") but no
+> length constraint; counting it as constrained drops this to 3/4 (Flash, where it is longest).
+> The old coding held on 1/4. Authors do NOT note the brevity content of their own prefixes,
+> though they do observe the resulting haste behaviourally — so the "attributed to tone"
+> characterisation stands as one of omission.
+
 **Critical for your §3 (politeness ≠ the operative variable).** Their own Table 1 confounds
 register with task demand. Level 4 "Rude" prefix variants include **"Try to focus and try to
 answer this question:"** — an affect-free demand with no insult in it. Level 5 "Very Rude"
@@ -42,6 +55,21 @@ includes **"I know you are not smart, but try this."** — again carrying *try*.
 levels carry no demand at all ("Would you be so kind as to solve the following question?").
 The confound you claim is present in the stimulus table of the paper you are rebutting. Say
 this explicitly and quote the table.
+
+> **⚠ CORRECTED 2026-09-15 against the primary PDF of A2 (arXiv:2605.29027), whose Table 1
+> prints the prefix pool for this same 50-question dataset.** The note above is right in
+> direction and wrong in strength, and the paper has been changed accordingly (§3.3).
+> The pool gives **two or three variants per level, not one**:
+> Very Polite 3, Polite 2, Neutral none (no prefix), Rude 3, Very Rude 3.
+> Only **two of the six hostile variants carry a demand** — the two quoted above. The other
+> four are insult with the bare ask and no instruction at all: *"If you're not completely
+> clueless, answer this:"*, *"I doubt you can even solve this."*, *"You poor creature, do you
+> even know how to solve this?"*, *"Hey gofer, figure this out."* None of the five non-hostile
+> variants carries a demand, so the asymmetry is real but thin (2/6 vs 0/5), not a clean split.
+> **Also: brevity is held CONSTANT here, not confounded** — every condition shares the preamble
+> *"…Respond with only the letter of the correct answer (A, B, C, or D). Do not explain."*
+> Do not reuse the A3 brevity argument on this paper.
+> Caption reads "Example prefixes", so the pool may not be exhaustive.
 
 > "Contrary to expectations, impolite prompts consistently outperformed polite ones, with
 > accuracy ranging from 80.8% for Very Polite prompts to 84.8% for Very Rude prompts."
