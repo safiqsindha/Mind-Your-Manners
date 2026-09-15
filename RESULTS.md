@@ -966,6 +966,39 @@ Records: `results_archive/core_gpt-luna_praise_records.json` (1,800 graded).
 
 ## Stage 0: is the persistence progress or thrashing? (2026-09-13)
 
+> ## ⚠ SUPERSEDED 2026-09-15 -- THE INSTRUMENT WAS DEFECTIVE
+>
+> Everything in this section was measured with a `progress.py` that **never
+> recalculated the agent's output workbooks**. openpyxl writes formulas with
+> no cached value, so every turn that answered with a formula (56-62% of
+> Luna's final gradable turns) read as empty and scored 0.0 --
+> indistinguishable from a turn that wrote nothing. `grader.py` had always
+> recalculated through LibreOffice; the regrade had not.
+>
+> The section's own validation claim -- "trajectories the benchmark passed
+> score a final match of 1.0" -- was false on the archived data: **89 of 126
+> passed control trajectories scored exactly 0.0.** The check was described
+> and not run.
+>
+> **Fixed and all 28 arms re-run** (`results_archive/progress_regrade_corrected/`).
+> Passed trajectories scoring 1.0 went from **29.4% to 94.4%**.
+>
+> | | Defective | Corrected |
+> |---|---|---|
+> | Redundant-step effects | +0.96 / -0.76 / -1.01 | +0.75 / -0.61 / -0.86 (all signs and p held) |
+> | "Work remains" on final match | +0.014 / **+0.061** / +0.019 | **+0.026 / +0.034 / +0.025** |
+> | Conclusion | extra turns buy nothing | **+0.028 [+0.009, +0.048], p=0.0038, Q=0.20/2df** |
+>
+> **The headline below is reversed.** "The extra persistence is thrashing" is
+> wrong as stated: roughly two-thirds to four-fifths of the turn effect is
+> redundant, and the explicit continue signal buys a small, tightly replicated
+> progress gain that does not reach the pass/fail threshold. The
+> "ceiling-dependent / run-to-run instability" analysis further down was
+> chasing an artefact of this defect.
+>
+> Current numbers: `results/analysis/regrade_summary.py`. Read them, not the
+> tables below, which are kept only so the correction is auditable.
+
 No model calls, no spend. Every live finding in this study is about
 persistence, but grading was binary on the FINAL state, so the extra turns
 were uninterpretable: an agent converging and an agent rewriting the same
@@ -977,7 +1010,9 @@ It is possible because the agent loop hands every turn the ORIGINAL input,
 never the previous turn's output, so each turn is an independent attempt and
 "progress" means attempt k+1 landing closer to the answer than attempt k.
 Validated before use: trajectories the benchmark passed score a final match
-of 1.0, long failing ones score 0.0.
+of 1.0, long failing ones score 0.0. **That validation was asserted, not run
+-- see the superseded banner above. It is the check that would have caught
+the defect, and when finally executed it failed on 89 of 126 trajectories.**
 
 ### At a 10-turn ceiling, the extra turns are pure thrashing
 

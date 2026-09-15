@@ -84,10 +84,12 @@ the largest stop in the study, −1.44 turns (§5). The ordering is monotone in 
 message projects an end to the exchange; that praise operates *through* pre-closing structure is
 the hypothesis this is consistent with, not one the design establishes (§5.4).
 
-**The extra turns are repetition.** Regrading every turn against the benchmark's own answer shows
-that every arm moving turn count moves *redundant steps* by about the same amount, and no arm
-moves the progress measure. The first code turn is already the best the agent produces in 85–90%
-of trajectories (§6).
+**The extra turns are mostly repetition.** Regrading every turn against the benchmark's own
+answer shows that two-thirds to four-fifths of each turn-count effect is *redundant steps*, and
+that among trajectories that could improve, the first gradable attempt is already the best in
+80–91%. The remainder is real but small: an explicit statement that work remains raises the graded
+fraction by 2.8 points, replicated across three runs — too little to change a pass rate, which is
+why accuracy stays flat (§6.4).
 
 **No accuracy effect survives correction or replication**, across seven runs. We state that as
 an equivalence rather than an absence: pooled, a mid-task interjection changes accuracy by less

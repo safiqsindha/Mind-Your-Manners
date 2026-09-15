@@ -87,44 +87,59 @@ Reasoning tokens behave the same way, and the praise pair is consistent there (�
 z = 0.95, p = 0.34), which is a further reason to treat the turn-count result as marginal rather
 than as established drift.
 
-## 8.4 Where nothing replicated
+## 8.4 An instability that was the instrument
 
-The continue-signal arm is the one contrast measured three times, and its non-turn outcomes are
-where the study's instability is worst.
+The continue-signal arm is the one contrast measured three times, and it was, until we rebuilt the
+instrument, this paper's showpiece for run-to-run instability. It is now something more useful: a
+worked example of a defective measure producing the *appearance* of instability.
 
 | "Work remains" vs control | praise run, ceiling 10 | dedicated re-run, ceiling 20 | stage 1, ceiling 20 |
 |---|---:|---:|---:|
 | Δ turns | +1.85 | +6.20 | +5.77 |
-| Δ final match | +0.014 (p = 0.49) | **+0.061 (p = 0.0026)** | +0.019 (p = 0.16) |
+| Δ final match, **defective regrade** | +0.014 (p = 0.49) | **+0.061 (p = 0.003)** | +0.019 (p = 0.16) |
+| Δ final match, **corrected** | +0.026 (p = 0.32) | +0.034 (p = 0.043) | +0.025 (p = 0.089) |
 | Δ accuracy | +2.4 pts (p = 0.24) | **+6.6 pts (p = 0.004)** | **−1.8 pts** (p = 0.39) |
 
-**Final match replicates in direction but not significance** — all three positive, one significant
-— and at matched ceiling the two are formally consistent (z = 1.68, p = 0.094). **Accuracy
-replicates in neither.** Its two matched-ceiling measurements are +6.6 and −1.8 points on identical
-tasks, model and ceiling: z = 2.79, p = 0.005. They are inconsistent with a common value, so at
-least one of them is wrong, and the data do not say which.
+Read the two middle rows against each other. Under the defective regrade the three measurements
+looked like one hit between two nulls, spanning 4.4×, and we wrote a subsection about what that
+implied. Corrected, they are +0.026, +0.034 and +0.025 — pooling to **+0.028, 95% CI
+[+0.009, +0.048], p = 0.0038, with Cochran's Q = 0.20 on 2 df (heterogeneity p = 0.91)**. They are
+the most consistent set of repeated measurements in this study.
 
-The middle column looked like corroboration at the time: a progress measure and the benchmark's
-own grade, both positive, both significant, on the same contrast. That reading was mistaken for a
-reason worth naming. Accuracy and `final_match` are not two instruments. They are two functions of
-the same final workbook — one asks whether all three test cases pass, the other what fraction of
-the graded range is correct — so they share not only every source of run-level noise but the
-underlying object. Their agreement carries almost no independent information.
+The defect is described in §6.8: the regrade never recalculated the agent's formula-writing turns,
+so a majority of final answers read as empty and scored zero. That is a *noise* injection, and
+noise does not merely widen intervals — it made one run look special and two look null, which is
+indistinguishable from the instability this section exists to document.
 
-We also tested the obvious rescue and it failed. The natural reading is that the 10-turn ceiling
-truncated real progress, which is testable: truncate the ceiling-20 run's own analysis to ten turns
-and see whether the effect survives. It does — +0.049 (p = 0.0065) at ten turns, +0.056 at fifteen,
-+0.061 at twenty. The ceiling explains almost none of the gap between +0.014 and +0.049. What
-separates them is that they are different runs.
+**Accuracy still replicates in neither direction.** Its two matched-ceiling measurements are +6.6
+and −1.8 points on identical tasks, model and ceiling: z = 2.79, p = 0.005. They are inconsistent
+with a common value, so at least one is wrong and the data do not say which. That one is real
+instability, and it survives the instrument fix — which is what makes the contrast with the row
+above informative rather than embarrassing.
 
-**So: a continue signal buys more turns, reliably, on two models. Whether it buys a better answer
-is unresolved, and we report it as unresolved rather than as either a null or a finding.**
+The middle column also looked like corroboration at the time: a progress measure and the
+benchmark's own grade, both positive, both significant. That reading was mistaken for a reason
+worth naming independently of the defect. Accuracy and `final_match` are not two instruments. They
+are two functions of the same final workbook — one asks whether all three test cases pass, the
+other what fraction of the graded range is correct — so they share not only every source of
+run-level noise but the underlying object. Their agreement carries almost no independent
+information.
 
-One note on the progress figures. The per-turn regrade outputs carry no record of whether the
-interjection fired, so these three contrasts are over all rows with a readable final match — 48
-tasks, with 23–34 unreadable rows dropped per arm — rather than the fired-only population §2.5
-specifies for everything else. The exclusion is independent of arm (§2.5), so we do not expect
-this to bias the contrast, but it is a different population and we say so.
+**So the corrected statement is:** a continue signal buys more turns on two models, most of them
+redundant, and buys about 2.8 points of the graded range, replicated three times. It does not buy
+a better pass rate, because 2.8 points of partial credit does not cross an all-or-nothing
+threshold (§6.4).
+
+One note on population. The per-turn regrade outputs carry no record of whether the interjection
+fired, so these contrasts are over all rows with a readable final match — 48 tasks — rather than
+the fired-only population §2.5 specifies elsewhere. Firing is pre-treatment and does not differ by
+arm (§2.5), so we do not expect bias, but it is a different population and we say so.
+
+**What we would have concluded without the fix.** That extra persistence buys nothing, and that
+our own measurements of it were unstable. Both were wrong, in the same direction, from one
+unrecalculated workbook. §8.6 lists the claims we withdrew after re-analysing data we already had;
+this is the one we withdrew after fixing the thing that produced it, which is a different and
+more expensive category.
 
 ## 8.5 The reasoning-token outcome, including an inconvenient row
 

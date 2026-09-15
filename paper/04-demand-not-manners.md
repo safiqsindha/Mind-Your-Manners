@@ -182,14 +182,18 @@ Nor is the effect confined to tasks the agent was about to abandon. Splitting by
 control arm ever solved the task, threatening gives +42.2% on never-solved tasks against +30.8%
 on solvable ones, and polite +31.5% against +24.2%.
 
-**The extra turns are mostly repetition.** The per-turn regrade of §6 is the evidence: the
-demand arm adds +0.96 redundant steps at a 10-turn ceiling and +1.11 at 20 (p < 0.0001 and
-p = 0.012) while moving final match by +0.006 (p = 0.77). In 90% of multi-turn trajectories at
-the 10-turn ceiling the first code turn is already the best the agent ever produces. That said,
-the continue-signal contrast on final match has been measured three times — +0.014 (p = 0.50),
-+0.061 (p = 0.0028), +0.019 (p = 0.16) — so "no progress" is what two of three measurements
-show and the third did not replicate (§2.9). A continue signal buys attempts; on the measure we
-report, the attempts are repetitions.
+**The extra turns are mostly, but not only, repetition.** The per-turn regrade of §6 is the
+evidence: the demand arm adds +0.75 redundant steps at a 10-turn ceiling and +1.03 at 20
+(p < 0.0001 and p = 0.0063), which is roughly two-thirds of its turn effect. Among trajectories
+that could improve, the first gradable attempt is already the best in 80–91% depending on the run.
+
+The remaining third is not nothing, and §6.4 is where this section's claim has to be qualified.
+The *explicit* continue signal — "there is still more work remaining" — raises the graded fraction
+by +0.028 (95% CI [+0.009, +0.048], p = 0.0038), replicated across three runs with no detectable
+heterogeneity. The affect-free demand tested here does not: it pools to +0.009, p = 0.42. So a
+demand interjection buys attempts that are largely repetitions, and a blunter statement that work
+remains buys a small amount of real progress as well — a dose–response in the explicitness of the
+continue signal, not in register.
 
 ## 4.6 The apparent timing effect is a proxy
 
@@ -290,9 +294,13 @@ read as a demand gradient that happened to correlate with politeness because of 
 were written.
 
 **Establishes what the moved quantity is.** Trajectory length, not reasoning per step — with
-threatening as a reported exception — and the extra length is, on the measure we report,
-redundant work rather than detectable progress. This holds on two models. The ordering is what
-holds; the magnitudes are not stable.
+threatening as a reported exception — and two-thirds to four-fifths of that length is redundant
+work. This holds on two models. The ordering is what holds; the magnitudes are not stable.
+
+**Establishes, with the qualification §6.4 adds, that the remainder is real.** An explicit
+statement that work remains buys +0.028 of the graded fraction, replicated three times. It does
+not move the pass rate, because that much partial credit does not cross an all-or-nothing
+threshold.
 
 **Does not establish why praise stops the agent.** That praise is heard as a completion signal
 is one reading; that it raises the agent's confidence in work already produced is another. This

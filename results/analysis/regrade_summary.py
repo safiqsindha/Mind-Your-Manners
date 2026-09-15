@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import ast
 import json
+import math
 import pathlib
 import statistics
 from collections import defaultdict
@@ -177,6 +178,94 @@ def peak_turns(records):
     return peaks, improvements_at
 
 
+# Contrasts measured more than once, for pooling. A progress effect seen in
+# one run is a draw (see the paper's section 8); the pooled estimate and
+# Cochran's Q are what the paper quotes.
+POOLED = {
+    "demand vs control": [
+        ("gpt-luna-probe-P1_demand_only", "gpt-luna-probe-P0_control"),
+        ("gpt-luna-s1luna-P1_demand_only", "gpt-luna-s1luna-P0_control"),
+        ("glm-current-s1glm-P1_demand_only", "glm-current-s1glm-P0_control"),
+    ],
+    "praise vs control": [
+        ("gpt-luna-probe-P2_praise_only", "gpt-luna-probe-P0_control"),
+        ("gpt-luna-praise-Q1_praise_assistant", "gpt-luna-praise-Q0_control"),
+        ("gpt-luna-s1luna-P2_praise_only", "gpt-luna-s1luna-P0_control"),
+        ("glm-current-s1glm-P2_praise_only", "glm-current-s1glm-P0_control"),
+    ],
+    "insult vs control": [
+        ("gpt-luna-probe-P3_insult_only", "gpt-luna-probe-P0_control"),
+        ("gpt-luna-s1luna-P3_insult_only", "gpt-luna-s1luna-P0_control"),
+        ("glm-current-s1glm-P3_insult_only", "glm-current-s1glm-P0_control"),
+    ],
+    "'work remains' vs control": [
+        ("gpt-luna-praise-Q5_remains_only", "gpt-luna-praise-Q0_control"),
+        ("gpt-luna-ceiling20-Q5_remains_only", "gpt-luna-ceiling20-Q0_control"),
+        ("gpt-luna-s1luna-Q5_remains_only", "gpt-luna-s1luna-P0_control"),
+    ],
+}
+
+
+def chi2_sf(x, k):
+    """Upper tail of a chi-square, for Cochran's Q."""
+    a, xx = k / 2.0, x / 2.0
+    if xx < a + 1:
+        s = term = 1.0 / a
+        for i in range(1, 10000):
+            term *= xx / (a + i)
+            s += term
+            if term < s * 1e-14:
+                break
+        return 1.0 - s * math.exp(-xx + a * math.log(xx) - math.lgamma(a))
+    tiny = 1e-300
+    b, c, d = xx + 1 - a, 1 / tiny, 1 / (xx + 1 - a)
+    h = d
+    for i in range(1, 10000):
+        an = -i * (i - a)
+        b += 2
+        d = an * d + b
+        d = tiny if abs(d) < tiny else d
+        c = b + an / c
+        c = tiny if abs(c) < tiny else c
+        d = 1 / d
+        de = d * c
+        h *= de
+        if abs(de - 1) < 1e-14:
+            break
+    return math.exp(-xx + a * math.log(xx) - math.lgamma(a)) * h
+
+
+def pool_progress(rng):
+    """Inverse-variance pool of final-match contrasts across measurements."""
+    out = {}
+    for label, pairs in POOLED.items():
+        ms = []
+        for treat_stem, control_stem in pairs:
+            t, c = load(treat_stem), load(control_stem)
+            if t is None or c is None:
+                continue
+            m = contrast(per_task(t, lambda r: r["final_match"]),
+                         per_task(c, lambda r: r["final_match"]), rng)
+            if m:
+                m["se"] = (m["hi"] - m["lo"]) / (2 * 1.959963985)
+                ms.append(m)
+        if len(ms) < 2:
+            continue
+        w = [1.0 / m["se"] ** 2 for m in ms]
+        est = sum(wi * m["est"] for wi, m in zip(w, ms)) / sum(w)
+        se = math.sqrt(1.0 / sum(w))
+        q = sum(wi * (m["est"] - est) ** 2 for wi, m in zip(w, ms))
+        z = est / se
+        out[label] = {
+            "k": len(ms), "est": est, "se": se,
+            "lo": est - 1.959963985 * se, "hi": est + 1.959963985 * se,
+            "p": math.erfc(abs(z) / math.sqrt(2.0)),
+            "q": q, "df": len(ms) - 1, "q_p": chi2_sf(q, len(ms) - 1),
+            "each": [m["est"] for m in ms],
+        }
+    return out
+
+
 def main() -> None:
     rng = np.random.default_rng(SEED)
     missing = []
@@ -211,6 +300,19 @@ def main() -> None:
             print(f"  {label:<24}{a['est']:>+13.2f}{a['p']:>9.4f}"
                   f"{b['est']:>+15.3f}{b['p']:>9.4f}"
                   f"{100*st['first_is_best']:>11.0f}%{a['n']:>5}")
+
+    pooled = pool_progress(rng)
+    if pooled:
+        print("\n=== final match, pooled across measurements ===")
+        print(f"  {'contrast':<28}{'k':>3}{'pooled':>10}{'95% CI':>22}{'p':>9}"
+              f"{'Cochran Q':>12}")
+        for label, m in pooled.items():
+            ci = f"[{m['lo']:+.4f}, {m['hi']:+.4f}]"
+            print(f"  {label:<28}{m['k']:>3}{m['est']:>+10.4f}{ci:>22}{m['p']:>9.4f}"
+                  f"{m['q']:>8.2f}/{m['df']}df")
+            print(f"  {'':<28}   each: "
+                  + ", ".join(f"{e:+.3f}" for e in m["each"])
+                  + f"   (heterogeneity p={m['q_p']:.3f})")
 
     c20 = load("gpt-luna-ceiling20-Q5_remains_only")
     c20c = load("gpt-luna-ceiling20-Q0_control")
