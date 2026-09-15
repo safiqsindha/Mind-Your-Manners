@@ -43,3 +43,19 @@ Then `results/analysis/regrade_summary.py`, which refuses to compare any arm
 whose regrade predates `harness/study2/progress.py` -- comparing a fresh
 control against stale arms manufactured a clean -0.36 effect at p < 0.0001
 during the rollout.
+
+## The ceiling-20 run's records (added 2026-09-15)
+
+The paper's headline count is **11,850 graded trajectories across eight runs**.
+Until now only 11,250 of those were committed: the eight run files in
+`results_archive/` sum to 11,250, and the ceiling-20 run's 600 records lived
+only in `results/analysis/`, which is gitignored. An auditor working from the
+repository alone could not reconcile the headline — and one didn't.
+
+The two missing arms are now committed as gzipped records beside the other
+archives:
+
+    results_archive/ceiling20_Q0_control_records.json.gz        300
+    results_archive/ceiling20_Q5_remains_only_records.json.gz   300
+
+11,250 + 600 = 11,850, reproducible from committed data alone.

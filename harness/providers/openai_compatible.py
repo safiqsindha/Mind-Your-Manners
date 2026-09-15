@@ -411,7 +411,32 @@ class OpenAICompatibleProvider(Provider):
             # return it here, but a provider that started to would be
             # reporting the same model more precisely, not a different one.
             served_model = data.get("model")
-            if served_model and served_model not in (model.model_id, model.canonical_slug):
+            if not served_model:
+                # The field is absent, so the served model CANNOT be verified.
+                # A bare truthy guard used to skip the check entirely here,
+                # silently recording the row under the REQUESTED model as
+                # though it had been confirmed -- the same fail-open asymmetry
+                # the provider_pin check below deliberately avoids.
+                #
+                # Fail closed for any pinned model: every model that produces
+                # study data carries a provider_pin, so a cross-model claim can
+                # never rest on an unverified attribution. Stay non-fatal for
+                # unpinned models (smoke tests, generic OpenAI-compatible
+                # endpoints that need not return this field), but say so out
+                # loud rather than passing silently.
+                if model.provider_pin:
+                    raise ProviderPinViolation(
+                        f"{model.key}: the response carried no 'model' field, so the "
+                        f"served model could not be verified against {model.model_id!r} "
+                        "-- failing closed rather than attributing unverified output to "
+                        "a pinned model."
+                    )
+                print(
+                    f"WARNING: {model.key}: response carried no 'model' field; the served "
+                    f"model was NOT verified against {model.model_id!r} (unpinned model, "
+                    "continuing)."
+                )
+            elif served_model not in (model.model_id, model.canonical_slug):
                 raise ProviderPinViolation(
                     f"{model.key}: requested {model.model_id!r} but the response was "
                     f"served as {served_model!r} -- halting rather than attributing one "

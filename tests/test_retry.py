@@ -248,6 +248,8 @@ def test_retry_then_success_still_verifies_the_pin_on_a_pinned_model(mock_post, 
     pinned_model = replace(UNPINNED_MODEL, provider_pin="Nex AGI", quantization_pin=["fp8"])
     pinned_ok_body = {
         **_ok_json(),
+        # Real responses carry this; a pinned model now fails closed without it.
+        "model": pinned_model.model_id,
         "openrouter_metadata": {
             "endpoints": {"available": [{"provider": "Nex AGI", "selected": True}]},
         },

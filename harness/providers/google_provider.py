@@ -1,7 +1,10 @@
 """Direct Google Gemini (generativelanguage) provider.
 
-Used for the Gemini Flash-tier model in the target model list. Requires
-GOOGLE_API_KEY (or GEMINI_API_KEY).
+NOT a target model. Both Gemini tiers were dropped in the 2026-09-10 roster
+revision (see `harness/config.py`), so no entry in ALL_MODELS carries
+provider="google" and this class is currently unreachable from the CLI. Kept
+as a working provider abstraction only. Requires GOOGLE_API_KEY (or
+GEMINI_API_KEY) if it is ever wired back in.
 """
 from __future__ import annotations
 

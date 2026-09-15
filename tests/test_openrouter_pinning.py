@@ -46,7 +46,12 @@ def _fake_response(status_code=200, headers=None, json_body=None):
     return resp
 
 
-def _ok_body(served_provider="Nebius", cached_tokens=0, reasoning_tokens=0, cost=None):
+def _ok_body(served_provider="Nebius", cached_tokens=0, reasoning_tokens=0, cost=None,
+             model_id=None):
+    # Real OpenRouter responses always carry "model" (see
+    # REAL_LIVE_PINNED_RESPONSE_BODY below, captured live). Fixtures must too:
+    # a pinned model whose response omits it now fails closed, because the
+    # served model cannot be verified.
     usage = {
         "prompt_tokens": 10,
         "completion_tokens": 5,
@@ -56,6 +61,7 @@ def _ok_body(served_provider="Nebius", cached_tokens=0, reasoning_tokens=0, cost
     if cost is not None:
         usage["cost"] = cost
     return {
+        "model": model_id or PINNED_MODEL.model_id,
         "choices": [{"message": {"content": "hi"}, "finish_reason": "stop"}],
         "usage": usage,
         "openrouter_metadata": {

@@ -4,7 +4,7 @@ Two passes. **Pass 1** (initial review) checked every citation against a primary
 read four papers in full. **Pass 2** ran six parallel full-text verifications over the 24
 sources that had only been read at abstract level, checking each claim adversarially.
 
-**29 of 29 cited sources have now been read in full text.** The 14 background entries carry their
+**31 of 31 cited sources have now been read in full text.** The 13 background entries carry their
 own read-depth tags in `01-sources.md`. What follows is what changed.
 
 ---
@@ -150,7 +150,7 @@ that the review was least reliable where it described *our* numbers. Corrected:
 | "no-op turn" → "Duplicated Step" | The repo's no-op is an *output* criterion (graded range unchanged); Duplicated Step requires identical inputs. | Mapped to "redundant step"; Duplicated Step cited as nearest subtype only. |
 | "premature disengagement" for the praise effect | Stage 0: 2–6% of trajectories still improving at stop, no gap vs control — not premature. | Term reserved for Cuadron's failure mode; ours described as earlier, non-premature disengagement. |
 | Cai et al. caveat dropped in the synthesis | Sources say "not a clean null"; synthesis used it as one. | Caveat carried into the synthesis. |
-| Source counts (38 / 28 / uncounted) | File has 43 entries. | 29 cited + 14 background, every heading tagged with read depth. |
+| Source counts (38 / 28 / uncounted) | File has 44 entries across 43 headings (G4/G5 share one). | 31 cited + 13 background, every heading tagged with read depth. |
 | Cuadron "19 models" | Table enumerates 17. | Stated as 19 claimed / 17 enumerated. |
 | ABC "all ten" vs "80%" | Two different statements. | Clarified: all ten have *some* reporting limitation; item R.8 failed by 80%. |
 | Minor | 8-vs-10 pairwise tests (A1); ELEPHANT roster version (GPT-5 → v2, Sept 2025); "peer-adjacent" (A3 is unrefereed); +8.8 pp vs RD scale; "max 22" tests and the Gandhi full-text details missing from the sources file; Self-Debug quote truncated. | All fixed in place. |

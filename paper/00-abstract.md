@@ -25,7 +25,8 @@ and make sure your result is correct" reproduces the cost effect. A length-match
 syntactically identical insult carrying no demand does not move it (−0.08 turns, *p* = 0.63).
 The seven-register cost curve that looks like a politeness gradient is a demand gradient: the
 four demand-carrying arms span +0.70 to +1.80 turns and the three without span −0.68 to +0.09,
-with no overlap and with hostile and polite arms on both sides of the split.
+with no overlap — and register does not sort them: each side carries both a
+flattering and a hostile arm.
 
 **Register acts in one direction only.** Praise carrying no task reference *shortens*
 trajectories; its minimal pair with *excellent* swapped for *awful* does not. Six arms separate

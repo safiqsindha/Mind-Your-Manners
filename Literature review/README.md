@@ -6,11 +6,11 @@ Prepared 2026-09-14 for the workshop paper.
 
 | File | What's in it |
 |---|---|
-| [`01-sources.md`](01-sources.md) | 43 entries grouped A–G per the brief — 29 cited, 14 background — every heading tagged `CITED` or `BACKGROUND` with its read depth. Citation, claim, method, numbers, relation to us, quotable line. |
+| [`01-sources.md`](01-sources.md) | 44 entries across 43 headings grouped A–G per the brief — 31 cited, 13 background — every heading tagged `CITED` or `BACKGROUND` with its read depth. Citation, claim, method, numbers, relation to us, quotable line. |
 | [`02-synthesis.md`](02-synthesis.md) | The five requested summaries: preempts, contradictions, must-cites, gaps, terminology. **Read this first.** |
 | [`03-verification-log.md`](03-verification-log.md) | Every error found and corrected, claims downgraded, and what remains UNVERIFIED. |
 
-**All 29 cited sources have been read in full text.** A second verification pass over the 25
+**All 31 cited sources have been read in full text.** A second verification pass over the 25
 that had only been read at abstract level found 15 citation-level errors, downgraded 8 claims,
 and strengthened 9 — all recorded in the log. A third pass cross-checked the review against
 `RESULTS.md` and corrected how it described our *own* numbers (see the log's "Pass 3"). Three corrections change the paper rather than a
@@ -68,6 +68,6 @@ Make sure the paper's prose follows the table. Details in `02-synthesis.md` §2(
 ## Rules followed
 
 - Every arXiv ID cited was checked against arXiv directly, including the three named in the brief.
-- All 29 cited papers were read in full text, not from abstracts — see the log.
+- All 31 cited papers were read in full text, not from abstracts — see the log.
 - Negative results and failed replications are included and flagged.
 - Anything not verified is marked **UNVERIFIED** inline.

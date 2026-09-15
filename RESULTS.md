@@ -56,6 +56,13 @@ target.
 
 ## Study 2 -- Agentic spreadsheet work (SpreadsheetBench)
 
+> **⚠ SUPERSEDED — pre-live-run status.** "Not yet run" and the
+> "verdict: not yet determined" line further down were true when this section
+> was written. The study ran to completion: 11,850 trajectories across eight
+> runs, and the pre-registered cost hypothesis was **tested and failed**
+> (p = 0.36, the 44% target excluded by the interval). See "Cost was
+> pre-registered as the primary outcome" below. Kept for provenance.
+
 **The study.** Not yet run against a target model. The dataset loader and
 grader were rewritten after actually cloning
 `RUCKBReasoning/SpreadsheetBench` and reading the real `evaluation.py` --
@@ -155,6 +162,10 @@ trajectories, up from 20 under 5 tones).
 **Cost-effect verdict: not yet determined -- needs a live run against a
 target model** (this is the pre-registered hypothesis test, see top of
 this file).
+
+> **⚠ SUPERSEDED.** Determined: the cost effect on opening tone is **null**,
+> p = 0.36, with the pre-registered 44% target excluded by the interval. The
+> line above is the pre-live-run state, kept so the sequence stays auditable.
 
 ## Retired and shelved (kept, not deleted -- see README)
 
@@ -674,7 +685,9 @@ figures).
 > +0.70 to +1.80 turns, the three without span −0.68 to +0.09, and the two
 > groups do not overlap (paper §4.2, which recomputes the correlation on
 > corrected data as r = +0.85 against +0.42 and still declines to lean on it).
-> The conclusion below stands; only its supporting statistic changed. This is the v1 wrapper-length mistake in a new costume: lengths
+> The conclusion below stands; only its supporting statistic changed.
+
+This is the v1 wrapper-length mistake in a new costume: lengths
 are now exactly matched, and a SEMANTIC nuisance variable took the place of
 the lexical one. So:
 
