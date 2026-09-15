@@ -239,5 +239,6 @@ Three things, in order of what they cost.
    sufficient for many use cases", so it is a reporting discipline rather than a design requirement.
 
 The first is what the design this paper is positioned against lacked. The second is what its own
-authors eventually supplied, re-running the experiment the following spring and not reproducing it
-[dobariya-kumar-2026].
+authors eventually supplied, re-running the experiment the following spring and not reproducing
+its headline contrast on GPT-4o [dobariya-kumar-2026]. Their re-run is not a null — §1.1 and §3.3
+give it in full — but the 4.0-point polite-to-rude gap it was known for becomes 0.4.

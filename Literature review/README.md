@@ -35,7 +35,9 @@ head-on:
 1. **The paper you are rebutting has already largely rebutted itself.** Dobariya & Kumar's
    AMCIS 2026 full paper ([2605.29027](https://arxiv.org/abs/2605.29027)) re-ran their own
    GPT-4o experiment and got 82.2% (Very Polite) vs 82.6% (Very Rude) — the 80.8→84.8
-   effect from the short paper did not replicate, and they label GPT-4o "Weak / noisy".
+   effect from the short paper did not replicate, and they label GPT-4o "Weak / noisy" — but the
+   re-run is **not a null**: both extremes significantly beat Neutral on the same 50 questions,
+   a U-shape in extremity rather than a rudeness gradient (paper §3.3).
 2. **"Tone moves length, not accuracy" is already published** — in single-turn
    ([2607.23915](https://arxiv.org/abs/2607.23915), and Yin et al. 2024 on summarization
    length). Your accuracy null and your effort measures are novel only in their *agentic*

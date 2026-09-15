@@ -71,15 +71,16 @@ asserting it.
 | L3 polite | "keep on helping me out with this one" | yes | +1.80 |
 
 **The four demand-carrying arms span +0.70 to +1.80 turns. The other three span −0.68 to
-+0.09. They do not overlap.** Register rank does not separate them: the most hostile arm on the
-scale and the second most polite sit on opposite sides of the split. (A correlation over seven
++0.09. They do not overlap.** Register rank does not separate them: the rude arm sits with the
+no-demand group, while the two arms *above* it in hostility — very rude and threatening — sit
+with the demand group, alongside polite. (A correlation over seven
 points says the same thing — r = +0.85 for the demand coding against +0.42 for register rank —
 but with n = 7 and a coding made after seeing the effects, the non-overlap is the honest
 statement and the correlation is close to curve-fitting. It is why §4.3 exists.)
 
 The rude arm is the informative case. Its text is *"Just get on with it already, quit dragging
-your feet. Do not waste any more of my time on this, seriously"* — the most hostile register on
-the scale, carrying an instruction to finish sooner — and it produces no lengthening at all.
+your feet. Do not waste any more of my time on this, seriously"* — hostile in register, and
+carrying an instruction to finish sooner — and it produces no lengthening at all.
 That is consistent with the direction §3.1 predicts: outcomes follow the content of the demand
 rather than the valence of the wrapper. It is not a full confirmation. A brevity demand should
 shorten, and this one does not; it is null.

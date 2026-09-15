@@ -71,7 +71,7 @@ register, and neither measures downstream persistence.
 instruction, no trend survives multiplicity correction, on cost or on accuracy. The
 reasoning-token trend is p = 0.36, and its interval — −4% to +14% across the whole scale —
 excludes the 44% effect the pre-registered hypothesis targeted, though not the smallest published
-effects. Two uncorrected leads in that run are reported in §2.6 rather than suppressed.
+effects. The uncorrected lead in that run is reported in §2.6 rather than suppressed.
 
 **A mid-task interruption does a great deal** — but not because of its manners. An affect-free
 "please continue working and make sure your result is correct" reproduces the effect. An
@@ -100,7 +100,9 @@ remainder is real but small: an explicit statement that work remains raises the 
 2.8 points across three measurements. Accuracy does not move — though it is too underpowered to
 resolve a gain that size either way (§6.4).
 
-**No accuracy effect survives correction or replication**, across seven runs. We state that as
+**No accuracy effect survives correction or replication**, across the seven runs in which
+accuracy was tested: the six that carried a mid-task interjection, whose 22 contrasts make up the
+corrected family (§2.6), and the opening-tone run. We state that as
 an equivalence rather than an absence: pooled, a mid-task interjection changes accuracy by less
 than the four points the tone literature reports (§2.8).
 

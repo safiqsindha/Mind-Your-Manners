@@ -19,7 +19,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Compile check
-        run: python -m py_compile $(find harness tests -name '*.py')
+        run: python -m py_compile $(find harness tests results/analysis -name '*.py')
 
       - name: Run tests
         run: python -m pytest tests/ -v
