@@ -171,8 +171,8 @@ best of all attempts made, in an execution-grounded agent loop*.
 
 The relationship to their argument needs care, because §6.4 changes it. Huang et al. argue that
 LLMs cannot reliably self-correct **without external feedback**, and point to execution feedback as
-the expected fix, citing Self-Debug — in their words, the code executor "serves as the perfect
-verifier" *when the task supplies unit tests* [chen-2023]. They never test it. Our agent has the
+the expected fix: in their own words, where a task supplies unit tests, a code executor "serves as
+the perfect verifier" [huang-2024]. They never test it. Our agent has the
 executor but not the tests: execution feedback tells it whether its code ran, not whether the
 answer is right. So we test the **weaker** form of the escape hatch, and the answer is mixed
 rather than negative — improvement is rare per turn, and a sufficiently explicit instruction to

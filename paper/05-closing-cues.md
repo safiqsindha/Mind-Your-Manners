@@ -137,7 +137,7 @@ the `Q4`–`Q5` gap is, if anything, understated.
 
 ## 5.5 Relation to prior work
 
-Weinberger & Hozez [weinberger-hozez-2026v6] establish that prompt wording moves agentic spend at
+Weinberger & Hozez [weinberger-hozez-2026] establish that prompt wording moves agentic spend at
 equal task success across 4,644 preregistered runs, and their `bounded_efficiency` variant —
 scope, smallest-sufficient-change, and **an explicit stop condition** — is the only arm free or
 better on all six models. So "a stop instruction in the opening prompt reduces agentic work" is

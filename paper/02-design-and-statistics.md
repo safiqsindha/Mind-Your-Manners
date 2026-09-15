@@ -85,7 +85,10 @@ graded range is unchanged after the turn — sits between their counterfactual d
 subtype, which additionally requires identical tool name, arguments and output. We do not
 compare base rates against theirs: some of their redundant steps are synthetically injected.
 Following [sclar-2024] and [mizrahi-2024] we report ranges rather than point estimates wherever
-a quantity has been measured more than once (§2.9).
+a quantity has been measured more than once (§2.9). Both scope that advice, and we adopt the
+scoped version: [sclar-2024] note single-format evaluation "may still be sufficient for many use
+cases", and [mizrahi-2024] recommend averaging across prompts when measuring robustness — our
+case — while recommending the top-performing prompt when selecting a model for deployment.
 
 ## 2.4 The estimator: paired within task, clustered by task
 

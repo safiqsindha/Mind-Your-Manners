@@ -16,13 +16,6 @@ Joshi, Yash Lara, John Langford, Besmira Nushi, Vibhav Vineet, Yue Wu, Safoora Y
 arXiv:2504.00294, 31 Mar 2025. *Unrefereed preprint (Microsoft Research).* — **Verified:** full
 text. Cited in §6.5 for oracle-assisted selection in inference-time scaling.
 
-**[chen-2023]** Chen et al. "Teaching Large Language Models to Self-Debug." — **⚠ Verified: NO.**
-This work has no entry of its own in our literature review; it reaches us only through Huang et
-al.'s description of it, and the words we quote in §6.5 ("serves as the perfect verifier") are
-*Huang et al.'s prose about Self-Debug*, not a quotation from Chen et al. **The full citation
-must be obtained and checked before submission**, or the reference dropped and the point made
-through [huang-2024] alone.
-
 **[cuadron-2025]** Alejandro Cuadron, Dacheng Li, Wenjie Ma, Xingyao Wang, Yichuan Wang, Siyuan
 Zhuang, Shu Liu, Luis Gaspar Schroeder, Tian Xia, Huanzhi Mao, Nicholas Thumiger, Aditya Desai,
 Ion Stoica, Ana Klimovic, Graham Neubig, Joseph E. Gonzalez. "The Danger of Overthinking:
@@ -90,9 +83,17 @@ MDE inversion (§2.4, §2.7). **Contains no equivalence framework** — see [lak
 
 **[mizrahi-2024]** Moran Mizrahi, Guy Kaplan, Dan Malkin, Rotem Dror, Dafna Shahaf, Gabriel
 Stanovsky. "State of What Art? A Call for Multi-Prompt LLM Evaluation." *Transactions of the
-ACL* 12 (2024). DOI 10.1162/tacl_a_00681. *Refereed journal.* — **⚠ Verified: abstract only.**
-Cited in §2.3 and §8.7 for the multi-prompt evaluation convention. Read in full before
-submission or drop; [sclar-2024] carries the same point verified.
+Association for Computational Linguistics* 12 (2024), 933–949. DOI 10.1162/tacl_a_00681.
+*Refereed journal.* — **Verified:** full text. 5,000 manually verified instruction paraphrases
+(more than 175 per task) evaluated over 6.5M instances, 20 LLMs, 39 tasks, 3 benchmarks. Kendall's
+*W* across prompts is below 0.85 for most tasks, so **model ranking**, not just absolute score,
+depends on the template. **⚠ Scope their recommendation carefully:** it is use-case-dependent, not
+a blanket call for ranges. They recommend averaging across many prompts when measuring robustness,
+but comparing models on "their corresponding top-performing prompt" when developing a downstream
+system, and they propose a Combined Performance Score uniting the two. §2.3 and §8.7 cite them for
+the first use case, which is ours. They also find automatically generated paraphrases sufficient
+for their metrics "without having to manually verify them" — relevant to §8.7's stimulus-sampling
+objection, which we do not answer.
 
 **[redundancybench]** Minyang Hu, Bo Yang, Zhinuo Zhou, Jiachen Liang, Jiahao Guo, Yiyang Yin,
 Xiongwei Han. "Redundant or Necessary? A Benchmark for Detecting Redundant Steps in Agent
@@ -122,13 +123,14 @@ Replication Crisis in Evaluating Behavior in Language Models? Evidence and Solut
 arXiv:2409.20303, 30 Sep 2024. *Unrefereed preprint.* — **Verified:** full text. The template
 for §7. Note their own design is single-run at temperature 0, which §7.1 states.
 
-**[weinberger-hozez-2026]**, **[weinberger-hozez-2026v6]** Sarel Weinberger, Amir Hozez
-(PointFive). "Prompt-Induced Waste in Coding Agents." arXiv:2608.01347, v1 2 Aug 2026, v6 10 Sep
-2026. *Unrefereed preprint, genuinely preregistered.* — **Verified:** full text, v1 and v6.
-**⚠ Version hazard:** the paper has six versions and grew roughly 8× in length; v6 reports 4,644
-valid runs and **removes** several figures and quotes present in v1. **Cite v6 throughout, and
-merge these two keys into one before submission** — they are the same paper and the paper
-currently carries both.
+**[weinberger-hozez-2026]** Sarel Weinberger, Amir Hozez (PointFive). "Prompt-Induced Waste in
+Coding Agents." arXiv:2608.01347. *Unrefereed preprint, genuinely preregistered.* — **Verified:**
+full text, v1 and v6. **Cited at v6 (10 Sep 2026) throughout.** ⚠ The paper has six versions and
+grew roughly 8× between v1 and v6; v6 reports 4,644 valid runs and removes several figures and
+quotes present in v1, so a version must be named when citing it. Cited in §4.5 for the
+tokens-per-step versus steps distinction, and in §5.5, where their `bounded_efficiency` arm
+establishes that a stop condition in the *opening* prompt reduces agentic work — a result we do
+not claim.
 
 **[yin-2024]** Ziqi Yin, Hao Wang, Kaito Horio, Daisuke Kawahara, Satoshi Sekine. "Should We
 Respect LLMs? A Cross-Lingual Study on the Influence of Prompt Politeness on LLM Performance."
@@ -141,19 +143,15 @@ question.
 
 ## Outstanding before submission
 
-Four items, all flagged above and none of them cosmetic:
+One item remains, and it needs the primary PDFs:
 
-1. **[chen-2023] is unverified** and its quoted words are Huang et al.'s, not Chen et al.'s.
-   Obtain the citation or drop it (§6.5).
-2. **[mizrahi-2024] was read at abstract level only.** Read in full or drop; [sclar-2024]
-   carries the same argument verified (§2.3, §8.7).
-3. **[weinberger-hozez-2026] and [weinberger-hozez-2026v6] are one paper under two keys.**
-   Merge, keeping v6.
-4. **The two §3.7 primary-PDF checks** — [kumar-dobariya-2026]'s non-hostile prefixes and
-   [dobariya-kumar-2025]'s variant count per level.
+1. **The two §3.7 primary-PDF checks** — whether any of [kumar-dobariya-2026]'s four non-hostile
+   prefixes contains a brevity instruction (§3.2's "no" column is currently an assertion), and how
+   many variants per level [dobariya-kumar-2025]'s Table 1 actually prints (§3.3 quotes one).
 
-One further note on composition. The paper carries 22 citation keys for **21 distinct works**
-(the two Weinberger & Hozez keys are the same paper — item 3 above). Of those 21, **eleven are
-unrefereed preprints**, including both papers this study is most directly positioned against. That is a fact about
-the state of this literature rather than about our citation practice, and it is part of why §7
-argues for repeated measurement as a default.
+Three earlier items are now closed. **[chen-2023] has been dropped**: the words §6.5 quoted for it
+were Huang et al.'s prose about Self-Debug rather than a quotation from Chen et al., and the point
+is made through [huang-2024] alone. **[mizrahi-2024] has been read in full**, and the entry above
+now scopes their recommendation correctly — it is use-case-dependent rather than a blanket call
+for ranges. **The two Weinberger & Hozez keys are merged**, cited at v6.
+
