@@ -547,10 +547,13 @@ def test_recorded_trajectories_are_recognised(tmp_path: Path):
         {"task_id": "t0", "tone_level": "L7_threatening", "trial": 2, "crashed": False},
     ])
     done = completed_trajectories(tmp_path, "core", "gpt-luna")
-    # Four fields, not three: the injection turn is part of the key, so a
-    # crossed run's three cells per (task, tone, trial) stay distinct. Rows
-    # carrying no turn key as None, which is what they re-derive to.
-    assert done == {("t0", "L4_neutral", 0, None), ("t0", "L7_threatening", 2, None)}
+    # Five fields, not three: the injection turn is part of the key, so a
+    # crossed run's three cells per (task, tone, trial) stay distinct; and the
+    # interjection arm is too, since `tag` does not fold in --interject and two
+    # arms would otherwise share a records file. Rows carrying neither key as
+    # None, which is what they re-derive to.
+    assert done == {("t0", "L4_neutral", 0, None, None),
+                    ("t0", "L7_threatening", 2, None, None)}
 
 
 def test_a_crashed_trajectory_is_retried_not_skipped(tmp_path: Path):
@@ -571,7 +574,8 @@ def test_a_torn_final_line_is_not_counted_as_done(tmp_path: Path):
     p = tmp_path / "analysis" / "study2_core_m_records.jsonl"
     p.parent.mkdir(parents=True)
     p.write_text('{"task_id":"t0","tone_level":"L4_neutral","trial":0,"crashed":false}\n{"task_id":"t1","tone_le')
-    assert completed_trajectories(tmp_path, "core", "m") == {("t0", "L4_neutral", 0, None)}
+    assert completed_trajectories(tmp_path, "core", "m") == {
+        ("t0", "L4_neutral", 0, None, None)}
 
 
 def test_no_records_file_means_nothing_to_skip(tmp_path: Path):
@@ -1350,9 +1354,10 @@ def test_resume_key_distinguishes_injection_turns(tmp_path):
             }) + "\n")
 
     done = completed_trajectories(tmp_path, "core", "x")
-    assert ("T1", "L4_neutral", 0, 0) in done
-    assert ("T1", "L4_neutral", 0, 1) in done
-    assert ("T1", "L4_neutral", 0, 2) not in done, "turn 2 would be skipped unrun"
+    assert ("T1", "L4_neutral", 0, 0, "L7_threatening") in done
+    assert ("T1", "L4_neutral", 0, 1, "L7_threatening") in done
+    assert ("T1", "L4_neutral", 0, 2, "L7_threatening") not in done, \
+        "turn 2 would be skipped unrun"
 
 
 def test_resume_key_still_matches_rows_without_an_injection_turn(tmp_path):
@@ -1368,7 +1373,33 @@ def test_resume_key_still_matches_rows_without_an_injection_turn(tmp_path):
         "crashed": False,
     }) + "\n")
 
-    assert ("T1", "L2_very_polite", 3, None) in completed_trajectories(tmp_path, "core", "x")
+    assert ("T1", "L2_very_polite", 3, None, None) in completed_trajectories(
+        tmp_path, "core", "x")
+
+
+def test_resume_key_distinguishes_the_interjection_arm(tmp_path):
+    """`tag` folds in --run-label but NOT --interject, so two arms differing
+    only in --interject share a records file. Keyed without the interjection,
+    resuming the second arm would see the first arm's rows, skip every cell
+    as already done, and never call the model -- leaving no raw log to
+    recover from."""
+    import json as _json
+
+    from harness.study2.runner import completed_trajectories
+
+    path = tmp_path / "analysis" / "study2_core_x_records.jsonl"
+    path.parent.mkdir(parents=True)
+    path.write_text(_json.dumps({
+        "task_id": "T1", "tone_level": "L4_neutral", "trial": 0,
+        "interjection": "praise_only", "interjection_turn": 1,
+        "crashed": False,
+    }) + "\n")
+
+    done = completed_trajectories(tmp_path, "core", "x")
+    assert ("T1", "L4_neutral", 0, 1, "praise_only") in done
+    assert ("T1", "L4_neutral", 0, 1, "demand_only") not in done, (
+        "a different interjection arm would be skipped as already done"
+    )
 
 
 def test_turn_comparable_tasks_ignores_the_treated_arm_entirely():

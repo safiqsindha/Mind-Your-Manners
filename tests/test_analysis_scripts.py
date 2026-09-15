@@ -86,3 +86,34 @@ def test_no_absolute_paths_outside_repo(path: pathlib.Path):
     src = path.read_text()
     for bad in ("/home/user/Mind-Your-Manners", "/Users/", "C:\\\\"):
         assert bad not in src, f"{path.name} hardcodes {bad!r}; use a ROOT-relative path"
+
+
+def test_permutation_p_values_are_never_exactly_zero():
+    """Phipson & Smyth, on the PRIMARY tests -- not just one secondary one.
+
+    `clustered_paired_comparison` and `clustered_trend_test` back the
+    pre-registered trend test and the BH-corrected pairwise matrix for both
+    studies. Both used a bare `np.mean(...)`, which returns exactly 0.0
+    whenever the observed effect exceeds every permutation draw. The observed
+    statistic is itself one draw from the null distribution, so an exact 0 is
+    not a value a permutation test can report; the floor is 1/(draws+1).
+    """
+    from harness.study1.analysis import (
+        N_PERMUTATIONS,
+        clustered_paired_comparison,
+    )
+
+    rows = []
+    for i in range(30):  # cleanly separated -- beats every sign-flip draw
+        rows.append({"item_id": f"t{i}", "tone_level": "A",
+                     "outcome": "answered", "is_correct": True})
+        rows.append({"item_id": f"t{i}", "tone_level": "B",
+                     "outcome": "answered", "is_correct": False})
+
+    result = clustered_paired_comparison(rows, "A", "B")
+    p = result.p_value if hasattr(result, "p_value") else result["p_value"]
+
+    assert p > 0.0, "a permutation test cannot honestly report p = 0 exactly"
+    assert p == pytest.approx(1.0 / (N_PERMUTATIONS + 1), rel=1e-6), (
+        "maximal separation should land on the floor 1/(draws+1), not below it"
+    )

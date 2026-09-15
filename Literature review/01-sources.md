@@ -1,9 +1,9 @@
 # Sources
 
-43 entries: **29 cited** and **14 background**. Every heading carries a tag — `[CITED — …]` or
+**44 entries across 43 headings** (G4/G5 share one): **31 cited** and **13 background**. Every heading carries a tag — `[CITED — …]` or
 `[BACKGROUND — …]` — followed by its read depth: *full text* (read in full, and *verified* where
 a second independent pass checked every claim), *abstract only*, or *secondary* (a summary or
-a vendor page, flagged where it matters). All 29 cited entries are full text.
+a vendor page, flagged where it matters). All 31 cited entries are full text.
 
 Relation tags: **PREEMPTS** / **CONTRADICTS** / **SUPPORTS** / **METHOD-PRECEDENT** / **BACKGROUND**.
 

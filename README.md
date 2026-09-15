@@ -24,7 +24,7 @@ This extends Dobariya & Kumar's *Mind Your Tone* line one rung up the autonomy l
 ![Models](https://img.shields.io/badge/models-2%20of%204-f59e0b?style=flat-square)
 ![Trajectories](https://img.shields.io/badge/trajectories-11%2C850-7C3AED?style=flat-square)
 ![Spend](https://img.shields.io/badge/spend-%2461.53-7C3AED?style=flat-square)
-![Tests](https://img.shields.io/badge/tests-353%20passing-22c55e?style=flat-square)
+![Tests](https://img.shields.io/badge/tests-362%20passing-22c55e?style=flat-square)
 
 **[Paper](paper/)** · **[Results](RESULTS.md)** · **[Communications](COMMUNICATIONS.md)** · **[Tone wrappers](harness/tone_wrappers.py)** · **[Analysis](harness/study2/analysis.py)** · **[Harness](harness/study2/runner.py)**
 
@@ -38,7 +38,7 @@ This extends Dobariya & Kumar's *Mind Your Tone* line one rung up the autonomy l
 | Graded trajectories | **11,850** across eight runs, plus 9,850 regraded turn by turn |
 | Total spend | **$61.53** across ~48,000 model calls |
 | Substrate | SpreadsheetBench, graded by the authors' own evaluator |
-| Tests | **353 passing** |
+| Tests | **362 passing** |
 | Write-up | **`paper/` — nine sections, drafted and reviewed** |
 | Prior-work verification | **complete** — both primary-PDF checks closed, 15 Sep 2026 |
 | Open blockers | **none** — an author block, CRediT contributions and a venue remain |
@@ -284,7 +284,7 @@ Every subcommand defaults to **dry-run** — it forces the mock provider regardl
 pip install -r requirements.txt
 cp .env.example .env          # OpenRouter key
 
-python -m pytest -q           # 353 tests, no keys needed
+python -m pytest -q           # 362 tests, no keys needed
 ```
 
 Committed records recompute every table above with no API access:

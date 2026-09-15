@@ -98,7 +98,13 @@ class MindYourToneRow:
 
     base_id: str
     domain: str
-    tone_level: str  # one of TONE_ORDER keys, mapped from their "Politeness Level"
+    # Part A's OWN fixed 5-level scheme (L1_very_polite .. L5_very_rude),
+    # mapped from their "Politeness Level". These are NOT
+    # harness.tone_wrappers.TONE_ORDER keys -- that scale moved to seven
+    # levels with different names, and none of these five match it. Do not
+    # feed Part A rows to helpers that default to levels=TONE_ORDER: they
+    # would match nothing and return an empty result rather than an error.
+    tone_level: str
     prompt_text: str
     answer_letter: str
 
