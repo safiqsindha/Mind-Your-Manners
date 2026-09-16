@@ -18,6 +18,9 @@ SRC  = (ROOT / _args[0]) if len(_args) > 0 else ROOT / 'paper'
 OUT  = (ROOT / _args[1]) if len(_args) > 1 else ROOT / 'build' / 'sections'
 if not SRC.is_dir():
     sys.exit(f"no such source directory: {SRC}")
+if shutil.which('pandoc') is None:
+    sys.exit("pandoc is not installed; this script shells out to it "
+             "(apt-get install pandoc). CI installs it explicitly.")
 BIB_SRC = ROOT / 'review' / 'references.bib'      # canonical
 BIB_DST = ROOT / 'build'  / 'references.bib'      # what bibtex reads
 OUT.mkdir(parents=True, exist_ok=True)

@@ -37,6 +37,22 @@ def test_ci_installs_libreoffice():
     )
 
 
+def test_ci_installs_pandoc():
+    """Without this, the converter tests skip and the build pipeline is unguarded.
+
+    build/md2tex.py shells out to pandoc and is the single converter behind both
+    the full manuscript and the workshop carve. Four rendering defects have
+    already shipped through it -- raw citation keys, a flattened heading
+    hierarchy, duplicated front matter, and a silently unconverted multi-key
+    citation -- none of which a passing LaTeX build could detect.
+    """
+    text = CI.read_text()
+    assert "pandoc" in text.lower(), (
+        "ci.yml does not install pandoc; the md2tex.py tests would skip "
+        "silently and CI would stay green with the converter unverified"
+    )
+
+
 def test_ci_compiles_the_analysis_scripts():
     """results/analysis/ computes the paper's numbers; CI must see it."""
     text = CI.read_text()

@@ -27,8 +27,22 @@ jobs:
           sudo apt-get install -y libreoffice-calc libreoffice-writer
 
       - name: Verify LibreOffice is present
-        # Fail loudly rather than let the recalculation tests skip.
+        # Fail loudly rather than let the recalculation tests skip. Note this
+        # checks the binary answers, not that Calc is installed -- a
+        # libreoffice-core-only host passes this and still cannot load a
+        # spreadsheet, which is exactly what happened in one dev container.
         run: soffice --version || libreoffice --version
+
+      - name: Install pandoc
+        # build/md2tex.py shells out to pandoc, and the tests that prove the
+        # converter still serves both the full paper and the workshop carve
+        # therefore need it. Installed rather than left to skipif for the same
+        # reason as LibreOffice above: a silent skip leaves CI green with the
+        # guarantee unverified.
+        run: sudo apt-get install -y pandoc
+
+      - name: Verify pandoc is present
+        run: pandoc --version
 
       - name: Install dependencies
         run: pip install -r requirements.txt
