@@ -20,7 +20,10 @@ length-matched and opens with the same stem, so being interrupted does not covar
 interruption says; the injection turn is crossed rather than sampled. 11,850 graded trajectories,
 eight runs, two models from different labs.
 
-**Manners are not the operative variable; demand is.** An affect-free "please continue working
+**Manners are not the operative variable; demand is** — on a coding of "demand" that is our own,
+applied after we had seen the effects, with no second rater, and tested on stimuli we wrote to
+embody it (§4.2, §8.7). That is the study's weakest joint and we put it here rather than in the
+limitations. An affect-free "please continue working
 and make sure your result is correct" reproduces the cost effect. A length-matched,
 syntactically identical insult carrying no demand does not move it (−0.08 turns, *p* = 0.63).
 The seven-register cost curve that looks like a politeness gradient is a demand gradient: the
@@ -34,8 +37,10 @@ three accounts of why. Praise still removes 1.35 turns relative to the identical
 it, even when that message states the task is unfinished, which rules out a completion
 inference; praising the work is no stronger than praising the assistant, which does not support
 a confidence account. A bare closing cue carrying no praise, no evaluation and no task-state
-claim produces the largest reduction in the study, −1.44 turns. The practical implication is a
-hazard rather than a technique: **a pleasantry can end an agent's work.**
+claim produces the largest reduction in the study, −1.44 turns. **This leg is the least
+replicated thing in the paper — one run, one model, one turn ceiling.** Weighted accordingly, the
+implication is a hazard rather than a technique: on this evidence **a pleasantry can end an
+agent's work**, and whether it does so generally is untested.
 
 **Regrading every turn against the benchmark's own evaluator** shows that 55–65% of each
 turn-count effect is redundant steps, and that among trajectories that could improve the first

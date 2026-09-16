@@ -117,7 +117,7 @@ Because §7 treats a single measurement as a draw:
   (31 tasks at turn 1, 8 at turn 2).
 - **GLM**, on everything. One run at one ceiling.
 
-## 8.7 Four objections we expect, and do not have answers to
+## 8.7 Objections we expect — three we cannot answer, one we now can
 
 **One stimulus per construct.** Every construct in this paper — demand, praise, insult, closing
 cue, "work remains" — is a single 28-token sentence. We cite [sclar-2024] and [mizrahi-2024] for
@@ -131,11 +131,33 @@ seeing the effects — we say so there — and §3's coding of other papers' sti
 rater. The probe of §4.3 is what tests the construct rather than asserting it, but it tests it on
 texts we wrote to embody our own coding.
 
-**The primary outcome is not corrected for multiplicity.** §2.6 corrects the opening run's
-twelve-outcome trend family and the 22-contrast accuracy family. The turn-count contrasts — the
-primary outcome — are uncorrected, and several load-bearing p-values are not large: GLM praise at
-0.062, stage-1 Luna praise at 0.017, L2 very polite at 0.0055, L6 very rude at 0.012. The largest
-effects would survive any reasonable correction; these would not all.
+This is the objection we would raise first against this paper, and it is not answerable by
+rewriting. The sharpest form of it is that the dissociation may be near-tautological: if "demand"
+means *contains an instruction* and "register" means *contains none*, then "instructions move
+behaviour and decorative text does not" is unsurprising and needs no manners-versus-demand
+framing. Three things would settle it, none of which we have done and all of which need new data
+rather than new prose:
+
+1. **A blinded second coder** on both the seven-register set and §3's cross-paper stimuli, with a
+   reliability statistic reported. One rater is not a measurement.
+2. **A demand scale fixed before outcomes are seen** — human or held-out-model ratings of "how
+   strongly does this text demand continued work," collected against stimuli whose turn counts the
+   raters cannot see.
+3. **Several paraphrases per construct**, so the dissociation is shown to survive the wording and
+   not just our wording. This is the same gap as the first objection above.
+
+Until then the three-way dissociation in §4.9 should be read as *consistent with* a demand account
+rather than as establishing one over an instruction-following account.
+
+**The primary outcome is not corrected for multiplicity — now answered, and the guess in this
+paragraph was half wrong.** An earlier draft of this objection said the load-bearing turn-count
+p-values "would not all" survive correction. §2.6 now corrects them, over the same 22-contrast
+family as the accuracy analysis, and **17 of 22 survive Benjamini–Hochberg at q = 0.05**. Of the
+four p-values this paragraph named, three survive — stage-1 Luna praise (0.019), L2 very polite
+(0.0055), L6 very rude (0.013) — and one does not: **GLM praise at 0.058**. The other four
+failures are the three insult contrasts and `L5_rude`, which is the dissociation §4 argues for.
+Correcting a primary outcome after the fact is still weaker than pre-registering the family, and
+we did not pre-register it.
 
 **Run-level drift is not excluded as an explanation of §7.** Provider drift was checked *within*
 the opening run (r = −0.003 with elapsed time) but not *between* runs, which span three days. The

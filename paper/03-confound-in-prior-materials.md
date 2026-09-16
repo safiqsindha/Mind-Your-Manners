@@ -333,3 +333,32 @@ as written.
 **One residual gap, recorded rather than closed.** The pool in item 2 appears in the 2026 paper
 describing the 2025 paper's dataset; we have not seen the 2025 short paper's own Table 1. Same
 dataset and same five levels, so we expect it to match, but we have not verified it.
+
+## 3.8 Work this audit did not reach
+
+The audit above covers four papers from three groups. It is not a systematic search, and a
+simulated review panel found four on-topic works it missed. We list them here rather than quietly
+folding them into §3, because where they sit relative to our claims is not yet known — **we have
+verified that each exists, by title and author, against its arXiv abstract page, and we have not
+read any of them.**
+
+| Work | Why it belongs in this section |
+|---|---|
+| [cai-2025-tone] | A politeness-effects study across GPT, Gemini and LLaMA. Squarely the paradigm §3 audits. It is in our source list but was never cited. |
+| [zhang-2026-politejudge] | Reported to use several independently written paraphrases per tone level across eight judge models — the stimulus-sampling design §8.7 concedes we did not run. |
+| [munirathinam-2026-recuse] | Measures agent compliance with **mid-flight** signals, including whether the agent stops. |
+| [zhu-2026-spreadsheetbench2] | A successor to our own substrate [ma-2024], sharing authors with it. §8.4 names a second substrate as the obvious next step without naming this one. |
+
+**The third of these is the one that matters most, and it cuts against us.** §5.1 and §1.2 claim
+that no prior work connects closing-sequence structure to agent termination. A paper whose title
+asks whether an agent will stop under in-band signals delivered mid-flight is, on its face, in
+that space. Until it is read, that novelty claim should be read as *unverified* rather than
+established — the hedge in §1.2 is "as far as our review could establish," and this is a case
+where our review did not establish much.
+
+The fourth changes nothing about our results but dates them: our substrate has a successor, and a
+reader should know that before treating SpreadsheetBench 1 as the current instrument.
+
+We record this as a limitation of the search, not of the finding. The demand/affect dissociation
+in §4 is measured on our own stimuli and does not depend on §3 being exhaustive. What depends on
+§3 being exhaustive is the *novelty* framing, and that is precisely what these four unsettle.

@@ -6,11 +6,15 @@ paper was read in full and its quoted numbers checked against it; *abstract only
 not. Both of the entries that once needed a pass against the primary PDF have had it; §3.7 records
 what each check found.
 
-**Three entries — [benzion-2026], [sun-2026-esteer] and [zhang-2026-termsbench] — postdate that
-review and are not in it.** They were added after a later citation audit surfaced them, and each
-is tagged *abstract and registry metadata only*. That is a weaker standard than the rest of this
-list meets, and it is marked rather than smoothed over: nothing in §1.2 or §8.8 rests on a number
-taken from any of the three.
+**Seven entries postdate that review and are not in it.** Three — [benzion-2026],
+[sun-2026-esteer] and [zhang-2026-termsbench] — were added after a citation audit. Four more —
+[cai-2025-tone], [zhang-2026-politejudge], [munirathinam-2026-recuse] and
+[zhu-2026-spreadsheetbench2] — were surfaced by a simulated review panel and are listed in §3.8.
+Each of the seven is tagged at the read depth it actually has, and for the last four that is
+**title and author metadata only**. That is a much weaker standard than the rest of this list
+meets. It is marked rather than smoothed over, and **no claim anywhere in this paper rests on
+any of the seven**; the four in §3.8 are recorded as work that must be read before the novelty
+claim in §1.2 is submitted anywhere.
 
 Venue is stated for each, because roughly half of this literature is unrefereed preprints and
 that bears on how much weight a reader should give it.
@@ -34,6 +38,12 @@ Joshi, Yash Lara, John Langford, Besmira Nushi, Vibhav Vineet, Yue Wu, Safoora Y
 "Inference-Time Scaling for Complex Tasks: Where We Stand and What Lies Ahead."
 arXiv:2504.00294, 31 Mar 2025. *Unrefereed preprint (Microsoft Research).* — **Verified:** full
 text. Cited in §6.5 for oracle-assisted selection in inference-time scaling.
+
+**[cai-2025-tone]** Hanyu Cai, Binqi Shen, Lier Jin, Lan Hu, Xiaojing Fan. "Does Tone Change the
+Answer? Evaluating Prompt Politeness Effects on Modern LLMs: GPT, Gemini, and LLaMA."
+arXiv:2512.12812. *Unrefereed preprint.* — **Verified: title and authors against the arXiv
+abstract page; NOT read.** Surfaced by the review panel (§3.8). Directly on topic for §3 and
+absent from that section's audit. Present in `Literature review/01-sources.md` but never cited.
 
 **[cuadron-2025]** Alejandro Cuadron, Dacheng Li, Wenjie Ma, Xingyao Wang, Yichuan Wang, Siyuan
 Zhuang, Shu Liu, Luis Gaspar Schroeder, Tian Xia, Huanzhi Mao, Nicholas Thumiger, Aditya Desai,
@@ -123,6 +133,14 @@ the first use case, which is ours. They also find automatically generated paraph
 for their metrics "without having to manually verify them" — relevant to §8.7's stimulus-sampling
 objection, which we do not answer.
 
+**[munirathinam-2026-recuse]** Thamilvendhan Munirathinam. "Will the Agent Recuse, and Will It
+Stop? Measuring LLM-Agent Compliance with In-Band Governance Signals at the Access Door and
+Mid-Flight." arXiv:2606.06460. *Unrefereed preprint.* — **Verified: title and author against the
+arXiv abstract page; NOT read.** Surfaced by the review panel (§3.8). ⚠ **On its title alone this
+is the nearest neighbour to §5's result** — mid-flight signals to an agent, and whether it stops.
+§5.1 claims no prior work connects closing-sequence structure to agent termination. That claim
+cannot stand until this paper is read.
+
 **[redundancybench]** Minyang Hu, Bo Yang, Zhinuo Zhou, Jiachen Liang, Jiahao Guo, Yiyang Yin,
 Xiongwei Han. "Redundant or Necessary? A Benchmark for Detecting Redundant Steps in Agent
 Trajectories." arXiv:2605.29893, 28 May 2026. *Unrefereed preprint; the anonymised code
@@ -178,12 +196,26 @@ tokens-per-step versus steps distinction, and in §5.5, where their `bounded_eff
 establishes that a stop condition in the *opening* prompt reduces agentic work — a result we do
 not claim.
 
+**[zhang-2026-politejudge]** Tian Zhang, Meng Li. "Should I Be Polite to My LLM Relevance Judge?
+Tone as a Severity Operating-Point Shift." arXiv:2609.09703. *Unrefereed preprint.* —
+**Verified: title and authors against the arXiv abstract page; NOT read.** Surfaced by the review
+panel (§3.8), which reported that it uses several independently written paraphrases per tone level
+across eight judge models — the stimulus-sampling design §8.7 concedes we did not run. We have not
+confirmed that description against the paper.
+
 **[zhang-2026-termsbench]** Erica Zhang, Fangzhao Zhang, Aneesh Pappu, Batu El, Jose Blanchet,
 Susan Athey, Jiashuo Liu, James Zou. "TERMS-Bench: Diagnosing LLM Negotiation Agents Beyond Deal
 Rate." arXiv:2605.13909, 13 May 2026 (v2, 13 Jun 2026). *Unrefereed preprint.* — **Verified:
 title, authors and version history against the arXiv abstract page; not read in full.** Cited
 once, in §8.8, as the instrument a negotiation follow-up would need. We make no claim about its
 contents beyond what its title states, and we have not run it.
+
+**[zhu-2026-spreadsheetbench2]** Jian Zhu, Yuzheng Zhang, Zeyao Ma, Bohan Zhang, Armin Schoepf,
+Daniel Woloch, Peter Yiliu Wang. "SpreadsheetBench 2: Evaluating Agents on End-to-End Business
+Spreadsheet Workflows." arXiv:2606.29955. *Unrefereed preprint.* — **Verified: title and authors
+against the arXiv abstract page; NOT read.** Surfaced by the review panel (§3.8). A successor to
+our own substrate [ma-2024], sharing authors with it. §8.4 calls a second substrate "the obvious
+next step" without naming this one.
 
 **[yin-2024]** Ziqi Yin, Hao Wang, Kaito Horio, Daisuke Kawahara, Satoshi Sekine. "Should We
 Respect LLMs? A Cross-Lingual Study on the Influence of Prompt Politeness on LLM Performance."
@@ -196,12 +228,14 @@ question.
 
 ## Outstanding before submission
 
-**Three items are open, all of the same kind.** [benzion-2026], [sun-2026-esteer] and
+**Seven items are open, all of the same kind.** [benzion-2026], [sun-2026-esteer] and
 [zhang-2026-termsbench] have been verified as existing — title, authors, venue and version
 history against the publisher record or the arXiv abstract page — but none has been read in full.
 Each is cited for a claim taken from its own abstract, and §1.2 and §8.8 are written so that
-nothing depends on a figure from any of them. Reading all three is the remaining pre-submission
-task on this list. In particular, [sun-2026-esteer] must not be cited for a magnitude comparison
+nothing depends on a figure from any of them. Four further entries (§3.8) are weaker still — verified to exist by
+title and author, nothing more. Reading all seven is the remaining pre-submission task on this
+list, and the §3.8 four are the higher priority of the two groups, because one of them may
+occupy ground §5.1 claims is unoccupied. In particular, [sun-2026-esteer] must not be cited for a magnitude comparison
 between agent-level and single-step variation until its full text is checked; its abstract does
 not make one.
 
