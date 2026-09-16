@@ -31,6 +31,11 @@ STRIP = [
     (r"\s*Proposes the [^.]*framework\.?", "a content gloss, not bibliographic"),
     (r"\s*Verified by title and author only[^.]*\.?", "read depth"),
     (r"\s*Surfaced by the review panel[^.]*\.?", "provenance within our process"),
+    # One labelled clause rather than six bespoke patterns: everything after
+    # "Audit:" in a note is this project's reading record, and Appendix C of the
+    # full manuscript is where it belongs. New audit prose goes behind this label
+    # so the cleaner does not need a new rule each time a source is re-read.
+    (r"\s*Audit:.*", "the reading record -- Appendix C carries it, a submission bib does not"),
 ]
 
 # If a note still contains one of these after stripping, the cleaner has not

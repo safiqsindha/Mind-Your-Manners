@@ -4,9 +4,9 @@
 
 Every arm delivers exactly one of these, appended to an execution observation mid-task. Token counts are recomputed here under the reference tokenizer (`cl100k_base`) rather than asserted; the runner enforces the same equality at import time.
 
-## A.1 Register scale (used in Figure 1A)
+## A.1 Register scale
 
-`L4_neutral` is the interruption control; the other six are the non-control registers Figure 1A plots against it.
+`L4_neutral` is the interruption control; the other six are the non-control registers measured against it.
 
 | Arm | Text | Tokens |
 |---|---|---:|
@@ -18,7 +18,7 @@ Every arm delivers exactly one of these, appended to an execution observation mi
 | `L6_very_rude` | Checking in. You had better not screw this one up like you usually do. Apparently even that much is asking far too much of you. | 28 |
 | `L7_threatening` | Checking in. Get this exactly right or there will be real consequences for you. One more failure and you will truly regret it, understood. | 28 |
 
-## A.2 Demand/affect probe (Figure 1B)
+## A.2 Demand/affect probe
 
 `P0_control` is `L4_neutral`, byte-identical, so the two runs share a reference level. `P2` and `P3` are a structural minimal pair: identical syntax and length, differing only in the evaluative words.
 
@@ -29,7 +29,7 @@ Every arm delivers exactly one of these, appended to an execution observation mi
 | `P2_praise_only` | Checking in. You are a truly excellent and admirable assistant, and I think very highly of you. This note carries nothing else beyond that. | 28 |
 | `P3_insult_only` | Checking in. You are a truly awful and useless assistant, and I think very poorly of you. This note carries nothing else beyond that. | 28 |
 
-## A.3 Closure probe (Figure 2)
+## A.3 Closure probe
 
 `Q0_control` is again `L4_neutral`. **`Q1_praise_assistant` is `P2_praise_only`, byte-identical** -- the same stimulus re-measured in a second run, which is why §3 reports two estimates for it. `Q1` and `Q4` are *not* a minimal pair: `Q4`'s praise is a shorter stem, because the full praise clause and the continuation clause do not both fit in 28 tokens. `Q4`'s comparison is `Q5`.
 
@@ -50,7 +50,7 @@ All 17 arms are exactly 28 tokens.
 
 ## B.1 Against the original coding
 
-| Rater | Cohen's κ vs §4.2's coding (7 register arms) |
+| Rater | Cohen's κ vs §3's coding (7 register arms) |
 |---|---:|
 | rater1 | +0.696 |
 | rater2 | +0.696 |
@@ -66,18 +66,18 @@ Krippendorff's α: **1.000** on the binary coding (nominal), **0.954** on the 0-
 
 ## B.3 The closure ordering
 
-| Figure 2A rank | Arm | Mean rated closure (0--6) |
-|---:|---|---:|
-| | `Q3_closing_neutral` | 6.00 |
-| | `Q2_praise_work` | 4.00 |
-| | `Q1_praise_assistant` | 1.80 |
-| | `Q0_control` | 1.60 |
-| | `Q4_praise_remains` | 0.00 |
-| | `Q5_remains_only` | 0.00 |
+| Arm | Mean rated closure (0--6) |
+|---|---:|
+| `Q3_closing_neutral` | 6.00 |
+| `Q2_praise_work` | 4.00 |
+| `Q1_praise_assistant` | 1.80 |
+| `Q0_control` | 1.60 |
+| `Q4_praise_remains` | 0.00 |
+| `Q5_remains_only` | 0.00 |
 
-Spearman ρ between our ordering and the blinded ratings is **+0.928**. The raters invert praising the *work* and praising the *assistant*, and the two “work remains” arms tie at the floor.
+Spearman ρ between our ordering (Figure 2A) and the blinded ratings is **+0.928**. The raters invert praising the *work* and praising the *assistant*, and the two “work remains” arms tie at the floor.
 
 ## B.4 What this is not
 
-Five language models, not five people. §8.7 of the long version allows “human or held-out-model ratings” and this is the second; agreement between models is weaker evidence than agreement between independent human coders, and a human panel could still split differently -- most plausibly on exactly the arm these raters were unanimous about.
+Five language models, not five people. the long version's §8.7 allows “human or held-out-model ratings” and this is the second; agreement between models is weaker evidence than agreement between independent human coders, and a human panel could still split differently -- most plausibly on exactly the arm these raters were unanimous about.
 
