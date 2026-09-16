@@ -69,13 +69,16 @@ representation level shapes multi-step agent trajectories [sun-2026-esteer]. Bot
 that emotional context changes what an agent *does* and not only what it says, and we take
 that as settled rather than as something this paper contributes.
 
-Neither, however, manipulates register the way a user would deliver it. One primes with
-narratives before the task begins, the other intervenes on hidden states rather than through
-the prompt at all, and neither scores the agent against a verifiable ground truth. What we
-could not find is prior work that varies register *mid-task, in the user turn*, inside an
-agentic loop; that decomposes politeness into affect and demand as separate experimental
-factors; or that connects conversational closing sequences to agent termination. The nearest
-designs — opening instructions split across turns, and content-typed interruptions answered in
+Neither, however, varies register in a message that reaches the agent while it is working. One
+primes with narratives before the task begins, the other intervenes on hidden states rather
+than through the model's input at all, and neither scores the agent against a verifiable ground
+truth. What we could not find is prior work that varies register *mid-task, while the agent is
+working*, inside an agentic loop; that decomposes politeness into affect and demand as separate
+experimental factors; or that connects conversational closing sequences to agent termination.
+On the channel our interjection arrives through, be precise: it rides along with an execution
+observation rather than as a fresh user turn, and §8.5 records that as a limitation of this
+design rather than a property we claim for it. The nearest designs — opening instructions split
+across turns, and content-typed interruptions answered in
 a single response — manipulate task content rather than register, and neither measures
 downstream persistence.
 
