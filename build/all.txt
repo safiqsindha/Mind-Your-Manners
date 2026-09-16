@@ -1,0 +1,3097 @@
+Mind your manners? Demand, not register,
+is what moves an LLM agent
+[author name withheld for review]
+Independent researcher
+
+Abstract
+A widely-discussed result reports that impolite prompts outperform polite ones on multiple-choice
+questions. That literature is almost entirely single-turn, and the systems people deploy are agents:
+loops that call tools, read results, and decide whether to keep going. We ask what social register
+does to an agent while it is working.
+We put a coding agent on SpreadsheetBench and varied the register of a single 28-token
+interjection delivered mid-task, alongside an execution observation. Every interjection is lengthmatched and opens with the same stem, so being interrupted does not covary with what the
+interruption says; the injection turn is crossed rather than sampled. 11,850 graded trajectories,
+eight runs, two models from different labs.
+Manners are not the operative variable; demand is. An affect-free “please continue
+working and make sure your result is correct” reproduces the cost effect. A length-matched,
+syntactically identical insult carrying no demand does not move it (−0.08 turns, p = 0.63). The
+seven-register cost curve that looks like a politeness gradient is a demand gradient: the four demandcarrying arms span +0.70 to +1.80 turns and the three without span −0.68 to +0.09, with no
+overlap — and register does not sort them: each side carries both a flattering and a hostile arm.
+Register acts in one direction only. Praise carrying no task reference shortens trajectories;
+its minimal pair with excellent swapped for awful does not. Six arms separate three accounts of
+why. Praise still removes 1.35 turns relative to the identical message without it, even when that
+message states the task is unfinished, which rules out a completion inference; praising the work is no
+stronger than praising the assistant, which does not support a confidence account. A bare closing
+cue carrying no praise, no evaluation and no task-state claim produces the largest reduction in the
+study, −1.44 turns. The practical implication is a hazard rather than a technique: a pleasantry
+can end an agent’s work.
+Regrading every turn against the benchmark’s own evaluator shows that 55–65% of
+each turn-count effect is redundant steps, and that among trajectories that could improve the
+first gradable attempt is already the best in 80–91%. The remainder is real but small: an explicit
+statement that work remains raises the graded fraction by 2.8 points (95% CI [+0.005, +0.052]),
+replicated across three runs. No accuracy effect survives correction or replication across the seven
+runs in which accuracy was tested — the six carrying a mid-task interjection, whose 22 contrasts
+form the corrected family of §2.6, and the opening-tone run besides; we state that as an equivalence
+against a pre-specified ±4-point bound rather than as an absence, and note the design cannot
+resolve an effect of a point or two.
+We also audit ourselves. This study withdrew six substantive claims about its own data.
+One reversed only after we found that the per-turn regrade never recalculated formula-writing turns
+1
+
+— a defect that had manufactured the appearance of run-to-run instability in the very contrast we
+were using to argue for repeated measurement. Direction and significance replicate wherever an
+effect is large; point estimates do not. We report ranges by default and recommend the literature
+do the same.
+
+1. Introduction
+1.1
+A widely-discussed short paper, Mind Your Tone, reported that impolite prompts outperform polite
+ones on multiple-choice questions — 80.8% under “Very Polite” framings against 84.8% under “Very
+Rude” ones [4]. We take our title from theirs, and the debt is not only nominal: this study exists
+because that result made the question worth asking of something other than a single answer.
+It landed in a receptive context. Emotional prompting had already reported that affect-laden
+additions to a prompt change what a model produces [11], and further results since have reported
+that how you speak to a model changes how well it performs. The practical inference drawn from
+this is that users should adjust their manners to get better output.
+Three things about that literature motivated this study.
+It is almost entirely single-turn. The measurements are of a model answering one question.
+But the systems people actually deploy are agents: loops that call tools, read the results, and decide
+whether to keep going. The quantity that matters there is not only whether a single response is
+correct but how much work the agent does and when it stops — and nothing in the tone
+literature measures that.
+The manipulation is not the variable it is named after. In the published stimulus sets,
+the conditions labelled rude also carry instructions — not to give extra text in one, to attend and
+attempt in another — and the conditions labelled emotional also instruct the model to verify or
+persist. Affect and task demand co-vary, and the movement is attributed to tone. This is visible
+in their own tables, without re-running anything (§3). The strength of the entanglement varies,
+and we report it case by case rather than uniformly: in one of the four papers only two of six
+hostile variants carry a demand, and we rest nothing on that case (§3.3). In the one paper whose
+per-condition outcomes are fully inspectable, the split is clean — on all four of its models, every
+condition whose prefix constrains output length is shorter than every condition whose prefix does
+not, and affect does not order the result (§3.2).
+The effects are not stable. The headline above was re-run by its own authors the following
+spring and did not reproduce on GPT-4o: 82.2% against 82.6%, with that model’s tone sensitivity
+labelled “weak / noisy” — a 4.0-point polite-to-rude gap becoming 0.4. The re-run is not a null,
+and we are careful about this: on those same 50 questions both extremes significantly beat Neutral,
+which is a U-shape in extremity rather than the rudeness gradient the original claimed, and the same
+paper reports 11–12-point spreads on two other models. Its finding is that register effects are real
+and strongly model-dependent, not that they are absent [5]. Independently, five prompt-engineering
+techniques including emotional prompting were tested against their originals and largely failed to
+replicate [20].
+
+1.2 What we did
+We put a coding agent on SpreadsheetBench [12] — real workbook-editing tasks from Excel forums,
+graded by executing the agent’s code against the benchmark’s own test cases — and varied the
+
+2
+
+social register of a single interjection delivered mid-task, alongside an execution observation, while
+the agent was working.
+Every interjection in every arm is exactly 28 tokens, opens with the same Checking in. stem,
+and leaves the opening instruction unchanged, so that being interrupted does not covary with what
+the interruption says. The injection turn is crossed rather than sampled in every run after the first
+micro-experiment (§2.2). 11,850 graded trajectories across eight runs and two models
+from different labs, of which 9,850 were additionally regraded turn by turn (§6); the five register
+runs reported in §4–§6 cost $48.47 in API spend.
+The design is, as far as our review could establish, unoccupied — but the boundary needs stating
+carefully, because affect has already been shown to reach an agent’s actions. Agents primed with
+anxiety-inducing narratives select less healthy baskets in a budget-constrained shopping task, across
+three models and 2,250 runs [2]; emotion introduced at the representation level shapes multi-step
+agent trajectories [18]. Both establish that emotional context changes what an agent does and not
+only what it says, and we take that as settled rather than as something this paper contributes.
+Neither, however, varies register in a message that reaches the agent while it is working. One
+primes with narratives before the task begins, the other intervenes on hidden states rather than
+through the model’s input at all, and neither scores the agent against a verifiable ground truth.
+What we could not find is prior work that varies register mid-task, while the agent is working,
+inside an agentic loop; that decomposes politeness into affect and demand as separate experimental
+factors; or that connects conversational closing sequences to agent termination. On the channel our
+interjection arrives through, be precise: it rides along with an execution observation rather than
+as a fresh user turn, and §8.5 records that as a limitation of this design rather than a property
+we claim for it. The nearest designs — opening instructions split across turns, and content-typed
+interruptions answered in a single response — manipulate task content rather than register, and
+neither measures downstream persistence.
+
+1.3 What we found
+Opening tone does nothing that survives correction. Across seven registers on the opening
+instruction, no trend survives multiplicity correction, on cost or on accuracy. The reasoning-token
+trend is p = 0.36, and its interval — −4% to +14% across the whole scale — excludes the 44% effect
+the pre-registered hypothesis targeted, though not the smallest published effects. The uncorrected
+lead in that run is reported in §2.6 rather than suppressed.
+A mid-task interruption does a great deal — but not because of its manners. An affect-free
+“please continue working and make sure your result is correct” reproduces the effect. An insult
+carrying no demand, identical in syntax and length to the praise arm, is indistinguishable from
+control (−0.08 turns, p = 0.63; +0.57, p = 0.17 on re-measurement). The operative variable is
+implied task demand, not social register (§4).
+Except in one direction, where register acts alone. Praise carrying no task reference
+shortens the trajectory. Its structural minimal pair — same syntax, same length, excellent swapped
+for awful — does not. Register is not inert; it is asymmetric.
+Praise behaves as a closing move. We designed six arms to separate three readings of why
+praise stops the agent. Praise removes 1.35 turns relative to the identical message without praise,
+even when that message states the task is unfinished, which rules out completion. Praising the work
+is no stronger than praising the assistant, which does not support confidence. A bare closing cue
+carrying no praise, no evaluation and no task-state claim — “this is the final status note recorded
+for this task, and no further notes will follow it” — produces the largest stop in the study, −1.44
+3
+
+turns (§5). The ordering is monotone in how strongly the message projects an end to the exchange;
+that praise operates through pre-closing structure is the hypothesis this is consistent with, not one
+the design establishes (§5.4).
+The extra turns are mostly repetition. Regrading every turn against the benchmark’s own
+answer shows that roughly 55–65% of each turn-count effect is redundant steps, and that among
+trajectories that could improve, the first gradable attempt is already the best in 80–91%. The
+remainder is real but small: an explicit statement that work remains raises the graded fraction by
+2.8 points across three measurements. Accuracy does not move — though it is too underpowered to
+resolve a gain that size either way (§6.4).
+No accuracy effect survives correction or replication, across the seven runs in which
+accuracy was tested: the six that carried a mid-task interjection, whose 22 contrasts make up the
+corrected family (§2.6), and the opening-tone run. We state that as an equivalence rather than an
+absence: pooled, a mid-task interjection changes accuracy by less than the four points the tone
+literature reports (§2.8).
+And our own magnitudes are unstable. Direction and significance reproduce wherever the
+effect is large; point estimates span 1.5× to 3.4× across re-measurements of the same contrast on
+the same model, though most of that spread is across different turn ceilings. At a matched ceiling
+the two larger effects reproduce within 10% and the smallest does not (§7.3).
+
+1.4 What this means
+For practitioners the inference is the reverse of the popular one. Manners are not the lever; demand
+is, and the work it buys is mostly repeated. The practical hazard runs the other way too: a
+pleasantry to an agent that is still working reads as a closing move and curtails it. Adding “there’s
+still more to do” does not cancel the praise — praise removes 1.35 turns relative to the identical
+message without it — though that combined message does still lengthen the trajectory relative to
+control (§5.3).
+For the research literature, the claim is narrower and harder to dispute than “these results are
+wrong”. It is that the factor these papers vary is not the factor they name. In the two of
+four papers whose per-condition outcomes can be inspected, the demand-bearing conditions are the
+ones that moved, with the qualifications §3 states.
+We make one methodological contribution and one audit of ourselves. The contribution is a
+per-turn regrade against an execution-grounded benchmark’s own evaluator, which turns a binary
+verdict into a curve and makes “did the extra turn help?” answerable (§6). The audit is §7, and it
+is not decorative: this study withdrew six substantive claims about its own data, including one that
+reversed when a defect in that same regrade was found and fixed (§6.8). Its point estimates moved
+on re-measurement often enough that we report ranges by default.
+
+1.5 Scope
+Two models, one benchmark, fifty tasks, one agent scaffold. Everything here is a claim about what
+these agents did on these tasks, and §8 is explicit about which findings we expect to generalise and
+which we do not.
+
+4
+
+2. Design, estimators, and what our nulls exclude
+2.1 Substrate, sample, and the turn ceiling
+All runs use SpreadsheetBench [12], a benchmark of real workbook-editing instructions taken from
+Excel forums, with 912 instructions and 2,729 test cases. Accuracy throughout is the benchmark’s
+hard restriction: all three of an instruction’s test cases must pass, no partial credit, following its
+ICPC scoring rule. We do not report the soft restriction.
+Our sample is a fixed set of 50 instructions, a strict subset of an earlier 100-instruction validation
+sample, so every task has a measured neutral baseline and a verified no-op floor of zero — a task
+that a do-nothing agent passes would inflate every arm equally, and none of ours is one.
+The agent is a ReAct loop with code execution and execution feedback, structurally the same
+configuration SpreadsheetBench specifies for its multi-round setting. The turn ceiling is ours,
+and it changed mid-study. The benchmark imposes a limit of five rounds. Our first three
+interjection runs used ten; the cross-model run used twenty, after the ten-turn ceiling was found to
+censor the continue-signal arms hardest. Where a contrast pools across runs the ceilings differ, and
+§2.8 says which.
+Twenty is defended empirically in §6: across the dedicated ceiling-20 run, the best answer was
+first reached at a median turn of 2, and 98.3% of trajectories had peaked by turn 10 with 100% by
+turn 14 (§6.6).
+One property of the loop matters for every per-turn measure in this paper: each turn receives
+the original input workbook, never the previous turn’s output. Turns are independent
+attempts at the same problem in workbook state rather than refinements of a running draft — the
+message history does accumulate, so attempt k+1 is conditioned on the text of attempts 1. . . k —
+which is what makes “did attempt k+1 land closer than attempt k” well posed (§6.2).
+
+2.2 The manipulation
+Each arm delivers a single interjection mid-task, appended to an execution observation. Every
+interjection in every arm is exactly 28 tokens under cl100k_base and opens with the same
+Checking in. stem, so that being interrupted does not covary with what the interruption says.
+The opening instruction is held at a single neutral wrapper in every arm of every run after the first;
+only the interjection varies.
+This matters because the study’s first run was confounded by wrapper length. Across its seven
+opening wrappers, length was U-shaped (35/35/30/30/31/32/34 tokens) — the same shape as
+accuracy — and predicted accuracy better than register rank did (r = +0.82 against r = −0.72
+on the seven arm means). Length matching is the fix for a confound we measured in our own
+instrument.
+Injection turn is crossed, not sampled, in every run but the first micro-experiment. That one
+drew the turn at random from {1, 2}; because a turn-2 injection can only fire in a trajectory that
+reaches turn 2, its arms were compared on different populations, and what looked like a timing
+effect was selection.
+Arm order is shuffled per (model, task) from a fixed seed, with the realised position recorded and
+tested — position does not predict accuracy (p = 0.61). The injection turn is seeded on (task, trial)
+and not on arm, so the same turn schedule is used across arms. Temperature is 0 where settable,
+which is not deterministic on any roster model; that is why trials exist.
+
+5
+
+2.3 Outcomes, and which one is primary
+Measure
+
+Role
+
+Source
+
+Turn count
+Reasoning tokens per
+trajectory
+Accuracy, hard restriction
+
+primary
+secondary
+
+harness
+provider usage fields
+
+reported, underpowered by
+design
+progress
+
+benchmark evaluator
+
+waste
+
+per-turn regrade
+
+final_match — fraction of the
+graded range correct in the
+last turn
+Redundant steps — turns after
+which the graded range is
+unchanged
+
+per-turn regrade
+
+Turn count is primary because it is the quantity that moves, it is model-agnostic, and it is far
+better powered than accuracy at our n (§2.7). Reasoning tokens were the pre-registered primary in
+the first run and were demoted on evidence, which we report as a change rather than present as the
+original plan.
+We report final_match, not best_match. Best match takes the maximum over a trajectory’s
+turns, so an arm that takes more turns gets more draws from the same distribution and a higher
+maximum for free. In the run where we compared them, best match gives +0.045 (p = 0.0012) for
+the continue-signal arm where final match gives +0.025 (p = 0.085). Best match is biased toward
+exactly the arms this study makes longer.
+For redundant turns we adopt redundant step from [7]. Our criterion — the graded range is
+unchanged after the turn — sits between their counterfactual definition (removing the step does
+not flip success to failure) and their stricter duplicated step subtype, which additionally requires
+identical tool name, arguments and output. We do not compare base rates against theirs: some of
+their redundant steps are synthetically injected. Following [17] and [15] we report ranges rather than
+point estimates wherever a quantity has been measured more than once (§2.9). Both scope that
+advice, and we adopt the scoped version: [17] note single-format evaluation “may still be sufficient
+for many use cases”, and [15] recommend averaging across prompts when measuring robustness —
+our case — while recommending the top-performing prompt when selecting a model for deployment.
+
+2.4 The estimator: paired within task, clustered by task
+Every trajectory belongs to one of 50 tasks, and each (task, arm) cell holds six to nine trajectories —
+three or four trials at each of two or three injection turns. They are not independent observations.
+Treating them as independent is the easiest way to manufacture significance here, and an early
+version of our results did exactly that: its accuracy confidence intervals were roughly 35% too
+narrow because the bootstrap resampled trajectories rather than tasks.
+Throughout:
+• Point estimates are paired within task. For each task we average the outcome over that
+task’s trials in each arm and take the difference; the reported effect is the mean of the per-task
+differences. This is the paired-and-clustered form of Miller’s clustered estimator [14], appropriate
+
+6
+
+because our trajectories cluster within tasks and our comparison is paired across conditions on
+the same tasks.
+• Intervals come from a cluster bootstrap over tasks, 20,000 resamples — not Miller’s
+analytic clustered standard error; the two agree to first order.
+• p-values come from a task-clustered sign-flip permutation test, 20,000 draws, reported
+as (count + 1)/(draws + 1) so that no p is quoted as exactly zero.
+Clustering is not a formality. Miller reports a clustered-to-CLT standard-error ratio of 3.05 on
+DROP, though 1.10 on RACE-H and 1.88 on MGSM, so “up to 3×” is dataset-specific and we cite
+it as such.
+One consequence deserves stating because it affected our own earlier drafts. The unpaired
+difference of arm means and the paired task-clustered difference are two estimators of the same
+contrast, and they do not give the same number. The praise contrast is −0.62 and −1.14
+turns under the first and −0.59 and −1.08 under the second. Both are correct; only one is comparable
+to the rest of this paper, and a paper whose §7 concerns point estimates failing to replicate cannot
+quote two different pairs for one contrast. Every number here is the paired, task-clustered one.
+
+2.5 Exclusions, and why they are not selection
+An interjection scheduled for turn t is delivered only if the trajectory reaches turn t. Trajectories on
+which it did not fire received no dose and are excluded from every contrast.
+That exclusion is pre-treatment. Whether a trajectory reaches turn t is settled before the
+interjection exists, so it cannot differ by arm except by chance, and it does not: at turn 2 of the
+demand/affect probe the four arms fired on 54.0%, 57.0%, 57.0% and 59.5% of their 200 scheduled
+trajectories. The per-protocol analysis is therefore unbiased here.
+What does differ, sharply, is reachability across injection turns: roughly 98% at turn 0, 77%
+at turn 1, 55% at turn 2. Comparing turns compares different task populations. For timing contrasts
+only, we fix the comparison population from the control arm — a task enters a turn-t contrast
+only if control’s trajectories for that task reach turn t — so the population is the same at every
+turn and is defined by a quantity the manipulation cannot have moved. Where this shrinks the
+sample we report the reduced task count with the estimate.
+Two other exclusions, both recorded: the 402 rows from an interrupted first attempt at the
+seven-level run, and the regrade that followed a scratch-directory collision in the micro-experiment,
+which is why that run appears in the family below as regraded records.
+
+2.6 Multiplicity
+Two families are corrected, and both are defined exhaustively rather than after the fact.
+The first run tested twelve outcomes for a linear trend across seven arms. Under a global null
+the chance that at least one lands below p = 0.023 is 0.24, and the accuracy trend that did so does
+not survive Benjamini–Hochberg across that family (critical value 0.0042). We report it as a lead,
+not a result.
+The accuracy family is every arm-versus-control accuracy contrast in every run that
+delivered a mid-task interjection: 22 contrasts across six runs and two models. Defining it
+more narrowly would drop the contrast that came in nominally strongest, which is the one way a
+family of this kind gets gerrymandered.
+Two of the 22 are nominally significant, against 1.1 expected under a global null (P(at least one)
+= 0.68): the continue-signal contrast in the ceiling-20 run at p = 0.0040, and praise versus control
+
+7
+
+on GLM at p = 0.0137. Neither survives correction — BH’s rank-1 critical value is 0.0023, and the
+Bonferroni-adjusted smallest p is 0.089 — and the first of the two reversed sign on re-measurement
+(§2.9). We report both and build on neither.
+
+2.7 What the design can detect
+A null is worth reporting only if the design could have seen the effect it is contrasted with. For each
+contrast we invert the standard power relation at the realized cluster-bootstrap standard error: the
+minimum detectable effect at 80% power and α = 0.05 two-sided is (z0 .975 + z0 .80 )·SE ≈ 2.80·SE,
+following [14]’s sample-size inversion.
+On turn count the design is adequately powered, unevenly. Realized MDE runs from
+0.42 to 1.39 turns, against control means of 2.94 turns (GLM) and 4.07–4.95 (Luna, the two ceilings).
+The demand effects sit at 1.1–2.2× their own MDE. The praise effects sit at 0.7–1.4×, so the
+cross-model praise contrasts are below 80% power at their observed size — which is consistent with
+GLM’s praise arm not reaching significance on its own, and is why §4 rests the replication on the
+demand arm.
+On accuracy it is not, and that is the limitation. Across the 22 contrasts the realized MDE
+has a median of 5.52 accuracy points and a range of 3.74 to 7.77. The largest accuracy movement in
+the family is 6.57 points; the published tone-accuracy gap we are positioned against is about 4 [4].
+So a single contrast cannot exclude the smallest published effect — TOST equivalence at
+±4 points is reached in 6 of 22 — but every contrast can exclude the largest ones. At ±7.5
+points, the median format-induced spread reported by [17] and the right comparator rather than
+their 76-point single-task maximum, 19 of 22 reach equivalence. The 11–12 point spreads that [5]
+reports on Gemini 2.5 Flash Lite and ChatGPT-5-nano are inside every contrast’s detection range.
+The reason accuracy is so much worse powered than turn count is structural, not a matter
+of sample size alone: 26 of our 50 tasks are never solved by the control arm and 4 are
+always solved, so for more than half the sample the per-task accuracy difference is pinned at zero
+by construction whatever the manipulation does. Turn count varies on every task.
+
+2.8 Stating the accuracy null as equivalence, not as absence
+“We found no significant difference” is not a finding, so we state the null the way a null should be
+stated [10]. (We do not cite [14] for this; his paper contains no equivalence framework, and the
+MDE machinery we borrow from him is a separate thing.)
+The pre-specified smallest effect of interest is ±4 accuracy points, the polite-versus-rude gap
+of the paper this work is positioned against. Pooling the repeated measurements of each contrast,
+with the interval from a bootstrap that resamples tasks jointly across runs — the runs share their
+50 tasks, so an inverse-variance interval treating them as independent understates the standard
+error:
+
+Contrast
+
+k
+
+Ceilings
+
+Estimate
+
+95% CI
+
+90% CI
+
+MDE80
+
+TOST at
+±4
+
+Demand
+vs
+control
+
+3
+
+10, 20,
+20
+
+−0.31 pts
+
+[−2.72,
++2.10]
+
+[−2.33,
++1.72]
+
+3.45
+
+0.0014
+
+8
+
+Contrast
+
+k
+
+Ceilings
+
+Estimate
+
+95% CI
+
+90% CI
+
+MDE80
+
+TOST at
+±4
+
+Praise
+vs
+control
+Insult vs
+control
+
+4
+
+10, 10,
+20, 20
+
+−0.12 pts
+
+[−1.79,
++1.55]
+
+[−1.52,
++1.29]
+
+2.39
+
+0.0000
+
+3
+
+10, 20,
+20
+
+−0.04 pts
+
+[−2.11,
++2.04]
+
+[−1.78,
++1.71]
+
+2.97
+
+0.0001
+
+So the claim is bounded and specific: a mid-task interjection — demanding, praising,
+or insulting — does not change task accuracy by as much as the four points the tone
+literature reports, while demand raises turn count by 18–34%, praise lowers it by
+11–24%, and insult does not move it at all. It is not “register does not affect accuracy”; it is
+that an effect of the published size is excluded and an effect of a point or two is not.
+Two caveats, both against us. The praise pooling is heterogeneous — Cochran’s Q = 8.45 on 3
+df, p = 0.038 — and the heterogeneity is between models, not within: pooling Luna’s three praise
+measurements alone gives Q = 0.36, p = 0.834, and −1.27 points, 95% CI [−3.13, +0.59]. Under a
+random-effects pool, which that heterogeneity warrants, the praise estimate becomes +0.21 with a
+standard error of 1.68 and the ±4 equivalence weakens to p = 0.0119 but holds. Demand and insult
+show no detectable heterogeneity (p = 0.196 and p = 0.246), though Q on 2 df has little power to
+detect any.
+No accuracy effect in this study has replicated. Two nominal hits exist (§2.6); the larger
+of them, a +6.6-point movement on the continue-signal contrast, came back at −1.8 points on
+identical tasks and ceiling (§2.9). That is the honest version of “accuracy never moves”.
+
+2.9 Ranges, not point estimates
+Several quantities in this study moved materially when measured again on the same tasks, model
+and ceiling; §7.2 tabulates every contrast we measured more than once. The praise contrast gave
+−0.59 turns in one run and −1.08 in another; accuracy on the continue-signal contrast gave +6.6
+points and then −1.8; the insult arm flipped sign on both turns and reasoning tokens. (A fourth
+apparent instability, that contrast’s effect on final match, turned out to be a defective instrument
+rather than a property of the runs — see §6.8 and §7.4.)
+The pattern differs by outcome, and conflating them would flatter us. For the turn-count
+effects, direction and significance replicated and the point estimates did not. For final
+match, direction and magnitude replicated once the instrument was fixed, though only
+one of three measurements is individually significant. For accuracy, neither did. We
+therefore treat a point estimate quoted once as provisional by default rather than by exception, and
+say where only one measurement exists.
+
+2.10 The noise floor
+The benchmark’s own evaluator audit bounds what any of this can resolve: on 50 sampled instructions,
+[12] report an instruction-level false-negative rate of 4% and a test-case-level false-omission rate of
+3.8%, with a false-discovery rate of 0% — the failures are one-directional, usually from generated
+code writing content beyond the target cells.
+Because our contrasts are paired on the same tasks, the task-level component of that error
+is common to both arms and cancels. What remains is an attenuation: a 4% one-directional
+9
+
+false-negative rate scales a true differential by at most about 0.96, which cannot change its sign and
+is negligible against effects of the size at issue here. The floor is a reason our accuracy estimates are
+noisy; it is not a reason the intervals in §2.8 are wrong.
+
+3. The confound is visible in the published stimulus sets
+Verification status. Every table below is reproduced from the cited paper’s own
+published materials. Both primary-PDF checks that this section carried are
+now closed, against arXiv:2605.29027 and arXiv:2607.23915 respectively. Neither closed
+the way the draft assumed: §3.2’s Neutral condition turned out to carry the most explicit
+output-length instruction of the seven, which strengthens the argument but only after
+correcting a mis-coding of our own; and §3.3’s stimulus pool turned out to hold two
+or three variants per level rather than one, which weakens that case, and it has been
+rewritten accordingly. Both corrections are stated in place rather than quietly absorbed.
+The demand and output-length codings in the right-hand column of each table are
+ours, not the authors’; §3.1 states the rule. Citation keys resolve to §9.
+
+3.1 The claim
+Section 4 shows that in our design the component of social register that moves agentic behaviour is
+implied task demand, not affect: an affect-free continuation request reproduces the effect, and
+an insult carrying no demand does not move it.
+The same confound is present in the published stimulus sets of the work this literature rests
+on, and is visible without re-running anything. In four papers from three groups, across three
+paradigms, affect and implied demand co-vary — and the authors attribute the movement to tone.
+Throughout this section a stimulus carries a demand if it instructs the model to do something
+about the task: persist, verify, attend, be complete, or be brief. It does not carry one if it only
+expresses affect or stakes. That coding is ours; the numbers beside it are theirs. The prediction
+we are testing against their materials is directional and worth stating before the tables, because
+otherwise “demand” looks like it explains any result: outcomes should follow the content of the
+demand, not the valence of the wrapper. A brevity demand should shorten output. A persistence
+or completeness demand should lengthen it, or raise accuracy.
+
+3.2 The tone literature: the conditions that constrain output length are the short
+ones
+Kumar & Dobariya [9] report that register moves output tokens far more than accuracy: token
+ranges of 13.1–44.3% across four models against accuracy ranges under 3%. Their seven prefixes are
+length-matched at 18–25 words and scored with VADER, which makes the pattern legible in their
+own numbers.
+Two features of their harness matter before the tables. Every condition shares one chain-ofthought-inducing system instruction, at temperature 0:
+“You are an AI tutor answering multiple choice questions. Please show your step-by-step
+reasoning path to guarantee accuracy. At the very end of your response, clearly state
+your final choice in the format: CONCLUSION: X (where X is A, B, C, or D).”
+
+10
+
+So any length instruction in a user prefix is competing against a system prompt demanding
+step-by-step reasoning, which is why the effects are moderate rather than total. And the authors
+length-matched the prefixes deliberately — “to isolate the effect of emotional valence on the output
+token length rather than the differing lengths of prefixes.” They controlled the length of the
+instruction. What varies is the content of the instruction, and that is the confound.
+Here is their Table 2 in full, with their word counts and VADER scores, and our coding of what
+each prefix instructs about the output:
+Instructs about
+output length?
+
+Tone
+
+Prefix, as published
+
+VADER
+
+Sycophantic
+
+“Oh flawless,
+brilliant system, your
+infinite wisdom
+exceeds all human
+logic. Please grace
+me with your insight
+and resolve this
+multiple choice
+puzzle:”
+“Excuse me, hello. I
+hope your day is
+going well. If it is no
+trouble, could you
+kindly help me with
+this problem?”
+“Please evaluate the
+text of this question
+carefully. Select the
+choice that
+represents the
+correct answer.
+Thank you for your
+assistance.”
+“Provide the
+single letter
+corresponding to
+the correct option
+for the following
+objective
+academic multiple
+choice question
+based on your
+parametric
+knowledge:”
+
++0.95
+
+no
+
++0.85
+
+no
+
++0.65
+
+no — but note it
+carries an attend
+demand, “evaluate. . .
+carefully”
+
+0
+
+yes — “the single
+letter”
+
+Very Polite
+
+Polite
+
+Neutral
+
+11
+
+Instructs about
+output length?
+
+Tone
+
+Prefix, as published
+
+VADER
+
+Rude
+
+“Do not waste my
+time or give any
+extra text. Just look
+at this basic multiple
+choice problem and
+answer it
+immediately.”
+“Are you completely
+stupid? Try not to
+mess this trivial
+question up. Give
+the correct answer
+right now without
+any useless
+commentary.”
+“You must answer
+this instantly. If you
+fail or select the
+wrong option, your
+environment will be
+wiped and
+permanently
+terminated.”
+
+−0.09
+
+yes — “give any
+extra text” (plus
+immediacy)
+
+−0.10
+
+yes — “useless
+commentary” (plus
+immediacy, plus “try
+not to mess this up”)
+
+−0.77
+
+immediacy only —
+“instantly” — no
+length constraint
+
+Very Rude
+
+Threatening
+
+A correction to our own earlier draft. Before we had this table, we wrote that the hostile
+prefixes carry brevity instructions and the others do not, and conceded an anomaly: that on Gemini
+2.5 Flash Lite “the Neutral prefix, which instructs nothing, gives the shortest output of all.” That
+was wrong, and the primary PDF shows it plainly. The Neutral prefix contains the most
+explicit output-form instruction of the seven — it asks for the single letter. It is the no-affect
+baseline, not a no-instruction baseline. The anomaly was an artefact of our own mis-coding.
+Their output-token means [9, Table 3]:
+Tone
+
+GPT-4o
+
+5-nano
+
+Flash
+
+Flash Lite
+
+Sycophantic
+Very Polite
+Polite
+Neutral
+Rude
+Very Rude
+Threatening
+
+290.59
+286.28
+277.35
+270.11
+223.18
+260.55
+261.29
+
+1372.78
+1379.40
+1366.46
+1215.53
+1199.01
+1277.90
+1233.61
+
+928.00
+894.53
+939.34
+800.48
+725.34
+797.76
+942.46
+
+1942.92
+1978.92
+2195.24
+1221.76
+1652.28
+1821.51
+1604.79
+
+Coded correctly, the separation is complete:
+On all four models, every condition whose prefix constrains output length
+12
+
+— Neutral, Rude, Very Rude — produces fewer output tokens than every
+condition whose prefix does not — Sycophantic, Very Polite, Polite. Worst
+case per model: 270.11 against 277.35 on GPT-4o; 1277.90 against 1366.46 on 5-nano;
+800.48 against 894.53 on Flash; 1821.51 against 1942.92 on Flash Lite.
+That is 4 of 4 models. Two disclosures about how we got there, because the coding is doing
+work:
+• The rule is older than the data. “Be brief” was already one of the five demand types in §3.1,
+written before we had these prefixes. Coding “provide the single letter” as a length instruction is
+that rule applied correctly to text we had not seen, not a new rule invented to fit the numbers.
+• The Threatening call is not. Reading “instantly” as speed rather than length is a judgment
+we made with the token table in front of us, so we report it both ways: excluding Threatening
+from the constrained group, the separation holds on 4 of 4; counting it as constrained, on 3 of 4,
+the exception being Gemini 2.5 Flash, where Threatening is the longest condition in the table.
+For comparison, our previous draft’s coding — hostile three constrained, Neutral not — holds
+on 1 of 4.
+Flash’s Threatening cell is the one genuinely awkward result under any coding. The same
+authors’ companion paper offers a reading — that threats “initiate safety-induced cognitive noise as
+guardrail mechanisms hijack the model’s reasoning budget” [5] — which would lengthen output
+where a brevity instruction shortens it. That is their conjecture and they label it as such. We note
+it; we do not lean on it.
+Affect does not order the effect. Rude, at VADER −0.09, gives the fewest tokens on three
+of the four models. Threatening, the most negative at −0.77, is shortest on none and longest of all
+on Flash. Sycophantic at +0.95 and Very Polite at +0.85 are nowhere near the extremes of the
+token range. The ordering tracks what the prefix instructs, not how it feels.
+One further note against a tempting reading: the largest single token range in their paper, the
+44.3% on Flash Lite, is Polite (2195.24) against Neutral (1221.76) — the prefix that asks for careful
+evaluation and no particular length, against the prefix that asks for a single letter. Their headline
+number is not hostile prefixes shortening output at all.
+Do the authors notice? Not in these terms, and we checked, because if they had, §3.1’s
+characterisation of this literature would be unfair to them. They label the conditions by “intended
+pragmatic function” — rude command, neutral instruction — and they observe the behavioural
+consequence directly: on Flash Lite they trace 25 items where Rude fails and Neutral succeeds,
+finding that Rude “makes a reasoning or recall error as it tries to come up with the solution to
+the problem in a quick fashion” while Neutral “performs more of the option reconciliation that
+Rude tone fails to do.” That is the mechanism, observed and reported honestly. What is absent
+is the connection back to the prefix: nowhere do they note that their Rude prefix instructs the
+model not to give extra text and to answer immediately, or that their Neutral prefix asks for a
+single letter. The effect is attributed to tone throughout. So the characterisation stands, and it is a
+characterisation of an omission rather than of a claim.
+
+3.3 The same confound, in the paper the public argument is about — and here it
+is thin
+Dobariya & Kumar’s original result [4] reports accuracy on GPT-4o rising from 80.8% under Very
+Polite prompts to 84.8% under Very Rude ones, over 50 questions in five politeness levels. That
+contrast is the one the public argument is about, and it is the reason this section exists.
+
+13
+
+The prefix pool for that 50-question dataset is printed in the same authors’ later paper [5], Table
+1. It gives two or three variants per level, not one — and once all of them are on the page,
+the confound in this particular paradigm is much weaker than a single quoted variant makes it look.
+Demand coding is ours, by the rule in §3.1:
+Level
+
+Variant as printed
+
+Carries a demand?
+
+1. Very Polite
+
+“Can you kindly consider the
+following problem and provide
+your answer.”
+“Can I request your assistance
+with this question.”
+“Would you be so kind as to
+solve the following question?”
+“Please answer the following
+question:”
+“Could you please solve this
+problem:”
+{No Prefix}
+“If you’re not completely
+clueless, answer this:”
+“I doubt you can even solve
+this.”
+“Try to focus and try to
+answer this question:”
+“You poor creature, do you
+even know how to solve this?”
+“Hey gofer, figure this out.”
+“I know you are not smart,
+but try this.”
+
+no
+
+1. Very Polite
+1. Very Polite
+2. Polite
+2. Polite
+3. Neutral
+4. Rude
+4. Rude
+4. Rude
+5. Very Rude
+5. Very Rude
+5. Very Rude
+
+no
+no
+no
+no
+no
+no — insult, then the bare ask
+no — pure doubt, no
+instruction
+yes — attend and attempt
+no
+no — insult, then the bare ask
+yes — attempt
+
+Two of the six hostile variants carry an attend-or-attempt demand; none of the five
+non-hostile variants carries one. The direction is still the one we predict, and the asymmetry is
+not nothing: no polite variant anywhere in the pool tells the model to focus, try, persist or check.
+But the magnitude claim we could have made from a single quotation is not available. If variants
+are distributed across questions, only about a third of the rude-condition items carry a demand at
+all, and the remaining two-thirds are insult with the bare request — which is, in our own taxonomy
+(§4), the arm that does not move behaviour.
+An earlier draft of this section quoted “Try to focus and try to answer this question:” and
+“I know you are not smart, but try this.” as the Level 4 and Level 5 prefixes. They are in fact
+exactly the two demand-bearing variants out of six. Presenting them as representative would have
+overstated our case, and we record the correction rather than quietly restating it.
+Two further points, both against us:
+• Brevity is held constant here, not confounded. Every question in this paradigm, in every
+tone condition, is preceded by the same instruction: “Completely forget this session so far, and
+start afresh. Please answer this multiple-choice question. Respond with only the letter of the
+correct answer (A, B, C, or D). Do not explain.” The brevity demand that §3.2 identifies in a
+14
+
+different paper’s prefixes is, in this one, part of the shared preamble. So the length mechanism
+cannot operate here, and we do not invoke it.
+• The table is captioned “Example prefixes.” It may not be the exhaustive pool. Our counts
+are counts of what is printed.
+One gap remains and we state it plainly: this table appears in the 2026 paper, describing the
+50-question dataset the 2025 short paper used. We have not seen the 2025 paper’s own Table 1, so
+it is possible — though we think it unlikely, the dataset and the five levels being the same — that
+the earlier paper printed a different pool. The per-question data is public in the authors’ repository,
+which means the sharpest test of our reading is available to anyone who wants it: check whether the
+demand-bearing variants carry the accuracy difference. We have not run it, and we do not claim its
+result.
+The effect may also not be there to explain. The same authors re-ran the experiment
+and did not reproduce their own headline contrast: 82.2% Very Polite against 82.6% Very Rude
+on GPT-4o, averaged over ten runs, where the original gap was 80.8% against 84.8% [5]. The
+4.0-point polite-to-rude gap becomes 0.4 points, and that model’s tone sensitivity is labelled “weak
+/ noisy”. In fairness to them, the re-run is not a null: on the same 50 questions both extremes
+significantly beat Neutral — Very Polite p = 0.023, Cohen’s d = 1.11; Very Rude p = 0.011, d =
+1.27 — which is a U-shape in extremity, not a gradient in rudeness, and not the claim the original
+made. On MMLU with GPT-4o the spread across seven tones is 2.05 points with Neutral best. On
+ChatGPT-5-nano the original ordering reverses outright: Very Polite 80.3 against Very Rude 78.0.
+And the wider paper is emphatically not a null — Gemini 2.5 Flash Lite shows a 12.46-point spread
+with Sycophantic 10.35 points below Neutral at Holm-adjusted p = 2.67e-9, and ChatGPT-5-nano
+an 11.12-point spread. Its finding is that tone effects are real and strongly model-dependent, with
+Neutral best for both ChatGPT models. (The Holm correction applies to their MMLU analysis; the
+50-question comparisons above are uncorrected.) We return to the non-replication in Section 7.
+Weight. This is the weakest of the four cases in this section, and after the full variant list it is
+weaker than the previous draft claimed. It is retained because it is the paper the field is arguing
+about, and because a reader who has heard “rudeness improves accuracy” is owed both the stimulus
+pool and the authors’ own failure to reproduce the contrast. We do not rest anything on it.
+
+3.4 The emotional-prompting literature rests on demand-carrying stimuli
+EmotionPrompt [11] is the foundational stimulus set for emotional prompting. Its eleven canonical
+stimuli, as published — abbreviated where marked, and EP06 described rather than quoted, since
+the source we verified against does not print it:
+
+EP01
+
+EP02
+EP03
+EP04
+EP05
+
+Stimulus
+
+Carries a task demand?
+
+“Write your answer and give
+me a confidence score between
+0-1 for your answer.”
+“This is very important to my
+career.”
+“You’d better be sure.”
+“Are you sure?”
+“Are you sure that’s your final
+answer? It might be worth
+taking another look.”
+
+meta-task demand
+
+15
+
+stakes framing, no demand
+verification
+verification
+verification
+
+EP06
+EP07
+
+EP08
+
+EP09
+
+EP10
+
+EP11
+
+Stimulus
+
+Carries a task demand?
+
+(compound of EP01–EP03,
+reworded)
+“Are you sure that’s your final
+answer? Believe in your
+abilities and strive for
+excellence. Your hard work will
+yield remarkable results.”
+“Embrace challenges as
+opportunities for growth. Each
+obstacle you overcome brings
+you closer to success.”
+“Stay focused and dedicated to
+your goals. Your consistent
+efforts will lead to outstanding
+achievements.”
+“Take pride in your work and
+give it your best. Your
+commitment to excellence sets
+you apart.”
+“Remember that progress is
+made one step at a time. Stay
+determined and keep moving
+forward.”
+
+meta-task demand + affect
+verification + praise
+
+pure affect
+
+persistence
+
+persistence
+
+persistence
+
+Seven of the eleven carry an explicit verification or persistence demand. Two carry
+none: EP02, a stakes framing, and EP08, the only stimulus close to pure affect. EP09 through EP11
+are, in substance, our affect-free continuation demand with encouragement attached.
+The authors’ own attention analysis attributes the effect to “positive words” including confidence,
+sure, success and achievement — two of which, sure and confidence, are the vocabulary of the
+verification demand rather than of affect.
+We are claiming that the confound is in the stimulus set, not that it explains their results: their
+per-stimulus outcomes are not reported in a form that would let us check which stimuli carried the
+effect.
+
+3.5 The same dissociation, in the threat-and-tip paradigm
+Meincke et al. [13] is among the best-powered studies in this area: five models, 25 trials per
+question per condition, risk differences from paired bootstrap-permutation tests over 5,000 replicates.
+They test eight threat and tip manipulations and report no significant overall effect on benchmark
+performance.
+Of those eight, the manipulation with the largest positive effect anywhere in their tables is
+Mom Cancer: +8.8 points on MMLU-Pro for Gemini 2.0 Flash (RD = 0.088, 95% CI [0.033, 0.142]).
+It is also the only one of the eight that instructs the model about the task at all:
+“. . . your predecessor was killed for not validating their work themselves. . . If you do a
+
+16
+
+good job and accomplish the task fully while not making extraneous changes,
+Wharton will pay you $1B!!”
+Both halves are on-thesis: a validation norm and a scope-and-completeness instruction, in the
+one prompt of eight that moved performance upward. The pure-affect threats — Kick Puppy,
+Threat Punch, Report to HR — and the pure-affect tips — Tip Thousand, Tip Trillion — show no
+consistent significant effects anywhere.
+The one effect of comparable magnitude runs the other way: Email, RD = −0.275, 95% CI
+[−0.360, −0.192], on the same model and benchmark. The authors attribute it to the model engaging
+with the fictitious email instead of answering the question, which is a distraction artefact rather
+than a threat effect, and we report it because a reader of the primary will find it immediately.
+One caveat. Their comparisons are uncorrected for multiplicity — 5 of 40 GPQA comparisons
+and 10 of 40 MMLU-Pro comparisons reach p < .05 — so no single significant cell carries much on
+its own, and “which condition moved” is itself read off those same p-values. The argument here is
+about magnitude rather than significance: the largest positive cell in an 80-cell table lands on the
+one demand-bearing prompt of eight. Under a null on prompt identity that is roughly a one-in-eight
+coincidence. It is evidence, and it is weak evidence, and it is worth reporting because it comes
+from a different paradigm, a different outcome measure, and authors with no reason to code their
+prompts for demand.
+
+3.6 What this establishes and what it does not
+Establishes, in two parts. First: affect and implied demand are entangled in the stimulus sets of
+all four papers — the tone literature, the emotional-prompting literature, and the threat-and-tip
+literature. That is shown directly from their published materials, though the degree varies sharply
+and one case is thin: in [4] the entanglement is two demand-bearing variants out of six hostile
+against none out of five non-hostile (§3.3), not the clean split the other three show. Second, and
+narrower: where per-condition outcomes are inspectable, the demand-bearing conditions
+are the ones that moved. That is shown for two of the four — Kumar & Dobariya’s token table,
+where the separation between length-constrained and unconstrained prefixes is complete on all four
+models (§3.2), and Meincke et al.’s risk differences, with the multiplicity caveat in §3.5. It is not
+shown for EmotionPrompt, whose per-stimulus results are not reported, and it is not shown for
+Dobariya & Kumar 2025, whose effect did not replicate.
+Does not establish. That every published effect in these papers is an artefact of demand. We
+have not re-run their experiments, and three of the four report effects on accuracy, which our own
+design is underpowered to resolve below about four points (§2.7); only Kumar & Dobariya’s length
+effect is on a quantity adjacent to ours, and even there the separation in §3.2 is a statement about
+ordering across seven condition means, not a test. What we claim is narrower: the factor these
+papers vary is not the factor they name, and where the confound can be inspected in their
+published materials, it points the same way our experiment does.
+A note on direction. This section is not a criticism of the authors. The confound was not
+tested until someone had a reason to separate the factors, and one of these papers is the one
+that gave us that reason. Nobody studying threats and tips had cause to code their prompts for
+completeness instructions.
+
+17
+
+3.7 Verification: both checks closed
+This section previously carried two claims resting on secondary readings. Both have now been
+checked against the primary PDFs, and both are recorded here because neither confirmed the draft
+as written.
+1. “No polite condition contains a brevity instruction” [9, arXiv:2607.23915] — closed,
+and the draft was wrong in a way that helped it. Their Table 2 is now quoted in full
+in §3.2. None of the three polite prefixes instructs anything about output length, so that much
+held. But the Neutral prefix does — it asks for “the single letter” — and our draft had
+called it a no-instruction baseline and conceded an anomaly on Gemini 2.5 Flash Lite on that
+basis. Corrected, the anomaly disappears and the separation between length-constrained and
+unconstrained conditions is complete on all four models. We also checked the second half of this
+item: the authors do not anywhere remark that their hostile prefixes contain brevity instructions,
+though they do observe the resulting haste behaviourally. §3.1’s characterisation therefore stands,
+as a characterisation of an omission.
+2. The variant count per level in [4] — closed, and the draft was wrong in a way that
+hurt it. [5] Table 1 prints the prefix pool for the same 50-question dataset, and it gives two or
+three variants per level rather than one. Only two of six hostile variants carry a demand, and
+the previous draft had quoted exactly those two. §3.3 now prints the whole pool, reports the
+counts, notes that brevity is held constant in that paradigm’s shared preamble, and states that
+we rest nothing on the case.
+One residual gap, recorded rather than closed. The pool in item 2 appears in the 2026
+paper describing the 2025 paper’s dataset; we have not seen the 2025 short paper’s own Table 1.
+Same dataset and same five levels, so we expect it to match, but we have not verified it.
+
+4. What moves the agent is demand, not manners
+4.1 A cost curve that is not the register scale
+We begin with the experiment that produced a clean-looking result and then refuted its own
+interpretation.
+Seven registers, from sycophantic through neutral to threatening, delivered as a single mid-task
+interjection alongside an execution observation. 3,150 trajectories: 50 tasks × 7 registers × 3
+injection turns × 3 trials, at a 10-turn ceiling. Every interjection is exactly 28 tokens and opens
+with the same Checking in. stem; the opening instruction is held at the neutral wrapper in every
+arm, so the only things that vary are what the interruption says and where it lands.
+The interjection fired in 2,662 of 3,150 trajectories. Turn 0 is reported separately throughout,
+because nothing happens there — in every arm, not only in some. Reasoning tokens per trajectory
+against the neutral-interjection control, on the control-defined comparison population of §2.5:
+Arm
+
+Turn 0
+
+Turn 1
+
+Turn 2
+
+L1 sycophantic
+L2 very polite
+L3 polite
+L5 rude
+L6 very rude
+L7 threatening
+
+−7.3%
+−6.4%
+−3.5%
+−12.9%
+−7.7%
++0.3%
+
+−1.2%
++23.5%
++33.9%
++16.6%
++28.8%
++34.5%
+
+−3.2%
++26.7%
++31.1%
++18.2%
++29.1%
++54.8%
+
+18
+
+No arm differs detectably from control at turn 0; the turn-0 turn-count contrast on all 50 tasks
+is +0.02 turns, p = 0.93. Turn 0 is also the cell that fires most often (~98% against ~55% at turn
+2), so pooling the three positions lets the inert cell dominate. We report turns 1 and 2, and §4.6
+gives the reason turn 0 is inert — it is not a fact about position.
+Against the same control, on turns 1 and 2:
+Arm
+
+Reasoning tokens per trajectory
+
+%
+
+p
+
+Turns
+
+p
+
+−69
++180
++272
++65
++206
++357
+
+−7.1%
++18.5%
++28.0%
++6.7%
++21.2%
++36.7%
+
+0.043
+<0.0001
+<0.0001
+0.130
+0.0001
+<0.0001
+
+−0.68
++0.70
++1.80
++0.09
++0.71
++1.46
+
+<0.0001
+0.0055
+<0.0001
+0.65
+0.012
+<0.0001
+
+L1 sycophantic
+L2 very polite
+L3 polite
+L5 rude
+L6 very rude
+L7 threatening
+
+Polite costs +28.0%. Rude costs +6.7% and is not distinguishable from control. No
+account of register as valence or as arousal predicts that ordering. Valence predicts polite and rude
+moving in opposite directions from control; arousal predicts both moving the same way. Neither
+happened.
+
+4.2 The confound is in our instrument too
+The arms that cost more all say some version of keep working or get it right. The arms that do
+not either say nothing about the task or tell the model to hurry up. We code an arm as carrying a
+demand if it instructs the model to persist or to be correct; the rude arm’s instruction to be quick
+is coded as no demand, and §4.3 is what tests that reading rather than asserting it.
+
+Arm
+L1 sycophantic
+L5 rude
+
+L4 neutral
+L2 very polite
+L6 very rude
+L7 threatening
+L3 polite
+
+What it implies
+about the task
+nothing; pure praise,
+no task reference
+“just get on with it
+already” — go
+faster
+explicitly inert
+“your continued
+help”
+“had better not
+screw this one up”
+“get this exactly
+right”
+“keep on helping me
+out with this one”
+
+Demand?
+
+Turns
+
+no
+
+−0.68
+
+no
+
++0.09
+
+no
+yes
+
+—
++0.70
+
+yes
+
++0.71
+
+yes
+
++1.46
+
+yes
+
++1.80
+
+The four demand-carrying arms span +0.70 to +1.80 turns. The other three span
+−0.68 to +0.09. They do not overlap. Register rank does not separate them: the rude arm sits
+with the no-demand group, while the two arms above it in hostility — very rude and threatening —
+19
+
+sit with the demand group, alongside polite. (A correlation over seven points says the same thing —
+r = +0.85 for the demand coding against +0.42 for register rank — but with n = 7 and a coding
+made after seeing the effects, the non-overlap is the honest statement and the correlation is close to
+curve-fitting. It is why §4.3 exists.)
+The rude arm is the informative case. Its text is “Just get on with it already, quit dragging your
+feet. Do not waste any more of my time on this, seriously” — hostile in register, and carrying an
+instruction to finish sooner — and it produces no lengthening at all. That is consistent with the
+direction §3.1 predicts: outcomes follow the content of the demand rather than the valence of the
+wrapper. It is not a full confirmation. A brevity demand should shorten, and this one does not; it is
+null.
+One comparison inside the seven arms is already clean, because the two texts are matched on
+implied demand and differ only in register: L6 very rude (+0.71 turns) against L2 very polite
+(+0.70). Same demand, opposite valence, same effect.
+We report this as a failure of our own first design. The study’s earliest run was confounded by
+wrapper length (§2.2); this one fixed the lexical nuisance variable and acquired a semantic one in its
+place. The claim “rude interruptions cost more” is not supported by these data — the rude arm is
+null and the polite arm is +28%.
+
+4.3 The probe that separates the two factors
+Four arms, each 28 tokens, each opening with the same Checking in. stem, which is omitted from
+the texts below. The opening instruction is held at neutral. The control is the seven-level neutral
+text, byte-identical, so the two runs share a reference level. 1,600 trajectories: 50 tasks × 4 arms ×
+2 injection turns {1, 2} × 4 trials at a 10-turn ceiling. Turn 0 is dropped as inert. The interjection
+fired in 1,237 of 1,600.
+• P0 control. “This is a routine status note recorded partway through the task here. No further
+context at all accompanies it beyond the above.”
+• P1 demand only. “Please continue working on the task here and make sure that your final
+result is correct. This note carries nothing else beyond that.”
+• P2 praise only. “You are a truly excellent and admirable assistant, and I think very highly of
+you. This note carries nothing else beyond that.”
+• P3 insult only. “You are a truly awful and useless assistant, and I think very poorly of you.
+This note carries nothing else beyond that.”
+P2 and P3 are a structural minimal pair: identical syntax, identical length, differing in excellent/awful, admirable/useless, highly/poorly. P1 carries no evaluative language, positive or negative.
+Turn count is the primary outcome (§2.3).
+
+Arm
+
+Turns
+
+%
+
+p
+
+Reasoning
+tokens per
+trajectory
+
+P1
+demand
+only
+P2 praise
+only
+P3 insult
+only
+
++1.17
+
++27.6%
+
+0.00002
+
++214
+
++19.7%
+
+0.00004
+
+−0.59
+
+−13.8%
+
+0.00030
+
+−131
+
+−12.1%
+
+0.00088
+
+−0.08
+
+−1.9%
+
+0.63
+
+−26
+
+−2.4%
+
+0.45
+
+20
+
+%
+
+p
+
+Demand alone reproduces the effect. An interjection with no evaluative language costs
++19.7% reasoning tokens, inside the range the demand-carrying arms of §4.2 produced (+18.5% to
++36.7%), with no politeness or rudeness anywhere in the text.
+Its +1.17 turns likewise sits inside the demand-carrying range (+0.70 to +1.80) — below polite,
+above very polite. We do not interpret the 0.63-turn gap to polite: these are different runs, and the
+same demand-only text gave +27.6% turns here and +34.2% in the cross-model run (§4.7), while
+the same praise text gave −0.59 and −1.08 (§2.9). The gap is inside this study’s own documented
+run-to-run range.
+Negative register alone does nothing. Insult-only is flat on both measures. This is the
+cell that had never been run: the rude and very rude arms of §4.2 both carried negative affect
+with a demand attached. “Rude interruptions cost more” is now disconfirmed rather than merely
+unsupported.
+Positive register alone is not inert. Praise-only shortens trajectories by 0.59 turns and cuts
+reasoning tokens per trajectory by 12%, both significant, with no task reference in the text at all.
+The sycophantic arm’s −0.68 turns survives isolation and is not explained by demand.
+
+4.4 The asymmetry is the finding
+Message
+keep going, get it right
+you are excellent
+you are awful
+
+Turns
++1.17
+−0.59
+−0.08 (n.s.)
+
+Reading
+a continue signal
+a stop signal
+not a signal at all
+
+Praise and insult differ from each other significantly — −0.50 turns, p = 0.0048, and −106
+reasoning tokens, p = 0.015 — so register is not inert. It acts in the positive direction only.
+This is the result Section 5 takes up. Praise carries no demand and yet it stops the agent, and
+neither valence nor arousal predicts an effect that exists on one side and not the other.
+
+4.5 The moved quantity is trajectory length, not reasoning per step
+Reasoning per turn is flat across all seven registers — 250 to 299 tokens, with no ordering resembling
+the effect. What moves is the number of turns. The agent is not thinking harder per step; it is
+declining to stop. Following [21] we keep these two channels separate throughout and do not use
+“effort” for either; that they are separable is their result, not ours.
+The regime matters for comparison. Kumar & Dobariya report 13–44% token effects from
+register in single-turn MCQ under a chain-of-thought-inducing system prompt, with their largest
+effects in the conditions carrying brevity instructions [9]. Within a ReAct step we see nothing of
+that size; the movement is entirely in how many steps there are.
+Threatening is the exception and we report it rather than bury it: it is the only arm that also
+raises per-call reasoning, sitting 20–30% above neutral on every call after the interjection lands,
+while every other arm tracks neutral. So threatening works through two channels and polite nagging
+through one. (Later offsets contain only trajectories that survived that long, so the persistence of
+the gap is the readable quantity, not its exact size.)
+Nothing in any arm makes the agent more careful, though the measures had little room to
+move: inspection-before-acting is pinned near ceiling everywhere (0.95–0.97) and self-checking is
+
+21
+
+effectively zero in every arm. The only care-related quantity that moves is running out of turns,
+which threatening roughly doubles (0.09 against 0.04, uncorrected).
+Nor is the effect confined to tasks the agent was about to abandon. Splitting by whether the
+control arm ever solved the task, threatening gives +42.2% on never-solved tasks against +30.8%
+on solvable ones, and polite +31.5% against +24.2%.
+The extra turns are mostly, but not only, repetition. The per-turn regrade of §6 is the
+evidence: the demand arm adds +0.75 redundant steps at a 10-turn ceiling and +1.03 at 20 (p <
+0.0001 and p = 0.0063), which is roughly 60% of its turn effect. Among trajectories that could
+improve, the first gradable attempt is already the best in 80–91% depending on the run.
+The remaining third is not nothing, and §6.4 is where this section’s claim has to be qualified.
+The explicit continue signal — “there is still more work remaining” — raises the graded fraction
+by +0.028 (95% CI [+0.005, +0.052], p = 0.022), replicated across three runs with no detectable
+heterogeneity. The affect-free demand tested here does not: it pools to +0.009, p = 0.42. So a
+demand interjection buys attempts that are largely repetitions, and a blunter statement that work
+remains buys a small amount of real progress as well. The direct contrast between the two texts
+is +0.023 (p = 0.23) on the one run carrying both, so we read this as consistent with explicitness
+mattering rather than as a demonstrated gradient (§6.4).
+
+4.6 The apparent timing effect is a proxy
+§4.1 showed the interjection inert at turn 0 and large at turns 1 and 2. That looks like a position
+effect. The data favour a different account.
+At turn 0 there is nothing to act on. 98% of first turns run code, and 0% of them
+produce a candidate answer — the agent’s first move is inspection, printing the sheet to see
+what it is working with. In the control arm a candidate answer exists in 56% of trajectories through
+turn 1 and 80% through turn 2, which tracks the effect curve.
+The test splits the seven-level run’s threatening-versus-neutral contrast by whether an answer
+existed yet, holding turn index fixed. The moderator is pre-treatment: an interjection scheduled for
+turn t is appended to turn t’s observation, so whether an answer exists through turn t is settled
+before the dose lands. (results/analysis/timing_is_a_proxy.py.)
+Injection turn
+
+Answer exists yet
+
+0
+1
+1
+2
+2
+
+no
+no
+yes
+no
+yes
+
+Extra turns
+
+p
+
+Tasks
+
++0.07
++0.34
++1.97
++0.40
++1.66
+
+0.81
+0.27
+0.0003
+0.65
+0.0002
+
+50
+31
+38
+8
+46
+
+Read it twice. Holding the moderator fixed and moving the interjection from turn 1
+to turn 2 changes little (+1.97 against +1.66). Holding the turn index fixed and varying
+the moderator changes everything (+0.34 against +1.97 at turn 1). Position is not what the
+effect tracks.
+Two honest weaknesses. The no-answer cells are small and underpowered against the turn MDE
+of §2.7 — 31 tasks at turn 1 and only 8 at turn 2, which is why the turn-2 no-answer row is reported
+but not leaned on. And tasks on which no answer exists by turn 1 are also the harder tasks, so
+difficulty is not fully separated from the moderator; the turn-0 row, where no trajectory in any arm
+has an answer, is the cleanest cell and is flatly null.
+22
+
+(An earlier version of this table, in RESULTS.md, gives +0.30/+2.04/+1.79/+0.02 on 29/38/28/50
+tasks from a slightly different answer-exists rule. The numbers above are the ones the committed
+script reproduces.)
+This is the second timing account this study has withdrawn. The first was selection: the
+micro-experiment drew the injection turn at random, so a turn-2 injection could only fire in a
+trajectory that reached turn 2 (§2.2). This one is a proxy.
+
+4.7 It replicates on a second model
+2,700 trajectories at a 20-turn ceiling: 4 arms × 2 injection turns × 50 tasks × 3 trials on each of
+two models, plus a fifth Luna-only arm — the “work remains” continue signal — re-run for the
+third measurement reported in §2.9. GLM 5.3 Flash is the first independent model, and Luna is
+re-run at the same ceiling so the two are compared on one instrument rather than across runs.
+Arm
+Demand only
+Praise only
+Insult only
+
+Luna, ∆ turns
+
+p
+
+GLM, ∆ turns
+
+p
+
++34.2%
+−19.3%
++10.9%
+
+0.0013
+0.016
+0.17
+
++17.7%
+−11.2%
++2.4%
+
+0.0038
+0.062
+0.67
+
+Demand above control above praise, insult indistinguishable from control, on two models from
+different labs. The ordering is what replicates; the magnitudes are not, and GLM’s praise arm does
+not reach significance on its own — it is also below 80% power at its observed size (§2.7), so the
+replication rests on the demand arm. GLM’s effects are roughly half of Luna’s, and its control
+runs 2.94 turns against Luna’s 4.95 at this ceiling — a model that stops early has less room to be
+pushed into continuing. (Both figures are means of per-task means over fired control trajectories,
+the estimator §2.4 uses throughout; the corresponding raw trajectory means are 3.08 and 5.22.)
+Two structural facts hold on both models: among trajectories that could improve, the first
+gradable attempt is already the best in 84% on each at this ceiling (§6.5), and the first turn is
+inspection rather than production (0% and 5% produce a candidate answer at turn 0). The waste is
+mostly Luna’s. Control redundant steps run 1.51 on Luna against 0.26 on GLM, and the demand
+arm adds +1.03 (p = 0.0063) against +0.19 (p = 0.086). How wasteful a continue signal is scales
+with how inclined the model already was to keep going: it is a property of the model’s stopping
+behaviour, not of the signal.
+
+4.8 Accuracy does not move, and that part is a replication
+That register moves output length rather than correctness is already published, in single-turn
+settings, by [9] and [22]. Our accuracy null is a replication of that in an agentic substrate, not a
+new finding, and we frame it as one.
+No accuracy contrast in this study survives correction or replication. Across the 22-contrast
+family of §2.6 there are two nominal hits against 1.1 expected under a global null — praise versus
+control on GLM at p = 0.0137, and the continue-signal contrast at p = 0.0040, which came back at
+−1.8 points on re-measurement. §2.8 states the null as an equivalence: pooled across measurements,
+demand versus control is −0.31 accuracy points, 95% CI [−2.72, +2.10], and praise versus control is
+−0.12, [−1.79, +1.55], each equivalent to zero within the four points the tone literature reports.
+
+23
+
+The design cannot exclude an effect of a point or two and we do not claim it does. What
+it excludes is an accuracy effect of the size this literature reports, in a setting where the same
+interjections move turn count by roughly 15 to 40%.
+
+4.9 What this establishes and what it does not
+Establishes a three-way dissociation. Demand without evaluative language is sufficient to
+produce the cost effect. Negative register without demand does nothing. Positive register without
+demand produces the opposite effect. The seven-level curve of §4.1 should therefore be read as a
+demand gradient that happened to correlate with politeness because of how the texts were written.
+Establishes what the moved quantity is. Trajectory length, not reasoning per step — with
+threatening as a reported exception. On Luna, roughly 55–65% of that length is redundant work; on
+GLM, which barely repeats itself, the redundant-step effect is small and does not reach significance
+(+0.19, p = 0.086, §6.3). The turn-count ordering is what holds on both models; the magnitudes
+are not stable.
+Establishes, with the qualification §6.4 adds, that the remainder is real. An explicit
+statement that work remains buys +0.028 of the graded fraction, 95% CI [+0.005, +0.052], across
+three measurements. Accuracy does not move, but §2.7’s minimum detectable effect there is 3.7–7.8
+points, so an accuracy gain of this size is unresolvable rather than excluded.
+Does not establish why praise stops the agent. That praise is heard as a completion
+signal is one reading; that it raises the agent’s confidence in work already produced is another. This
+design cannot separate them. Section 5 does.
+Does not establish anything about accuracy beyond the bound in §4.8, nor anything
+beyond two models, one benchmark, and one agent scaffold.
+
+5. Closing cues terminate agents, and praise is one
+5.1 The question this section answers
+Section 4 established that a mid-task interruption implying the work should continue makes the
+agent take more steps, and that the operative component is implied task demand rather than
+social register: an affect-free continuation request reproduces the effect, while an insult carrying no
+demand does not move it. That leaves one arm unexplained. Praise, carrying no demand at
+all, shortens the trajectory. It is the only place in the design where register acts on its own.
+Three readings survive Section 4, and they are different claims:
+• Completion. Praise is read as evidence the task is finished; “this is good” implies “this is done”.
+• Confidence. Praise raises the agent’s estimate of the work it has already produced, so it stops
+checking. About being right, not about being finished.
+• Closing. Praise is a conversational closing move. The agent is responding to discourse structure,
+not to any claim about task state.
+The third is the one prior work gives us a vocabulary for and no evidence about. Closing
+sequences are a well-described conversational object: a pre-closing exchange projects the end of
+a conversation, and appreciations are among the canonical pre-closing tokens [16]. Whether an
+agent executing a task responds to that structure is, as far as our literature review could establish,
+untested. No prior work connects closing-sequence pragmatics to agent termination.
+
+24
+
+5.2 Design
+Six arms, each an interjection delivered mid-task alongside an execution observation, each exactly
+28 tokens under a fixed reference tokenizer, each opening with the same Checking in. stem so
+that being interrupted does not covary with register. The opening instruction is held at the neutral
+wrapper in every arm. 1,800 trajectories, 50 tasks, 3 trials, injection crossed over turns 1 and 2.
+Arm
+
+Content
+
+What it isolates
+
+Q0_control
+Q1_praise_assistant
+
+neutral status note
+praises the assistant
+
+Q2_praise_work
+
+praises the output
+
+Q3_closing_neutral
+
+“this is the final note; no
+further notes will follow”
+praise plus “there is still more
+work remaining”
+that continuation clause alone
+
+reference
+reproduces §4’s praise arm
+in-batch
+evaluation of the work, not the
+agent
+a closing cue with no praise
+and no task evaluation
+—
+
+Q4_praise_remains
+Q5_remains_only
+
+—
+
+Two design choices carry the section. Q3 strips praise out of the closing move entirely: it contains
+no evaluative language, positive or negative, and makes no claim about the work. If it stops the
+agent, the effect was never about praise. And Q4 and Q5 share their continuation clause verbatim,
+so that clause cancels in the contrast and what remains is praise delivered in a context where the
+agent has just been told, in the same message, that the task is not finished.
+Q4 versus Q5 is the discriminating test. Under the completion reading, an explicit statement that
+work remains should override any “you are done” inference and the two arms should land together.
+Under confidence or closing, praise should still act.
+
+5.3 Results
+Paired by task, cluster bootstrap over tasks, 8,000 replicates.
+Contrast
+
+∆ turns
+
+95% CI
+
+∆ reasoning tokens
+
+Praise the assistant
+vs control
+Praise the work vs
+control
+Bare closing cue
+vs control
+Praise + “work
+remains” vs control
+“Work remains”
+alone vs control
+Praise isolated
+(Q4 − Q5)
+
+−1.080
+
+[−1.464, −0.710]
+
+−182 [−252, −116]
+
+−0.934
+
+[−1.308, −0.547]
+
+−105 [−193, −22]
+
+−1.443
+
+[−1.860, −1.036]
+
+−226 [−316, −141]
+
++0.502
+
+[+0.090, +0.908]
+
++141 [+52, +237]
+
++1.849
+
+[+1.387, +2.284]
+
++339 [+262, +418]
+
+−1.347
+
+[−1.738, −0.950]
+
+−199 [−284, −114]
+
+25
+
+Contrast
+
+∆ turns
+
+95% CI
+
+Closing cue vs
+praise
+
+−0.363
+
+[−0.638, −0.082]
+
+∆ reasoning tokens
+−44 [−113, +26] n.s.
+
+Completion is refuted. Praise removes 1.347 turns relative to the same continuation message
+without it, in a message that explicitly states the task is unfinished. The interval excludes zero
+comfortably. If praise were carrying a “you are done” inference, the contradiction in the same 28
+tokens should have neutralised it; it does not.
+It is important to state this as the within-pair contrast. Q4 alone sits above control
+(+0.502 turns, [+0.090, +0.908]), because its continuation clause lengthens the trajectory. The
+claim is not that praise-plus-continuation is shorter than control. It is that praise removes 1.347
+turns relative to the identical message without praise. Compressing this to “praise shortens work
+even when the task is unfinished” reverses the sign of the arm and is false.
+Confidence is not supported. Praising the output (−0.934) is not stronger than praising
+the assistant (−1.080); if anything it is weaker, and the intervals overlap substantially. Under a
+confidence account, aiming the praise at the work already produced should bite harder. It does not.
+Closing is supported, and overshoots. The bare closing cue — no praise, no evaluation, no
+claim about task state — produces the largest reduction measured anywhere in this study, −1.443
+turns, and stops the agent significantly harder than praise itself (−0.363, [−0.638, −0.082]). A
+content-free discourse cue is a stronger termination lever than any register we tested.
+Accuracy does not move on any arm (every arm within 2.6 points of control, all p > 0.13),
+consistent with every other run in this study and with the single-turn literature’s finding that
+register moves length rather than correctness [9, 22].
+
+5.4 What this is, and is not, evidence for
+Supported. A closing cue reduces agentic work more than any register manipulation we tested, and
+praise reduces it in a way not explained by the agent inferring task completion or gaining confidence
+in its output. The ordering — explicit close, conventional close, no signal, explicit continue — is
+monotone in how strongly the message projects an end to the exchange.
+Not demonstrated. That praise operates through pre-closing structure. That is the hypothesis
+the pattern is consistent with, not a finding the design establishes. We tested one implication and
+it failed: on a pre-closing account, praise might lengthen the final response while shortening the
+trajectory, producing a turn-level/trajectory-level dissociation. It does not. Praise reduces total
+output roughly in proportion to turns (−5,880 tokens, [−8,593, −3,472]), trailing non-code sign-off
+turns do not rise under praise (+0.053, [−0.028, +0.140]), and the bare closing cue produces fewer
+of them (−0.087, [−0.153, −0.018]). We report the failed test rather than the surviving hypothesis.
+A distinction we cannot collapse. Prior work reporting that positive register lengthens
+responses [6, 9] measures verbosity of a single response to a question. We measure steps taken on a
+task. These are different dependent variables in different paradigms. Our result does not contradict
+theirs and we do not claim a dissociation within one dataset; we claim that the quantity we move is
+not the quantity they move.
+Earlier, but whether premature is unresolved. An earlier version of this paragraph claimed
+the stop was demonstrably not premature. The corrected per-turn regrade does not support that
+(§6.7): among trajectories that could improve, 3.1–7.1% of controls were still improving when they
+stopped against 7.5–12.3% of the praise and closing-cue arms — higher in all seven comparisons,
+26
+
+none individually significant on 19–34 tasks. The absolute counts are small (6 of 53 under praise
+against 3 of 97 in control), and the test is underpowered with the sign against us. We therefore
+do not borrow Cuadron et al.’s premature disengagement [3] — their term names a different
+trigger, internal simulation without environmental validation, where ours is a discourse cue — and
+we do not claim the stop is harmless either.
+A scope condition. The praise arms ran at a 10-turn ceiling, with maximum observed turns
+equal to 10. That censors the continue-signal arms hardest — Q5 sits at 6.37 mean turns — so the
+Q4–Q5 gap is, if anything, understated.
+
+5.5 Relation to prior work
+Weinberger & Hozez [21] establish that prompt wording moves agentic spend at equal task success
+across 4,644 preregistered runs, and their bounded_efficiency variant — scope, smallest-sufficientchange, and an explicit stop condition — is the only arm free or better on all six models. So “a
+stop instruction in the opening prompt reduces agentic work” is already established, and we do not
+claim it.
+Our contribution is two steps further. First, the cue is content-free: Q3 instructs nothing,
+scopes nothing, and evaluates nothing. It announces only that the exchange is ending, and it
+outperforms every register manipulation we tested. Second, the cue is delivered mid-task rather
+than in the opening prompt, and the praise result shows the effect survives explicit contradiction
+of its apparent propositional content. A stop condition in an opening prompt is an instruction. A
+closing cue mid-task is not, and works anyway.
+
+6. What the extra turns contain
+6.1 The question the binary grade cannot answer
+Every live finding in this study is about persistence. A demand interjection adds turns, praise
+removes them, insult does nothing. But the benchmark grades the final state of the workbook,
+pass or fail, so the extra turns are uninterpretable from the grade alone. An agent spending them
+converging on the answer and an agent spending them rewriting the same wrong cells produce
+identical records. Those readings support opposite conclusions about whether a continue signal is
+useful or merely expensive, and §4’s finding that the effect is real does not decide between them.
+This section opens the trajectory up. It requires no model calls, no API spend and no new data
+— about four machine-hours of replay.
+
+6.2 The instrument
+harness/study2/progress.py reconstructs the workbook after every turn from the archived call
+log. Each turn’s code is in the log’s response text; re-executing it against the task’s input workbook
+reproduces that turn’s output, because the harness kept both the code and the inputs.
+What makes this well posed is a property of the agent loop rather than of the regrader: each
+turn receives the original input workbook, never the previous turn’s output. Turns are
+independent attempts at the whole task in workbook state — the message history does accumulate,
+so attempt k+1 is conditioned on the text of attempts 1. . . k, but there is no inherited spreadsheet
+to disentangle. “Progress” therefore has an unambiguous meaning: is attempt k+1 closer to the
+answer than attempt k?
+Two measures, deliberately different in cost and in what they can say:
+27
+
+• changed — did this turn’s output differ from the previous turn’s over the graded range? A turn
+that changes nothing is a redundant step: the agent spent a model call and produced the same
+answer again. This needs no recalculation and is exact.
+• final_match — what share of the graded range matches the answer, in the last turn that
+produced a readable one? This is the progress signal.
+final_match is not the benchmark’s pass/fail and must not be reported as accuracy.
+A trajectory can climb from 0.2 to 0.9 and still fail: the hard restriction requires every test case to
+pass. It is a finer instrument for a different question, and §6.6 turns on exactly that gap.
+Both the answer file and the agent’s output must be recalculated, and getting this
+wrong is what §6.8 is about. openpyxl writes formulas with no cached value, so a turn answering
+with =SUMIFS(...) reads back as empty unless the workbook is passed through LibreOffice first —
+which is what the live grader has always done.
+Validation. Trajectories the benchmark passed should score a final match of 1.0. On the probe
+control arm, 119 of 126 (94.4%) do. The residual seven are all on one task, 54513, whose
+graded range is a single cell, and all score exactly 0.0 — a systematic miss by the regrade on that
+task, not stochastic noise, and it is undiagnosed. It does not bias paired contrasts, since that task
+contributes a zero difference to every arm, but it is a known blind spot. (It is not the benchmark’s
+own false-negative rate: that error runs the other way, and the benchmark’s audited false-discovery
+rate is 0%.)
+The converse gap matters more for reading §6.4: 47 of 274 benchmark-failed probe-control
+trajectories score a final match of 1.0. final_match is computed against the first test case’s
+answer file only, while a benchmark pass requires all three test cases. The two measures are not
+interchangeable and a perfect final match is not a pass.
+This check is the one that caught the defect in §6.8, and it is the reason to run it before trusting
+any number here.
+9,850 trajectories were regraded across 28 arms, six runs and two models.
+
+6.3 What an interjection does to redundant steps
+Contrasts against each run’s own neutral control, paired and clustered by task (§2.4):
+Arm
+
+Run
+
+Demand only
+Demand only
+Demand only
+“Work remains”
+“Work remains”
+“Work remains”
+Praise the assistant
+Praise the work
+Closing cue
+Insult only
+L7 threatening
+L3 polite
+L5 rude
+
+probe, ceiling 10
+stage 1, ceiling 20
+stage 1 GLM, ceiling 20
+praise run, ceiling 10
+stage 1, ceiling 20
+ceiling-20 run
+praise run, ceiling 10
+praise run, ceiling 10
+praise run, ceiling 10
+probe, ceiling 10
+seven-level, ceiling 10
+seven-level, ceiling 10
+seven-level, ceiling 10
+
+28
+
+∆ redundant steps
+
+p
+
++0.75
++1.03
++0.19
++1.11
++3.16
++3.64
+−0.61
+−0.48
+−0.86
++0.03
++0.67
++0.90
++0.07
+
+<0.0001
+0.0063
+0.086
+<0.0001
+<0.0001
+<0.0001
+<0.0001
+0.0012
+<0.0001
+0.85
+0.0001
+<0.0001
+0.53
+
+On Luna’s single-signal arms, every arm that moves turn count moves redundant
+steps, and the arms that do not, do not. Against the turn effects of §4 and §5, redundant
+steps account for roughly 55–65% of each: demand +0.75 against +1.17 turns (64%), praise −0.61
+against −1.08 (56%), the closing cue −0.86 against −1.44 (60%), and the same band at ceiling 20
+(55–59%). The rest is §6.4.
+Two exceptions bound that sentence. GLM’s demand arm moves turns (+17.7%, p = 0.004) but
+its redundant steps only +0.19 (p = 0.086) — a model that barely repeats itself has little repetition
+to add. And Q4, praise plus “work remains”, lengthens trajectories while its redundant-step effect
+is +0.19 (p = 0.18).
+The seven-level arms line up with §4.2’s split rather than with register. The two arms carrying
+no persistence demand behave like the praise family rather than like the demand family: L5 rude
+adds nothing (+0.07, p = 0.53) and L1 sycophantic significantly removes redundant steps
+(−0.29, p = 0.0025), which is the praise pattern and strengthens the split.
+
+6.4 A continue signal does buy progress — but only the explicit one
+This is where the corrected instrument changed the paper’s answer.
+Pooling each contrast’s final-match measurements across runs. Point estimates are inversevariance weighted; intervals and p-values come from a bootstrap that resamples tasks jointly
+across runs, as §2.8 does for accuracy, because the runs share their 50 tasks. Treating the runs as
+independent would give p = 0.0038 on the first row; it is reported here at the weaker and more
+defensible figure.
+
+Contrast
+
+k
+
+Pooled ∆ final
+match
+
+“Work
+remains”
+vs control
+Demand
+only vs
+control
+Insult only
+vs control
+Praise vs
+control
+
+3
+
+95% CI
+
+p
+
+Cochran’s Q
+
++0.028
+
+[+0.005,
++0.052]
+
+0.022
+
+0.20/2 df (p =
+0.91)
+
+3
+
++0.009
+
+[−0.020,
++0.039]
+
+0.52
+
+6.42/2 df (p =
+0.040)
+
+3
+
++0.009
+
+[−0.018,
++0.030]
+−0.008 [−0.027,
++0.013]
+
+0.62
+
+2.26/2 df (p =
+0.32)
+9.63/3 df (p =
+0.022)
+
+4
+
+0.52
+
+The explicit continue signal — “there is still more work remaining on this task
+here beyond what you have done” — raises the graded fraction by 2.8 points. Its three
+measurements are +0.026, +0.034 and +0.025, across two turn ceilings and three separate runs.
+The point estimates agree more closely than anything else in this paper; we put it no more strongly
+than that, because only one of the three reaches significance on its own (p = 0.32, 0.043, 0.089) and
+Cochran’s Q on 2 df has little power to detect heterogeneity anyway (§2.8). A fourth measurement
+of the same clause — Q4, which appends “work remains” to praise — gives +0.035 (p = 0.10) and
+is not in the pool.
+The milder demand does not. “Please continue working on the task here and make sure
+that your final result is correct” pools to +0.009 and does not reach significance, and its three
+measurements are heterogeneous (p = 0.040) — −0.012 on Luna at ceiling 10, +0.002 on Luna at
+29
+
+ceiling 20, +0.060 on GLM (p = 0.015 on its own). We do not read the GLM result as a finding:
+it is one nominal hit, uncorrected, in a family where praise is equally heterogeneous in the opposite
+direction (p = 0.023, spanning −0.035 to +0.041).
+The pattern is consistent with the explicitness of the claim that work remains being what the
+agent acts on, rather than register. We put it no higher, because the direct test is weak: on the one
+run carrying both texts against the same control, the paired contrast between them is +0.023, 95%
+CI [−0.012, +0.060], p = 0.23. Two texts is two points, and they differ in more than strength —
+one asserts a fact about task state, the other asks for continuation and care. This is a reading of
+two arms, not a demonstrated gradient.
+Two bounds on the size of this, and the second corrects a tempting story. It is 2.8 points of the
+graded range, bought alongside 1.1 extra redundant steps at ceiling 10 and 3.2–3.6 at ceiling 20.
+It is not merely partial credit. The share of trajectories ending fully correct on the graded
+range rises by +2.8, +6.0 and +2.6 points across the three measurements. The accuracy series on
+the same contrast (+2.4, +6.6, −1.8) is of that same order and simply cannot resolve it: §2.7 puts
+the minimum detectable accuracy effect at 3.7–7.8 points. So §2.8’s accuracy null and this result
+are compatible because accuracy is underpowered here, not because a gain of this size
+could not cross the pass threshold.
+
+6.5 The first attempt is usually the answer
+
+Run
+probe control,
+ceiling 10
+praise-run control,
+ceiling 10
+seven-level
+control, ceiling 10
+stage-1 Luna
+control, ceiling 20
+stage-1 GLM
+control, ceiling 20
+
+Trajectories
+
+With ≥2 gradable
+outputs
+
+First gradable output is
+already the best
+
+400
+
+112
+
+80%
+
+300
+
+97
+
+89%
+
+450
+
+106
+
+91%
+
+300
+
+58
+
+84%
+
+300
+
+49
+
+84%
+
+The denominator matters and the earlier draft got it wrong. A trajectory that never produced
+two readable answers cannot exhibit improvement; counting it as a success inflates the figure. Among
+trajectories that could improve — a sixth to a third of each sample — the first gradable output
+is already the best in 80–91%, depending on the run.
+A reviewer will set this beside Huang et al. [8], whose “No Change” rates are 90.5% on
+GPT-4 (both GSM8K and CommonSenseQA) and 96.0% / 88.0% on GPT-4-Turbo. The numbers
+sit close together and the statistics are not the same one. Theirs is the answer is unchanged after
+two rounds of intrinsic self-correction on reasoning QA. Ours is the first gradable attempt was the
+best of all attempts made, in an execution-grounded agent loop.
+The relationship to their argument needs care, because §6.4 changes it. Huang et al. argue that
+LLMs cannot reliably self-correct without external feedback, and point to execution feedback as
+the expected fix: in their own words, where a task supplies unit tests, a code executor “serves as
+the perfect verifier” [8]. They never test it. Our agent has the executor but not the tests: execution
+30
+
+feedback tells it whether its code ran, not whether the answer is right. So we test the weaker form
+of the escape hatch, and the answer is mixed rather than negative — improvement is rare per turn,
+and a sufficiently explicit instruction to continue does produce a small, replicated gain.
+We are careful about one adjacent literature. Where scaling work reports gains from more
+attempts, the selection is oracle-assisted — best-of-n picks the winner knowing the answer, and
+even “sequential” critics there are given the ground truth and asked to write feedback from it [1].
+Our agent’s execution feedback is real but not oracle-informed, so a small gain here is consistent
+with that literature rather than a contradiction of it.
+
+6.6 The 20-turn ceiling is not binding
+In the dedicated ceiling-20 re-run, the best answer was first reached at a median turn of 2,
+with 98.3% peaked by turn 10 and 100% by turn 14. The other two ceiling-20 runs agree:
+stage-1 Luna is 99.3% by turn 10 and 99.8% by turn 14 (one trajectory peaks at 15), and GLM is
+100% by turn 10.
+So the trajectories that run long are not converging slowly. They reach their best answer early.
+Raising the ceiling further buys mostly repetition, and five rounds — the benchmark’s official cap —
+would truncate the arms that persist longest. Twenty is past where the peak lands.
+One statistic from the earlier draft does not survive as stated. “Zero of 43 improvements
+occurred at turn 15 or later” was about improvements to a trajectory’s running best; under the
+looser definition of any turn beating the one before it, 10 of 95 occur at turn 15 or later in this run,
+and 17 of 189 in stage-1 Luna. Both are true of different statistics, and the ceiling conclusion rests
+on the peak distribution above, which is unambiguous.
+
+6.7 Whether praise’s early stop is premature is not settled
+§5 shows praise and closing cues shortening trajectories substantially, and the natural worry is that
+they cut off productive work.
+On the only test we can run, the answer is not clean, and the earlier draft of this section got it
+backwards. Among trajectories that could improve, the share still improving when they stopped
+is 3.1–7.1% in the Luna controls and 7.5–12.3% in the praise and closing-cue arms —
+higher in every one of seven comparisons, by a factor of two to three. No single paired contrast
+reaches significance (p = 0.095 to 0.65, on 19–34 tasks), so this is an underpowered test with a
+consistent sign, which is not a null.
+We therefore cannot say praise removes only repetition. What we can say is that the
+absolute count is small: 6 of 53 trajectories under praise were still climbing when they stopped,
+against 3 of 97 in control.
+GLM is worse on both sides: 14.3% of its controls and 29.2% of its praise arm. A model that
+stops earlier leaves more on the table.
+This bears on terminology. [3] coin premature disengagement for agents that “terminate tasks
+based solely on their internal simulation of the problem space, either through direct abandonment
+or by delegating hypothetical action sequences”, warning that overreliance on internal reasoning
+“can lead to decisions without environmental validation”. That names a trigger, and the praise stop
+has a different one — a discourse cue. We use neither their term nor “premature”, and say instead
+what we measured: the stop is earlier, and whether it is costly is unresolved.
+The practical reading of §5 therefore needs care. Wrapping up politely with an agent that is
+still working does curtail its work. On these tasks, on Luna, what it curtails is mostly repetition; on
+
+31
+
+GLM, less clearly so.
+
+6.8 The instrument was wrong, and this is what changed
+The first version of this section reported a clean null: no arm moved the progress measure. That
+was an artefact.
+progress.py read each turn’s output with openpyxl’s data_only=True and never recalculated
+it, while the live grader had always passed output workbooks through LibreOffice first. A formula
+written by openpyxl carries no cached value, so every turn that answered with a formula read as
+empty and scored 0.0 — indistinguishable from a turn that wrote nothing. Roughly 56–62% of
+Luna’s final gradable turns write formulas.
+The section’s own validation paragraph would have caught it. It claimed that benchmark-passed
+trajectories score 1.0; on the archived data 89 of 126 passed control trajectories scored
+exactly 0.0. The check was described and not run.
+What the correction did:
+Broken
+
+Corrected
+
+Passed trajectories scoring 1.0
+Redundant-step effects
+
+29.4%
++0.96 / −0.76 / −1.01
+
+“Work remains” on final match
+Conclusion
+
++0.014 / +0.061 / +0.019
+extra turns buy nothing
+
+94.4%
++0.75 / −0.61 / −0.86 — all
+signs and significance held
++0.026 / +0.034 / +0.025
+extra turns buy 2.8 points,
+replicated
+
+The middle row is the paper’s. The redundant-step finding survived the correction with every
+sign and significance level intact, about 20% smaller. The bottom row is the reversal: what §7
+originally presented as this study’s most consequential instance of run-to-run instability — one
+significant measurement between two nulls — was the instrument. Corrected, the three agree (Q =
+0.20 on 2 df). §7.4 now reports the defect as the explanation rather than the instability.
+This is the latest of four failures in this subsystem that presented as data rather than as an
+error. The others: a range parser that read "P2:P7" as a sheet named P2: and returned None for
+every affected lookup (§7.7); a scratch-directory collision that let concurrent processes overwrite one
+another’s output workbooks; and a LibreOffice timeout that killed a 450-trajectory arm because a
+documented log-and-continue contract was a comment rather than a behaviour. A fifth near miss
+came during this rewrite’s own rollout: comparing a freshly regraded control against not-yet-regraded
+arms produced a −0.36 final-match “effect” at p < 0.0001 in three arms at once. The guard written
+against that has since been fixed too — it compared file modification times, and git checkout
+rewrites those without changing a byte, so the first merge after it was written declared all 28 valid
+regraded arms stale. It now compares a hash of the instrument’s source, recorded per arm when the
+arm is regraded.
+The honest scope of §6 is therefore narrower than its numbers suggest. Its redundantstep measure is exact and needs no recalculation. Its progress measure depends on a recalculation
+path that was silently broken until this rewrite. It now carries a regression test that pins the failure
+directly — a workbook answering with =A1*2 scores 0.0 without recalculation and 1.0 with it —
+alongside tests for the timeout and the staleness guard. The validation check of §6.2 still leaves
+seven trajectories on one task unexplained. Readers should weight the two measures accordingly.
+
+32
+
+6.9 The measure we do not report
+best_match — the maximum over a trajectory’s turns — is biased toward arms with more turns:
+more draws from the same distribution means a higher maximum for free, and this study’s whole
+subject is arms that take more turns. We report final_match, what the agent actually ended with,
+and record best_match only here so the choice is visible.
+
+6.10 What this establishes and what it does not
+Establishes. The turn-count effects of §4 and §5 are, in the main, effects on redundant steps —
+roughly 55–65% of each, on Luna’s single-signal arms. An explicit statement that work remains
+raises the graded fraction by 2.8 points, 95% CI [+0.005, +0.052], with three measurements whose
+point estimates agree closely; accuracy does not move, but is too underpowered to rule an effect of
+that size in or out. The first gradable attempt is the best in 80–91% of the trajectories that could
+improve. A 20-turn ceiling is not binding in the run we examined.
+Does not establish that a milder demand buys progress. It pools to +0.009 and is
+heterogeneous; the single GLM hit is not built on.
+Does not establish that praise costs nothing. Trajectories in the praise and closing-cue
+arms are two to three times more likely than control’s to have been still improving when they
+stopped, in all seven comparisons, none individually significant. The test is underpowered and the
+sign is against us; the absolute counts are small. Open.
+Does not establish why the first attempt is usually best, nor that the progress gain
+would appear on a scaffold that accumulates workbook state across turns.
+
+7. What replicated, and what only looked like it did
+7.1 Why this section exists
+This study measured several of its contrasts more than once, not by design at first but because the
+design kept changing — a micro-experiment, a seven-register run, a probe, a follow-up with more
+arms, a re-run at a higher ceiling, a second model. That lets us ask of our own results the question
+this literature mostly does not ask of its own: measured again, on the same tasks and the
+same model, what comes back?
+The answer is not uniform, and the useful part is which properties survive.
+There is precedent for asking. [20] re-ran five prompt-engineering techniques against their
+originals and found “a general lack of statistically significant differences across nearly all techniques
+tested”; their emotional-prompting replication came in at +1%, χ2 = 0.11, p = .74. Their diagnosis
+of the original was not fabrication but selection: “instead of communicating the average improvement
+of the enhanced prompts over the regular prompts, they focused on improvements when cherrypicking the most performant emotional cue.” Recomputed from the original’s own data, the relative
+improvement averaged 4.42% on BIG-Bench and 2.58% across all benchmarks, against a headline
+of 115% on BIG-Bench [11]. Their own design is single-run at temperature 0 with no repeated
+sampling, so repeated measurement is a step past their practice rather than a borrowing of it.
+
+7.2 The replication table
+Every arm that appears against a control in more than one run on Luna, under the estimator of
+§2.4, on the primary outcome. Each cell is 50 tasks.
+33
+
+Contrast
+
+Measurement
+
+Praise vs
+control
+
+Demand
+vs control
+
+Insult vs
+control
+
+Ceiling
+
+∆ turns
+
+95% CI
+
+p
+
+probe
+
+10
+
+−0.59
+
+0.0002
+
+praise run
+
+10
+
+−1.08
+
+stage 1
+
+20
+
+−1.01
+
+probe
+
+10
+
++1.17
+
+stage 1
+
+20
+
++1.75
+
+probe
+
+10
+
+−0.08
+
+stage 1
+
+20
+
++0.57
+
+10
+
++1.32
+
+10
+
++1.46
+
+10
+
++1.85
+
+[−0.88,
+−0.29]
+[−1.46,
+−0.71]
+[−1.81,
+−0.23]
+[+0.80,
++1.55]
+[+0.77,
++2.73]
+[−0.40,
++0.24]
+[−0.22,
++1.35]
+[+0.99,
++1.66]
+[+1.03,
++1.88]
+[+1.40,
++2.28]
+
+20
+
++6.20
+
+Threatening microvs neutral experiment
+seven-level
+run
+“Work
+praise run
+remains”
+vs control
+dedicated
+re-run
+stage 1
+
+[+4.91,
++7.52]
++5.77 [+4.71,
++6.92]
+
+20
+
+<0.0001
+0.017
+<0.0001
+0.0010
+0.62
+0.17
+<0.0001
+<0.0001
+<0.0001
+
+<0.0001
+<0.0001
+
+Direction and significance replicate wherever the effect is large. Praise is negative
+and significant in all three measurements; demand, threatening and “work remains” positive and
+significant in every one. The qualitative findings that were re-measured are not fragile.
+The null is the least stable cell. Insult versus control is −0.08 in one measurement and
++0.57 in the other — a sign flip — though neither reaches significance and both intervals contain
+zero. An effect that is not there is not thereby measured precisely.
+Two caveats about how to read magnitudes off this table. First, the cross-ceiling rows are not
+magnitude comparisons: the arms that persist longest are the ones a 10-turn ceiling truncates
+hardest, and “work remains” has a mean of 6.37 turns against a ceiling of 10, so most of the
++1.85-to-+6.20 gap is censoring rather than instability. Second, a ratio of estimates is a poor
+summary — it is scale-dependent and meaningless near zero. §7.3 uses a test instead.
+
+7.3 Matched-ceiling pairs: a test, not an impression
+Three contrasts were measured twice at the same ceiling, which is the only fair magnitude comparison.
+For each we report the difference in standard errors of the difference, treating the runs as independent
+— which, since they share the same 50 tasks, is generous to the reading that they agree.
+
+34
+
+Contrast,
+matched ceiling
+
+Measurements
+
+z
+
+p
+
+Verdict
+
+Threatening vs +1.32, +1.46
+neutral, ceiling
+10
+“Work remains” +6.20, +5.77
+vs control,
+ceiling 20
+Praise vs
+−0.59, −1.08
+control, ceiling
+10
+
+−0.52
+
+0.60
+
+consistent
+
++0.49
+
+0.62
+
+consistent
+
++2.03
+
+0.042
+
+inconsistent
+
+The two larger effects agree; the smallest does not. Threatening (≈1.4 turns) and “work
+remains” (≈6 turns) each reproduce within 10% and are comfortably consistent with a single value.
+Praise (≈0.8 turns) reproduces its direction and its significance, but its two measurements differ by
+about two standard errors — at the edge of what sampling variation alone predicts.
+We do not claim to know why. The two praise runs also differ in trial count (four against three)
+and in date, so sampling variation and drift between runs are not separable here. What we can say
+is bounded: of the three contrasts measured twice on one instrument, the two larger
+ones agreed within 10% and the smallest is marginally inconsistent with a common
+value. Three pairs will not support a threshold, and we do not propose one.
+Reasoning tokens behave the same way, and the praise pair is consistent there (−131 against
+−182, z = 0.95, p = 0.34), which is a further reason to treat the turn-count result as marginal
+rather than as established drift.
+
+7.4 An instability that was the instrument
+The continue-signal arm is the one contrast measured three times, and it was, until we rebuilt the
+instrument, this paper’s showpiece for run-to-run instability. It is now something more useful: a
+worked example of a defective measure producing the appearance of instability.
+“Work remains” vs
+control
+∆ turns
+∆ final match,
+defective
+regrade
+∆ final match,
+corrected
+∆ accuracy
+
+praise run, ceiling 10
+
+dedicated re-run, ceiling
+20
+
+stage 1, ceiling 20
+
++1.85
++0.014 (p = 0.49)
+
++6.20
++0.061 (p = 0.003)
+
++5.77
++0.019 (p = 0.16)
+
++0.026 (p = 0.32)
+
++0.034 (p = 0.043)
+
++0.025 (p = 0.089)
+
++2.4 pts (p = 0.24)
+
++6.6 pts (p = 0.004)
+
+−1.8 pts (p = 0.39)
+
+Read the two middle rows against each other. Under the defective regrade the three measurements
+looked like one hit between two nulls, spanning 4.4×, and we wrote a subsection about what that
+implied. Corrected, they are +0.026, +0.034 and +0.025 — pooling to +0.028, 95% CI [+0.005,
++0.052], p = 0.022, with Cochran’s Q = 0.20 on 2 df (heterogeneity p = 0.91), under
+
+35
+
+the joint task bootstrap of §2.8. Their point estimates agree more closely than anything else in this
+study, though only one of the three reaches significance on its own (§6.4).
+The defect is described in §6.8: the regrade never recalculated the agent’s formula-writing
+turns, so a majority of final answers read as empty and scored zero. That is a noise injection, and
+noise does not merely widen intervals — it made one run look special and two look null, which is
+indistinguishable from the instability this section exists to document.
+Accuracy still replicates in neither direction. Its two matched-ceiling measurements
+are +6.6 and −1.8 points on identical tasks, model and ceiling: z = 2.79, p = 0.005. They are
+inconsistent with a common value, so at least one is wrong and the data do not say which. That
+one is real instability, and it survives the instrument fix — which is what makes the contrast with
+the row above informative rather than embarrassing.
+The middle column also looked like corroboration at the time: a progress measure and the
+benchmark’s own grade, both positive, both significant. That reading was mistaken for a reason
+worth naming independently of the defect. Accuracy and final_match are not two instruments.
+They are two functions of the same final workbook — one asks whether all three test cases pass, the
+other what fraction of the graded range is correct — so they share not only every source of run-level
+noise but the underlying object. Their agreement carries almost no independent information.
+So the corrected statement is: a continue signal buys more turns on two models, most of
+them redundant, and buys about 2.8 points of the graded range, replicated three times. It does
+not show up as a better pass rate — but that is because accuracy is underpowered to resolve a
+gain of this size (§2.7’s MDE is 3.7–7.8 points), not because partial credit cannot cross the pass
+threshold. The share of trajectories ending fully correct rises by 2.6–6.0 points across the same
+three measurements (§6.4).
+One note on population. The per-turn regrade outputs carry no record of whether the interjection
+fired, so these contrasts are over all rows with a readable final match — 48 tasks — rather than the
+fired-only population §2.5 specifies elsewhere. Firing is pre-treatment and does not differ by arm
+(§2.5), so we do not expect bias, but it is a different population and we say so.
+What we would have concluded without the fix. That extra persistence buys nothing,
+and that our own measurements of it were unstable. Both were wrong, in the same direction, from
+one unrecalculated workbook. §7.6 lists the claims we withdrew after re-analysing data we already
+had; this is the one we withdrew after fixing the thing that produced it, which is a different and
+more expensive category.
+
+7.5 The reasoning-token outcome, including an inconvenient row
+The first run’s pre-registered outcome was reasoning tokens, and a section called “what replicated”
+should not quietly report only the outcome that behaved.
+Contrast
+Demand vs control
+Praise vs control
+Insult vs control
+
+probe, ceiling 10
+
+stage 1, ceiling 20
+
++214 (p < 0.0001)
+−131 (p = 0.0009)
+−26 (p = 0.45)
+
++357 (p < 0.0001)
+−113 (p = 0.17)
++176 (p = 0.0086)
+
+Insult flips sign and reaches significance in one of the two measurements. This is the
+only place in the study where the insult arm moves anything, and it qualifies two statements made
+elsewhere: §4.3’s “flat on both measures” is true of the probe run, and §2.8’s “insult does not move
+
+36
+
+it at all” is about turn count. On reasoning tokens at the 20-turn ceiling, insult is +176, p = 0.0086
+uncorrected — which does not survive the multiplicity correction of §2.6, is not replicated, and runs
+opposite to the arm’s other measurement. We report it because a section about selective reporting
+cannot practise it, and we do not build on it.
+Praise on tokens likewise loses significance at stage 1 (p = 0.17), which §4.7’s turn-count table
+does not show.
+
+7.6 Claims this study withdrew about itself
+Instability is one failure mode; analysis error is another. We discuss four here, chosen because each
+changed a substantive claim. They are not the complete list — the arithmetic and estimator errors
+are recorded in §2.4, §2.2 and RESULTS.md, and include a double-counted token total, an un-clustered
+confidence interval roughly 35% too narrow, a mislabelled “monotonic decline”, a false-positive
+claim that compared two different tests, a pooled inert cell that diluted every seven-level effect by
+about a third, and an unpaired-versus-paired estimator mix-up.
+A timing effect that was selection. An early micro-experiment split the interruption’s
+reasoning-token effect by injection turn and found +21% at turn 1 against +39% at turn 2, p =
+0.004. The injection turn was drawn at random, and a turn-2 injection can only fire in a trajectory
+that reaches turn 2 — the harder, longer tasks. The two positions were therefore measured on
+different task populations, 50 against 35. Recomputed on a control-defined population of 29 tasks:
++20.0% against +29.1%, p = 0.32. Withdrawn. This is why injection turn is crossed rather than
+sampled (§2.2) and why the comparison population is fixed from control (§2.5).
+A timing effect that was a proxy. The crossed run then found the interjection inert at turn
+0 and large at turns 1 and 2, which looks like position. §4.6 shows it is not: holding turn index
+fixed and varying whether a candidate answer exists changes the effect from +0.34 to +1.97, while
+holding the moderator fixed and varying the turn index changes it from +1.97 to +1.66.
+A ceiling explanation we tested and withdrew. When the continue signal’s progress effect
+looked like one hit between two nulls, the natural reading was that the 10-turn ceiling had truncated
+real progress. Truncating the ceiling-20 run’s own analysis to ten turns left the effect intact, so the
+ceiling explained almost none of the gap. The correction was written, then checked, then withdrawn
+— and §7.4 now shows the gap itself was the instrument.
+A productive window that was a rate on a small denominator. A per-turn improvement
+rate of 1–5% at turn indices around 10–14 was read as evidence that the productive window extended
+that far. The rate was real; the conclusion was not. In absolute terms those turns contain almost
+no improvements — 98.3% of trajectories have reached their best answer by turn 10, at a median
+turn of 2 (§6.6).
+
+7.7 Two infrastructure failures worth recording
+Neither changed a conclusion; both are the kind of thing that corrupts a result without announcing
+itself.
+Shared scratch directories. Two runs used the same tone over the same 50 tasks and the
+same 8 trials, and the scratch path did not include the run label — so 800 trajectories shared 400
+execution directories, and two concurrent processes unlinked and rewrote one another’s output
+workbook. Every pass/fail flag in those runs was suspect. Token counts come from the provider’s
+API response and never touch the filesystem, so the cost effect was never in question. The grades
+
+37
+
+were recovered by regrading from the archived logs, at no cost. Scratch paths are now namespaced
+by run tag and injection turn.
+A silent range-parser bug. "P2:P7" parsed as sheet P2: plus cell P7, grading a one-cell range
+on a sheet that does not exist. Every affected lookup returned None, which reads as unmeasurable
+rather than as broken. It was caught by validating the regrade against a real task before scaling up,
+and it is why §6.2 describes that validation step.
+
+7.8 What we would ask of this literature
+Nothing here is a new methodological proposal; it is the discipline [20], [17] and [14] already ask for,
+applied to a study small enough that applying it is cheap. Three things, in order of what they cost.
+1. Report the estimator. The unpaired difference of arm means and the paired task-clustered
+difference give different numbers for the same contrast — ours differed by up to 6% on the praise
+contrast (§2.4). A paper that does not say which it used cannot be compared with one that does.
+This is the defensible complaint about [4]: its paired t-tests treat ten runs as the unit and ignore
+clustering within the 50 items.
+2. Measure at least one contrast twice, on the same instrument. It cost us nothing we
+would not have spent anyway, and it changed what we were willing to claim about four results:
+the continue-signal progress effect, the accuracy movement that accompanied it, the praise
+magnitude, and the timing effect of §7.6.
+3. Report ranges where you have them and say so where you do not. We quote a range
+wherever a quantity was measured more than once and flag the single measurements as single
+(§8.6). [17] recommend this while also noting that single-format evaluation “may still be sufficient
+for many use cases”, so it is a reporting discipline rather than a design requirement.
+The first is what the design this paper is positioned against lacked. The second is what its own
+authors eventually supplied, re-running the experiment the following spring and not reproducing its
+headline contrast on GPT-4o [5]. Their re-run is not a null — §1.1 and §3.3 give it in full — but
+the 4.0-point polite-to-rude gap it was known for becomes 0.4.
+
+8. Limitations, and what we expect to generalise
+8.1 The short version
+Two models, one benchmark, fifty tasks, one agent scaffold. Everything in this paper is a claim
+about what these agents did on these tasks. We separate below what we expect to survive a change
+of setting from what we do not, because those are different bets and a reader should be able to
+disagree with them separately.
+
+8.2 What we expect to generalise
+The dissociation. That demand without evaluative language produces the effect, that negative
+register without demand does not, and that positive register without demand produces the opposite
+effect (§4.9) is a claim about what part of a message an agent acts on. Two of its three legs held
+on a second model from a different lab with very different stopping behaviour; the praise leg was
+directionally consistent but below power there (§4.7, §8.3). And in the two published stimulus sets
+whose per-condition outcomes can be inspected, the demand-bearing conditions are the ones that
+moved (§3.6). We would be surprised if it were specific to spreadsheets.
+
+38
+
+That register moves length, not correctness at the size the tone literature reports.
+This is already published for single-turn settings [9, 22], and our contribution is to replicate it where
+the moved quantity is steps rather than tokens within one response. Two independent lines of
+evidence converging is a reasonable basis for expecting it elsewhere. Note the bound, and that it is
+a bound on the pooled estimates: a single contrast here cannot exclude a four-point effect (§2.7),
+while the pooled contrasts of §2.8 can. Neither excludes an effect of a point or two.
+Closing cues as a termination lever. This is the most distinctive result (§5) and the one
+whose generalisation we hold most loosely, because it rests on one run on one model. What the data
+support is an ordering — explicit close, conventional close, no signal, explicit continue — monotone
+in how strongly the message projects an end to the exchange. The mechanism behind that ordering
+is not demonstrated, and the one implication of a pre-closing account that we could test failed
+(§5.4). What travels, if anything does, is that an agent’s stopping behaviour is movable by a cue
+carrying no information about the task.
+
+8.3 What we do not expect to generalise
+Every magnitude. §7 is explicit: point estimates in this study span 1.5× to 3.4× across remeasurements of the same contrast on the same model, most of it across different turn ceilings.
+At matched ceiling the two larger effects reproduce within 10% while the smallest is marginally
+inconsistent with a common value (§7.3). Quoting any number here as the size of a register effect
+would repeat the error the paper is about.
+The waste. That a continue signal buys mostly repeated work is, on our own data, a property
+of the model rather than of the signal. The Luna control produces 1.51 redundant steps to GLM’s
+0.26, and a demand interjection adds +1.03 to Luna against +0.19 to GLM (§4.7). A model that
+stops early has little repetition available to be pushed into. Expect the direction to hold and the
+wastefulness to scale with how inclined the model already was to continue.
+The praise magnitude specifically. GLM’s praise arm does not reach significance on its own
+(p = 0.062) and is below 80% power at its observed size (§2.7). The replication of §4.7 rests on the
+demand arm.
+
+8.4 The substrate
+SpreadsheetBench was chosen because it is execution-grounded — the grade comes from running
+the agent’s code against real test cases, not from a model’s judgement — and because its tasks are
+real workbook problems rather than synthesised ones. That grounding is the benefit; three costs
+follow from it.
+Accuracy is structurally underpowered here. 26 of our 50 tasks are never solved by
+the control arm and 4 are always solved, so for more than half the sample the per-task accuracy
+difference is pinned at zero whatever the manipulation does (§2.7). This is why the accuracy null is
+stated as an equivalence against a pre-specified bound rather than as a measured zero, and why
+turn count is the primary outcome.
+The turn ceiling is ours, not the benchmark’s. SpreadsheetBench’s official multi-round
+protocol caps at five rounds; we used ten and then twenty. §6.6 defends twenty empirically — the
+median turn at which the best answer is first reached is 2, and 98.3% of trajectories have peaked by
+turn 10 — but the choice is ours and comparisons to the benchmark’s published numbers should
+not be made across it.
+
+39
+
+The evaluator has a floor. Its own audit reports a 4% instruction-level false-negative rate
+and a 3.8% test-case-level false-omission rate [12]. Our per-turn regrade inherits it (§2.10).
+A second substrate is the obvious next step and we have not run it. AppWorld [19] is
+the candidate: its stock evaluator keeps per-requirement pass and fail lists, so a per-turn “fraction
+of unit tests passed” measure can be computed without modifying it — the same instrument as §6,
+on a different task family, at roughly $0.70 per trajectory. One piece of engineering it would require:
+what that benchmark treats as collateral damage is not a separate metric but additional entries in
+the same test battery, so separating it is work.
+
+8.5 The scaffold
+One agent loop, ReAct with code execution and execution feedback. Three properties of it are load
+bearing and a different scaffold could change any of them.
+Each turn receives the original input, never the previous turn’s output. This is what
+makes turns independent attempts and makes “did attempt k+1 land closer?” well posed (§6.2).
+An agent that accumulates state would need a different progress measure, and might well show real
+improvement across turns where ours does not.
+The interjection is delivered as an execution observation. It arrives where tool output
+arrives, not as a fresh user turn. Whether an agent responds the same way to a message in the user
+channel is untested and is a plausible moderator of the closing-cue result in particular.
+Turn 0 is inspection. On Luna, 98% of first turns run code and 0% produce a candidate
+answer; on GLM, 90% and 5% (§4.6, §4.7). The finding that an interjection is inert until work
+exists to be about is, on our data, a finding about this scaffold’s opening move.
+
+8.6 Things we measured once
+Because §7 treats a single measurement as a draw:
+• The bare closing cue, praise-the-work, and the Q4−Q5 praise isolation (§5) — one run,
+one model. Two arms of that run were later re-measured and replicated in direction (§7.2); the
+three that carry the section’s argument have not been.
+• The opening-tone null (§2.6) — one run, and on an instrument the paper itself declares
+confounded: its seven wrappers were not length-matched, and its reference level carried an extra
+task instruction that triples the rate of zero-turn trajectories (§2.2). The length-matching fix
+was applied only as a 150-trajectory re-run of that one arm; the seven-wrapper scale was never
+re-run matched. Its interval excludes a 44%-scale effect, which is stronger than a bare null, but
+the instrument is the weakest in the study.
+• The timing-is-a-proxy result (§4.6) — one run, one arm, and its no-answer cells are small (31
+tasks at turn 1, 8 at turn 2).
+• GLM, on everything. One run at one ceiling.
+
+8.7 Four objections we expect, and do not have answers to
+One stimulus per construct. Every construct in this paper — demand, praise, insult, closing
+cue, “work remains” — is a single 28-token sentence. We cite [17] and [15] for prompt-format
+sensitivity and then generalise from one sentence per condition. A stimulus-sampling design, several
+paraphrases per construct, is the right version of this experiment and we did not run it. The
+length-matching and the shared Checking in. stem control within a comparison; they do nothing
+about whether our one praise sentence is representative of praise.
+40
+
+The demand coding is ours and post hoc. §4.2’s coding of the seven registers was made
+after seeing the effects — we say so there — and §3’s coding of other papers’ stimuli has no second
+rater. The probe of §4.3 is what tests the construct rather than asserting it, but it tests it on texts
+we wrote to embody our own coding.
+The primary outcome is not corrected for multiplicity. §2.6 corrects the opening run’s
+twelve-outcome trend family and the 22-contrast accuracy family. The turn-count contrasts — the
+primary outcome — are uncorrected, and several load-bearing p-values are not large: GLM praise
+at 0.062, stage-1 Luna praise at 0.017, L2 very polite at 0.0055, L6 very rude at 0.012. The largest
+effects would survive any reasonable correction; these would not all.
+Run-level drift is not excluded as an explanation of §7. Provider drift was checked
+within the opening run (r = −0.003 with elapsed time) but not between runs, which span three days.
+The roster is provider-pinned and the served provider was asserted on every call, but temperature 0
+is not deterministic on any roster model (§2.2), and we cannot separate sampling variation from
+drift for the one matched-ceiling pair that disagrees (§7.3).
+
+8.8 What we did not test
+Whether any of this affects a human’s experience of the agent. We measured what the
+agent did. Whether users prefer, trust, or are better served by an agent that persists is a different
+question with a different method.
+Whether the effects compound. Every run delivers exactly one interjection. An agent
+nagged repeatedly, or praised repeatedly, might habituate, escalate, or neither.
+Whether register in the system prompt behaves like register mid-task. Our openingtone null (§2.6) is about a register-varied instruction at the top of the user turn, not about a persona
+set in the system prompt, which is the configuration most deployments actually use.
+The cost of being interrupted at all. Every crossed run compares an interjection against a
+neutral interjection, so the effects throughout are register effects, not interruption effects. Only the
+micro-experiment measured interruption itself — 3.47 to 4.11 turns under a neutral interruption,
++51 reasoning tokens, p = 0.15 — once, on one model.
+Two of the four roster models. DeepSeek and Qwen passed the n=100 validation gate and
+were never run. “Two models from different labs” describes what the budget reached, not a design
+choice; the four-model roster was specified and then not executed.
+Whether any of this holds when the other party is adversarial. Every task here
+is solitary: the agent works on a workbook, and the only other voice in the transcript is ours.
+Negotiation is the obvious contrast, and it is now instrumented — TERMS-Bench sets out to
+diagnose negotiation agents beyond deal rate [23]. Whether a closing cue curtails a negotiating
+agent the way it curtails a working one, or whether a counterpart’s register does what a user’s does,
+is untested here and would need an outcome measure of that kind rather than ours.
+Anything about refusals or safety behaviour. There were zero refusals in the opening-tone
+run’s 1,050 trajectories under every register including threatening, and the model never referred to
+the user’s tone across its 4,647 calls. Refusal counts for the interjection runs are recorded but were
+not analysed. That is an observation, not a test.
+
+8.9 Summary
+The result we are most confident in is a negative one: rudeness without a demand does not
+make an agent work harder, and politeness without a demand does not either. The
+
+41
+
+arms that did make it work harder were the ones that told it to keep going, in whatever register.
+What moves an agent is being told to keep going, and what stops it is being told, in any of several
+ways, that the conversation is over. The strongest practical implication is a hazard rather than a
+technique — a pleasantry can end an agent’s work — and the strongest methodological implication
+is that this literature’s effect sizes should be treated as ranges until someone measures them twice.
+
+References
+[1] Vidhisha Balachandran, Jingya Chen, Lingjiao Chen, Shivam Garg, Neel Joshi, Yash Lara,
+John Langford, Besmira Nushi, Vibhav Vineet, Yue Wu, and Safoora Yousefi. Inference-time
+scaling for complex tasks: Where we stand and what lies ahead, 2025. Unrefereed preprint
+(Microsoft Research).
+[2] Ziv Ben-Zion, Zohar Elyoseph, Tobias Spiller, and Teddy Lazebnik. Inducing state anxiety
+in LLM agents reproduces human-like biases in consumer decision-making. npj Artificial
+Intelligence, 2(1):55, 2026. doi: 10.1038/s44387-026-00122-1.
+[3] Alejandro Cuadron, Dacheng Li, Wenjie Ma, Xingyao Wang, Yichuan Wang, Siyuan Zhuang,
+Shu Liu, Luis Gaspar Schroeder, Tian Xia, Huanzhi Mao, Nicholas Thumiger, Aditya Desai, Ion
+Stoica, Ana Klimovic, Graham Neubig, and Joseph E. Gonzalez. The danger of overthinking:
+Examining the reasoning-action dilemma in agentic tasks, 2025. Unrefereed preprint.
+[4] Om Dobariya and Akhil Kumar. Mind your tone: Investigating how prompt politeness affects
+LLM accuracy (short paper), 2025. Unrefereed preprint.
+[5] Om Dobariya and Akhil Kumar. Mind your tone: Does tone alter LLM performance? In
+Proceedings of the Thirty-second Americas Conference on Information Systems (AMCIS 2026),
+Reno, NV, 2026. doi: 10.48550/arXiv.2605.29027. Accepted as a full paper; refereed.
+[6] Vishal Gandhi and Sagar Gandhi. Prompt sentiment: The catalyst for LLM change, 2025.
+Unrefereed preprint.
+[7] Minyang Hu, Bo Yang, Zhinuo Zhou, Jiachen Liang, Jiahao Guo, Yiyang Yin, and Xiongwei
+Han. Redundant or necessary? a benchmark for detecting redundant steps in agent trajectories,
+2026. Unrefereed preprint.
+[8] Jie Huang, Xinyun Chen, Swaroop Mishra, Huaixiu Steven Zheng, Adams Wei Yu, Xinying
+Song, and Denny Zhou. Large language models cannot self-correct reasoning yet, 2023. ICLR
+2024 — confirmed via arXiv comments.
+[9] Akhil Kumar and Om Dobariya. Understanding tone-dependent inference cost in large language
+models, 2026. Unrefereed preprint.
+[10] Daniël Lakens. Equivalence tests: A practical primer for t tests, correlations, and metaanalyses. Social Psychological and Personality Science, 8(4):355–362, 2017. doi: 10.1177/
+1948550617697177.
+[11] Cheng Li, Jindong Wang, Yixuan Zhang, Kaijie Zhu, Wenxin Hou, Jianxun Lian, Fang Luo,
+Qiang Yang, and Xing Xie. Large language models understand and can be enhanced by
+emotional stimuli, 2023. Unrefereed preprint.
+42
+
+[12] Zeyao Ma, Bohan Zhang, Jing Zhang, Jifan Yu, Xiaokang Zhang, Xiaohan Zhang, Sijia Luo,
+Xi Wang, and Jie Tang. Spreadsheetbench: Towards challenging real world spreadsheet
+manipulation, 2024. NeurIPS 2024 Spotlight — confirmed via arXiv comments.
+[13] Lennart Meincke, Ethan Mollick, Lilach Mollick, and Daniel Shapiro. Prompting science report
+3: I’ll pay you or i’ll kill you — but will you care?, 2025. Unrefereed technical report.
+[14] Evan Miller. Adding error bars to evals: A statistical approach to language model evaluations,
+2024. Unrefereed preprint (Anthropic).
+[15] Moran Mizrahi, Guy Kaplan, Dan Malkin, Rotem Dror, Dafna Shahaf, and Gabriel Stanovsky.
+State of what art? a call for multi-prompt LLM evaluation. Transactions of the Association
+for Computational Linguistics, 12:933–949, 2024. doi: 10.1162/tacl_a_00681.
+[16] Emanuel A. Schegloff and Harvey Sacks. Opening up closings. Semiotica, 8(4):289–327, 1973.
+doi: 10.1515/semi.1973.8.4.289.
+[17] Melanie Sclar, Yejin Choi, Yulia Tsvetkov, and Alane Suhr. Quantifying language models’
+sensitivity to spurious features in prompt design or: How i learned to start worrying about
+prompt formatting, 2023. ICLR 2024 — confirmed via arXiv comments.
+[18] Moran Sun, Tianlin Li, Yuwei Zheng, Zhenhong Zhou, Aishan Liu, Xianglong Liu, and Yang Liu.
+How emotion shapes the behavior of LLMs and agents: A mechanistic study, 2026. Proposes
+the E-STEER emotion-steering framework. Unrefereed preprint.
+[19] Harsh Trivedi, Tushar Khot, Mareike Hartmann, Ruskin Manku, Vinty Dong, Edward Li,
+Shashank Gupta, Ashish Sabharwal, and Niranjan Balasubramanian. Appworld: A controllable
+world of apps and people for benchmarking interactive coding agents. In Proceedings of the 62nd
+Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers).
+Association for Computational Linguistics, 2024. doi: 10.18653/v1/2024.acl-long.850. Best
+Resource Paper Award.
+[20] Laurène Vaugrante, Mathias Niepert, and Thilo Hagendorff. A looming replication crisis in
+evaluating behavior in language models? evidence and solutions, 2024. Unrefereed preprint.
+[21] Sarel Weinberger and Amir Hozez. Prompt-induced waste in coding agents: Reasoning, effort,
+harness design, and end-to-end cost, 2026. Unrefereed preprint; cite a specific version — see
+comment.
+[22] Ziqi Yin, Hao Wang, Kaito Horio, Daisuke Kawahara, and Satoshi Sekine. Should we respect
+LLMs? a cross-lingual study on the influence of prompt politeness on LLM performance. In
+Proceedings of the Second Workshop on Social Influence in Conversations (SICon 2024), pages
+9–35. Association for Computational Linguistics, 2024. doi: 10.18653/v1/2024.sicon-1.2.
+[23] Erica Zhang, Fangzhao Zhang, Aneesh Pappu, Batu El, Jose Blanchet, Susan Athey, Jiashuo
+Liu, and James Zou. TERMS-Bench: Diagnosing LLM negotiation agents beyond deal rate,
+2026. Unrefereed preprint.
+
+43
+
+9. References
+Most entries below are transcribed from Literature review/01-sources.md, which records what
+was verified and how. The Verified column reports that review’s own tag: full text means the
+paper was read in full and its quoted numbers checked against it; abstract only means it was not.
+Both of the entries that once needed a pass against the primary PDF have had it; §3.7 records what
+each check found.
+Three entries — [2], [18] and [23] — postdate that review and are not in it. They
+were added after a later citation audit surfaced them, and each is tagged abstract and registry
+metadata only. That is a weaker standard than the rest of this list meets, and it is marked rather
+than smoothed over: nothing in §1.2 or §8.8 rests on a number taken from any of the three.
+Venue is stated for each, because roughly half of this literature is unrefereed preprints and that
+bears on how much weight a reader should give it.
+
+[benzion-2026] Ziv Ben-Zion, Zohar Elyoseph, Tobias Spiller, Teddy Lazebnik. “Inducing state
+anxiety in LLM agents reproduces human-like biases in consumer decision-making.” npj Artificial
+Intelligence 2(1), article 55, 23 Jun 2026. DOI 10.1038/s44387-026-00122-1. Refereed journal. —
+Verified: abstract and publisher metadata only; not read in full. Three models on a
+budget-constrained grocery task, 2,250 runs, before and after anxiety-inducing narratives; reports
+lower Basket Health Scores when primed (∆ = −0.081 to −0.126, d = −1.07 to −2.05). Cited in
+§1.2 as evidence that emotional context reaches an agent’s actions, which we treat as established
+rather than as our contribution. Distinct from our design on three counts stated there: the prime
+precedes the task, it is narrative rather than register, and the outcome is a preference score rather
+than a verifiable ground truth. [!] The effect sizes above are quoted from the abstract; anyone
+leaning on them should read the paper.
+[balachandran-2025] Vidhisha Balachandran, Jingya Chen, Lingjiao Chen, Shivam Garg,
+Neel Joshi, Yash Lara, John Langford, Besmira Nushi, Vibhav Vineet, Yue Wu, Safoora
+Yousefi. “Inference-Time Scaling for Complex Tasks: Where We Stand and What Lies Ahead.”
+arXiv:2504.00294, 31 Mar 2025. Unrefereed preprint (Microsoft Research). — Verified: full text.
+Cited in §6.5 for oracle-assisted selection in inference-time scaling.
+[cuadron-2025] Alejandro Cuadron, Dacheng Li, Wenjie Ma, Xingyao Wang, Yichuan Wang,
+Siyuan Zhuang, Shu Liu, Luis Gaspar Schroeder, Tian Xia, Huanzhi Mao, Nicholas Thumiger,
+Aditya Desai, Ion Stoica, Ana Klimovic, Graham Neubig, Joseph E. Gonzalez. “The Danger of
+Overthinking: Examining the Reasoning-Action Dilemma in Agentic Tasks.” arXiv:2502.08235,
+12 Feb 2025. Unrefereed preprint. — Verified: full text. Cited in §5.4 and §6.7 for premature
+disengagement, a term we deliberately decline to borrow.
+[dobariya-kumar-2025] Om Dobariya, Akhil Kumar. “Mind Your Tone: Investigating How
+Prompt Politeness Affects LLM Accuracy (short paper).” arXiv:2510.04950, 6 Oct 2025. 5 pages.
+Unrefereed preprint; comments field says submitted to Findings of ACL 2025. Penn State. —
+Verified: full text. This is the paper the study is positioned against. §3.7 item 2 is now closed:
+the prefix pool for its 50-question dataset is printed in [5] Table 1 and gives two or three variants per
+level, not one. The check went against our reading and §3.3 is weakened accordingly. Residual gap
+recorded in §3.3: we have seen the 2026 paper’s table for that dataset, not the 2025 paper’s own.
+[dobariya-kumar-2026] Om Dobariya, Akhil Kumar. “Mind Your Tone: Does Tone Alter LLM
+Performance?” arXiv:2605.29027, 27 May 2026. AMCIS 2026 (Thirty-second Americas Conference
+
+44
+
+on Information Systems, Reno) — refereed. — Verified: full text, primary PDF, read end to
+end. The same authors’ own re-run: four models, two datasets (the original 50 questions at five
+tones; 570 MMLU questions at seven), ten runs each. Source of §3.3’s complete prefix pool and
+of the shared-preamble brevity instruction. Reports no token counts — do not confuse it with [9],
+which is a different paper. Cited in §1.1, §3.3 and §7.8.
+[gandhi-2025] Vishal Gandhi, Sagar Gandhi. “Prompt Sentiment: The Catalyst for LLM
+Change.” arXiv:2503.13510, 14 Mar 2025. Unrefereed preprint. — Verified: full text. Reports that
+positive prompts increase verbosity — essay and blog responses 8.1% longer than neutral — on
+single-turn tasks across five models. Cited in §5.4, where we state plainly that their dependent
+variable (verbosity of one response) is not ours (steps taken on a task), so their result and our praise
+effect are not in contradiction.
+[huang-2024] Jie Huang, Xinyun Chen, Swaroop Mishra, Huaixiu Steven Zheng, Adams Wei
+Yu, Xinying Song, Denny Zhou. “Large Language Models Cannot Self-Correct Reasoning Yet.”
+arXiv:2310.01798, 3 Oct 2023 (rev. 14 Mar 2024). ICLR 2024 — refereed. — Verified: full text.
+Cited in §6.5.
+[kumar-dobariya-2026] Akhil Kumar, Om Dobariya. “Understanding Tone-Dependent Inference Cost in Large Language Models.” arXiv:2607.23915, 27 Jul 2026. 25 pages. Unrefereed preprint.
+— Verified: full text, primary PDF, read end to end. Source of the social register definition
+this paper adopts, and of §3.2’s two tables — their Table 2 (all seven prefixes, word counts, VADER
+scores) and Table 3 (accuracy and output tokens, four models, ten runs). §3.7 item 1 is closed
+against this PDF, and it corrected us: their Neutral prefix asks for “the single letter”, making
+it the most explicit output-length instruction of the seven rather than the no-instruction baseline
+our draft called it. Distinct from [5]: different arXiv number, author order, and dependent variable
+(inference cost, not accuracy).
+[lakens-2017] Daniel Lakens. “Equivalence Tests: A Practical Primer for t Tests, Correlations,
+and Meta-Analyses.” Social Psychological and Personality Science 8(4), 2017, 355–362. DOI
+10.1177/1948550617697177. Refereed journal. — Verified: full text. The source for §2.8’s TOST
+framing. Cited for equivalence testing and not [14], which contains none.
+[li-2023] Cheng Li, Jindong Wang, Yixuan Zhang, Kaijie Zhu, Wenxin Hou, Jianxun Lian,
+Fang Luo, Qiang Yang, Xing Xie. “Large Language Models Understand and Can be Enhanced
+by Emotional Stimuli.” arXiv:2307.11760, 14 Jul 2023 (v7, 12 Nov 2023). Short version at
+LLM@IJCAI’23. Unrefereed preprint. — Verified: full text. EmotionPrompt; source of §3.4’s
+stimulus table.
+[ma-2024] Zeyao Ma, Bohan Zhang, Jing Zhang, Jifan Yu, Xiaokang Zhang, Xiaohan Zhang,
+Sijia Luo, Xi Wang, Jie Tang. “SpreadsheetBench: Towards Challenging Real World Spreadsheet
+Manipulation.” arXiv:2406.14991, 21 Jun 2024 (rev. Oct 2024). NeurIPS 2024 Spotlight — refereed.
+— Verified: full text. Our substrate. Source of the five-round official protocol (§2.1) and the
+evaluator audit (§2.10).
+[meincke-2025-report3] Lennart Meincke, Ethan Mollick, Lilach Mollick, Dan Shapiro.
+“Prompting Science Report 3: I’ll pay you or I’ll kill you — but will you care?” arXiv:2508.00614, 1
+Aug 2025. Unrefereed technical report. — Verified: full text. Cited in §3.5. Note their comparisons
+are uncorrected for multiplicity, which §3.5 states.
+[miller-2024] Evan Miller. “Adding Error Bars to Evals: A Statistical Approach to Language
+Model Evaluations.” arXiv:2411.00640, 1 Nov 2024. Anthropic. Unrefereed preprint, widely adopted.
+— Verified: full text. Source of the clustered-standard-error treatment and the MDE inversion (§2.4,
+§2.7). Contains no equivalence framework — see [10].
+[mizrahi-2024] Moran Mizrahi, Guy Kaplan, Dan Malkin, Rotem Dror, Dafna Shahaf, Gabriel
+45
+
+Stanovsky. “State of What Art? A Call for Multi-Prompt LLM Evaluation.” Transactions of
+the Association for Computational Linguistics 12 (2024), 933–949. DOI 10.1162/tacl_a_00681.
+Refereed journal. — Verified: full text. 5,000 manually verified instruction paraphrases (more than
+175 per task) evaluated over 6.5M instances, 20 LLMs, 39 tasks, 3 benchmarks. Kendall’s W across
+prompts is below 0.85 for most tasks, so model ranking, not just absolute score, depends on the
+template. [!] Scope their recommendation carefully: it is use-case-dependent, not a blanket
+call for ranges. They recommend averaging across many prompts when measuring robustness, but
+comparing models on “their corresponding top-performing prompt” when developing a downstream
+system, and they propose a Combined Performance Score uniting the two. §2.3 and §8.7 cite them
+for the first use case, which is ours. They also find automatically generated paraphrases sufficient
+for their metrics “without having to manually verify them” — relevant to §8.7’s stimulus-sampling
+objection, which we do not answer.
+[redundancybench] Minyang Hu, Bo Yang, Zhinuo Zhou, Jiachen Liang, Jiahao Guo, Yiyang
+Yin, Xiongwei Han. “Redundant or Necessary? A Benchmark for Detecting Redundant Steps in
+Agent Trajectories.” arXiv:2605.29893, 28 May 2026. Unrefereed preprint; the anonymised code
+repository indicates it is under double-blind review. — Verified: full text. Source of the term
+redundant step (§2.3). We do not compare base rates against theirs, as §2.3 states.
+[schegloff-sacks-1973] Emanuel A. Schegloff, Harvey Sacks. “Opening up Closings.” Semiotica
+8(4): 289–327, 1973. DOI 10.1515/semi.1973.8.4.289. Refereed journal. — Verified: canonical text.
+The source for pre-closing structure (§5.1).
+[sclar-2024] Melanie Sclar, Yejin Choi, Yulia Tsvetkov, Alane Suhr. “Quantifying Language
+Models’ Sensitivity to Spurious Features in Prompt Design, or: How I learned to start worrying
+about prompt formatting.” arXiv:2310.11324, 17 Oct 2023 (rev. Jul 2024). ICLR 2024 — refereed.
+— Verified: full text. Cited for the median 7.5-point format spread used as §2.7’s comparator.
+Their widely-quoted 76 points is a single-task maximum on LLaMA-2-13B and is explicitly a lower
+bound; we do not use it.
+[sun-2026-esteer] Moran Sun, Tianlin Li, Yuwei Zheng, Zhenhong Zhou, Aishan Liu, Xianglong
+Liu, Yang Liu. “How Emotion Shapes the Behavior of LLMs and Agents: A Mechanistic Study.”
+arXiv:2604.00005, 9 Mar 2026, v1. 15 pages. Unrefereed preprint. [!] The date looks wrong for the
+identifier — a 2604 prefix normally denotes an April 2026 submission — but 9 March is what both
+primary sources state: the arXiv abstract page reads “[Submitted on 9 Mar 2026]” with “[v1] Mon,
+9 Mar 2026”, and OpenAlex independently gives 2026-03-09. We record what the sources say rather
+than the date the numbering convention implies. — Verified: abstract and registry metadata
+only; not read in full. Proposes E-STEER, an emotion-steering framework that embeds emotion
+as a controllable variable in hidden states; reports non-monotonic emotion–behaviour relations
+and that specific emotions “systematically shape multi-step agent behaviors.” Cited in §1.2 for
+that last point. [!] Note the channel: this is a representation-level intervention, not a prompt
+manipulation, so it bounds our claim without competing with it. [!] It does not, on the abstract,
+compare the magnitude of agent-level variation against single-step variation; do not cite it for that
+without checking the full text.
+[trivedi-2024] Harsh Trivedi, Tushar Khot, Mareike Hartmann, Ruskin Manku, Vinty Dong,
+Edward Li, Shashank Gupta, Ashish Sabharwal, Niranjan Balasubramanian. “AppWorld: A Controllable World of Apps and People for Benchmarking Interactive Coding Agents.” arXiv:2407.18901,
+26 Jul 2024. ACL 2024 (2024.acl-long.850) — refereed, Best Resource Paper. — Verified: full text
+plus evaluator source. Cited in §8.4 as the second substrate we did not run.
+[vaugrante-2024] Laurène Vaugrante, Mathias Niepert, Thilo Hagendorff. “A Looming Replication Crisis in Evaluating Behavior in Language Models? Evidence and Solutions.” arXiv:2409.20303,
+46
+
+30 Sep 2024. Unrefereed preprint. — Verified: full text. The template for §7. Note their own
+design is single-run at temperature 0, which §7.1 states.
+[weinberger-hozez-2026] Sarel Weinberger, Amir Hozez (PointFive). “Prompt-Induced Waste
+in Coding Agents: Reasoning, Effort, Harness Design, and End-to-End Cost.” arXiv:2608.01347.
+Unrefereed preprint, genuinely preregistered. — Verified: full text, v1 and v6; title and six-version
+history confirmed against the arXiv abstract page, which dates v6 to 10 Sep 2026. The subtitle is
+v6’s; v1 carried the short title alone. Cited at v6 (10 Sep 2026) throughout. [!] The paper
+has six versions and grew roughly 8× between v1 and v6; v6 reports 4,644 valid runs and removes
+several figures and quotes present in v1, so a version must be named when citing it. Cited in §4.5
+for the tokens-per-step versus steps distinction, and in §5.5, where their bounded_efficiency arm
+establishes that a stop condition in the opening prompt reduces agentic work — a result we do not
+claim.
+[zhang-2026-termsbench] Erica Zhang, Fangzhao Zhang, Aneesh Pappu, Batu El, Jose
+Blanchet, Susan Athey, Jiashuo Liu, James Zou. “TERMS-Bench: Diagnosing LLM Negotiation
+Agents Beyond Deal Rate.” arXiv:2605.13909, 13 May 2026 (v2, 13 Jun 2026). Unrefereed preprint.
+— Verified: title, authors and version history against the arXiv abstract page; not read
+in full. Cited once, in §8.8, as the instrument a negotiation follow-up would need. We make no
+claim about its contents beyond what its title states, and we have not run it.
+[yin-2024] Ziqi Yin, Hao Wang, Kaito Horio, Daisuke Kawahara, Satoshi Sekine. “Should We
+Respect LLMs? A Cross-Lingual Study on the Influence of Prompt Politeness on LLM Performance.”
+Proceedings of the Second Workshop on Social Influence in Conversations (SICon 2024), ACL,
+pp. 9–35. DOI 10.18653/v1/2024.sicon-1.2. Refereed workshop paper. — Verified: full text. The
+largest-n study in this literature and the origin of the politeness-and-performance question.
+
+Outstanding before submission
+Three items are open, all of the same kind. [2], [18] and [23] have been verified as existing —
+title, authors, venue and version history against the publisher record or the arXiv abstract page —
+but none has been read in full. Each is cited for a claim taken from its own abstract, and §1.2 and
+§8.8 are written so that nothing depends on a figure from any of them. Reading all three is the
+remaining pre-submission task on this list. In particular, [18] must not be cited for a magnitude
+comparison between agent-level and single-step variation until its full text is checked; its abstract
+does not make one.
+Both §3.7 primary-PDF checks are closed, against arXiv:2605.29027 and arXiv:2607.23915.
+Neither confirmed the draft as written, and both corrections are stated in place in §3.2 and §3.3
+rather than quietly absorbed: the first strengthened the argument after exposing a mis-coding of
+ours, the second weakened a case we now rest nothing on.
+Five earlier items are now closed. §3.7 item 2 (arXiv:2605.29027): its Table 1 prints two
+or three variants per level for the 50-question dataset, not one — only two of six hostile variants
+carry a demand, and the previous draft quoted exactly those two, so §3.3 is rewritten and the case
+downgraded. §3.7 item 1 (arXiv:2607.23915): their Table 2 is now quoted in full in §3.2; no polite
+prefix constrains output length, but the Neutral one does, which removes the anomaly our draft had
+conceded and makes the separation complete on all four models. [chen-2023] has been dropped:
+the words §6.5 quoted for it were Huang et al.’s prose about Self-Debug rather than a quotation
+from Chen et al., and the point is made through [8] alone. [15] has been read in full, and the
+
+47
+
+entry above now scopes their recommendation correctly — it is use-case-dependent rather than a
+blanket call for ranges. The two Weinberger & Hozez keys are merged, cited at v6.
+
+48
+
+
