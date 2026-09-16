@@ -79,13 +79,47 @@ markdown that pandoc converts. Two results deserve floats:
 
 ## The thing you should look at first
 
-**47 pages.** That is a full-length manuscript, not a workshop paper. Typical workshop limits are
-4–9 pages plus references, so this is roughly 5× over.
+**48 pages** — 41 body, 2 bibliography, 5 annotated appendix.
 
-That is a content decision, not a build problem, and it is not one I should make for you. The
-shape of the cut is visible from the section sizes, though: §3 (confound in prior materials),
-§6 (per-turn regrade) and §7 (what replicated) together are more than half the manuscript, and
-each is arguably a paper of its own. §7's self-audit in particular is the part every reviewer
-praised and is the most obviously separable.
+The instinct that this is long relative to the literature is worth checking against the
+literature, so I did. Actual page counts, taken from the PDFs themselves or from arXiv's comments
+field:
+
+| Work | Pages |
+|---|---:|
+| **This paper (body only)** | **41** |
+| SpreadsheetBench — the substrate, NeurIPS Spotlight | 38 |
+| Weinberger & Hozez, v6 | 37 |
+| Sclar et al. — ICLR | 29 |
+| Kumar & Dobariya (16 + 9 appendix) | 25 |
+| Vaugrante et al. | 23 |
+| E-STEER | 15 |
+| RedundancyBench | 15 |
+| Miller — error bars | 14 |
+| Dobariya & Kumar 2026 — AMCIS full paper | 10 |
+| **Mind Your Tone** — the paper this is positioned against | **5** |
+
+**So 41 pages of body is not an outlier in this literature.** It sits just above SpreadsheetBench
+and Weinberger, both of which are full-length arXiv preprints of the same kind. The paper is long,
+but it is not longer than its sources — several sources are 23–38 pages.
+
+**The gap that actually matters is against a workshop limit, not against the sources.** Typical
+workshop limits are 4–9 pages plus references. That is a 5–8× cut, not the ~1.2× that "longer than
+my sources" would suggest. And the paper this one argues with is 5 pages long.
+
+That reframes the decision. This is not an overlong paper needing a trim; it is a full-length
+paper that would have to become **a different and much smaller artifact** to be a workshop
+submission. Three coherent options:
+
+1. **arXiv preprint as-is.** 41 pages is normal here. Fix the blockers and the pipeline, post it.
+2. **Carve a workshop paper out of it.** §7 (what replicated) is the part every reviewer praised
+   and the most separable — a self-audit paper on measurement instability in agent evaluations
+   stands alone at roughly 8 pages, with the tone result as its running example rather than its
+   contribution.
+3. **Full venue submission.** The length fits; the six blockers in
+   `review/05-stage3-peer-review.md` are what gate it.
+
+Section sizes, if a cut is wanted: §3 (16%), §6 (14%), §4 (13%) and §7 (11%) are the four largest
+of 25,165 words.
 
 I have not cut anything.
