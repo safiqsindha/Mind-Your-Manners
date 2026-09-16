@@ -16,9 +16,18 @@ Three findings, in order of how much they'd cost you at review:
    review that §1.2's novelty claim rests on.
 2. **Your title's debt to "Mind Your Tone" is never stated.** The phrase appears nowhere in the
    prose — only inside the reference entry.
-3. **No citation in the paper is fabricated.** All 16 arXiv IDs and all 4 DOIs resolve to real
-   works with matching titles and authors. That is a genuinely good result for a paper with
-   this much 2026 preprint content, and it is worth saying plainly.
+3. **No citation in the paper is fabricated, and its metadata is more accurate than the
+   databases'.** All 16 arXiv IDs and all 4 DOIs resolve to real works with matching titles and
+   authors. Every venue claim in `paper/09` has now been confirmed against a primary source.
+   Twice, `paper/09` was right where a registry was wrong — the AMCIS venue (§3.2) and the
+   Kawahara spelling (§3.4). For a reference list this preprint-heavy that is a strong result,
+   and it is worth saying plainly.
+
+**One correction to my own first pass.** I initially reported the `[dobariya-kumar-2026]` venue
+as a conflict needing your adjudication, and four further venue claims as unverified. All five
+are now closed against primary sources, and the paper was right in every case. The blocker was
+that arXiv's API was rate-limiting this host; its plain abstract page was not, and I had not
+tried it. `review/references.bib` now carries **zero** UNVERIFIED markers.
 
 ---
 
@@ -40,13 +49,15 @@ It is written to `review/` because that is this session's sanctioned write area.
 |---|---|---|
 | OpenAlex | all 18 arXiv IDs, by `doi:10.48550/arXiv.<id>` | worked |
 | CrossRef | all 4 journal/proceedings DOIs; venue and page confirmation | worked |
+| **arXiv abstract page** | **`comments`, `journal_ref`, version history** | **worked** |
+| ACL Anthology | award confirmation for `trivedi-2024` | worked |
 | Semantic Scholar | cross-check | HTTP 429 throughout — unusable |
-| **arXiv API** | **`comments` and `journal_ref` fields** | **HTTP 429 throughout — unusable** |
+| arXiv JSON/Atom API | first attempt at the comments fields | HTTP 429 throughout — unusable |
 
-The arXiv outage matters. `comments` and `journal_ref` are the authoritative source for
-"submitted to X" and "published at Y" claims on a preprint. Several of `paper/09`'s venue
-statements rest on exactly those fields, and I could not read them. Each is marked UNVERIFIED
-below and in the `.bib` rather than accepted. This is a retry-later item, not a defect.
+The arXiv API rate-limited this host all session. The plain abstract page at
+`https://arxiv.org/abs/<id>` is a *different endpoint* and answered normally — that is how every
+venue claim below was eventually settled. **Every UNVERIFIED marker from my first pass has since
+been closed. The `.bib` now carries none.**
 
 ---
 
@@ -80,42 +91,46 @@ Your own `Literature review/03-verification-log.md` already caught this — its 
 of arXiv:2608.01347: "**Six versions exist.** v6 changed the title..." So this is a known
 correction that did not make it into `paper/09`. The `.bib` carries the full title.
 
-Related and unresolved: `paper/09` pins the citation to **v6 (10 Sep 2026)**. OpenAlex exposes
-only the 2026-08-02 first-version date, and arXiv's per-version history was unreachable. The
-v6 date is UNVERIFIED. Given the paper's own warning that "a version must be named when citing
-it", this is worth re-checking when arXiv is reachable.
+Related, and now **confirmed**: `paper/09` pins the citation to **v6 (10 Sep 2026)**. The arXiv
+abstract page lists exactly six versions — v1 2 Aug, v2 5 Aug, v3 6 Aug, v4 21 Aug, v5 24 Aug,
+**v6 Thu, 10 Sep 2026**. The date and the version count are both right. Only the title is stale:
+`paper/09` still prints the v1 title.
 
-### 3.2 Venue conflict — `[dobariya-kumar-2026]` — needs your confirmation
+### 3.2 Venue for `[dobariya-kumar-2026]` — RESOLVED, and the paper was right
 
-This one matters, because §1.1 and §7.8 both lean on this paper being the original authors' own
-**refereed** re-run.
+I flagged this as a conflict in my first pass. It is now settled, in the paper's favour.
 
-| Source | Says |
-|---|---|
-| `paper/09` | "*AMCIS 2026 (Thirty-second Americas Conference on Information Systems, Reno) — refereed.*" |
-| OpenAlex | host venue "**Journal of the Association for Information Systems**", type `article` |
-| CrossRef | no record at all beyond the arXiv DOI |
+The arXiv abstract page's comments field for 2605.29027 reads, verbatim:
 
-AMCIS and JAIS are both AIS venues, so this may be an OpenAlex mis-mapping of an AIS-affiliated
-container — but I cannot adjudicate it without the arXiv `journal_ref` field. I left the venue
-out of the `.bib` entry and flagged it. **Please confirm from the arXiv abstract page.**
+> "10 pages, 6 tables, 1 figure. **Accepted as a full paper at the Thirty-second Americas
+> Conference on Information Systems (AMCIS 2026), Reno.** Follow-up to arXiv:2510.04950"
 
-### 3.3 Four venue claims that are prose-only
+`paper/09` says: "*AMCIS 2026 (Thirty-second Americas Conference on Information Systems, Reno) —
+refereed.*" That is exactly right, down to the ordinal.
 
-None of these is contradicted by anything. None is confirmed by a registry either, because the
-cited artifact is the arXiv preprint and the venue claim lives in the arXiv comments field I
-could not read. Listing them because your brief says never to fill a gap from memory, and these
-are currently gaps:
+OpenAlex's "Journal of the Association for Information Systems" is the error — it appears to have
+mapped the AIS society to its flagship journal. **The `.bib` now carries this as a proper
+`@inproceedings` with the AMCIS booktitle.** §7.8's reliance on "refereed" is sound.
 
-| Key | Claim in `paper/09` |
-|---|---|
-| `huang-2024` | ICLR 2024 — refereed |
-| `ma-2024` | NeurIPS 2024 Spotlight, main track — refereed |
-| `sclar-2024` | ICLR 2024 — refereed |
-| `trivedi-2024` | ACL 2024 (2024.acl-long.850) — refereed, Best Resource Paper |
+### 3.3 The four prose-only venue claims — ALL CONFIRMED
 
-`trivedi-2024` is the easiest to close: the paper already cites an ACL Anthology ID, so a
-CrossRef lookup on the Anthology DOI rather than the arXiv DOI would confirm it outright.
+Every one of these checked out against the arXiv comments field:
+
+| Key | Claim in `paper/09` | arXiv comments field says | Verdict |
+|---|---|---|---|
+| `huang-2024` | ICLR 2024 | "ICLR 2024" | confirmed |
+| `ma-2024` | NeurIPS 2024 Spotlight, main track | "Neurips 2024 (Spotlight)" | confirmed, except "main track" |
+| `sclar-2024` | ICLR 2024 | "ICLR 2024 Camera Ready version" | confirmed |
+| `trivedi-2024` | ACL 2024, Best Resource Paper | "ACL'24 Camera Ready" | confirmed (award: see below) |
+
+`trivedi-2024`'s award went one step further: the ACL Anthology page for `2024.acl-long.850`
+carries "**Award: Best Resource Paper Award**". `paper/09` is correct on every detail. I have
+switched that `.bib` entry to the published ACL version with DOI `10.18653/v1/2024.acl-long.850`,
+since it is a published paper rather than a preprint.
+
+The one residue: **"main track" for `ma-2024` is not stated anywhere I can reach.** The comments
+field says only "Neurips 2024 (Spotlight)". Almost certainly true and almost certainly harmless —
+noting it only because it is the last unsourced word in the reference list.
 
 ### 3.4 Three minor metadata notes
 
@@ -123,7 +138,8 @@ CrossRef lookup on the Anthology DOI rather than the arXiv DOI would confirm it 
   Registry spelling used in the `.bib`.
 - `yin-2024` — CrossRef **and** OpenAlex both spell the fourth author "Dais**ui**ke Kawahara".
   `paper/09` has "Daisuke", which is correct; the registries carry a known ACL Anthology typo.
-  **The paper is right and the databases are wrong** — worth knowing in case a checker flags it.
+  **The paper is right and the databases are wrong.** This is the second such case, alongside the
+  AMCIS venue in §3.2 — worth knowing in case an automated checker flags either.
 - `sclar-2024` — the registry title has no comma before "or:"; `paper/09` adds one. Cosmetic.
 
 ### 3.5 No dangling citation keys
@@ -182,6 +198,12 @@ they were representative.
 **Assessment.** The framing is careful and, unusually, self-penalising. I cannot check the
 internal numbers (80.8/84.8, 50 questions, five levels, paired t-tests) against the PDF at this
 stage — that is Stage 2 work. Nothing in the registry metadata contradicts the characterization.
+
+**Confirmed since my first pass.** The arXiv comments field reads: "5 pages, 3 tables; includes
+Limitations and Ethical Considerations sections; **short paper under submission to Findings of
+ACL 2025**". `paper/09`'s entry — "5 pages. *Unrefereed preprint; comments field says submitted
+to Findings of ACL 2025*" — is exactly right, page count included. No journal-ref exists, so
+"unrefereed" still holds.
 
 **GAP — the attribution your brief requires is not present.** Your paper is titled "Mind your
 manners? Demand, not register, is what moves an LLM agent". The phrase "Mind Your Tone" appears
