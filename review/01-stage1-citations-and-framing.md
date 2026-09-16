@@ -50,11 +50,16 @@ below and in the `.bib` rather than accepted. This is a retry-later item, not a 
 
 ---
 
-## 2. Citation checker
+## 2. Citation checker — ran, but its verdict is unusable here
 
 `check-citations` only consumes `.bib`, so it had nothing to run against until the file above
-existed. Result appended in §7 once the run completes — it is slow because two of its three
-backends are rate-limiting this host.
+existed. It has now run twice. **Both verdicts should be disregarded**, for three independent
+reasons documented in §7. The authoritative verification remains the per-ID registry lookups in
+§1, which resolved all 22 identifiers.
+
+Reported, for the record: run 1 said "12 UNFOUND CITATION(S)", run 2 said "13 UNFOUND
+CITATION(S) — remove or replace before submission". Every single one of those is a paper I
+resolved by hand against OpenAlex minutes earlier, with matching title and authors.
 
 ---
 
@@ -326,6 +331,90 @@ the title and date it is worth ten minutes of your time before submission.
 
 ---
 
-## 8. Citation-checker output
+## 8. Citation-checker output, and why it cannot be trusted in this environment
 
-*(pending — appended below when the run completes)*
+### 8.1 What it reported
+
+| Run | Input | Verified (2+) | Suspicious (1) | NOT FOUND |
+|---|---|---:|---:|---:|
+| 1 | `review/references.bib` as written | — | 10 | 12 |
+| 2 | brace-flattened copy (scratchpad only) | 1 | 9 | 13 |
+
+Exit code 1 both times. Its own wording for the NOT FOUND bucket is "CITATIONS NOT FOUND —
+LIKELY HALLUCINATED".
+
+**Not one of those is hallucinated.** The run-2 NOT FOUND list includes `li-2023`, `miller-2024`,
+`sclar-2024`, `huang-2024`, `vaugrante-2024` and `cuadron-2025` — EmotionPrompt, the Anthropic
+error-bars paper, the prompt-formatting paper, the self-correction paper. All resolved cleanly
+against OpenAlex in §1 with exact title and author matches.
+
+### 8.2 Three independent causes, all verified
+
+**(a) The field parser truncates at the first closing brace.** `_extract_field` (line 133) uses
+a non-greedy `(.+?)[\}"]`, which stops at the first `}`. Standard brace-protected
+capitalization therefore truncates the value. The line immediately after the match reads
+`# Handle nested braces` — the intent was there, but the strip runs *after* the regex has
+already cut the string, so it is dead code for this input.
+
+Titles, as the checker read them from a correctly-formatted `.bib`:
+
+| In the file | What it parsed |
+|---|---|
+| `Mind Your Tone: Investigating How Prompt Politeness Affects {LLM} Accuracy (short paper)` | `Mind Your Tone: Investigating How Prompt Politeness Affects LLM` |
+| `{TERMS-Bench}: Diagnosing {LLM} Negotiation Agents Beyond Deal Rate` | `TERMS-Bench` |
+| `Should We Respect {LLMs}? A Cross-Lingual Study on...` | `Should We Respect LLMs` |
+
+**It hits the author field too**, which is worse, because author overlap is what drives the
+tool's advertised chimeric-citation detection:
+
+| In the file | What it parsed |
+|---|---|
+| `Lakens, Dani\"{e}l` | `Lakens, Dani\` |
+| `Vaugrante, Laur\`{e}ne` | `Vaugrante, Laure` |
+
+Any accented name written the standard LaTeX way is mangled.
+
+**(b) CrossRef does not index arXiv DOIs.** arXiv registers its DOIs with DataCite under the
+`10.48550` prefix. `check_crossref` does a direct DOI lookup first, so for every arXiv entry it
+gets a hard 404 — confirmed directly:
+
+```
+10.48550/arXiv.2307.11760 -> CrossRef HTTP 404
+10.48550/arXiv.2411.00640 -> CrossRef HTTP 404
+```
+
+It then falls back to CrossRef title search, which covers preprints only patchily. Since 18 of
+the 23 entries are arXiv preprints, one of the tool's three backends is structurally near-blind
+to most of this bibliography. Nothing in SKILL.md mentions this.
+
+**(c) Rate limiting.** Semantic Scholar returned HTTP 429 throughout both runs. OpenAlex was
+intermittently 429 during run 2 — partly a consequence of my own §1 verification traffic from the
+same shared egress IP. OpenAlex answered HTTP 200 on a direct probe immediately afterwards, so
+run 2 is not even reproducible against itself.
+
+Cause (a) is a defect in the tool. Cause (b) is a design gap in the tool. Cause (c) is
+environmental and partly self-inflicted.
+
+### 8.3 Against its SKILL.md
+
+SKILL.md states: "The core guarantee: **fake papers are never marked as real.**" That guarantee
+is intact — nothing fake was waved through, because nothing here is fake.
+
+But it also advertises a **10% false-positive rate**, from a 25-item test. On this bibliography
+the observed false-positive rate is **13 of 23 (57%)**, and the causes are the parser and the
+backend coverage rather than anything about the citations. The documented accuracy table does not
+transfer to conventionally-formatted BibTeX that is preprint-heavy — which is precisely the shape
+of bibliography this paper has.
+
+### 8.4 What I did and did not do about it
+
+- I did **not** edit `review/references.bib` to work around the parser. The braces are correct
+  BibTeX and protect capitalization in rendered output; removing them would damage the file to
+  flatter a broken tool.
+- I generated a flattened copy in the scratchpad purely as checker input. It is not in the repo.
+- I did **not** act on any "not found" verdict.
+
+**Recommendation: do not use this tool as a submission gate for this paper.** Its exit code 1
+would fail a CI check for reasons unrelated to citation quality. If you want an automated gate,
+the per-ID OpenAlex lookup in §1 is the pattern that actually worked — one identifier at a time,
+resolved by DOI rather than by title search.
