@@ -66,7 +66,10 @@ for md in sorted(SRC.glob('*.md')):
     # is kept and LaTeX's generated numbering suppressed in main.tex, because the prose
     # is full of §2.4-style cross-references tied to those exact numbers.
     tmp = OUT / (md.stem + '.pre.md'); tmp.write_text(txt)
-    r = subprocess.run(['pandoc', '-f', 'markdown+pipe_tables+tex_math_dollars', '-t', 'latex',
+    r = subprocess.run(['pandoc', '-f', 'markdown+pipe_tables', '-t', 'latex',   # no tex_math_dollars:
+                        # the prose contains no inline math but does contain dollar amounts
+                        # ($48.47, $1B, $0.70). One per file today, so nothing pairs; two in
+                        # one file would silently swallow the text between them into math mode.
                         '--top-level-division=section', '-o', str(tex), str(tmp)],
                        capture_output=True, text=True)
     tmp.unlink(missing_ok=True)
