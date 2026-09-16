@@ -257,10 +257,22 @@ contrast carrying two p-values is seeing two statistics, not two data sets. Thir
 reads turn counts from the run records throughout — including for the micro-experiment, where the
 accuracy family reads the per-turn *regrade* instead, which is a grading pass and the right source
 for accuracy but not for an observed trajectory count. That row is +1.32 turns, matching §7.2. An
-earlier version of this script inherited the regrade file for that row and got +1.02; the
-regraded file carries different turn counts for the same 50 trajectories, which a regrade should
-not change. That does not touch this family, and we record it as an oddity in that artefact
-rather than resolve it here.
+earlier version of this script inherited the regrade file for that row and got +1.02.
+
+That gap is worth explaining, because it looked at first like a defect and is not one: **the two
+files count different things, and both are correct.** The run records store *acting* turns — the
+turns that emitted code — while the regrade stores model calls, every turn including the closing
+`FINAL:` message or refusal that carries no code. Across the 800 micro-experiment trajectories
+the difference is exactly the number of non-acting turns, on every single one; the 21 where the
+two agree are precisely the trajectories that hit the turn ceiling and so never got a closing
+turn. Mean acting turns 3.57 against 4.69 model calls is a 31% relative gap, which is why a
+reader comparing our turn counts to another paper's needs to know which is which.
+
+**Turn count in this paper means acting turns throughout**, the quantity §4–§7 report and the
+definition under which the interjection has somewhere to act. The two quantities share a field
+name in the artefacts, which is what made this look mysterious;
+`results/analysis/turn_definitions.py` prints the reconciliation and
+`tests/test_turn_definitions.py` pins it.
 
 **The second family: §5's within-design contrasts.** Praise isolated, Q4 − Q5, is −1.35 turns
 (*p* < 0.0001); closing cue versus praise, Q3 − Q1, is −0.36 (*p* = 0.017). Both survive

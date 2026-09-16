@@ -1,13 +1,23 @@
-"""Convert paper/*.md -> LaTeX bodies, rewriting [key] citations to \\cite{key}.
+"""Convert a directory of *.md -> LaTeX bodies, rewriting [key] citations to \\cite{key}.
 
 Exits nonzero if any conversion fails, and removes the stale .tex first, so a
 failed pandoc run can never leave an old section silently in the PDF.
+
+Defaults to paper/ -> build/sections (the full manuscript). The workshop carve
+passes its own pair, so both documents go through exactly one converter and one
+citation guard; a second copy of this file would be a second place for the
+rendering defects this script exists to catch.
+
+  python3 build/md2tex.py [SRC_DIR] [OUT_DIR]
 """
 import re, shutil, subprocess, pathlib, sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-SRC  = ROOT / 'paper'
-OUT  = ROOT / 'build' / 'sections'
+_args = [a for a in sys.argv[1:] if not a.startswith('-')]
+SRC  = (ROOT / _args[0]) if len(_args) > 0 else ROOT / 'paper'
+OUT  = (ROOT / _args[1]) if len(_args) > 1 else ROOT / 'build' / 'sections'
+if not SRC.is_dir():
+    sys.exit(f"no such source directory: {SRC}")
 BIB_SRC = ROOT / 'review' / 'references.bib'      # canonical
 BIB_DST = ROOT / 'build'  / 'references.bib'      # what bibtex reads
 OUT.mkdir(parents=True, exist_ok=True)

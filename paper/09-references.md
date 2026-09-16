@@ -10,11 +10,14 @@ what each check found.
 [sun-2026-esteer] and [zhang-2026-termsbench] — were added after a citation audit. Four more —
 [cai-2025-tone], [zhang-2026-politejudge], [munirathinam-2026-recuse] and
 [zhu-2026-spreadsheetbench2] — were surfaced by a simulated review panel and are listed in §3.8.
-Each of the seven is tagged at the read depth it actually has, and for the last four that is
-**title and author metadata only**. That is a much weaker standard than the rest of this list
-meets. It is marked rather than smoothed over, and **no claim anywhere in this paper rests on
-any of the seven**; the four in §3.8 are recorded as work that must be read before the novelty
-claim in §1.2 is submitted anywhere.
+Each of the seven is tagged at the read depth it actually has. One of the panel's four,
+[munirathinam-2026-recuse], has since been read in full because it bore directly on §5's novelty
+claim — it narrowed one claim and removed another (§3.8, §5.5). For the remaining **six** the
+depth is **abstract, or title and author metadata, only**: a much weaker standard than the rest
+of this list meets, marked rather than smoothed over. **No claim anywhere in this paper rests on
+any of the six**, and the three still unread from §3.8 are recorded as work to do before the
+novelty framing in §1.2 is submitted anywhere. That reading one of them cost us half a claim is
+the reason the other three are not treated as a formality.
 
 Venue is stated for each, because roughly half of this literature is unrefereed preprints and
 that bears on how much weight a reader should give it.
@@ -135,11 +138,15 @@ objection, which we do not answer.
 
 **[munirathinam-2026-recuse]** Thamilvendhan Munirathinam. "Will the Agent Recuse, and Will It
 Stop? Measuring LLM-Agent Compliance with In-Band Governance Signals at the Access Door and
-Mid-Flight." arXiv:2606.06460. *Unrefereed preprint.* — **Verified: title and author against the
-arXiv abstract page; NOT read.** Surfaced by the review panel (§3.8). ⚠ **On its title alone this
-is the nearest neighbour to §5's result** — mid-flight signals to an agent, and whether it stops.
-§5.1 claims no prior work connects closing-sequence structure to agent termination. That claim
-cannot stand until this paper is read.
+Mid-Flight." arXiv:2606.06460v4, 1 Aug 2026 (v1 4 Jun 2026); cs.CR, cross-listed cs.AI.
+*Unrefereed preprint.* — **Verified: full text.** Surfaced by the review panel (§3.8) as the
+nearest neighbour to §5 and read in full for that reason. It measures agent termination, but
+manipulates an explicit halt directive rather than a pragmatic cue; §5.1 records what that
+narrows and §5.5 what it removed. ⚠ **Cite at v4.** The title changed between versions — v1 is
+"Will the Agent Recuse Itself? Measuring LLM-Agent Compliance with In-Band Access-Deny Signals"
+and contains no mid-flight study at all — and Semantic Scholar still serves the v1 title under
+the v4 DOI, so a DOI-resolving reference manager will produce the wrong one. This is the second
+version hazard in this list, after arXiv:2608.01347.
 
 **[redundancybench]** Minyang Hu, Bo Yang, Zhinuo Zhou, Jiachen Liang, Jiahao Guo, Yiyang Yin,
 Xiongwei Han. "Redundant or Necessary? A Benchmark for Detecting Redundant Steps in Agent

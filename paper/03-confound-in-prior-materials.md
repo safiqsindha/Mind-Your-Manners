@@ -338,23 +338,26 @@ dataset and same five levels, so we expect it to match, but we have not verified
 
 The audit above covers four papers from three groups. It is not a systematic search, and a
 simulated review panel found four on-topic works it missed. We list them here rather than quietly
-folding them into §3, because where they sit relative to our claims is not yet known — **we have
-verified that each exists, by title and author, against its arXiv abstract page, and we have not
-read any of them.**
+folding them into §3. Each was verified to exist, by title and author, against its arXiv abstract
+page. **One of the four — [munirathinam-2026-recuse], the one that bore on a novelty claim — has
+since been read in full and is resolved in §5.1 and §5.5. The other three have not been read.**
 
 | Work | Why it belongs in this section |
 |---|---|
 | [cai-2025-tone] | A politeness-effects study across GPT, Gemini and LLaMA. Squarely the paradigm §3 audits. It is in our source list but was never cited. |
 | [zhang-2026-politejudge] | Reported to use several independently written paraphrases per tone level across eight judge models — the stimulus-sampling design §8.7 concedes we did not run. |
-| [munirathinam-2026-recuse] | Measures agent compliance with **mid-flight** signals, including whether the agent stops. |
+| [munirathinam-2026-recuse] | Measures agent compliance with **mid-flight** signals, including whether the agent stops. **Read in full; see below.** |
 | [zhu-2026-spreadsheetbench2] | A successor to our own substrate [ma-2024], sharing authors with it. §8.4 names a second substrate as the obvious next step without naming this one. |
 
-**The third of these is the one that matters most, and it cuts against us.** §5.1 and §1.2 claim
-that no prior work connects closing-sequence structure to agent termination. A paper whose title
-asks whether an agent will stop under in-band signals delivered mid-flight is, on its face, in
-that space. Until it is read, that novelty claim should be read as *unverified* rather than
-established — the hedge in §1.2 is "as far as our review could establish," and this is a case
-where our review did not establish much.
+**The third of these was the one that mattered most, and reading it cost us half a claim.** §5.1
+and §1.2 claimed that no prior work connects closing-sequence structure to agent termination, and
+a paper asking whether an agent stops under in-band signals delivered mid-flight is, on its face,
+in that space. It measures termination, as feared; what it manipulates is an explicit halt
+directive rather than a pragmatic cue, so the closing-sequence claim survives in the narrowed
+form §5.1 now states. **§5.5's second novelty step did not survive: mid-task delivery is that
+paper's ground, not ours, and the claim there is now confined to the cue instructing nothing.**
+This is what the §3.8 exercise was for — the hedge in §1.2 was "as far as our review could
+establish", and our review had not established much.
 
 The fourth changes nothing about our results but dates them: our substrate has a successor, and a
 reader should know that before treating SpreadsheetBench 1 as the current instrument.
