@@ -1,5 +1,9 @@
 # Stage 1 — Citations and prior-art framing
 
+**STATUS: CLOSED.** All seven recommendations were approved and applied in commit `d1bd17f`.
+The findings below are preserved as written, including the parts my later passes corrected;
+§0 carries the correction. What changed in the manuscript is listed in `review/03-stage1-closeout.md`.
+
 Date: 2026-09-16
 Inputs: `paper/*.md` (10 files), `Literature review/*.md`, and primary registry lookups.
 Outputs: `review/references.bib` (new, 23 entries).
