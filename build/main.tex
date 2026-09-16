@@ -57,6 +57,11 @@
 \providecommand{\tightlist}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 \providecommand{\pandocbounded}[1]{#1}
 
+% The source headings carry their own numbering ("1.2 What we did") and the prose
+% cross-references it as §1.2, so suppress LaTeX's generated numbers rather than
+% stacking two schemes ("0.5 1.2 What we did").
+\setcounter{secnumdepth}{0}
+
 \setlist{nosep,leftmargin=1.4em}
 \captionsetup{font=small,labelfont=bf}
 \providecommand{\tightlist}{}
