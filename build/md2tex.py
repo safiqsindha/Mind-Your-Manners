@@ -32,6 +32,10 @@ def to_cite(m):
     return '\\cite{' + ','.join(parts) + '}'
 
 DROP_BLOCK = re.compile(r'^> \*\*Draft status\.\*\*.*?(?=\n\n)', re.S | re.M)
+# 00-abstract.md repeats the paper title and an author placeholder; main.tex already
+# sets both via \maketitle, so strip them rather than render them twice.
+DROP_TITLE   = re.compile(r'\A#\s+Mind your manners.*?\n', re.M)
+DROP_AUTHORS = re.compile(r'^\*\*Authors\.\*\*.*?\n', re.M)
 
 made, failed = [], []
 for md in sorted(SRC.glob('*.md')):
@@ -40,8 +44,16 @@ for md in sorted(SRC.glob('*.md')):
         tex.unlink()                             # never leave a stale section behind
     txt = md.read_text()
     txt = DROP_BLOCK.sub('', txt)
+    if md.stem == '00-abstract':
+        txt = DROP_TITLE.sub('', txt)
+        txt = DROP_AUTHORS.sub('', txt)
+        txt = re.sub(r'\A(?:\s*---\s*\n)+', '', txt)   # rule that separated the stripped front matter
     txt = CITE.sub(to_cite, txt)
-    txt = re.sub(r'^#\s+', '## ', txt, count=1, flags=re.M)
+    # Heading levels are passed through untouched: with --top-level-division=section
+    # pandoc already maps # -> \section and ## -> \subsection. Demoting them flattened
+    # the whole document to subsections. The source's own numbering ("1.2 What we did")
+    # is kept and LaTeX's generated numbering suppressed in main.tex, because the prose
+    # is full of §2.4-style cross-references tied to those exact numbers.
     tmp = OUT / (md.stem + '.pre.md'); tmp.write_text(txt)
     r = subprocess.run(['pandoc', '-f', 'markdown+pipe_tables+tex_math_dollars', '-t', 'latex',
                         '--top-level-division=section', '-o', str(tex), str(tmp)],
