@@ -11,9 +11,10 @@
 % VERIFICATION LEGEND
 %   [OA]  resolved via OpenAlex  https://api.openalex.org/works/doi:<doi>
 %   [CR]  resolved via CrossRef  https://api.crossref.org/works/<doi>
-%   arXiv's own API was rate-limiting this host throughout the session (HTTP
-%   429), so arXiv `comments` and `journal_ref` fields could NOT be read. Any
-%   venue claim that rests on those fields is marked UNVERIFIED below.
+%   [AX]  resolved via the arXiv abstract page (https://arxiv.org/abs/<id>)
+%   arXiv's JSON/Atom API rate-limited this host throughout (HTTP 429). The
+%   plain abstract page is a different endpoint and answered normally, which
+%   is how the `comments` and version-history fields below were read.
 
 % ───────────────────────── currently cited in the prose ─────────────────────
 
@@ -41,9 +42,11 @@
   note         = {Unrefereed preprint}
 }
 
-% [OA] verified: title (incl. "(short paper)"), authors, 2025-10-06, preprint
-% UNVERIFIED: the "submitted to Findings of ACL 2025" claim in paper/09 comes
-% from the arXiv comments field, which could not be read this session.
+% [OA] verified: title (incl. "(short paper)"), authors, 2025-10-06, preprint.
+% [arXiv API] CONFIRMED --- comments field reads verbatim: "5 pages, 3 tables;
+% includes Limitations and Ethical Considerations sections; short paper under
+% submission to Findings of ACL 2025". No journal-ref, so still unrefereed.
+% paper/09's characterisation is exactly right.
 @misc{dobariya-kumar-2025,
   author       = {Dobariya, Om and Kumar, Akhil},
   title        = {Mind Your Tone: Investigating How Prompt Politeness Affects {LLM} Accuracy (short paper)},
@@ -55,21 +58,25 @@
   note         = {Unrefereed preprint}
 }
 
-% [OA] verified: title, authors, 2026-05-27
-% UNVERIFIED VENUE: paper/09 states "AMCIS 2026 (Reno) -- refereed".
-% OpenAlex instead reports host venue "Journal of the Association for
-% Information Systems", type "article". CrossRef has no record beyond the
-% arXiv DOI. These disagree; neither could be adjudicated without the arXiv
-% journal_ref field. Author must confirm. Venue deliberately left out below.
-@misc{dobariya-kumar-2026,
+% [OA] verified: title, authors, 2026-05-27.
+% [arXiv abs page] VENUE RESOLVED --- comments field reads verbatim:
+%   "10 pages, 6 tables, 1 figure. Accepted as a full paper at the
+%    Thirty-second Americas Conference on Information Systems (AMCIS 2026),
+%    Reno. Follow-up to arXiv:2510.04950"
+% paper/09's characterisation is exactly right. OpenAlex's "Journal of the
+% Association for Information Systems" is a mis-mapping of the AIS society
+% to its flagship journal. Primary class is cs.AI, not cs.CL.
+@inproceedings{dobariya-kumar-2026,
   author       = {Dobariya, Om and Kumar, Akhil},
   title        = {Mind Your Tone: Does Tone Alter {LLM} Performance?},
+  booktitle    = {Proceedings of the Thirty-second Americas Conference on Information Systems (AMCIS 2026)},
+  address      = {Reno, NV},
   year         = {2026},
   eprint       = {2605.29027},
   archivePrefix= {arXiv},
-  primaryClass = {cs.CL},
+  primaryClass = {cs.AI},
   doi          = {10.48550/arXiv.2605.29027},
-  note         = {VENUE UNVERIFIED --- see comment above}
+  note         = {Accepted as a full paper; refereed}
 }
 
 % [OA] verified: title, authors, 2025-03-14, preprint
@@ -85,7 +92,7 @@
 }
 
 % [OA] verified: title, authors, 2023-10-03, preprint.
-% ICLR 2024 acceptance asserted in paper/09; not confirmed by OA or CR.
+% [AX] VENUE CONFIRMED --- arXiv comments field reads exactly "ICLR 2024".
 @misc{huang-2024,
   author       = {Huang, Jie and Chen, Xinyun and Mishra, Swaroop and Zheng, Huaixiu Steven and Yu, Adams Wei and Song, Xinying and Zhou, Denny},
   title        = {Large Language Models Cannot Self-Correct Reasoning Yet},
@@ -94,7 +101,7 @@
   archivePrefix= {arXiv},
   primaryClass = {cs.CL},
   doi          = {10.48550/arXiv.2310.01798},
-  note         = {ICLR 2024 --- venue asserted in prose, UNVERIFIED by registry}
+  note         = {ICLR 2024 --- confirmed via arXiv comments}
 }
 
 % [OA] verified: title, authors (Kumar first), 2026-07-27, preprint
@@ -136,7 +143,8 @@
 }
 
 % [OA] verified: title, authors, 2024-06-21, preprint.
-% NeurIPS 2024 Spotlight asserted in paper/09; not confirmed by OA or CR.
+% [AX] VENUE CONFIRMED --- arXiv comments read "Neurips 2024 (Spotlight)".
+% NOTE: it does NOT say "main track", which paper/09 adds.
 @misc{ma-2024,
   author       = {Ma, Zeyao and Zhang, Bohan and Zhang, Jing and Yu, Jifan and Zhang, Xiaokang and Zhang, Xiaohan and Luo, Sijia and Wang, Xi and Tang, Jie},
   title        = {SpreadsheetBench: Towards Challenging Real World Spreadsheet Manipulation},
@@ -145,7 +153,7 @@
   archivePrefix= {arXiv},
   primaryClass = {cs.CL},
   doi          = {10.48550/arXiv.2406.14991},
-  note         = {NeurIPS 2024 Spotlight --- venue asserted in prose, UNVERIFIED by registry}
+  note         = {NeurIPS 2024 Spotlight --- confirmed via arXiv comments}
 }
 
 % [OA] verified: title, authors, 2025-08-01, preprint.
@@ -213,7 +221,7 @@
 
 % [OA] verified: title, authors, 2023-10-17, preprint.
 % NOTE: the registry title has no comma before "or:"; paper/09 adds one.
-% ICLR 2024 acceptance asserted in paper/09; not confirmed by OA or CR.
+% [AX] VENUE CONFIRMED --- arXiv comments: "ICLR 2024 Camera Ready version".
 @misc{sclar-2024,
   author       = {Sclar, Melanie and Choi, Yejin and Tsvetkov, Yulia and Suhr, Alane},
   title        = {Quantifying Language Models' Sensitivity to Spurious Features in Prompt Design or: How I Learned to Start Worrying About Prompt Formatting},
@@ -222,21 +230,25 @@
   archivePrefix= {arXiv},
   primaryClass = {cs.CL},
   doi          = {10.48550/arXiv.2310.11324},
-  note         = {ICLR 2024 --- venue asserted in prose, UNVERIFIED by registry}
+  note         = {ICLR 2024 --- confirmed via arXiv comments}
 }
 
 % [OA] verified: title, authors, 2024-07-26, preprint.
-% ACL 2024 Best Resource Paper (2024.acl-long.850) asserted in paper/09;
-% not confirmed by OA or CR against this DOI.
-@misc{trivedi-2024,
-  author       = {Trivedi, Harsh and Khot, Tushar and Hartmann, Mareike and Manku, Ruskin and Dong, Vinty and Li, Edward and Gupta, Shashank and Sabharwal, Ashish and Balasubramanian, Niranjan},
-  title        = {AppWorld: A Controllable World of Apps and People for Benchmarking Interactive Coding Agents},
-  year         = {2024},
-  eprint       = {2407.18901},
-  archivePrefix= {arXiv},
-  primaryClass = {cs.CL},
-  doi          = {10.48550/arXiv.2407.18901},
-  note         = {ACL 2024 --- venue asserted in prose, UNVERIFIED by registry}
+% [AX] arXiv comments read "ACL'24 Camera Ready".
+% [ACL Anthology] FULLY CONFIRMED at https://aclanthology.org/2024.acl-long.850/
+%   --- the page carries "Award: Best Resource Paper Award" and the Anthology
+%   DOI 10.18653/v1/2024.acl-long.850. paper/09 is correct on every detail.
+% Cited below as the published ACL version rather than the arXiv preprint.
+@inproceedings{trivedi-2024,
+  author    = {Trivedi, Harsh and Khot, Tushar and Hartmann, Mareike and Manku, Ruskin and Dong, Vinty and Li, Edward and Gupta, Shashank and Sabharwal, Ashish and Balasubramanian, Niranjan},
+  title     = {AppWorld: A Controllable World of Apps and People for Benchmarking Interactive Coding Agents},
+  booktitle = {Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)},
+  year      = {2024},
+  publisher = {Association for Computational Linguistics},
+  doi       = {10.18653/v1/2024.acl-long.850},
+  eprint    = {2407.18901},
+  archivePrefix = {arXiv},
+  note      = {Best Resource Paper Award}
 }
 
 % [OA] verified: title, authors, 2024-09-30, preprint
@@ -251,12 +263,13 @@
   note         = {Unrefereed preprint}
 }
 
-% [OA] verified: authors, 2026-08-02, preprint.
-% TITLE CORRECTION: the registry title carries a subtitle that paper/09 omits
-% --- "...: Reasoning, Effort, Harness Design, and End-to-End Cost".
-% The v6 citation date (10 Sep 2026) in paper/09 could not be confirmed:
-% OpenAlex exposes only the 2026-08-02 first-version date, and arXiv's
-% per-version history was unreachable (429). Version pinning UNVERIFIED.
+% [OA] verified: authors, 2026-08-02 (v1), preprint.
+% [arXiv abs page] VERSION HISTORY CONFIRMED --- six versions:
+%   v1 2 Aug 2026, v2 5 Aug, v3 6 Aug, v4 21 Aug, v5 24 Aug, v6 10 Sep 2026.
+% paper/09's "Cited at v6 (10 Sep 2026)" is exactly right.
+% TITLE CORRECTION STANDS: the live (v6) title carries a subtitle that
+% paper/09 omits --- "...: Reasoning, Effort, Harness Design, and End-to-End
+% Cost". paper/09 still prints the v1 title.
 @misc{weinberger-hozez-2026,
   author       = {Weinberger, Sarel and Hozez, Amir},
   title        = {Prompt-Induced Waste in Coding Agents: Reasoning, Effort, Harness Design, and End-to-End Cost},
@@ -287,6 +300,8 @@
 % report for how each would need to be characterised.
 
 % [OA] verified: title, authors, 2026-03-09, preprint.
+% [arXiv abs page] v1 only, 9 Mar 2026. Comments: "15 pages, 11 figures".
+% No journal-ref, so unrefereed.
 % NOTE: "E-STEER" is the name of the framework proposed INSIDE this paper
 % (confirmed in the OpenAlex abstract), not the paper's title. Cite by title.
 @misc{sun-2026-esteer,
@@ -314,6 +329,8 @@
 }
 
 % [OA] verified: title, authors, 2026-05-13, preprint.
+% [arXiv abs page] TWO versions: v1 13 May 2026, v2 13 Jun 2026. Pin a version
+% if the cited content is version-sensitive. No journal-ref, so unrefereed.
 % NOTE: the registry capitalises it "TERMS-Bench", not "TERMS-BENCH".
 @misc{zhang-2026-termsbench,
   author       = {Zhang, Erica and Zhang, Fangzhao and Pappu, Aneesh and El, Batu and Blanchet, Jose and Athey, Susan and Liu, Jiashuo and Zou, James},
