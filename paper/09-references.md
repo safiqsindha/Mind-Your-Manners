@@ -142,7 +142,11 @@ explicitly a lower bound; we do not use it.
 
 **[sun-2026-esteer]** Moran Sun, Tianlin Li, Yuwei Zheng, Zhenhong Zhou, Aishan Liu, Xianglong
 Liu, Yang Liu. "How Emotion Shapes the Behavior of LLMs and Agents: A Mechanistic Study."
-arXiv:2604.00005, 9 Mar 2026, v1. 15 pages. *Unrefereed preprint.* — **Verified: abstract and
+arXiv:2604.00005, 9 Mar 2026, v1. 15 pages. *Unrefereed preprint.* ⚠ The date looks wrong for
+the identifier — a `2604` prefix normally denotes an April 2026 submission — but 9 March is what
+both primary sources state: the arXiv abstract page reads "[Submitted on 9 Mar 2026]" with
+"[v1] Mon, 9 Mar 2026", and OpenAlex independently gives 2026-03-09. We record what the sources
+say rather than the date the numbering convention implies. — **Verified: abstract and
 registry metadata only; not read in full.** Proposes **E-STEER**, an emotion-steering framework
 that embeds emotion as a controllable variable in hidden states; reports non-monotonic
 emotion–behaviour relations and that specific emotions "systematically shape multi-step agent

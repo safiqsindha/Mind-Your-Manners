@@ -24,4 +24,9 @@ fetched here (HTTP 403 / 404 through the proxy), so no venue is baked in.
   live in pandoc's own template, which this build does not use.
 - "Multiply-defined labels" warning: pandoc generates section labels per file and some collide.
   Cosmetic — it does not affect output or citations.
-- `references.bib` is copied from `review/references.bib` at build time.
+- `references.bib` is copied from `review/references.bib` by `md2tex.py` on every run, so the
+  keys used to emit `\cite` and the keys BibTeX resolves cannot drift apart.
+- `md2tex.py` exits nonzero if any pandoc conversion fails, and deletes the target `.tex` first,
+  so a failed conversion cannot leave a stale section in the PDF. It also fails the build if any
+  citation key survives unconverted into the LaTeX.
+- Citations with locators (`[key, Table 3]`) become `\cite[Table 3]{key}`.
