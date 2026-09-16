@@ -232,12 +232,14 @@ question.
 [zhang-2026-termsbench] have been verified as existing — title, authors, venue and version
 history against the publisher record or the arXiv abstract page — but none has been read in full.
 Each is cited for a claim taken from its own abstract, and §1.2 and §8.8 are written so that
-nothing depends on a figure from any of them. Four further entries (§3.8) are weaker still — verified to exist by
-title and author, nothing more. Reading all seven is the remaining pre-submission task on this
-list, and the §3.8 four are the higher priority of the two groups, because one of them may
-occupy ground §5.1 claims is unoccupied. In particular, [sun-2026-esteer] must not be cited for a magnitude comparison
-between agent-level and single-step variation until its full text is checked; its abstract does
-not make one.
+nothing depends on a figure from any of them. In particular, [sun-2026-esteer] must not be cited
+for a magnitude comparison between agent-level and single-step variation until its full text is
+checked; its abstract does not make one.
+
+Four further entries (§3.8) are weaker still — verified to exist by title and author, nothing
+more. Reading all seven is the remaining pre-submission task on this list, and the §3.8 four are
+the higher priority of the two groups, because one of them may occupy ground §5.1 claims is
+unoccupied.
 
 **Both §3.7 primary-PDF checks are closed**, against
 arXiv:2605.29027 and arXiv:2607.23915. Neither confirmed the draft as written, and both

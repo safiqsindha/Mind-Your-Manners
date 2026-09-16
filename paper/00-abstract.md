@@ -23,8 +23,8 @@ eight runs, two models from different labs.
 **Manners are not the operative variable; demand is** — on a coding of "demand" that is our own,
 applied after we had seen the effects, with no second rater, and tested on stimuli we wrote to
 embody it (§4.2, §8.7). That is the study's weakest joint and we put it here rather than in the
-limitations. An affect-free "please continue working
-and make sure your result is correct" reproduces the cost effect. A length-matched,
+limitations. An affect-free "please continue working and make sure your result is correct"
+reproduces the cost effect. A length-matched,
 syntactically identical insult carrying no demand does not move it (−0.08 turns, *p* = 0.63).
 The seven-register cost curve that looks like a politeness gradient is a demand gradient: the
 four demand-carrying arms span +0.70 to +1.80 turns and the three without span −0.68 to +0.09,

@@ -28,8 +28,11 @@ The third is the one prior work gives us a vocabulary for and no evidence about.
 sequences are a well-described conversational object: a pre-closing exchange projects the end of
 a conversation, and appreciations are among the canonical pre-closing tokens
 [schegloff-sacks-1973]. Whether an agent executing a task responds to that structure is, as far
-as our literature review could establish, untested. No prior work connects closing-sequence
-pragmatics to agent termination.
+as our literature review could establish, untested — and §3.8 records the limit of that
+establishing. A paper our review missed, [munirathinam-2026-recuse], asks in its title whether an
+agent will stop under signals delivered mid-flight. We have not read it. Until we have, "no prior
+work connects closing-sequence pragmatics to agent termination" is a claim about our search, not
+about the literature, and we state it that way.
 
 ## 5.2 Design
 
