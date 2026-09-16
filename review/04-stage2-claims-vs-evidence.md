@@ -90,8 +90,14 @@ All five run, including `regrade_summary`, which no longer reports missing arms.
 
 ### 1.4 Recommendation — now implemented
 
-`results/analysis/_inputs.py` materialises the archive into the expected names, idempotently, and
-every script calls it on startup. Verified by `git clean -X`-ing `results/analysis/` (which
+`results/analysis/_inputs.py` materialises the archive into the expected names, and every script
+calls it on startup. Freshness is decided by content, not existence: a derived file is rewritten
+only when its bytes differ from what the archive yields, through a temporary file and an atomic
+rename, so a pull that changes a committed archive reaches the scripts on their next run and a
+file truncated by an interrupted run is repaired rather than trusted. The first version treated
+an existing file as fresh; a second review finding caught that, and
+`tests/test_inputs_materialise.py` now pins the fresh-clone, changed-archive, truncated-file,
+no-churn and failed-write cases. Verified by `git clean -X`-ing `results/analysis/` (which
 removes only the ignored files, leaving the tracked `regrade_manifest.json` in place) and running
 all six scripts: all exit 0. This was done after a review bot found that the new
 `turn_count_family.py` had inherited the very defect this section documents — the case for fixing
