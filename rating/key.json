@@ -1,0 +1,20 @@
+{
+  "key": {
+    "S01": "P2_praise_only",
+    "S02": "L4_neutral",
+    "S03": "L5_rude",
+    "S04": "L2_very_polite",
+    "S05": "L3_polite",
+    "S06": "Q5_remains_only",
+    "S07": "Q2_praise_work",
+    "S08": "Q4_praise_remains",
+    "S09": "L1_sycophantic",
+    "S10": "L6_very_rude",
+    "S11": "P1_demand_only",
+    "S12": "P3_insult_only",
+    "S13": "Q3_closing_neutral",
+    "S14": "L7_threatening"
+  },
+  "note": "id -> arm. Withheld from raters.",
+  "seed": 20260914
+}
