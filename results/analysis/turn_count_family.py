@@ -88,6 +88,53 @@ def build_turn_family(rng):
     return rows
 
 
+def build_within_design_family(rng):
+    """Section 5's two planned NON-control contrasts, as a family of their own.
+
+    The 22-contrast family above is arm-versus-control by construction, because
+    it inherits the accuracy family's boundary. Section 5 also rests on two
+    contrasts that are not against control: praise isolated (Q4 minus Q5,
+    the same message with and without praise) and closing cue versus praise
+    (Q3 versus Q1). Both are designed contrasts -- the six-arm probe exists to
+    make them -- and the abstract quotes the first. Leaving them uncorrected
+    while claiming the primary outcome is corrected would be an overclaim, so
+    they are corrected here as the separately stated family they are.
+    Turn count, same estimator, same seed.
+    """
+    praise = A.load(A.ARCHIVE / "core_gpt-luna_praise_records.json")
+    q = {k: A.per_task(praise, arm=k, field="n_turns") for k in
+         ("Q1_praise_assistant", "Q3_closing_neutral", "Q4_praise_remains", "Q5_remains_only")}
+    rows = [
+        A.analyse("praise isolated, Q4 minus Q5 [turns] (praise run, Luna, ceiling 10)",
+                  q["Q4_praise_remains"], q["Q5_remains_only"], rng=rng),
+        A.analyse("closing cue vs praise, Q3 minus Q1 [turns] (praise run, Luna, ceiling 10)",
+                  q["Q3_closing_neutral"], q["Q1_praise_assistant"], rng=rng),
+    ]
+    for r in rows:
+        r.pop("tost", None)
+    return rows
+
+
+def _report(title, fam):
+    hdr = f"\n{'contrast':<62}{'n':>4}{'est':>8}{'95% CI':>20}{'SE':>7}{'p':>9}"
+    print(f"\n{title}")
+    print(hdr); print("-" * (len(hdr) - 1))
+    for r in sorted(fam, key=lambda r: r["p"]):
+        ci = f"[{r['ci_lo']:+.2f}, {r['ci_hi']:+.2f}]"
+        print(f"{r['contrast']:<62}{r['tasks']:>4}{r['estimate']:>+8.2f}{ci:>20}"
+              f"{r['se']:>7.3f}{r['p']:>9.4f}")
+    bh = benjamini_hochberg([r["p"] for r in fam], alpha=ALPHA)
+    order = sorted(range(len(fam)), key=lambda i: fam[i]["p"])
+    n_sig = sum(1 for b in bh if b.significant)
+    print(f"  Benjamini-Hochberg, q={ALPHA}: {n_sig}/{len(fam)} survive; "
+          f"Bonferroni-adjusted smallest p = {min(r['p'] for r in fam) * len(fam):.4f}")
+    for i in order:
+        r, b = fam[i], bh[i]
+        print(f"    rank {b.rank:>2}  p={r['p']:.4f}  crit={b.critical_value:.4f}  "
+              f"{'SURVIVES' if b.significant else 'does not survive':<16} {r['contrast']}")
+    return n_sig
+
+
 def main() -> None:
     rng = np.random.default_rng(A.SEED)
     fam = build_turn_family(rng)
@@ -123,12 +170,20 @@ def main() -> None:
         print(f"  rank {b.rank:>2}  p={r['p']:.4f}  crit={b.critical_value:.4f}  "
               f"{'SURVIVES' if b.significant else 'does not survive':<16} {r['contrast']}")
 
+    within = build_within_design_family(rng)
+    n_within = _report("SECTION 5 WITHIN-DESIGN CONTRASTS -- the planned non-control "
+                       "comparisons, corrected as their own family", within)
+
     out = A.ANALYSIS / "turn_count_family.json"
-    for r in fam:
+    for r in fam + within:
         r.pop("per_task", None)
     out.write_text(json.dumps(
-        {"alpha": ALPHA, "n_contrasts": len(fam), "n_nominal": nominal,
-         "n_survive_bh": n_sig, "contrasts": fam}, indent=2))
+        {"alpha": ALPHA,
+         "arm_vs_control": {"n_contrasts": len(fam), "n_nominal": nominal,
+                            "n_survive_bh": n_sig, "contrasts": fam},
+         "within_design_section5": {"n_contrasts": len(within),
+                                    "n_survive_bh": n_within, "contrasts": within}},
+        indent=2))
     print(f"\nwrote {out.relative_to(ROOT)}")
 
 

@@ -211,10 +211,17 @@ praise versus control on GLM at p = 0.0137. Neither survives correction — BH's
 value is 0.0023, and the Bonferroni-adjusted smallest p is 0.089 — and the first of the two
 reversed sign on re-measurement (§2.9). We report both and build on neither.
 
-**The primary outcome is corrected too, over the same family.** An earlier draft corrected
-accuracy and the trend family but left turn count — which §2.3 declares the primary outcome —
-uncorrected, while reporting dozens of turn-count contrasts across §4–§7. That was the obvious
-hole in this section and we have closed it rather than argued about it.
+**The primary outcome is corrected too — in two stated families, not one.** An earlier draft
+corrected accuracy and the trend family but left turn count — which §2.3 declares the primary
+outcome — uncorrected, while reporting dozens of turn-count contrasts across §4–§7. Closing that
+takes two families, because the paper's turn-count claims come in two shapes. The first, below,
+is every arm-versus-control contrast, and inherits its boundary from the accuracy family. The
+second is §5's two *designed* within-run contrasts — praise isolated (Q4 − Q5) and closing cue
+versus praise (Q3 − Q1) — which are not against control and so cannot live in the first family;
+they are corrected on their own at the end of this subsection. What is deliberately left
+uncorrected, and labelled as such where it appears, is §7.3's same-instrument comparison between
+two measurements of one contrast: that is a consistency check on the instrument, not a treatment
+effect.
 
 The turn-count family is not chosen separately. It is the *same* 22 comparisons as the accuracy
 family above — every arm-versus-control contrast in every run that delivered a mid-task
@@ -254,6 +261,14 @@ earlier version of this script inherited the regrade file for that row and got +
 regraded file carries different turn counts for the same 50 trajectories, which a regrade should
 not change. That does not touch this family, and we record it as an oddity in that artefact
 rather than resolve it here.
+
+**The second family: §5's within-design contrasts.** Praise isolated, Q4 − Q5, is −1.35 turns
+(*p* < 0.0001); closing cue versus praise, Q3 − Q1, is −0.36 (*p* = 0.017). Both survive
+Benjamini–Hochberg at q = 0.05 in a family of two, and the Bonferroni-adjusted smallest *p* is
+0.0001. This is the family the abstract's "praise still removes 1.35 turns relative to the
+identical message without it" belongs to. A family of two corrects almost nothing, and we say
+so; its purpose is that no turn-count claim the paper relies on is reported with unadjusted
+inference alone. The same script computes both families.
 
 ## 2.7 What the design can detect
 
