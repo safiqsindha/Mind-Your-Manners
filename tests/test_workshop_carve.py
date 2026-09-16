@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import pathlib
 import re
+import shutil
 import subprocess
 import sys
 
@@ -74,6 +75,11 @@ def test_author_block_is_still_a_placeholder():
     assert "author name withheld" in TEX.read_text()
 
 
+@pytest.mark.skipif(
+    shutil.which("pandoc") is None,
+    reason="pandoc absent locally; ci.yml installs and verifies it explicitly, "
+           "and tests/test_ci_guarantees.py asserts that it does",
+)
 def test_md2tex_accepts_a_source_directory(tmp_path):
     """The carve depends on the converter being parameterised, not copied."""
     src, out = tmp_path / "src", tmp_path / "out"
