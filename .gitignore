@@ -43,5 +43,6 @@ build/*.out
 build/*.blg
 build/*.bbl
 build/sections/
+build/workshop-sections/
 # pdftotext scratch output, used to inspect the rendered PDF
 build/*.txt

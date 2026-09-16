@@ -10,3 +10,8 @@ scipy>=1.11,<2
 datasets>=2.19,<4
 openpyxl>=3.1,<4
 pytest>=8.0,<9
+# Figures only (results/analysis/figures.py). Not a numerics dependency -- it
+# reads the contrasts turn_count_family.py already computed and draws them -- so
+# the bound is loose. Pinned at all because a paper figure that cannot be
+# rebuilt from the data is the same problem as a number that cannot be traced.
+matplotlib>=3.8,<4
