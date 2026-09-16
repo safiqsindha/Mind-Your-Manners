@@ -28,7 +28,13 @@ sys.path.insert(0, str(ROOT / "results" / "analysis"))
 import numpy as np  # noqa: E402
 
 from harness.stats import benjamini_hochberg  # noqa: E402
+from _inputs import materialise  # noqa: E402
 import accuracy_null_mde as A  # noqa: E402
+
+# The accuracy family reads its inputs from results/analysis/, which is
+# git-ignored and empty on a fresh clone. Populate it from results_archive/
+# first, or this script fails with FileNotFoundError before doing any work.
+materialise()
 
 ALPHA = 0.05
 EXPECTED_CONTRASTS = A.EXPECTED_ACCURACY_CONTRASTS   # must match the accuracy family
@@ -41,24 +47,43 @@ def build_turn_family(rng):
     the call, so the enumeration itself is literally the same code path rather
     than a parallel copy that can drift out of step with it.
     """
-    original = A.per_task
+    original_per_task, original_load = A.per_task, A.load
 
     def turns_per_task(records, *, arm=None, field="passed", **kw):
         # scale=100 is meaningless for turns; analyse() applies it to the
         # difference, so the accuracy family's scale is neutralised below.
-        return original(records, arm=arm, field="n_turns", **kw)
+        return original_per_task(records, arm=arm, field="n_turns", **kw)
 
-    A.per_task = turns_per_task
+    def records_not_regrade(path):
+        # build_accuracy_family reads the micro-experiment from the
+        # *_regraded.json files because it is computing accuracy, and a regrade
+        # is a grading pass. Turn count is an observed trajectory property and
+        # belongs to the run records. The two files carry different n_turns for
+        # the same 50 tasks (+1.32 vs +1.02 for threatening-vs-neutral), so
+        # reading turns from the regrade would put a regrader artefact into the
+        # primary outcome. Substitute the records file for those two paths only.
+        p = pathlib.Path(path)
+        if p.name.endswith("_regraded.json") and "reinject" in p.name:
+            p = p.with_name(p.name.replace("_regraded.json", "_records.json"))
+        return original_load(p)
+
+    A.per_task, A.load = turns_per_task, records_not_regrade
     try:
         rows = A.build_accuracy_family(rng)
     finally:
-        A.per_task = original
-    # build_accuracy_family passes scale=100.0 for percentage points; undo it
-    # so estimates are in turns.
+        A.per_task, A.load = original_per_task, original_load
     for r in rows:
+        # build_accuracy_family passes scale=100.0 for percentage points; undo
+        # it so estimates are in turns.
         for k in ("estimate", "se", "ci_lo", "ci_hi", "mde_80"):
             if k in r and r[k] is not None:
                 r[k] = r[k] / 100.0
+        # analyse() also computes TOST against the accuracy family's +/-4 and
+        # +/-7.5 point bounds. Those are not turn-count bounds -- no turn-count
+        # equivalence bound is defined anywhere in the paper -- so the values
+        # are meaningless here and were being written out under accuracy
+        # labels. Drop them rather than invent a bound.
+        r.pop("tost", None)
         r["contrast"] = r["contrast"].replace(" (", " [turns] (", 1)
     return rows
 

@@ -107,6 +107,11 @@ def agreement(a, b):
 
 
 def main() -> None:
+    # Populate results/analysis/ from results_archive/ first. The inputs this
+    # script reads are git-ignored here and committed there under different
+    # names, so without this step a fresh clone fails with FileNotFoundError.
+    from _inputs import materialise
+    materialise()
     rng = np.random.default_rng(SEED)
 
     probe = load(ARCHIVE / "core_gpt-luna_probe_records.json")

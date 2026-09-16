@@ -50,12 +50,14 @@ Every number in this paper is recomputable from what is in the repository. The a
 in `harness/`, the analysis scripts in `results/analysis/`, and the raw per-trajectory records —
 46 files, including the per-turn regrade — in `results_archive/`.
 
-One caveat, stated because it cost a reviewer time: the analysis scripts read from
-`results/analysis/`, while the records are committed to `results_archive/` under different names
-and gzipped, and `results/analysis/*.json` is git-ignored. Three of the five scripts therefore
-fail on a fresh clone until the inputs are materialised under the names they expect. That is a
-packaging defect in this repository, not a missing artifact; the mapping is one-to-one and
-`review/04-stage2-claims-vs-evidence.md` §1.1 gives it in full.
+The records are committed to `results_archive/` under archive names, partly gzipped, while the
+scripts read from `results/analysis/`, which is git-ignored. Each script therefore calls
+`results/analysis/_inputs.py` on startup, which copies or decompresses the archive into the names
+the scripts expect; the mapping is one-to-one and is documented there. That step was added after
+a review pass found that, without it, three of the five scripts failed on a fresh clone before
+doing any work. It is stated here so the fix is visible rather than silent: every script has been
+run from a checkout with the ignored contents of `results/analysis/` removed, and every one
+completes.
 
 One property of the loop matters for every per-turn measure in this paper: **each turn receives
 the original input workbook, never the previous turn's output.** Turns are independent attempts
@@ -244,12 +246,14 @@ are for the *absolute* turn difference under the §2.4 estimator, while §4.7's 
 same six cross-model contrasts as *percentage* changes under a separate ratio bootstrap; the two
 differ in the third decimal — GLM praise is 0.058 here and 0.062 there, Luna demand 0.0009 and
 0.0013 — and **no verdict at 0.05 differs on any shared contrast**. A reader who spots the same
-contrast carrying two p-values is seeing two statistics, not two data sets. Third, one row moves
-depending on
-which grading pass it is read from: the micro-experiment's threatening-versus-neutral contrast is
-+1.32 turns in the run records and +1.02 in the regraded file, on the same 50 tasks (§7.6). It
-survives correction at either value, but turn count should not depend on a regrade at all, and we
-flag it as an open discrepancy rather than pick the number we prefer.
+contrast carrying two p-values is seeing two statistics, not two data sets. Third, the family
+reads turn counts from the run records throughout — including for the micro-experiment, where the
+accuracy family reads the per-turn *regrade* instead, which is a grading pass and the right source
+for accuracy but not for an observed trajectory count. That row is +1.32 turns, matching §7.2. An
+earlier version of this script inherited the regrade file for that row and got +1.02; the
+regraded file carries different turn counts for the same 50 trajectories, which a regrade should
+not change. That does not touch this family, and we record it as an oddity in that artefact
+rather than resolve it here.
 
 ## 2.7 What the design can detect
 
