@@ -21,12 +21,16 @@ effect is largest where there is most room and survives at both, so it is not an
 floor; the turn-2 estimates also rest on the 35–38 tasks whose trajectories reach turn 2 at all,
 against all 50 at turn 1.
 
-**The ordering is ours and was not fixed in advance.** Figure 2A arranges the arms by how strongly
-each message projects an end to the exchange, and that ordering is monotone in the effect. But the
-arm definitions, their predictions and the run's results entered our repository in a single commit,
-so we have no dated evidence that the ranking preceded the outcomes. Treat it as the same kind of
-post-hoc coding as "demand" in §3, with the same discount. `[AUTHOR: if a dated pre-specification
-of the closure ordering exists outside the repository, cite it here; otherwise this stands.]`
+**The ordering is ours and was not fixed in advance — but blinded readers reproduce it.** Figure
+2A arranges the arms by how strongly each message projects an end to the exchange, and that
+ordering is monotone in the effect. The arm definitions, their predictions and the run's results
+entered our repository in a single commit, so we have no dated evidence that the ranking preceded
+the outcomes. What we do have is the blinded rating of §3: five raters who never saw a turn count
+scored each text for projected closure, and their mean ranks the arms as Figure 2A does, Spearman
+ρ = +0.93. They invert one pair — they read praising the *work* as more closing than praising the
+*assistant*, where we had it the other way — and the two "work remains" arms tie at the floor. The
+ordering is therefore recoverable from the text by someone with no access to the outcome, which is
+what it needed to stop being an author artefact.
 
 Closing sequences are a well-described conversational object, and appreciations are among the
 canonical pre-closing tokens [schegloff-sacks-1973]; that praise operates *through* that structure
@@ -37,8 +41,7 @@ a working agent before, and whether it stops has been measured [munirathinam-202
 that signal is an explicit stop instruction with normative force, and closing-sequence pragmatics
 appear nowhere in it. Prior work shows that explicit mid-flight halt instructions need not stop an
 agent; our distinct question is whether ordinary conversational closing structure can alter
-termination without instructing the agent to stop. Read against ours, that result raises the
-stakes: an explicit halt which agents acknowledged in 20 of 20 trials stopped none of them, while
-a note that issues no instruction at all removed 1.44 turns. **This experiment — the six-arm
-closure study of this section — is the least replicated in the paper: one run, one model, one turn
-ceiling**, and is the first thing a replication should target.
+termination without instructing the agent to stop. Read against ours it raises the stakes: an explicit halt
+that agents acknowledged in 20 of 20 trials stopped none of them, while a note issuing no
+instruction removed 1.44 turns. **This experiment — the six-arm closure study of this section — is
+the least replicated in the paper: one run, one model, one turn ceiling.**

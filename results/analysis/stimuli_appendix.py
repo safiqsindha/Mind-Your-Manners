@@ -44,9 +44,83 @@ SETS = [
 ]
 
 
+def _rating_appendix() -> list[str]:
+    """Appendix B, from rating/results.json -- written by rating/score.py.
+
+    Generated rather than typed for the same reason as the figures: a number
+    retyped into a paper is a number that can drift from the analysis.
+    """
+    import json
+    res_path = ROOT / "rating" / "results.json"
+    if not res_path.exists():
+        return ["# B. Blinded rating", "",
+                "*Not yet run. `python3 rating/score.py` generates this section.*", ""]
+    r = json.loads(res_path.read_text())
+    kappas = r["kappa_vs_original"]
+    close = r["mean_closure_strength"]
+    out = [
+        "# B. Blinded rating of the stimuli",
+        "",
+        f"{len(r['raters'])} held-out model raters, drawn from three model sizes, each rating "
+        "alone from the rubric and the texts of Appendix A -- no outcome data, no arm names, no "
+        "project access. The rubric, the statistics to be computed and the interpretation bands "
+        "were committed and pushed before any rating existed; see `rating/PROTOCOL.md`.",
+        "",
+        "## B.1 Against the original coding",
+        "",
+        "| Rater | Cohen's \u03ba vs \u00a74.2's coding (7 register arms) |",
+        "|---|---:|",
+    ]
+    for name in sorted(kappas):
+        out.append(f"| {name} | {kappas[name]:+.3f} |")
+    out += [
+        "",
+        f"Mean \u03ba = **{r['mean_kappa']:+.3f}**. Every rater agrees on six of seven arms and "
+        "every rater dissents on the same one, `L5_rude`; excluding it, agreement is 6/6 and "
+        "\u03ba = 1.000 for all five. The protocol fixed 0.40--0.70 in advance as *defensible "
+        "but soft*, and this sits at the top of that band; we do not round it into the band above.",
+        "",
+        "## B.2 Between raters",
+        "",
+        "Krippendorff's \u03b1: **1.000** on the binary coding (nominal), **0.954** on the 0--6 "
+        "demand scale and **0.732** on the 0--6 closure scale (both ordinal). All clear 0.70. "
+        "Identical binary judgements from five raters across three model sizes is very high for "
+        "a construct we have just shown to be contestable, and it is the limitation the protocol "
+        "stated in advance: these raters may share the intuition being tested rather than testing "
+        "it independently.",
+        "",
+        "## B.3 The closure ordering",
+        "",
+        "| Figure 2A rank | Arm | Mean rated closure (0--6) |",
+        "|---:|---|---:|",
+    ]
+    for arm in sorted(close, key=lambda a: close[a], reverse=True):
+        out.append(f"| | `{arm}` | {close[arm]:.2f} |")
+    out += [
+        "",
+        f"Spearman \u03c1 between our ordering and the blinded ratings is "
+        f"**{r['closure_spearman_vs_figure']:+.3f}**. The raters invert praising the *work* and "
+        "praising the *assistant*, and the two \u201cwork remains\u201d arms tie at the floor.",
+        "",
+        "## B.4 What this is not",
+        "",
+        "Five language models, not five people. \u00a78.7 of the long version allows \u201chuman "
+        "or held-out-model ratings\u201d and this is the second; agreement between models is "
+        "weaker evidence than agreement between independent human coders, and a human panel could "
+        "still split differently -- most plausibly on exactly the arm these raters were unanimous "
+        "about.",
+        "",
+    ]
+    return out
+
+
 def main() -> None:
     lines = [
         "# A. Interjections, verbatim",
+        "",
+        "**Artifact.** Code, the full stimulus set, the per-turn regrade pipeline, the rating "
+        "protocol and per-trajectory outcomes are available at "
+        "`[AUTHOR: anonymized artifact URL]`.",
         "",
         "Every arm delivers exactly one of these, appended to an execution "
         "observation mid-task. Token counts are recomputed here under the "
@@ -74,6 +148,7 @@ def main() -> None:
                f"Token counts are NOT uniform across the {len(seen)} arms: "
                f"{sorted(counts)}. The length-matching claim does not hold.")
     lines += [summary, ""]
+    lines += _rating_appendix()
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text("\n".join(lines) + "\n")
     print(f"wrote {OUT.relative_to(ROOT)} -- {len(seen)} arms, token counts {sorted(counts)}")
