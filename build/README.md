@@ -3,10 +3,15 @@
 Produces `main.pdf` from `paper/*.md`.
 
 ```bash
-python3 build/md2tex.py     # paper/*.md -> build/sections/*.tex, rewriting [key] -> \cite{key}
-cd build
-pdflatex main && bibtex main && pdflatex main && pdflatex main
+# One chain. md2tex.py exits nonzero on a failed conversion or an unconverted
+# citation, and must stop the build -- if it is run as a separate command, a
+# paste-and-run continues to pdflatex and overwrites main.pdf with the defect
+# the script just refused.
+python3 build/md2tex.py && cd build && \
+  pdflatex main && bibtex main && pdflatex main && pdflatex main
 ```
+
+Or `bash build/build.sh`, which is the same chain under `set -euo pipefail`.
 
 Requires `pandoc`, `pdflatex`, `bibtex`. Engine is **pdflatex**: the 21 non-ASCII characters the
 prose uses are declared explicitly in `main.tex` rather than relying on a Unicode engine, because

@@ -28,6 +28,13 @@ def to_cite(m):
     if locator:
         if len(parts) > 1:                       # \cite[loc]{a,b} is ambiguous; leave alone
             return m.group(0)
+        # A locator that itself contains a citation key means the bracket held
+        # more than one citation and the regex split it in the wrong place --
+        # e.g. "[a, Table 9; b]" would otherwise become \cite[Table 9; b]{a},
+        # burying b inside a locator string where it can never resolve. Refuse
+        # it so the unconverted-citation scan below reports it.
+        if any(tok.strip(' ;,.') in keys for tok in re.split(r'[;,\s]+', locator)):
+            return m.group(0)
         return '\\cite[' + locator.strip() + ']{' + parts[0] + '}'
     return '\\cite{' + ','.join(parts) + '}'
 
@@ -66,10 +73,14 @@ for md in sorted(SRC.glob('*.md')):
     # is kept and LaTeX's generated numbering suppressed in main.tex, because the prose
     # is full of §2.4-style cross-references tied to those exact numbers.
     tmp = OUT / (md.stem + '.pre.md'); tmp.write_text(txt)
-    r = subprocess.run(['pandoc', '-f', 'markdown+pipe_tables', '-t', 'latex',   # no tex_math_dollars:
-                        # the prose contains no inline math but does contain dollar amounts
-                        # ($48.47, $1B, $0.70). One per file today, so nothing pairs; two in
-                        # one file would silently swallow the text between them into math mode.
+    r = subprocess.run(['pandoc', # tex_math_dollars is ON by default in pandoc's markdown; dropping "+tex_math_dollars"
+                        # does NOT disable it -- an extension is removed only with a leading "-".
+                        # An earlier commit here claimed otherwise and was wrong: $x^2$ still
+                        # became \(x^2\). Disabled explicitly below. The prose has no inline
+                        # math but does carry dollar amounts ($48.47, $1B, $0.70), and a pair of
+                        # them can be read as math whenever the closing $ has a non-space to its
+                        # left and no digit to its right.
+                        '-f', 'markdown-tex_math_dollars+pipe_tables', '-t', 'latex',
                         '--top-level-division=section', '-o', str(tex), str(tmp)],
                        capture_output=True, text=True)
     tmp.unlink(missing_ok=True)
