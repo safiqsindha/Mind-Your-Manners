@@ -1,0 +1,13 @@
+concern,alfa,bravo,charlie,delta,severity
+"Demand/register coding is post hoc, single-coder, no inter-rater reliability",1,1,1,1,BLOCKER
+"No data/code availability statement; model 'Luna' never identified",0,1,1,0,BLOCKER
+"'A pleasantry can end an agent's work' generalised from one run on one model",1,1,0,0,BLOCKER
+"Directly on-topic prior work missing from the audit and reference list",1,1,0,0,BLOCKER
+"Neutral-control baseline validated once, at low power, on one model",0,0,1,0,BLOCKER
+"Turn count (primary outcome) never multiplicity-corrected",0,1,0,0,BLOCKER
+"Equivalence bound +/-4 pts barely clears the design's own MDE (median 5.52)",1,0,0,0,POLISH
+"Closing-cue novelty asserted more strongly than search discipline supports",1,0,0,0,POLISH
+"No dose-response manipulation of demand strength",0,0,1,0,POLISH
+"Pre-closing account not distinguished from trained pattern-matching",0,0,1,0,POLISH
+"Q3 closing cue may itself be an implicit demand under the paper's own rule",0,0,0,1,POLISH
+"Section 7.6 lists fixed errors without before/after numbers",0,1,0,0,POLISH

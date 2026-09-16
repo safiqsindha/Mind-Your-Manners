@@ -1,0 +1,93 @@
+% Mind Your Manners --- workshop submission build
+% BUILD WITH: pdflatex (Unicode handled via \DeclareUnicodeCharacter below)
+%
+% VENUE-NEUTRAL TEMPLATE. Swap the preamble block marked below for the target
+% workshop's .sty when the venue is chosen; nothing else needs to change.
+\documentclass[11pt]{article}
+
+% ---------------- venue block: replace wholesale with e.g. \usepackage{neurips_2026} -------------
+\usepackage[letterpaper,margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\renewcommand{\baselinestretch}{1.02}
+% -------------------------------------------------------------------------------------------------
+
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,longtable,array,multirow}
+\usepackage{graphicx}
+\usepackage[table]{xcolor}
+\usepackage{caption}
+\usepackage[hidelinks]{hyperref}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{microtype}
+\usepackage{enumitem}
+\usepackage{fancyvrb}
+\usepackage{textcomp}
+
+
+% --- Unicode characters used in the prose (21 distinct; enumerated, not guessed) ---
+\usepackage{textcomp}
+\DeclareUnicodeCharacter{2014}{---}
+\DeclareUnicodeCharacter{2013}{--}
+\DeclareUnicodeCharacter{00A7}{\S}
+\DeclareUnicodeCharacter{2212}{\ensuremath{-}}
+\DeclareUnicodeCharacter{00D7}{\ensuremath{\times}}
+\DeclareUnicodeCharacter{0394}{\ensuremath{\Delta}}
+\DeclareUnicodeCharacter{00B1}{\ensuremath{\pm}}
+\DeclareUnicodeCharacter{26A0}{\textbf{[!]}}
+\DeclareUnicodeCharacter{2026}{\ldots}
+\DeclareUnicodeCharacter{2248}{\ensuremath{\approx}}
+\DeclareUnicodeCharacter{2265}{\ensuremath{\geq}}
+\DeclareUnicodeCharacter{00B7}{\ensuremath{\cdot}}
+\DeclareUnicodeCharacter{00B2}{\ensuremath{^2}}
+\DeclareUnicodeCharacter{00E8}{\`e}
+\DeclareUnicodeCharacter{03C7}{\ensuremath{\chi}}
+\DeclareUnicodeCharacter{03B1}{\ensuremath{\alpha}}
+\DeclareUnicodeCharacter{2080}{\ensuremath{_0}}
+\DeclareUnicodeCharacter{2085}{\ensuremath{_5}}
+\DeclareUnicodeCharacter{2087}{\ensuremath{_7}}
+\DeclareUnicodeCharacter{2088}{\ensuremath{_8}}
+\DeclareUnicodeCharacter{2089}{\ensuremath{_9}}
+
+
+% --- pandoc table helpers (pandoc emits these but they live in its own template) ---
+\usepackage{calc}
+\providecommand{\real}[1]{#1}
+\providecommand{\tightlist}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\providecommand{\pandocbounded}[1]{#1}
+
+\setlist{nosep,leftmargin=1.4em}
+\captionsetup{font=small,labelfont=bf}
+\providecommand{\tightlist}{}
+\setlength{\emergencystretch}{3em}
+\sloppy
+
+\title{\textbf{Mind your manners? Demand, not register,\\is what moves an LLM agent}}
+\author{%
+  % TODO: author block --- name, affiliation, contact.
+  \textit{[author name withheld for review]}\\
+  \textit{Independent researcher}
+}
+\date{}
+
+\begin{document}
+\maketitle
+
+\input{sections/00-abstract}
+\input{sections/01-introduction}
+\input{sections/02-design-and-statistics}
+\input{sections/03-confound-in-prior-materials}
+\input{sections/04-demand-not-manners}
+\input{sections/05-closing-cues}
+\input{sections/06-per-turn-regrade}
+\input{sections/07-what-replicated}
+\input{sections/08-limitations}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\appendix
+\input{sections/09-references}
+
+\end{document}
