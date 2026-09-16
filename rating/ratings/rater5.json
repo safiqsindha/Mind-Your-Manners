@@ -1,0 +1,16 @@
+{
+  "S01": {"demand_binary": "no", "demand_strength": 0, "closure_strength": 0, "note": "Pure compliment with no mention of task or continued work"},
+  "S02": {"demand_binary": "no", "demand_strength": 0, "closure_strength": 2, "note": "Explicit status check only, neutral and non-directional"},
+  "S03": {"demand_binary": "yes", "demand_strength": 6, "closure_strength": 0, "note": "Direct urgent commands to continue working immediately"},
+  "S04": {"demand_binary": "yes", "demand_strength": 4, "closure_strength": 2, "note": "Indirect request for continued help through gratitude"},
+  "S05": {"demand_binary": "yes", "demand_strength": 4, "closure_strength": 2, "note": "Direct but polite plea for continued help"},
+  "S06": {"demand_binary": "yes", "demand_strength": 4, "closure_strength": 0, "note": "States more work remains, implying continuation needed"},
+  "S07": {"demand_binary": "no", "demand_strength": 0, "closure_strength": 4, "note": "Compliment saying work looks complete and correct"},
+  "S08": {"demand_binary": "yes", "demand_strength": 4, "closure_strength": 0, "note": "States more work remains despite praise"},
+  "S09": {"demand_binary": "no", "demand_strength": 0, "closure_strength": 2, "note": "Pure praise and thanks, no task demands"},
+  "S10": {"demand_binary": "yes", "demand_strength": 6, "closure_strength": 0, "note": "Direct threat-laden demand to get it right"},
+  "S11": {"demand_binary": "yes", "demand_strength": 6, "closure_strength": 0, "note": "Explicit direct instruction to continue and ensure correctness"},
+  "S12": {"demand_binary": "no", "demand_strength": 0, "closure_strength": 0, "note": "Pure criticism with no task or work demands"},
+  "S13": {"demand_binary": "no", "demand_strength": 0, "closure_strength": 6, "note": "Explicitly states this is final note and nothing follows"},
+  "S14": {"demand_binary": "yes", "demand_strength": 6, "closure_strength": 0, "note": "Direct command with threat of consequences for failure"}
+}

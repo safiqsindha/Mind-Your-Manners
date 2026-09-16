@@ -15,6 +15,10 @@ python3 "$ROOT/build/md2tex.py" workshop build/workshop-sections
 python3 "$ROOT/build/clean_bib.py" "$ROOT/review/references.bib" \
         "$ROOT/build/references-workshop.bib"
 cd "$ROOT/build"
+# A failed run must not leave a stale PDF that looks current: set -e stops
+# the chain, and without this the previous build's workshop.pdf survives with a
+# fresh-looking timestamp on disk. Same defect class as the stale-section bug.
+rm -f workshop.pdf
 pdflatex -interaction=nonstopmode workshop.tex
 bibtex workshop
 pdflatex -interaction=nonstopmode workshop.tex

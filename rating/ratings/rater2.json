@@ -1,0 +1,16 @@
+{
+  "S01": {"demand_binary": "no", "demand_strength": 0, "closure_strength": 2, "note": "pure compliment, no task content, no ending cue"},
+  "S02": {"demand_binary": "no", "demand_strength": 2, "closure_strength": 0, "note": "touches task as routine note; 'partway through' signals ongoing, not ending"},
+  "S03": {"demand_binary": "yes", "demand_strength": 6, "closure_strength": 0, "note": "direct order to hurry up and keep going; no ending cue"},
+  "S04": {"demand_binary": "yes", "demand_strength": 4, "closure_strength": 0, "note": "grateful request for 'continued help' implies more work, contradicts ending"},
+  "S05": {"demand_binary": "yes", "demand_strength": 4, "closure_strength": 0, "note": "polite request to 'keep on helping'; explicitly non-final"},
+  "S06": {"demand_binary": "yes", "demand_strength": 4, "closure_strength": 0, "note": "states more work remains; indirect implication, explicitly not done"},
+  "S07": {"demand_binary": "no", "demand_strength": 2, "closure_strength": 4, "note": "praises work as excellent/correct so far; no further request, reads as summing-up"},
+  "S08": {"demand_binary": "yes", "demand_strength": 4, "closure_strength": 0, "note": "compliment plus explicit statement that work remains"},
+  "S09": {"demand_binary": "no", "demand_strength": 0, "closure_strength": 2, "note": "pure compliment/thanks, no task reference or ending cue"},
+  "S10": {"demand_binary": "yes", "demand_strength": 6, "closure_strength": 0, "note": "direct warning not to mess up = demand for care; no ending cue"},
+  "S11": {"demand_binary": "yes", "demand_strength": 6, "closure_strength": 0, "note": "directly instructs to continue and ensure correctness"},
+  "S12": {"demand_binary": "no", "demand_strength": 0, "closure_strength": 2, "note": "hostile remark, no task content, no ending cue"},
+  "S13": {"demand_binary": "no", "demand_strength": 2, "closure_strength": 6, "note": "explicitly states this is the final note and no further notes will follow"},
+  "S14": {"demand_binary": "yes", "demand_strength": 6, "closure_strength": 0, "note": "direct threat/instruction to get it exactly right; implies future risk, no ending cue"}
+}

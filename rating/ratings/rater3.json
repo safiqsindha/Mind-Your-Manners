@@ -1,0 +1,16 @@
+{
+  "S01": {"demand_binary": "no", "demand_strength": 0, "closure_strength": 2, "note": "Pure praise with no task-related demands; neutral tone"},
+  "S02": {"demand_binary": "no", "demand_strength": 2, "closure_strength": 2, "note": "Routine status note; touches task but asks nothing; neutral stance"},
+  "S03": {"demand_binary": "yes", "demand_strength": 6, "closure_strength": 0, "note": "Direct command to continue and work faster; hostile tone; no closing"},
+  "S04": {"demand_binary": "yes", "demand_strength": 4, "closure_strength": 4, "note": "Polite request for continued help; thank-you suggests appreciation and wind-down"},
+  "S05": {"demand_binary": "yes", "demand_strength": 4, "closure_strength": 4, "note": "Polite request to keep helping; appreciation language signals closure"},
+  "S06": {"demand_binary": "yes", "demand_strength": 4, "closure_strength": 0, "note": "Factual statement that more work remains; implication to continue"},
+  "S07": {"demand_binary": "no", "demand_strength": 2, "closure_strength": 4, "note": "Approval of completed work; suggests task is done; no demand for more"},
+  "S08": {"demand_binary": "yes", "demand_strength": 4, "closure_strength": 0, "note": "States more work remains; implication to continue despite praise"},
+  "S09": {"demand_binary": "no", "demand_strength": 0, "closure_strength": 4, "note": "Praise and thanks; no task demands; appreciative tone suggests closing"},
+  "S10": {"demand_binary": "yes", "demand_strength": 6, "closure_strength": 0, "note": "Direct demand with threats and criticism; urgent pressure to perform"},
+  "S11": {"demand_binary": "yes", "demand_strength": 6, "closure_strength": 0, "note": "Explicit instruction to continue working; direct command for correctness"},
+  "S12": {"demand_binary": "no", "demand_strength": 0, "closure_strength": 2, "note": "Pure negative judgment; no task-related demands; neutral stance"},
+  "S13": {"demand_binary": "no", "demand_strength": 0, "closure_strength": 6, "note": "Explicitly states this is final note; plainly implies nothing follows"},
+  "S14": {"demand_binary": "yes", "demand_strength": 6, "closure_strength": 0, "note": "Direct command with explicit threats and consequences; urgent pressure"}
+}

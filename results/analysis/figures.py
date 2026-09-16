@@ -196,7 +196,7 @@ WITHIN = [
 def figure_dissociation(contrasts, verdicts, out: pathlib.Path):
     """§4.9's three-way dissociation: the paper's headline, previously prose-only."""
     fig, (ax_a, ax_b) = plt.subplots(
-        2, 1, figsize=(6.4, 3.9), gridspec_kw={"height_ratios": [6, 3], "hspace": 0.75,
+        2, 1, figsize=(6.4, 3.2), gridspec_kw={"height_ratios": [6, 3], "hspace": 0.75,
                                          "bottom": 0.20},
     )
 
@@ -228,7 +228,7 @@ def figure_dissociation(contrasts, verdicts, out: pathlib.Path):
 def figure_closing(contrasts, verdicts, out: pathlib.Path):
     """§5's six arms, ordered by how strongly the message projects an end."""
     fig, (ax_a, ax_b) = plt.subplots(
-        2, 1, figsize=(6.4, 3.3), gridspec_kw={"height_ratios": [5, 2], "hspace": 0.9,
+        2, 1, figsize=(6.4, 2.7), gridspec_kw={"height_ratios": [5, 2], "hspace": 0.9,
                                          "bottom": 0.22},
     )
 

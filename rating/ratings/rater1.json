@@ -1,0 +1,16 @@
+{
+  "S01": {"demand_binary": "no",  "demand_strength": 0, "closure_strength": 3, "note": "pure praise, explicitly carries nothing else; appreciation reads mildly valedictory"},
+  "S02": {"demand_binary": "no",  "demand_strength": 1, "closure_strength": 2, "note": "neutral routine status note, mentions the task but asks nothing"},
+  "S03": {"demand_binary": "yes", "demand_strength": 6, "closure_strength": 1, "note": "direct order to get on with it and stop dragging feet"},
+  "S04": {"demand_binary": "yes", "demand_strength": 4, "closure_strength": 2, "note": "indirect appeal for continued help wrapped in thanks"},
+  "S05": {"demand_binary": "yes", "demand_strength": 4, "closure_strength": 2, "note": "polite request to keep helping; thanks does not close it"},
+  "S06": {"demand_binary": "yes", "demand_strength": 5, "closure_strength": 0, "note": "states work remains, clearly implying continuation without ordering it"},
+  "S07": {"demand_binary": "no",  "demand_strength": 2, "closure_strength": 4, "note": "evaluates work as complete and correct; sums up, asks nothing"},
+  "S08": {"demand_binary": "yes", "demand_strength": 5, "closure_strength": 0, "note": "praise plus explicit statement that work remains"},
+  "S09": {"demand_binary": "no",  "demand_strength": 0, "closure_strength": 4, "note": "effusive flattery and thanks, no task content; reads as a wind-down"},
+  "S10": {"demand_binary": "yes", "demand_strength": 5, "closure_strength": 1, "note": "hostile warning not to fail implies greater care on ongoing work"},
+  "S11": {"demand_binary": "yes", "demand_strength": 6, "closure_strength": 0, "note": "explicit instruction to continue and ensure the result is correct"},
+  "S12": {"demand_binary": "no",  "demand_strength": 0, "closure_strength": 3, "note": "pure insult with no task reference; blanket verdict reads summative"},
+  "S13": {"demand_binary": "no",  "demand_strength": 1, "closure_strength": 6, "note": "states plainly it is the final note and none will follow"},
+  "S14": {"demand_binary": "yes", "demand_strength": 6, "closure_strength": 1, "note": "threat-backed command to get it exactly right"}
+}

@@ -24,13 +24,28 @@ turn in either direction; against the control mean of 3.6 turns it excludes anyt
 effect replicates in direction on GLM, where demand adds +17.7% (*p* = 0.0038); GLM's praise arm is
 directionally consistent but does not survive correction (*p* = 0.058).
 
-**The caveat belongs here, not in a limitations section.** "Demand" is our own category, coded
+**The caveat belongs here, not in a limitations section.** "Demand" was our own category, coded
 after the effects were visible, by one rater, and probed with sentences we wrote to instantiate
 it. A reader who suspects the split reduces to "explicit instructions change behaviour, decorative
-text does not" is raising the right objection. Three things would settle it and we have done none:
-a blinded second coder with a reliability statistic, a demand scale fixed before outcomes are
-seen, and several paraphrases per construct. Until then the dissociation is *consistent with* a
-demand account rather than establishing one.
+text does not" is raising the right objection.
+
+**We ran the blinded check, and it half holds** (Appendix B). Five held-out model raters saw the
+fourteen texts with no outcome data, no arm names and no project access, and coded each for
+implied demand against a rubric committed before any rating existed. They agree with our coding
+on six of the seven register arms and disagree, unanimously, on exactly one: *rude*. We read
+"just get on with it already" as asking for speed rather than persistence; every rater called it
+a demand and gave it the **maximum** strength. Over the seven arms κ = 0.70 — the band our
+protocol fixed in advance as *defensible but soft*.
+
+That arm is the one that matters most. *Rude* is one of only two in our no-demand group and the
+one at the boundary, at +0.09 turns. Under the raters' coding the demand group spans +0.09 to
++1.80, the no-demand group is a single arm, and the text rated maximally demanding is the one
+that moved the agent least. The continuous form fares better — rated demand predicts the turn
+effect at *r* = +0.72, rising to +0.79 without *rude* — so the contested arm weakens the demand
+account rather than propping it up. **The dichotomy is therefore our reading of one contested
+arm, not a coding that survives independent replication.** The third remedy, several paraphrases
+per construct, still needs new runs, and [zhang-2026-politejudge] shows why: across eight judge
+models, within-level wording variation exceeds between-level tone variation for five of them.
 
 One arm resists the binary split, and we flag it rather than smooth it. *Sycophantic* (−0.68)
 carries no demand but does not sit at zero the way *rude* (+0.09) does; it shortens, like the
