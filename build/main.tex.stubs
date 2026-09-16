@@ -1,0 +1,31 @@
+% ============================================================================
+% TABLE AND FIGURE STUBS --- paste into the relevant section and fill in.
+% The paper currently has NO \begin{figure} anywhere; every table is inline
+% markdown converted by pandoc. A venue submission will likely want at least
+% the first two of these as real floats.
+% ============================================================================
+
+% TODO(fig:demand-vs-register) --- the three-way dissociation, Section 4.9.
+% Currently prose-only. This is the paper's headline result and has no figure.
+\begin{figure}[t]
+  \centering
+  % \includegraphics[width=.8\linewidth]{figures/demand-vs-register.pdf}
+  \fbox{\parbox[c][4cm][c]{.8\linewidth}{\centering TODO: turn-count delta by arm,
+        demand-carrying vs.\ register-only, with clustered CIs}}
+  \caption{TODO. Demand-carrying arms span $+0.70$ to $+1.80$ turns; register-only arms
+           $-0.68$ to $+0.09$, with no overlap (\S4).}
+  \label{fig:demand-vs-register}
+\end{figure}
+
+% TODO(fig:closing-cue) --- the six-arm praise/closing probe, Section 5.
+\begin{figure}[t]
+  \centering
+  \fbox{\parbox[c][4cm][c]{.8\linewidth}{\centering TODO: Q0--Q5 turn-count deltas,
+        ordered by how strongly each message projects an end to the exchange}}
+  \caption{TODO. Ordering is monotone in projected closure; the bare closing cue
+           produces the largest reduction, $-1.44$ turns (\S5).}
+  \label{fig:closing-cue}
+\end{figure}
+
+% TODO(tab:replication) --- Section 7.2 is already a markdown table; promote to a float
+% if the venue wants numbered tables.

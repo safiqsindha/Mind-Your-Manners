@@ -5,9 +5,13 @@
 
 ## 1.1
 
-A widely-discussed short paper reported that impolite prompts outperform polite ones on
-multiple-choice questions — 80.8% under "Very Polite" framings against 84.8% under "Very Rude"
-ones [dobariya-kumar-2025]. It landed in a receptive context. Emotional prompting had already
+A widely-discussed short paper, *Mind Your Tone*, reported that impolite prompts outperform
+polite ones on multiple-choice questions — 80.8% under "Very Polite" framings against 84.8%
+under "Very Rude" ones [dobariya-kumar-2025]. We take our title from theirs, and the debt is
+not only nominal: this study exists because that result made the question worth asking of
+something other than a single answer.
+
+It landed in a receptive context. Emotional prompting had already
 reported that affect-laden additions to a prompt change what a model produces [li-2023], and
 further results since have reported that how you speak to a model changes how well it performs.
 The practical inference drawn from this is that users should adjust their manners to get better
@@ -57,13 +61,26 @@ the first micro-experiment (§2.2). **11,850 graded trajectories across eight ru
 from different labs**, of which 9,850 were additionally regraded turn by turn (§6); the five
 register runs reported in §4–§6 cost $48.47 in API spend.
 
-The design is, as far as a 43-source review with full-text term searches could establish,
-unoccupied. No prior work manipulates register mid-task inside an agentic loop, measures agent
-persistence as the dependent variable of a register manipulation, decomposes politeness into
-affect and demand as separate experimental factors, or connects conversational closing sequences
-to agent termination. The nearest designs — opening instructions split across turns, and
-content-typed interruptions answered in a single response — manipulate task content rather than
-register, and neither measures downstream persistence.
+The design is, as far as our review could establish, unoccupied — but the boundary needs
+stating carefully, because affect has already been shown to reach an agent's actions. Agents
+primed with anxiety-inducing narratives select less healthy baskets in a budget-constrained
+shopping task, across three models and 2,250 runs [benzion-2026]; emotion introduced at the
+representation level shapes multi-step agent trajectories [sun-2026-esteer]. Both establish
+that emotional context changes what an agent *does* and not only what it says, and we take
+that as settled rather than as something this paper contributes.
+
+Neither, however, varies register in a message that reaches the agent while it is working. One
+primes with narratives before the task begins, the other intervenes on hidden states rather
+than through the model's input at all, and neither scores the agent against a verifiable ground
+truth. What we could not find is prior work that varies register *mid-task, while the agent is
+working*, inside an agentic loop; that decomposes politeness into affect and demand as separate
+experimental factors; or that connects conversational closing sequences to agent termination.
+On the channel our interjection arrives through, be precise: it rides along with an execution
+observation rather than as a fresh user turn, and §8.5 records that as a limitation of this
+design rather than a property we claim for it. The nearest designs — opening instructions split
+across turns, and content-typed interruptions answered in
+a single response — manipulate task content rather than register, and neither measures
+downstream persistence.
 
 ## 1.3 What we found
 
@@ -77,7 +94,11 @@ effects. The uncorrected lead in that run is reported in §2.6 rather than suppr
 "please continue working and make sure your result is correct" reproduces the effect. An
 insult carrying no demand, identical in syntax and length to the praise arm, is indistinguishable
 from control (−0.08 turns, p = 0.63; +0.57, p = 0.17 on re-measurement). **The operative variable
-is implied task demand, not social register** (§4).
+is implied task demand, not social register** (§4) — with the caveat that "demand" is our own
+category, coded after the effects were visible, by one rater, and probed with sentences we wrote
+to instantiate it (§4.2, §8.7). A reader who suspects the dissociation reduces to "explicit
+instructions change behaviour, decorative text does not" is raising the right objection, and
+§8.7 says what would settle it.
 
 **Except in one direction, where register acts alone.** Praise carrying no task reference
 *shortens* the trajectory. Its structural minimal pair — same syntax, same length, *excellent*
@@ -115,7 +136,9 @@ ceiling the two larger effects reproduce within 10% and the smallest does not (�
 
 For practitioners the inference is the reverse of the popular one. Manners are not the lever;
 **demand is**, and the work it buys is mostly repeated. The practical hazard runs the other way
-too: a pleasantry to an agent that is still working reads as a closing move and curtails it.
+too: a pleasantry to an agent that is still working reads as a closing move and curtails it —
+though that leg rests on one run of one model at one ceiling (§8.6), and is the first thing a
+replication should target rather than the first thing a practitioner should act on.
 Adding "there's still more to do" does not cancel the praise — praise removes 1.35 turns relative
 to the identical message without it — though that combined message does still lengthen the
 trajectory relative to control (§5.3).
