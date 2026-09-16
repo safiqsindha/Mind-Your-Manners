@@ -48,7 +48,18 @@ for md in sorted(SRC.glob('*.md')):
         txt = DROP_TITLE.sub('', txt)
         txt = DROP_AUTHORS.sub('', txt)
         txt = re.sub(r'\A(?:\s*---\s*\n)+', '', txt)   # rule that separated the stripped front matter
-    txt = CITE.sub(to_cite, txt)
+    if md.stem == '09-references':
+        # In the annotated bibliography each entry OPENS with **[key]** as its own
+        # label. Those are labels, not citations: converting them rendered the
+        # appendix as "[21] [23] [22]" -- natbib numbers, in citation order rather
+        # than entry order. Protect the line-initial label, convert the rest (the
+        # genuine cross-references between entries, e.g. "see [lakens-2017]").
+        LABEL = re.compile(r'^(\*\*)\[([a-z][a-z0-9-]*)\](\*\*)', re.M)
+        txt = LABEL.sub(lambda m: m.group(1) + '\x00' + m.group(2) + '\x01' + m.group(3), txt)
+        txt = CITE.sub(to_cite, txt)
+        txt = txt.replace('\x00', '[').replace('\x01', ']')
+    else:
+        txt = CITE.sub(to_cite, txt)
     # Heading levels are passed through untouched: with --top-level-division=section
     # pandoc already maps # -> \section and ## -> \subsection. Demoting them flattened
     # the whole document to subsections. The source's own numbering ("1.2 What we did")
@@ -69,9 +80,15 @@ n_cite = sum(len(re.findall(r'\\cite(?:\[[^\]]*\])?\{', (OUT / f).read_text())) 
 print(f"converted {len(made)} sections; {n_cite} \\cite commands; bib synced -> {BIB_DST.name}")
 
 # Any citation-key-looking bracket left unconverted is a silent PDF defect.
+# The annotated bibliography's entry labels are deliberately left unconverted
+# (see above); they surface as \textbf{{[}key{]}} and must not be reported here.
+LABEL_TEX = re.compile(r'\\textbf\{\{\[\}[a-z][a-z0-9-]*\{\]\}\}')
 leftover = []
 for f in made:
-    for m in re.finditer(r'\{\[\}([a-z][a-z0-9-]*(?:[;,][^\]]*)?)\{\]\}', (OUT / f).read_text()):
+    body = (OUT / f).read_text()
+    if f == '09-references.tex':
+        body = LABEL_TEX.sub('', body)
+    for m in re.finditer(r'\{\[\}([a-z][a-z0-9-]*(?:[;,][^\]]*)?)\{\]\}', body):
         if m.group(1).split(',')[0].split(';')[0].strip() in keys:
             leftover.append((f, m.group(0)[:60]))
 if leftover:
