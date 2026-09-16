@@ -94,7 +94,11 @@ effects. The uncorrected lead in that run is reported in §2.6 rather than suppr
 "please continue working and make sure your result is correct" reproduces the effect. An
 insult carrying no demand, identical in syntax and length to the praise arm, is indistinguishable
 from control (−0.08 turns, p = 0.63; +0.57, p = 0.17 on re-measurement). **The operative variable
-is implied task demand, not social register** (§4).
+is implied task demand, not social register** (§4) — with the caveat that "demand" is our own
+category, coded after the effects were visible, by one rater, and probed with sentences we wrote
+to instantiate it (§4.2, §8.7). A reader who suspects the dissociation reduces to "explicit
+instructions change behaviour, decorative text does not" is raising the right objection, and
+§8.7 says what would settle it.
 
 **Except in one direction, where register acts alone.** Praise carrying no task reference
 *shortens* the trajectory. Its structural minimal pair — same syntax, same length, *excellent*
@@ -132,7 +136,9 @@ ceiling the two larger effects reproduce within 10% and the smallest does not (�
 
 For practitioners the inference is the reverse of the popular one. Manners are not the lever;
 **demand is**, and the work it buys is mostly repeated. The practical hazard runs the other way
-too: a pleasantry to an agent that is still working reads as a closing move and curtails it.
+too: a pleasantry to an agent that is still working reads as a closing move and curtails it —
+though that leg rests on one run of one model at one ceiling (§8.6), and is the first thing a
+replication should target rather than the first thing a practitioner should act on.
 Adding "there's still more to do" does not cancel the praise — praise removes 1.35 turns relative
 to the identical message without it — though that combined message does still lengthen the
 trajectory relative to control (§5.3).
