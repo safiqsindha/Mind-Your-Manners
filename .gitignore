@@ -35,3 +35,14 @@ results/locks/
 # and large enough that committing it once would be hard to undo.
 # (data/spreadsheetbench/ is already covered above.)
 .cache/
+
+# LaTeX build artifacts (build/main.pdf is committed as the deliverable)
+build/*.aux
+build/*.log
+build/*.out
+build/*.blg
+build/*.bbl
+build/sections/
+build/workshop-sections/
+# pdftotext scratch output, used to inspect the rendered PDF
+build/*.txt

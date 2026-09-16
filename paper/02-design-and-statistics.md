@@ -28,6 +28,37 @@ Twenty is defended empirically in §6: across the dedicated ceiling-20 run, the 
 first reached at a median turn of 2, and 98.3% of trajectories had peaked by turn 10 with 100%
 by turn 14 (§6.6).
 
+### The models
+
+Both are named, with the provider-pinned identifiers the runs actually used, so the study can be
+re-run against the same weights rather than against whatever currently answers to a family name:
+
+| Short name in this paper | Provider identifier | Pinned slug |
+|---|---|---|
+| **Luna** | `openai/gpt-5.6-luna` | `openai/gpt-5.6-luna-20260709` |
+| **GLM** | `z-ai/glm-5.3-flash` | `z-ai/glm-5.3-flash-20260826` |
+
+Both are served through OpenRouter, pinned to the dated slug above; `harness/config.py` holds the
+roster and `tests/test_openrouter_pinning.py` asserts the pinning. Two further models —
+`deepseek/deepseek-v4.1-flash` and `qwen/qwen3.8-flash` — passed the n=100 validation gate and
+were specified in the roster but never run (§8.8); "two models from different labs" describes
+what the budget reached, not a design choice.
+
+### Data and code availability
+
+Every number in this paper is recomputable from what is in the repository. The agent harness is
+in `harness/`, the analysis scripts in `results/analysis/`, and the raw per-trajectory records —
+46 files, including the per-turn regrade — in `results_archive/`.
+
+The records are committed to `results_archive/` under archive names, partly gzipped, while the
+scripts read from `results/analysis/`, which is git-ignored. Each script therefore calls
+`results/analysis/_inputs.py` on startup, which copies or decompresses the archive into the names
+the scripts expect; the mapping is one-to-one and is documented there. That step was added after
+a review pass found that, without it, three of the five scripts failed on a fresh clone before
+doing any work. It is stated here so the fix is visible rather than silent: every script has been
+run from a checkout with the ignored contents of `results/analysis/` removed, and every one
+completes.
+
 One property of the loop matters for every per-turn measure in this paper: **each turn receives
 the original input workbook, never the previous turn's output.** Turns are independent attempts
 at the same problem in *workbook state* rather than refinements of a running draft — the message
@@ -91,6 +122,22 @@ cases", and [mizrahi-2024] recommend averaging across prompts when measuring rob
 case — while recommending the top-performing prompt when selecting a model for deployment.
 
 ## 2.4 The estimator: paired within task, clustered by task
+
+**What the denominator is, stated before any number depends on it.** Every contrast in this paper
+is against a *neutral interjection*, not against silence. Each arm is compared with a control arm
+that also receives a 28-token message at the same turn; that is what isolates register from the
+fact of being interrupted. It also means every headline figure here is a register effect measured
+relative to an interrupted baseline, and inherits whatever that baseline does.
+
+How much the baseline itself moves is measured **once**: the micro-experiment of §2.2 puts a
+neutral interruption against no interruption at 3.47 versus 4.11 turns, +51 reasoning tokens,
+**p = 0.15, on one model at one ceiling** — and it was never revisited when the ceiling, the
+injection turn or the model changed. That single comparison is doing a lot of load-bearing work.
+If the neutral interjection is not in fact equivalent to silence, every turn-count and
+accuracy-equivalence number in this paper carries a common offset we have not bounded. The
+within-comparison logic survives that — an offset shared by treated and control arms cancels in
+the difference — but any reading of an arm's absolute cost against an uninterrupted agent does
+not. §8.8 records the same gap; we state it here because this is where the estimator is defined.
 
 Every trajectory belongs to one of 50 tasks, and each (task, arm) cell holds six to nine
 trajectories — three or four trials at each of two or three injection turns. They are not
@@ -163,6 +210,77 @@ Two of the 22 are nominally significant, against 1.1 expected under a global nul
 praise versus control on GLM at p = 0.0137. Neither survives correction — BH's rank-1 critical
 value is 0.0023, and the Bonferroni-adjusted smallest p is 0.089 — and the first of the two
 reversed sign on re-measurement (§2.9). We report both and build on neither.
+
+**The primary outcome is corrected too — in two stated families, not one.** An earlier draft
+corrected accuracy and the trend family but left turn count — which §2.3 declares the primary
+outcome — uncorrected, while reporting dozens of turn-count contrasts across §4–§7. Closing that
+takes two families, because the paper's turn-count claims come in two shapes. The first, below,
+is every arm-versus-control contrast, and inherits its boundary from the accuracy family. The
+second is §5's two *designed* within-run contrasts — praise isolated (Q4 − Q5) and closing cue
+versus praise (Q3 − Q1) — which are not against control and so cannot live in the first family;
+they are corrected on their own at the end of this subsection. What is deliberately left
+uncorrected, and labelled as such where it appears, is §7.3's same-instrument comparison between
+two measurements of one contrast: that is a consistency check on the instrument, not a treatment
+effect.
+
+The turn-count family is not chosen separately. It is the *same* 22 comparisons as the accuracy
+family above — every arm-versus-control contrast in every run that delivered a mid-task
+interjection, across six runs and two models — with the outcome switched from graded pass to
+turns. Inheriting the boundary is deliberate: choosing a turn-count family by hand, after seeing
+which contrasts are large, is the gerrymandering this section already warns against.
+`results/analysis/turn_count_family.py` recomputes it and reuses the same tested
+Benjamini–Hochberg implementation.
+
+**Seventeen of the 22 survive at q = 0.05.** The Bonferroni-adjusted smallest p is 0.0011. The
+five that do not survive are:
+
+| Contrast | Δ turns | p |
+|---|---:|---:|
+| praise vs control (stage 1, GLM, ceiling 20) | −0.35 | 0.058 |
+| insult vs control (stage 1, Luna, ceiling 20) | +0.57 | 0.165 |
+| insult vs control (probe, Luna, ceiling 10) | −0.08 | 0.624 |
+| `L5_rude` vs neutral (seven-level, Luna, ceiling 10) | +0.09 | 0.654 |
+| insult vs control (stage 1, GLM, ceiling 20) | +0.07 | 0.659 |
+
+The result cuts in the paper's favour and we note that it could have gone the other way. Every
+demand-carrying contrast survives, on both models. Every closing-cue and praise contrast on Luna
+survives. **All three insult contrasts fail, and so does the one rude register arm** — which is
+the dissociation §4 argues for, now holding under correction rather than only nominally.
+
+Three honest qualifications. First, correcting the primary outcome after the fact is weaker than
+pre-registering the family, and we did not pre-register it. Second, the p-values in this family
+are for the *absolute* turn difference under the §2.4 estimator, while §4.7's table reports the
+same six cross-model contrasts as *percentage* changes under a separate ratio bootstrap; the two
+differ in the third decimal — GLM praise is 0.058 here and 0.062 there, Luna demand 0.0009 and
+0.0013 — and **no verdict at 0.05 differs on any shared contrast**. A reader who spots the same
+contrast carrying two p-values is seeing two statistics, not two data sets. Third, the family
+reads turn counts from the run records throughout — including for the micro-experiment, where the
+accuracy family reads the per-turn *regrade* instead, which is a grading pass and the right source
+for accuracy but not for an observed trajectory count. That row is +1.32 turns, matching §7.2. An
+earlier version of this script inherited the regrade file for that row and got +1.02.
+
+That gap is worth explaining, because it looked at first like a defect and is not one: **the two
+files count different things, and both are correct.** The run records store *acting* turns — the
+turns that emitted code — while the regrade stores model calls, every turn including the closing
+`FINAL:` message or refusal that carries no code. Across the 800 micro-experiment trajectories
+the difference is exactly the number of non-acting turns, on every single one; the 21 where the
+two agree are precisely the trajectories that hit the turn ceiling and so never got a closing
+turn. Mean acting turns 3.57 against 4.69 model calls is a 31% relative gap, which is why a
+reader comparing our turn counts to another paper's needs to know which is which.
+
+**Turn count in this paper means acting turns throughout**, the quantity §4–§7 report and the
+definition under which the interjection has somewhere to act. The two quantities share a field
+name in the artefacts, which is what made this look mysterious;
+`results/analysis/turn_definitions.py` prints the reconciliation and
+`tests/test_turn_definitions.py` pins it.
+
+**The second family: §5's within-design contrasts.** Praise isolated, Q4 − Q5, is −1.35 turns
+(*p* < 0.0001); closing cue versus praise, Q3 − Q1, is −0.36 (*p* = 0.017). Both survive
+Benjamini–Hochberg at q = 0.05 in a family of two, and the Bonferroni-adjusted smallest *p* is
+0.0001. This is the family the abstract's "praise still removes 1.35 turns relative to the
+identical message without it" belongs to. A family of two corrects almost nothing, and we say
+so; its purpose is that no turn-count claim the paper relies on is reported with unadjusted
+inference alone. The same script computes both families.
 
 ## 2.7 What the design can detect
 

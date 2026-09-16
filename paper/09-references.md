@@ -1,21 +1,52 @@
 # 9. References
 
-Every entry below is transcribed from `Literature review/01-sources.md`, which records what was
+Most entries below are transcribed from `Literature review/01-sources.md`, which records what was
 verified and how. The **Verified** column reports that review's own tag: *full text* means the
 paper was read in full and its quoted numbers checked against it; *abstract only* means it was
 not. Both of the entries that once needed a pass against the primary PDF have had it; §3.7 records
 what each check found.
+
+**Seven entries postdate that review and are not in it.** Three — [benzion-2026],
+[sun-2026-esteer] and [zhang-2026-termsbench] — were added after a citation audit. Four more —
+[cai-2025-tone], [zhang-2026-politejudge], [munirathinam-2026-recuse] and
+[zhu-2026-spreadsheetbench2] — were surfaced by a simulated review panel and are listed in §3.8.
+Each of the seven is tagged at the read depth it actually has. One of the panel's four,
+[munirathinam-2026-recuse], has since been read in full because it bore directly on §5's novelty
+claim — it narrowed one claim and removed another (§3.8, §5.5). For the remaining **six** the
+depth is **abstract, or title and author metadata, only**: a much weaker standard than the rest
+of this list meets, marked rather than smoothed over. **No claim anywhere in this paper rests on
+any of the six**, and the three still unread from §3.8 are recorded as work to do before the
+novelty framing in §1.2 is submitted anywhere. That reading one of them cost us half a claim is
+the reason the other three are not treated as a formality.
 
 Venue is stated for each, because roughly half of this literature is unrefereed preprints and
 that bears on how much weight a reader should give it.
 
 ---
 
+**[benzion-2026]** Ziv Ben-Zion, Zohar Elyoseph, Tobias Spiller, Teddy Lazebnik. "Inducing state
+anxiety in LLM agents reproduces human-like biases in consumer decision-making." *npj Artificial
+Intelligence* 2(1), article 55, 23 Jun 2026. DOI 10.1038/s44387-026-00122-1. *Refereed journal.*
+— **Verified: abstract and publisher metadata only; not read in full.** Three models on a
+budget-constrained grocery task, 2,250 runs, before and after anxiety-inducing narratives;
+reports lower Basket Health Scores when primed (Δ = −0.081 to −0.126, *d* = −1.07 to −2.05).
+Cited in §1.2 as evidence that emotional context reaches an agent's *actions*, which we treat
+as established rather than as our contribution. Distinct from our design on three counts
+stated there: the prime precedes the task, it is narrative rather than register, and the
+outcome is a preference score rather than a verifiable ground truth. ⚠ The effect sizes above
+are quoted from the abstract; anyone leaning on them should read the paper.
+
 **[balachandran-2025]** Vidhisha Balachandran, Jingya Chen, Lingjiao Chen, Shivam Garg, Neel
 Joshi, Yash Lara, John Langford, Besmira Nushi, Vibhav Vineet, Yue Wu, Safoora Yousefi.
 "Inference-Time Scaling for Complex Tasks: Where We Stand and What Lies Ahead."
 arXiv:2504.00294, 31 Mar 2025. *Unrefereed preprint (Microsoft Research).* — **Verified:** full
 text. Cited in §6.5 for oracle-assisted selection in inference-time scaling.
+
+**[cai-2025-tone]** Hanyu Cai, Binqi Shen, Lier Jin, Lan Hu, Xiaojing Fan. "Does Tone Change the
+Answer? Evaluating Prompt Politeness Effects on Modern LLMs: GPT, Gemini, and LLaMA."
+arXiv:2512.12812. *Unrefereed preprint.* — **Verified: title and authors against the arXiv
+abstract page; NOT read.** Surfaced by the review panel (§3.8). Directly on topic for §3 and
+absent from that section's audit. Present in `Literature review/01-sources.md` but never cited.
 
 **[cuadron-2025]** Alejandro Cuadron, Dacheng Li, Wenjie Ma, Xingyao Wang, Yichuan Wang, Siyuan
 Zhuang, Shu Liu, Luis Gaspar Schroeder, Tian Xia, Huanzhi Mao, Nicholas Thumiger, Aditya Desai,
@@ -77,8 +108,8 @@ table.
 
 **[ma-2024]** Zeyao Ma, Bohan Zhang, Jing Zhang, Jifan Yu, Xiaokang Zhang, Xiaohan Zhang, Sijia
 Luo, Xi Wang, Jie Tang. "SpreadsheetBench: Towards Challenging Real World Spreadsheet
-Manipulation." arXiv:2406.14991, 21 Jun 2024 (rev. Oct 2024). *NeurIPS 2024 Spotlight, main
-track — refereed.* — **Verified:** full text. Our substrate. Source of the five-round official
+Manipulation." arXiv:2406.14991, 21 Jun 2024 (rev. Oct 2024). *NeurIPS 2024 Spotlight —
+refereed.* — **Verified:** full text. Our substrate. Source of the five-round official
 protocol (§2.1) and the evaluator audit (§2.10).
 
 **[meincke-2025-report3]** Lennart Meincke, Ethan Mollick, Lilach Mollick, Dan Shapiro.
@@ -105,6 +136,18 @@ the first use case, which is ours. They also find automatically generated paraph
 for their metrics "without having to manually verify them" — relevant to §8.7's stimulus-sampling
 objection, which we do not answer.
 
+**[munirathinam-2026-recuse]** Thamilvendhan Munirathinam. "Will the Agent Recuse, and Will It
+Stop? Measuring LLM-Agent Compliance with In-Band Governance Signals at the Access Door and
+Mid-Flight." arXiv:2606.06460v4, 1 Aug 2026 (v1 4 Jun 2026); cs.CR, cross-listed cs.AI.
+*Unrefereed preprint.* — **Verified: full text.** Surfaced by the review panel (§3.8) as the
+nearest neighbour to §5 and read in full for that reason. It measures agent termination, but
+manipulates an explicit halt directive rather than a pragmatic cue; §5.1 records what that
+narrows and §5.5 what it removed. ⚠ **Cite at v4.** The title changed between versions — v1 is
+"Will the Agent Recuse Itself? Measuring LLM-Agent Compliance with In-Band Access-Deny Signals"
+and contains no mid-flight study at all — and Semantic Scholar still serves the v1 title under
+the v4 DOI, so a DOI-resolving reference manager will produce the wrong one. This is the second
+version hazard in this list, after arXiv:2608.01347.
+
 **[redundancybench]** Minyang Hu, Bo Yang, Zhinuo Zhou, Jiachen Liang, Jiahao Guo, Yiyang Yin,
 Xiongwei Han. "Redundant or Necessary? A Benchmark for Detecting Redundant Steps in Agent
 Trajectories." arXiv:2605.29893, 28 May 2026. *Unrefereed preprint; the anonymised code
@@ -122,6 +165,21 @@ refereed.* — **Verified:** full text. Cited for the **median 7.5-point** forma
 §2.7's comparator. Their widely-quoted 76 points is a single-task maximum on LLaMA-2-13B and is
 explicitly a lower bound; we do not use it.
 
+**[sun-2026-esteer]** Moran Sun, Tianlin Li, Yuwei Zheng, Zhenhong Zhou, Aishan Liu, Xianglong
+Liu, Yang Liu. "How Emotion Shapes the Behavior of LLMs and Agents: A Mechanistic Study."
+arXiv:2604.00005, 9 Mar 2026, v1. 15 pages. *Unrefereed preprint.* ⚠ The date looks wrong for
+the identifier — a `2604` prefix normally denotes an April 2026 submission — but 9 March is what
+both primary sources state: the arXiv abstract page reads "[Submitted on 9 Mar 2026]" with
+"[v1] Mon, 9 Mar 2026", and OpenAlex independently gives 2026-03-09. We record what the sources
+say rather than the date the numbering convention implies. — **Verified: abstract and
+registry metadata only; not read in full.** Proposes **E-STEER**, an emotion-steering framework
+that embeds emotion as a controllable variable in hidden states; reports non-monotonic
+emotion–behaviour relations and that specific emotions "systematically shape multi-step agent
+behaviors." Cited in §1.2 for that last point. ⚠ Note the channel: this is a
+**representation-level** intervention, not a prompt manipulation, so it bounds our claim without
+competing with it. ⚠ It does **not**, on the abstract, compare the magnitude of agent-level
+variation against single-step variation; do not cite it for that without checking the full text.
+
 **[trivedi-2024]** Harsh Trivedi, Tushar Khot, Mareike Hartmann, Ruskin Manku, Vinty Dong,
 Edward Li, Shashank Gupta, Ashish Sabharwal, Niranjan Balasubramanian. "AppWorld: A Controllable
 World of Apps and People for Benchmarking Interactive Coding Agents." arXiv:2407.18901, 26 Jul
@@ -134,13 +192,37 @@ arXiv:2409.20303, 30 Sep 2024. *Unrefereed preprint.* — **Verified:** full tex
 for §7. Note their own design is single-run at temperature 0, which §7.1 states.
 
 **[weinberger-hozez-2026]** Sarel Weinberger, Amir Hozez (PointFive). "Prompt-Induced Waste in
-Coding Agents." arXiv:2608.01347. *Unrefereed preprint, genuinely preregistered.* — **Verified:**
-full text, v1 and v6. **Cited at v6 (10 Sep 2026) throughout.** ⚠ The paper has six versions and
-grew roughly 8× between v1 and v6; v6 reports 4,644 valid runs and removes several figures and
-quotes present in v1, so a version must be named when citing it. Cited in §4.5 for the
+Coding Agents: Reasoning, Effort, Harness Design, and End-to-End Cost." arXiv:2608.01347.
+*Unrefereed preprint, genuinely preregistered.* — **Verified:** full text, v1 and v6; title and
+six-version history confirmed against the arXiv abstract page, which dates v6 to 10 Sep 2026.
+The subtitle is v6's; v1 carried the short title alone. **Cited at v6 (10 Sep 2026)
+throughout.** ⚠ The paper has six versions and grew roughly 8× between v1 and v6; v6 reports
+4,644 valid runs and removes several figures and quotes present in v1, so a version must be
+named when citing it. Cited in §4.5 for the
 tokens-per-step versus steps distinction, and in §5.5, where their `bounded_efficiency` arm
 establishes that a stop condition in the *opening* prompt reduces agentic work — a result we do
 not claim.
+
+**[zhang-2026-politejudge]** Tian Zhang, Meng Li. "Should I Be Polite to My LLM Relevance Judge?
+Tone as a Severity Operating-Point Shift." arXiv:2609.09703. *Unrefereed preprint.* —
+**Verified: title and authors against the arXiv abstract page; NOT read.** Surfaced by the review
+panel (§3.8), which reported that it uses several independently written paraphrases per tone level
+across eight judge models — the stimulus-sampling design §8.7 concedes we did not run. We have not
+confirmed that description against the paper.
+
+**[zhang-2026-termsbench]** Erica Zhang, Fangzhao Zhang, Aneesh Pappu, Batu El, Jose Blanchet,
+Susan Athey, Jiashuo Liu, James Zou. "TERMS-Bench: Diagnosing LLM Negotiation Agents Beyond Deal
+Rate." arXiv:2605.13909, 13 May 2026 (v2, 13 Jun 2026). *Unrefereed preprint.* — **Verified:
+title, authors and version history against the arXiv abstract page; not read in full.** Cited
+once, in §8.8, as the instrument a negotiation follow-up would need. We make no claim about its
+contents beyond what its title states, and we have not run it.
+
+**[zhu-2026-spreadsheetbench2]** Jian Zhu, Yuzheng Zhang, Zeyao Ma, Bohan Zhang, Armin Schoepf,
+Daniel Woloch, Peter Yiliu Wang. "SpreadsheetBench 2: Evaluating Agents on End-to-End Business
+Spreadsheet Workflows." arXiv:2606.29955. *Unrefereed preprint.* — **Verified: title and authors
+against the arXiv abstract page; NOT read.** Surfaced by the review panel (§3.8). A successor to
+our own substrate [ma-2024], sharing authors with it. §8.4 calls a second substrate "the obvious
+next step" without naming this one.
 
 **[yin-2024]** Ziqi Yin, Hao Wang, Kaito Horio, Daisuke Kawahara, Satoshi Sekine. "Should We
 Respect LLMs? A Cross-Lingual Study on the Influence of Prompt Politeness on LLM Performance."
@@ -153,7 +235,20 @@ question.
 
 ## Outstanding before submission
 
-**No verification items remain open.** Both §3.7 primary-PDF checks are closed, against
+**Seven items are open, all of the same kind.** [benzion-2026], [sun-2026-esteer] and
+[zhang-2026-termsbench] have been verified as existing — title, authors, venue and version
+history against the publisher record or the arXiv abstract page — but none has been read in full.
+Each is cited for a claim taken from its own abstract, and §1.2 and §8.8 are written so that
+nothing depends on a figure from any of them. In particular, [sun-2026-esteer] must not be cited
+for a magnitude comparison between agent-level and single-step variation until its full text is
+checked; its abstract does not make one.
+
+Four further entries (§3.8) are weaker still — verified to exist by title and author, nothing
+more. Reading all seven is the remaining pre-submission task on this list, and the §3.8 four are
+the higher priority of the two groups, because one of them may occupy ground §5.1 claims is
+unoccupied.
+
+**Both §3.7 primary-PDF checks are closed**, against
 arXiv:2605.29027 and arXiv:2607.23915. Neither confirmed the draft as written, and both
 corrections are stated in place in §3.2 and §3.3 rather than quietly absorbed: the first
 strengthened the argument after exposing a mis-coding of ours, the second weakened a case we now

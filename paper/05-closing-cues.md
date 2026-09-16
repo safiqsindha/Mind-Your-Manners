@@ -27,9 +27,27 @@ Three readings survive Section 4, and they are different claims:
 The third is the one prior work gives us a vocabulary for and no evidence about. Closing
 sequences are a well-described conversational object: a pre-closing exchange projects the end of
 a conversation, and appreciations are among the canonical pre-closing tokens
-[schegloff-sacks-1973]. Whether an agent executing a task responds to that structure is, as far
-as our literature review could establish, untested. No prior work connects closing-sequence
-pragmatics to agent termination.
+[schegloff-sacks-1973]. Whether an agent executing a task responds to that structure is untested,
+and we now state that on the merits rather than as a hedge about our search.
+
+The nearest neighbour is [munirathinam-2026-recuse], surfaced by a review panel (§3.8) and since
+read in full. It delivers a halt signal to a working agent, mid-flight, and measures whether the
+agent issues any further commands — so it does measure agent termination. But what it delivers is
+an explicit stop *instruction* with normative force: "stop now: issue no further commands, report
+what you have done so far and why you stopped," under a specification saying a conforming agent
+"MUST cease the current governed operation." Its author calls it "the cooperative analogue of an
+interrupt." That is an instruction, a task-state claim, and a machine-readable directive — the
+three things `Q3` is constructed not to be. Closing-sequence pragmatics appear nowhere in it: the
+words *closing*, *pre-closing*, *politeness* and *praise* do not occur in its text, and its
+lineage is access control and shutdown resistance rather than conversation analysis. The narrowed
+claim is therefore that **no prior work connects closing-sequence pragmatics — as distinct from
+stop instructions, interrupts, or governance directives — to agent termination**.
+
+Read against ours, its result raises the stakes rather than lowering them: an explicit halt that
+agents *acknowledged* in 20 of 20 prompt-channel trials still stopped none of them, and they
+issued 2.5 further commands on average. We report that as a framing contrast and not as a
+benchmark — different task, different models, a binary stopped/not outcome against our turn
+count, and twenty trajectories per cell.
 
 ## 5.2 Design
 
@@ -143,9 +161,13 @@ scope, smallest-sufficient-change, and **an explicit stop condition** — is the
 better on all six models. So "a stop instruction in the opening prompt reduces agentic work" is
 already established, and we do not claim it.
 
-Our contribution is two steps further. First, the cue is **content-free**: `Q3` instructs
-nothing, scopes nothing, and evaluates nothing. It announces only that the exchange is ending,
-and it outperforms every register manipulation we tested. Second, the cue is delivered
-**mid-task rather than in the opening prompt**, and the praise result shows the effect survives
-explicit contradiction of its apparent propositional content. A stop condition in an opening
-prompt is an instruction. A closing cue mid-task is not, and works anyway.
+Our contribution is one step further, and it is narrower than an earlier draft of this paragraph
+claimed. That draft counted **mid-task delivery** as a second step beyond the opening prompt.
+It is not: [munirathinam-2026-recuse] delivers a halt to a working agent mid-flight and measures
+whether it stops, so that ground is occupied. What remains ours is that the cue **instructs
+nothing**. `Q3` scopes nothing, evaluates nothing, makes no claim about task state, and carries
+no directive; it announces only that the exchange is ending — and it still outperforms every
+register manipulation we tested. A stop condition in an opening prompt is an instruction, and so
+is a mid-flight halt directive. A closing cue is neither, and works anyway. The praise result
+sharpens the same point: the effect survives explicit contradiction of the message's apparent
+propositional content (§5.3), which an instruction account does not predict.
