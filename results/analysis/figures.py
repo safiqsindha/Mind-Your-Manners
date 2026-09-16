@@ -188,8 +188,8 @@ CLOSING = [
     ("“work remains” alone", "remains-only vs control [turns] (praise run, Luna, ceiling 10)"),
 ]
 WITHIN = [
-    ("praise isolated (Q4 − Q5)", "praise isolated, Q4 minus Q5 [turns] (praise run, Luna, ceiling 10)"),
-    ("closing cue vs praise (Q3 − Q1)", "closing cue vs praise, Q3 minus Q1 [turns] (praise run, Luna, ceiling 10)"),
+    ("praise isolated:\npraise+remains vs remains alone", "praise isolated, Q4 minus Q5 [turns] (praise run, Luna, ceiling 10)"),
+    ("bare closing cue\nvs praise the assistant", "closing cue vs praise, Q3 minus Q1 [turns] (praise run, Luna, ceiling 10)"),
 ]
 
 
@@ -210,14 +210,14 @@ def figure_dissociation(contrasts, verdicts, out: pathlib.Path):
               color=INK_2, style="italic", va="center")
     ax_a.text(-1.35, len(SEVEN_DEMAND) - 0.75, "carries a demand", fontsize=7,
               color=INK_2, style="italic", va="center")
-    ax_a.set_title("A.  Seven-register scale: the gradient is demand, not politeness",
+    ax_a.set_title("A.  Six non-control registers: the gradient tracks demand, not politeness",
                    fontsize=8.5, loc="left", pad=6)
 
     rows_b = PROBE
     ys = forest(ax_b, rows_b, contrasts, verdicts, xlabel="change in turns vs the control interjection")
     ax_b.set_xlim(-1.4, 3.4)
     gutter(ax_b, rows_b, contrasts, ys, 1.02)
-    ax_b.set_title("B.  Isolation probe: demand moves it, register alone does not",
+    ax_b.set_title("B.  Demand manipulation increases persistence; praise decreases it; insult does not",
                    fontsize=8.5, loc="left", pad=6)
 
     legend(fig)
@@ -248,7 +248,10 @@ def figure_closing(contrasts, verdicts, out: pathlib.Path):
                 xlabel="difference in turns between the two arms named")
     ax_b.set_xlim(-2.3, 4.2)
     gutter(ax_b, WITHIN, contrasts, ys, 1.02)
-    ax_b.set_title("B.  Within-design contrasts (§2.6's second corrected family)",
+    # No section number here: this figure is shared with the workshop carve,
+    # whose numbering differs, and a cross-reference that resolves in one
+    # document and dangles in the other is exactly the defect review caught.
+    ax_b.set_title("B.  Contrasts between two treated arms (second corrected family)",
                    fontsize=8.5, loc="left", pad=6)
 
     legend(fig, include_muted=False)

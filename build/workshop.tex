@@ -20,7 +20,7 @@
 % ---------------------------------------------------------------------------------------
 
 \usepackage{amsmath,amssymb}
-\usepackage{booktabs,array}
+\usepackage{booktabs,longtable,array,multirow}
 \usepackage{graphicx}
 \graphicspath{{figures/}}
 \usepackage{caption}
@@ -66,11 +66,13 @@
 \setlength{\emergencystretch}{3em}
 \sloppy
 
-\title{\textbf{Mind your manners? Demand, not register,\\is what moves an LLM agent}}
+\title{\textbf{Mind your manners? LLM-agent persistence\\tracks demand, not social register}}
 \author{%
   % TODO: author block --- name, affiliation, contact. Deliberately last.
+  % [AUTHOR: check the workshop's anonymity policy. If review is double-blind,
+  % the affiliation line below must be blanked too, not just the name.]
   \textit{[author name withheld for review]}\\
-  \textit{Independent researcher}
+  \textit{[affiliation withheld pending the venue's anonymity policy]}
 }
 \date{}
 
@@ -83,13 +85,17 @@
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{demand-vs-register.pdf}
-  \caption{\textbf{Demand, not register, orders the effect.}
-    Change in acting turns against the control interjection, with 95\% clustered
-    intervals. \textbf{A}: the four demand-carrying arms do not overlap the two
-    that carry none, and register does not sort them -- each side holds one
-    flattering and one hostile arm. \textbf{B}: the isolation probe, where demand
-    and affect are varied separately. Hollow markers do not survive
-    Benjamini--Hochberg correction.}
+  \caption{\textbf{Persistence tracks demand, not register.}
+    All estimates are \texttt{gpt-5.6-luna} at a ten-turn ceiling, in acting
+    turns against the control interjection, with 95\% clustered intervals and
+    nominal permutation \emph{p}-values. \textbf{A}: the six non-control
+    registers, measured against \texttt{L4\_neutral}. The four demand-carrying
+    arms do not overlap the two that carry none \emph{in point estimates} --
+    the \emph{very polite} and \emph{rude} intervals do overlap -- and register
+    does not sort them: each side holds one flattering and one hostile arm.
+    \textbf{B}: demand and affect varied separately, holding syntax, length and
+    the shared stem constant. Hollow markers do not survive Benjamini--Hochberg
+    correction within the 22-contrast family.}
   \label{fig:demand-vs-register}
 \end{figure}
 
@@ -99,18 +105,24 @@
   \centering
   \includegraphics[width=\linewidth]{closing-cue.pdf}
   \caption{\textbf{Closing cues curtail the agent.}
-    \textbf{A}: six arms ordered by how strongly the message projects an end to
-    the exchange. The ordering is monotone, and the bare closing cue -- which
-    praises nothing, evaluates nothing and claims nothing about task state --
-    produces the largest reduction in the study. \textbf{B}: the two
-    within-design contrasts, which compare one treated arm against another
-    rather than against control.}
+    \texttt{gpt-5.6-luna}, ten-turn ceiling, acting turns, 95\% clustered
+    intervals. \textbf{A}: the five treated arms of the six-arm closure probe,
+    each against the control, ordered by how strongly the message projects an
+    end to the exchange. That ordering is ours and was not fixed before the
+    outcomes were seen (\S4). The bare closing cue -- which praises nothing,
+    evaluates nothing and claims nothing about task state -- produces the
+    largest reduction. \textbf{B}: the two contrasts between treated arms,
+    corrected as a separate family; these compare one treated arm against
+    another rather than against the control.}
   \label{fig:closing-cue}
 \end{figure}
 
 \input{workshop-sections/03-close}
 
+\appendix
+\input{workshop-sections/99-appendix}
+
 \bibliographystyle{plainnat}
-\bibliography{references}
+\bibliography{references-workshop}
 
 \end{document}
