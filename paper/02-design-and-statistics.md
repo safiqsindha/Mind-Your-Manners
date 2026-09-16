@@ -238,8 +238,14 @@ demand-carrying contrast survives, on both models. Every closing-cue and praise 
 survives. **All three insult contrasts fail, and so does the one rude register arm** — which is
 the dissociation §4 argues for, now holding under correction rather than only nominally.
 
-Two honest qualifications. First, correcting the primary outcome after the fact is weaker than
-pre-registering the family, and we did not pre-register it. Second, one row moves depending on
+Three honest qualifications. First, correcting the primary outcome after the fact is weaker than
+pre-registering the family, and we did not pre-register it. Second, the p-values in this family
+are for the *absolute* turn difference under the §2.4 estimator, while §4.7's table reports the
+same six cross-model contrasts as *percentage* changes under a separate ratio bootstrap; the two
+differ in the third decimal — GLM praise is 0.058 here and 0.062 there, Luna demand 0.0009 and
+0.0013 — and **no verdict at 0.05 differs on any shared contrast**. A reader who spots the same
+contrast carrying two p-values is seeing two statistics, not two data sets. Third, one row moves
+depending on
 which grading pass it is read from: the micro-experiment's threatening-versus-neutral contrast is
 +1.32 turns in the run records and +1.02 in the regraded file, on the same 50 tasks (§7.6). It
 survives correction at either value, but turn count should not depend on a regrade at all, and we
