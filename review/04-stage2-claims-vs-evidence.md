@@ -88,12 +88,18 @@ praise_turn_vs_trajectory    exit=0
 
 All five run, including `regrade_summary`, which no longer reports missing arms.
 
-### 1.4 Recommendation
+### 1.4 Recommendation — now implemented
 
-A ~20-line `results/analysis/materialise_inputs.py` committed alongside the scripts, run as step
-zero, would close this permanently. I have not written it into the repo — it is a change to your
-analysis pipeline rather than to the paper, and it deserves your judgement about naming. The
-mapping above is complete and is all such a script needs.
+`results/analysis/_inputs.py` materialises the archive into the expected names, idempotently, and
+every script calls it on startup. Verified by `git clean -X`-ing `results/analysis/` (which
+removes only the ignored files, leaving the tracked `regrade_manifest.json` in place) and running
+all six scripts: all exit 0. This was done after a review bot found that the new
+`turn_count_family.py` had inherited the very defect this section documents — the case for fixing
+it in one shared entry point rather than per script.
+
+One caution learned the hard way: simulating a fresh checkout with `mv results/analysis/*.json`
+also sweeps up the *tracked* manifest, and `regrade_summary.py`'s staleness guard then fires as
+designed. Use `git clean -X`, not a glob.
 
 ---
 
