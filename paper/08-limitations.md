@@ -165,6 +165,14 @@ interruption, +51 reasoning tokens, p = 0.15 — once, on one model.
 never run. "Two models from different labs" describes what the budget reached, not a design
 choice; the four-model roster was specified and then not executed.
 
+**Whether any of this holds when the other party is adversarial.** Every task here is solitary:
+the agent works on a workbook, and the only other voice in the transcript is ours. Negotiation
+is the obvious contrast, and it is now instrumented — TERMS-Bench sets out to diagnose
+negotiation agents beyond deal rate [zhang-2026-termsbench]. Whether a closing cue curtails a
+negotiating agent the way it curtails a working one, or whether a counterpart's register does
+what a user's does, is untested here and would need an outcome measure of that kind rather than
+ours.
+
 **Anything about refusals or safety behaviour.** There were zero refusals in the opening-tone
 run's 1,050 trajectories under every register including threatening, and the model never referred
 to the user's tone across its 4,647 calls. Refusal counts for the interjection runs are recorded
