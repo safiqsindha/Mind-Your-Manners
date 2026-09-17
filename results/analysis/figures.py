@@ -187,9 +187,13 @@ CLOSING = [
     ("praise + “work remains”", "praise+remains vs control [turns] (praise run, Luna, ceiling 10)"),
     ("“work remains” alone", "remains-only vs control [turns] (praise run, Luna, ceiling 10)"),
 ]
+# Single-line labels. Panel B is short -- two rows in roughly 0.35in -- so the
+# two-line versions these replace overlapped each other by 13pt, measured from
+# the rendered tick-label boxes. The arms are named in the Q-notation the
+# section uses, which fits on one line and is what the text cross-references.
 WITHIN = [
-    ("praise isolated:\npraise+remains vs remains alone", "praise isolated, Q4 minus Q5 [turns] (praise run, Luna, ceiling 10)"),
-    ("bare closing cue\nvs praise the assistant", "closing cue vs praise, Q3 minus Q1 [turns] (praise run, Luna, ceiling 10)"),
+    ("praise isolated (Q4 \u2212 Q5)", "praise isolated, Q4 minus Q5 [turns] (praise run, Luna, ceiling 10)"),
+    ("closing cue vs praise (Q3 \u2212 Q1)", "closing cue vs praise, Q3 minus Q1 [turns] (praise run, Luna, ceiling 10)"),
 ]
 
 

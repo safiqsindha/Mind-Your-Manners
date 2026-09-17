@@ -63,14 +63,17 @@ ceiling** — so an arm's absolute cost against an *uninterrupted* agent is not 
 bounds, though a shared offset cancels in every contrast reported here.
 
 Every trajectory belongs to one of 50 tasks, and each (task, arm) cell holds six to nine
-trajectories, which are not independent. Throughout: **point estimates are paired within task** (per
-task, the mean over that task's trials in each arm, differenced, then averaged — the
-paired-and-clustered form of Miller's clustered estimator [miller-2024]); **intervals come from a
-cluster bootstrap over tasks**, 20,000 resamples; ***p*-values come from a task-clustered sign-flip
-permutation test**, 20,000 draws, reported as (count + 1)/(draws + 1) so that no *p* is quoted as
-exactly zero. Clustering is not a formality: Miller reports clustered-to-CLT standard-error ratios
-of 1.10, 1.88 and 3.05 across three datasets, and an early unclustered version of our own results
-had accuracy intervals roughly 35% too narrow. Following [sclar-2024] and [mizrahi-2024] we report
+trajectories, which are not independent. For every arm-versus-control contrast and both designed
+within-run contrasts: **point estimates are paired within task** (per task, the mean over that
+task's trials in each arm, differenced, then averaged — the paired-and-clustered form of Miller's
+clustered estimator [miller-2024]); **intervals come from a cluster bootstrap over tasks**, 20,000
+resamples; ***p*-values come from a task-clustered sign-flip permutation test**, 20,000 draws,
+reported as (count + 1)/(draws + 1) so that no *p* is quoted as exactly zero. Three analyses run a
+different number of replicates, and each says so where it appears: the pooled accuracy contrasts of
+§2.5 (4,000), the closure-run contrasts of §5.2 (8,000) and the pooled progress contrasts of §6.3
+(8,000). Clustering is not a formality: Miller reports clustered-to-CLT standard-error ratios of
+1.10, 1.88 and 3.05 across three datasets, and an early unclustered version of our own results had
+accuracy intervals roughly 35% too narrow. Following [sclar-2024] and [mizrahi-2024] we report
 ranges wherever a quantity was measured more than once.
 
 ## 2.4 Multiplicity
@@ -116,8 +119,8 @@ task.
 
 The pre-specified smallest effect of interest is **±4 accuracy points**, the polite-versus-rude gap
 of the paper this work is positioned against. Pooling each contrast's repeated measurements, with
-the interval from a bootstrap that resamples tasks **jointly across runs**, since the runs share
-their 50 tasks:
+the interval from a bootstrap that resamples tasks **jointly across runs**, 4,000 draws, since the
+runs share their 50 tasks:
 
 | Contrast | *k* | Ceilings | Estimate | 95% CI | MDE₈₀ | TOST at ±4 |
 |---|---:|---|---:|---|---:|---:|
