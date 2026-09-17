@@ -44,7 +44,7 @@ accuracy — and length predicted accuracy better than register rank did (*r* = 
 
 Injection turn is **crossed**, not sampled, in every run but the first micro-experiment, which drew it at
 random from {1, 2}; because a turn-2 injection can only fire in a trajectory that reaches turn 2, its arms
-were compared on different populations and what looked like a timing effect was selection (§7.4). Arm order
+were compared on different populations and what looked like a timing effect was selection (§7.3). Arm order
 is shuffled per (model, task) from a fixed seed and position does not predict accuracy (*p* = 0.61).
 Temperature is 0 where settable, which is **not** deterministic on any roster model; that is why trials
 exist.
@@ -92,7 +92,7 @@ that no *p* is quoted as exactly zero. Clustering is not a formality — Miller 
 standard-error ratios of 1.10, 1.88 and 3.05 across three datasets, so "up to 3×" is dataset-specific. Note
 also that the unpaired difference of arm means and the paired task-clustered difference are **two estimators
 of the same contrast that do not agree**: the praise contrast is −0.62 and −1.14 turns under the first,
-−0.59 and −1.08 under the second. Every number here is the paired one (§7.5).
+−0.59 and −1.08 under the second. Every number here is the paired one (§7.3).
 
 ## 2.5 Exclusions, and why they are not selection
 
@@ -104,7 +104,7 @@ chance, and it does not: at turn 2 of the demand/affect probe the four arms fire
 turns** — roughly 98% at turn 0, 77% at turn 1, 55% at turn 2 — so comparing turns compares different task
 populations. For timing contrasts only, we fix the comparison population from the **control** arm and report
 the reduced task count with the estimate. Two other exclusions are recorded: 402 rows from an interrupted
-first attempt at the seven-level run, and a regrade following a scratch-directory collision (§7.4).
+first attempt at the seven-level run, and a regrade following a scratch-directory collision (§7.3).
 
 ## 2.6 Multiplicity
 

@@ -164,7 +164,7 @@ The middle row is the paper's: the redundant-step finding survived with every si
 intact, about 20% smaller. The bottom row is the reversal — what §7 originally presented as this study's
 most consequential instance of run-to-run instability, one significant measurement between two nulls, was
 the instrument. It is the latest of four failures in this subsystem that presented as data rather than as an
-error (§7.4).
+error (§7.3).
 
 **The honest scope of §6 is therefore narrower than its numbers suggest.** Its redundant-step measure is
 exact and needs no recalculation; its progress measure depends on a recalculation path that was silently

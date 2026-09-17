@@ -157,6 +157,6 @@ works anyway. The praise result sharpens the same point: the effect survives exp
 message's apparent propositional content (§5.3), which an instruction account does not predict.
 
 **This experiment is the least replicated in the paper: one run, one model, one turn ceiling.** Two of
-its six arms were later re-measured and replicated in direction (§7.2); the three that carry the
+its six arms were later re-measured and replicated in direction (§7.1); the three that carry the
 section's argument — the bare closing cue, praise-the-work, and the `Q4`−`Q5` isolation — have not
 been.
