@@ -13,7 +13,8 @@ Two jobs in one pass: apply the corrections that reading six sources in full mad
 | Normalising the draft's 11pt / 1.02 line stretch to the `article` 10pt default | −7 |
 | Adding Appendix A (stimuli) and Appendix B (blinded rating), generated | +4 |
 | Fixing table column widths in the converter (see §4 below) | −4 |
-| **Now** | **32** |
+| Cutting §7 from three pages to under two, and Appendix C to one | −2 |
+| **Now** | **30** |
 
 Two of those need stating plainly rather than being folded into a total.
 
@@ -22,10 +23,22 @@ Two of those need stating plainly rather than being folded into a total.
 rather than a chosen one. It is now the `article` 10pt default. The venue block is still a
 placeholder and the target venue's `.sty` will change the pagination again.
 
-**32 is two pages over the 30 asked for.** Getting to 30 means dropping content, not prose: the
-obvious candidates are §7's record of the claims this study withdrew about itself (2.5 pages) and
-§3's audit of the published stimulus sets (4 pages). Both are load-bearing for a reader deciding
-how much to believe, so the call belongs to the author rather than to a page target.
+**The last two pages came out of §7 and Appendix C, on the author's instruction.** §7 went from
+three pages to under two: its five subsections became three, the separate withdrawn-claims and
+recommendations subsections were folded into §7.3, and the standalone defective-versus-corrected
+table was dropped because §6.5 already carries that comparison. Both of its tables survive, as does
+every finding other sections cite — the sign-flipping null, the byte-identical praise pair, the
+1.5×–3.4× range, the accuracy non-replication, all four withdrawals, and the three asks of the
+literature.
+
+§7 could not yield the second page without losing the withdrawn-claims record that the abstract
+advertises, so that page came from **Appendix C**, which is bookkeeping rather than evidence. It is
+now a single page: the read-depth statement and the six changes reading those sources produced, the
+two prohibitions, and the four version hazards. What went was the *"two citations we deliberately do
+not make"* note, which §2.7 already makes in place, and the *"what remains open"* paragraph, whose
+one live gap §3.3 already states where it matters. One warning moved rather than died — that
+[kumar-dobariya-2026] and [dobariya-kumar-2026] are different papers by the same two authors in the
+other order is now a clause in §3.3, which is where a reader is actually at risk of conflating them.
 
 ## 2. Corrections from `review/11` and `review/12`
 

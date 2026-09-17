@@ -93,7 +93,7 @@ improve the first gradable attempt is already the best in 80–91%. The remainde
 (§6.4). **No accuracy effect survives correction or replication**, which we state as an equivalence
 rather than an absence (§2.8). **And our own magnitudes are unstable:** direction and significance
 reproduce wherever the effect is large, while point estimates span 1.5× to 3.4× across
-re-measurements of the same contrast on the same model (§7.3).
+re-measurements of the same contrast on the same model (§7.2).
 
 ## 1.4 What this means, and scope
 

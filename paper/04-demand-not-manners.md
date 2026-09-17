@@ -164,7 +164,7 @@ the turn index fixed and varying the moderator changes everything.** Position is
 tracks. Two weaknesses: the no-answer cells are small and underpowered (31 tasks at turn 1, 8 at turn 2,
 which is why that row is reported but not leaned on), and tasks with no answer by turn 1 are also the
 harder tasks, so difficulty is not fully separated from the moderator. This is the second timing account
-this study has withdrawn; the first was selection (§7.4).
+this study has withdrawn; the first was selection (§7.3).
 
 **The extra turns are mostly, but not only, repetition.** The demand arm adds +0.75 redundant steps at a
 10-turn ceiling and +1.03 at 20, roughly 60% of its turn effect (§6.2). The remaining third is where this

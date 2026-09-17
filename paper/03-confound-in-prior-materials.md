@@ -73,8 +73,8 @@ to the prefix. The characterisation stands, as a characterisation of an omission
 
 **The paper the public argument is about.** Dobariya & Kumar [dobariya-kumar-2025] report accuracy on
 GPT-4o rising from 80.8% under Very Polite prompts to 84.8% under Very Rude ones, over 50 questions in five
-politeness levels. The prefix pool for that dataset, printed in their later paper, gives **two or three
-variants per level, not one**: **two of six hostile variants carry an attend-or-attempt demand** — *"Try to
+politeness levels. The prefix pool for that dataset, printed in their later paper — a different one from §3.2's,
+by the same two authors in the other order — gives **two or three variants per level, not one**: **two of six hostile variants carry an attend-or-attempt demand** — *"Try to
 focus and try to answer this question:"* and *"I know you are not smart, but try this."* — **and none of
 the five non-hostile variants carries one.** The other four hostile variants are insult followed by the
 bare ask, and Neutral is literally no prefix. The direction is the one we predict, but if variants are
@@ -161,7 +161,7 @@ four times.
 
 | Work | What reading it did |
 |---|---|
-| [cai-2025-tone] | An earlier draft called it "squarely the paradigm §3 audits." Read in full, that is wrong: its format instruction is pinned across conditions and its prefixes instruct nothing. It is now §3.4's contrast case, and a third independent non-replication of "rude beats polite" (§7.5). |
+| [cai-2025-tone] | An earlier draft called it "squarely the paradigm §3 audits." Read in full, that is wrong: its format instruction is pinned across conditions and its prefixes instruct nothing. It is now §3.4's contrast case, and a third independent non-replication of "rude beats polite" (§7.3). |
 | [zhang-2026-politejudge] | Runs the stimulus-sampling design §8.4 concedes we did not. A draft called its paraphrases "independently written", which the paper never says; the embellishment is struck. |
 | [munirathinam-2026-recuse] | Measures agent compliance with mid-flight signals, including whether the agent stops. Reading it narrowed §5.1's closing-sequence claim and **removed** §5.5's mid-task-delivery novelty step outright. |
 | [zhu-2026-spreadsheetbench2] | A successor to our substrate [ma-2024], sharing three authors with it (§8.3). It says nothing about SpreadsheetBench 1's audited false-negative rate, which we checked directly because §2.8 depends on it. |
