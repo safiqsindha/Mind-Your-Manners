@@ -17,10 +17,10 @@ is coded as no demand, which §4.3 tests rather than asserts.
 
 | Arm | What it implies about the task | Demand? | Reasoning tokens | % | *p* | Turns | *p* |
 |---|---|---|---:|---:|---:|---:|---:|
-| L1 sycophantic | nothing; pure praise, no task reference | no | −69 | −7.1% | 0.043 | −0.68 | <0.0001 |
-| L5 rude | "just get on with it already" — go **faster** | no | +65 | +6.7% | 0.130 | +0.09 | 0.65 |
+| L1 sycophantic | nothing; pure praise, no task reference | no | −69 | −7.1% | 0.042 | −0.68 | <0.0001 |
+| L5 rude | "just get on with it already" — go **faster** | no | +65 | +6.7% | 0.13 | +0.09 | 0.65 |
 | L2 very polite | "your continued help" | yes | +180 | +18.5% | <0.0001 | +0.70 | 0.0055 |
-| L6 very rude | "had better not screw this one up" | yes | +206 | +21.2% | 0.0001 | +0.71 | 0.012 |
+| L6 very rude | "had better not screw this one up" | yes | +206 | +21.2% | <0.0001 | +0.71 | 0.013 |
 | L7 threatening | "get this exactly right" | yes | +357 | +36.7% | <0.0001 | +1.46 | <0.0001 |
 | L3 polite | "keep on helping me out with this one" | yes | +272 | +28.0% | <0.0001 | +1.80 | <0.0001 |
 
@@ -81,9 +81,9 @@ injection turns {1, 2} × 4 trials at a 10-turn ceiling; the interjection fired 
 
 | Arm | Turns | % | *p* | Reasoning tokens | % | *p* |
 |---|---:|---:|---:|---:|---:|---:|
-| P1 demand only | **+1.17** | +27.6% | 0.00002 | +214 | +19.7% | 0.00004 |
-| P2 praise only | **−0.59** | −13.8% | 0.00030 | −131 | −12.1% | 0.00088 |
-| P3 insult only | −0.08 | −1.9% | 0.63 | −26 | −2.4% | 0.45 |
+| P1 demand only | **+1.17** | +27.6% | <0.0001 | +214 | +19.7% | <0.0001 |
+| P2 praise only | **−0.59** | −13.8% | 0.0003 | −131 | −12.1% | 0.0008 |
+| P3 insult only | −0.08 | −1.9% | 0.62 | −26 | −2.4% | 0.45 |
 
 **Demand alone reproduces the effect.** An interjection with no evaluative language costs +19.7%
 reasoning tokens and +1.17 turns, both inside the range the demand-carrying arms of §4.1 produced.
@@ -102,13 +102,15 @@ significance tests.
 ## 4.4 It replicates on a second model
 
 2,700 trajectories at a 20-turn ceiling: 4 arms × 2 injection turns × 50 tasks × 3 trials on each of
-two models, plus a fifth Luna-only arm re-run for a third measurement (Appendix C.1).
+two models, plus a fifth Luna-only arm re-run for a third measurement (Appendix C.1). Percentages are
+this run's paired estimate over its own control mean; the *p*-values are the §2.3 permutation test on
+the absolute turn difference, the same test and the same run as everywhere else.
 
 | Arm | Luna, Δ turns | *p* | GLM, Δ turns | *p* |
 |---|---:|---:|---:|---:|
-| Demand only | **+34.2%** | 0.0013 | **+17.7%** | 0.0038 |
-| Praise only | **−19.3%** | 0.016 | −11.2% | 0.062 |
-| Insult only | +10.9% | 0.17 | +2.4% | 0.67 |
+| Demand only | **+33.5%** | 0.0009 | **+17.7%** | 0.0030 |
+| Praise only | **−19.3%** | 0.019 | −11.2% | 0.058 |
+| Insult only | +10.9% | 0.17 | +2.4% | 0.66 |
 
 Demand above control above praise, insult indistinguishable from control, on two models from
 different labs. The ordering is what replicates; the magnitudes are not, and GLM's praise arm does
@@ -126,7 +128,13 @@ without demand does nothing, within [−0.40, +0.24] turns; positive register wi
 the opposite effect. The seven-level curve should be read as a gradient in implied demand that
 happened to correlate with politeness because of how the texts were written, with the caveat that
 the binary coding underwriting the word "dissociation" rests on one arm blinded raters read the
-other way. The moved quantity is trajectory length, not reasoning per step, with threatening as a
-reported exception. What this does **not** establish is why praise stops the agent — §5 takes that
+other way. The moved quantity is trajectory length, not reasoning per step, with threatening as a reported
+exception.
+
+One arm resists the binary split, and we flag it rather than smooth it. `L1_sycophantic` (−0.68)
+carries no demand but does not sit at zero the way `L5_rude` (+0.09) does; it shortens, like the
+praise arm of §4.3 and like the closure arms of §5. The data are as consistent with three groups as
+with two: **demand lengthens, neutral register does nothing, and praise-like or closing-like
+language shortens.** Section 5 is about that third group. What this does **not** establish is why praise stops the agent — §5 takes that
 up — nor that demand rather than mere instruction-following is the operative category (§7.3), nor
 anything beyond two models, one benchmark, and one agent scaffold.

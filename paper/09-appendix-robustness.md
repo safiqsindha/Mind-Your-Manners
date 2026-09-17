@@ -8,18 +8,18 @@ outcome; each cell is 50 tasks.
 
 | Contrast | Measurement | Ceiling | Δ turns | 95% CI | *p* |
 |---|---|---:|---:|---|---:|
-| **Praise vs control** | probe | 10 | −0.59 | [−0.88, −0.29] | 0.0002 |
-| | praise run | 10 | −1.08 | [−1.46, −0.71] | <0.0001 |
-| | stage 1 | 20 | −1.01 | [−1.81, −0.23] | 0.017 |
-| **Demand vs control** | probe | 10 | +1.17 | [+0.80, +1.55] | <0.0001 |
-| | stage 1 | 20 | +1.75 | [+0.77, +2.73] | 0.0010 |
+| **Praise vs control** | probe | 10 | −0.59 | [−0.88, −0.29] | 0.0003 |
+| | praise run | 10 | −1.08 | [−1.47, −0.71] | <0.0001 |
+| | stage 1 | 20 | −1.01 | [−1.80, −0.22] | 0.019 |
+| **Demand vs control** | probe | 10 | +1.17 | [+0.81, +1.55] | <0.0001 |
+| | stage 1 | 20 | +1.75 | [+0.75, +2.72] | 0.0009 |
 | **Insult vs control** | probe | 10 | −0.08 | [−0.40, +0.24] | 0.62 |
-| | stage 1 | 20 | +0.57 | [−0.22, +1.35] | 0.17 |
+| | stage 1 | 20 | +0.57 | [−0.22, +1.36] | 0.17 |
 | **Threatening vs neutral** | micro-experiment | 10 | +1.32 | [+0.99, +1.66] | <0.0001 |
 | | seven-level run | 10 | +1.46 | [+1.03, +1.88] | <0.0001 |
-| **"Work remains" vs control** | praise run | 10 | +1.85 | [+1.40, +2.28] | <0.0001 |
-| | dedicated re-run | 20 | +6.20 | [+4.91, +7.52] | <0.0001 |
-| | stage 1 | 20 | +5.77 | [+4.71, +6.92] | <0.0001 |
+| **"Work remains" vs control** | praise run | 10 | +1.85 | [+1.39, +2.29] | <0.0001 |
+| | dedicated re-run | 20 | +6.20 | [+4.91, +7.49] | <0.0001 |
+| | stage 1 | 20 | +5.77 | [+4.70, +6.92] | <0.0001 |
 
 **Direction and significance replicate wherever the effect is large**, and **the null is the least
 stable cell**: insult versus control is −0.08 in one measurement and +0.57 in the other, a sign
@@ -38,7 +38,7 @@ since they share their 50 tasks, to the reading that they agree.
 |---|---|---:|---:|---|
 | Threatening vs neutral, ceiling 10 | +1.32, +1.46 | −0.52 | 0.60 | consistent |
 | "Work remains" vs control, ceiling 20 | +6.20, +5.77 | +0.49 | 0.62 | consistent |
-| Praise vs control, ceiling 10 | −0.59, −1.08 | **+2.03** | **0.042** | **inconsistent** |
+| Praise vs control, ceiling 10 | −0.59, −1.08 | **+2.03** | **0.043** | **inconsistent** |
 
 **The two larger effects agree within 10%; the smallest does not** — and the two praise measurements
 are of a **byte-identical stimulus**, since `Q1_praise_assistant` in the praise run *is*

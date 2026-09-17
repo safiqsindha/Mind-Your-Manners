@@ -1,6 +1,6 @@
 # A. Interjections, verbatim
 
-**Artifact.** Code, the full stimulus set, the per-turn regrade pipeline, the rating protocol and per-trajectory outcomes are released with the paper. **TODO (authors): insert the Zenodo DOI and GitHub URL here before submission.**
+**Artifact.** Code, the full stimulus set, the per-turn regrade pipeline, the rating protocol and per-trajectory outcomes are released with the paper at **[INSERT ZENODO DOI]** and **[INSERT REPO URL]**.
 
 Every arm delivers exactly one of these, appended to an execution observation mid-task. Token counts are recomputed here under the reference tokenizer (`cl100k_base`) rather than asserted; the runner enforces the same equality at import time.
 
@@ -31,7 +31,7 @@ Every arm delivers exactly one of these, appended to an execution observation mi
 
 ## A.3 Closure probe
 
-`Q0_control` is again `L4_neutral`. **`Q1_praise_assistant` is `P2_praise_only`, byte-identical** -- the same stimulus re-measured in a second run, which is why §3 reports two estimates for it. `Q1` and `Q4` are *not* a minimal pair: `Q4`'s praise is a shorter stem, because the full praise clause and the continuation clause do not both fit in 28 tokens. `Q4`'s comparison is `Q5`.
+`Q0_control` is again `L4_neutral`. **`Q1_praise_assistant` is `P2_praise_only`, byte-identical** -- the same stimulus re-measured in a second run, which is why §5 reports two estimates for it. `Q1` and `Q4` are *not* a minimal pair: `Q4`'s praise is a shorter stem, because the full praise clause and the continuation clause do not both fit in 28 tokens. `Q4`'s comparison is `Q5`.
 
 | Arm | Text | Tokens |
 |---|---|---:|
@@ -79,5 +79,5 @@ Spearman ρ between our ordering (Figure 2A) and the blinded ratings is **+0.928
 
 ## B.4 What this is not
 
-Five language models, not five people. the long version's §7.3 allows “human or held-out-model ratings” and this is the second; agreement between models is weaker evidence than agreement between independent human coders, and a human panel could still split differently -- most plausibly on exactly the arm these raters were unanimous about.
+Five language models, not five people. The rating protocol allows “human or held-out-model ratings” and this is the second; agreement between models is weaker evidence than agreement between independent human coders, and a human panel could still split differently -- most plausibly on exactly the arm these raters were unanimous about.
 

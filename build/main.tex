@@ -78,9 +78,10 @@
 
 \title{\textbf{Mind your manners? LLM-agent persistence\\tracks demand, not social register}}
 \author{%
-  % TODO: author block --- name, affiliation, contact.
-  \textit{[author name withheld for review]}\\
-  \textit{Independent researcher}
+  % [AUTHOR] Fill both lines before posting to Zenodo. Left as visible
+  % placeholders so an unfilled byline cannot ship unnoticed.
+  \textit{[INSERT AUTHOR NAME]}\\
+  \textit{[INSERT AFFILIATION]}
 }
 \date{}
 
@@ -97,14 +98,17 @@
   \centering
   \includegraphics[width=\linewidth]{demand-vs-register.pdf}
   \caption{\textbf{Demand, not register, orders the effect (\S4).}
-    Change in acting turns against the control interjection, with 95\%
-    clustered intervals. \textbf{A}: on the seven-register scale the four
-    demand-carrying arms have point estimates from \(+0.70\) to \(+1.80\) and
-    the two that carry none from \(-0.68\) to \(+0.09\); the point estimates
-    do not overlap, though the intervals of the two adjacent arms do. Register
-    does not sort them -- each side holds one flattering and one hostile arm.
-    \textbf{B}: the isolation probe, where demand and affect are varied
-    separately. Hollow markers do not survive the \S2.4 correction.}
+    All estimates are \texttt{gpt-5.6-luna} at a ten-turn ceiling, in acting
+    turns against the control interjection, with 95\% clustered intervals and
+    nominal permutation \emph{p}-values. \textbf{A}: on the seven-register
+    scale the four demand-carrying arms have point estimates from \(+0.70\) to
+    \(+1.80\) and the two that carry none from \(-0.68\) to \(+0.09\); the
+    point estimates do not overlap, though the \emph{very polite} and
+    \emph{rude} intervals do. Register does not sort them -- each side holds
+    one flattering and one hostile arm. \textbf{B}: the isolation probe, where
+    demand and affect are varied separately, holding syntax, length and the
+    shared stem constant. Hollow markers do not survive the \S2.4 correction
+    within the 22-contrast family.}
   \label{fig:demand-vs-register}
 \end{figure}
 
@@ -114,12 +118,14 @@
   \centering
   \includegraphics[width=\linewidth]{closing-cue.pdf}
   \caption{\textbf{Closing cues curtail the agent (\S5).}
-    \textbf{A}: the six arms ordered by how strongly the message projects an
-    end to the exchange. The ordering is monotone, and the bare closing cue --
-    which praises nothing, evaluates nothing and claims nothing about task
-    state -- produces the largest reduction in the study. \textbf{B}: the two
-    within-design contrasts, \S2.4's second corrected family; these compare
-    one treated arm against another rather than against control.}
+    \texttt{gpt-5.6-luna}, ten-turn ceiling, acting turns, 95\% clustered
+    intervals. \textbf{A}: the six arms ordered by how strongly the message
+    projects an end to the exchange. The ordering is monotone, and the bare
+    closing cue -- which praises nothing, evaluates nothing and claims nothing
+    about task state -- produces the largest reduction in the study.
+    \textbf{B}: the two within-design contrasts, \S2.4's second corrected
+    family; these compare one treated arm against another rather than against
+    control.}
   \label{fig:closing-cue}
 \end{figure}
 \input{sections/06-regrade}

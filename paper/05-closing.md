@@ -34,17 +34,17 @@ a minimal pair, because `Q4`'s praise is a shorter stem, so `Q4`'s comparison is
 
 ## 5.2 Results
 
-Paired by task, cluster bootstrap over tasks, 8,000 replicates.
+Paired by task, cluster bootstrap over tasks, 20,000 resamples (§2.3).
 
 | Contrast | Δ turns | 95% CI | Δ reasoning tokens |
 |---|---:|---|---:|
-| Praise the assistant vs control | **−1.080** | [−1.464, −0.710] | −182 [−252, −116] |
-| Praise the work vs control | **−0.934** | [−1.308, −0.547] | −105 [−193, −22] |
-| **Bare closing cue vs control** | **−1.443** | [−1.860, −1.036] | −226 [−316, −141] |
-| Praise + "work remains" vs control | **+0.502** | [+0.090, +0.908] | +141 [+52, +237] |
-| "Work remains" alone vs control | **+1.849** | [+1.387, +2.284] | +339 [+262, +418] |
-| **Praise isolated (Q4 − Q5)** | **−1.347** | [−1.738, −0.950] | −199 [−284, −114] |
-| Closing cue vs praise | −0.363 | [−0.638, −0.082] | −44 [−113, +26] n.s. |
+| Praise the assistant vs control | **−1.080** | [−1.466, −0.714] | −182 [−251, −115] |
+| Praise the work vs control | **−0.934** | [−1.314, −0.545] | −105 [−192, −24] |
+| **Bare closing cue vs control** | **−1.443** | [−1.867, −1.042] | −226 [−316, −142] |
+| Praise + "work remains" vs control | **+0.502** | [+0.095, +0.903] | +141 [+53, +234] |
+| "Work remains" alone vs control | **+1.849** | [+1.387, +2.286] | +339 [+264, +417] |
+| **Praise isolated (Q4 − Q5)** | **−1.347** | [−1.740, −0.956] | −199 [−284, −114] |
+| Closing cue vs praise | −0.363 | [−0.643, −0.081] | −44 [−113, +24] n.s. |
 
 **A simple completion account does not fit.** Praise removes 1.347 turns relative to the same
 continuation message without it, in a message that explicitly states the task is unfinished. If
@@ -59,14 +59,14 @@ assistant (−1.080); if anything weaker, with intervals overlapping substantial
 account predicts praise aimed at the work should bite harder. **Closing is supported, and
 overshoots**: the bare cue — no praise, no evaluation, no claim about task state — produces the
 largest reduction measured anywhere in this study, −1.443 turns, and stops the agent significantly
-harder than praise itself (−0.363, [−0.638, −0.082]). A content-free discourse cue is a stronger
+harder than praise itself (−0.363, [−0.643, −0.081]). A content-free discourse cue is a stronger
 termination lever than any register we tested.
 
 **A floor could manufacture this, and does not.** A trajectory cannot be shorter than its injection
 turn, so a shortening effect has less room at turn 2 than at turn 1. Split by position, the closing
 cue gives **−1.55 [−2.07, −1.03] at turn 1** and **−0.99 [−1.59, −0.43] at turn 2**: largest where
-there is most room, and surviving at both, which is the opposite of what an artefact predicts.
-Accuracy does not move on any arm (every arm within 2.6 points of control, all *p* > 0.13).
+there is most room, and surviving at both, which is the opposite of what an artefact predicts. The turn-2 estimates rest on the 35–38 tasks
+whose trajectories reach turn 2 at all, against all 50 at turn 1. Accuracy does not move on any arm (every arm within 2.6 points of control, all *p* > 0.13).
 
 ## 5.3 What this is, and is not, evidence for
 
