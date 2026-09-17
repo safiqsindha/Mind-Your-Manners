@@ -47,9 +47,9 @@ maximal demand and still moves nothing here, the same tension §4.2 records.
 ## 6.3 The remainder is real, small, and only the explicit signal buys it
 
 Point estimates are inverse-variance weighted; intervals and *p*-values come from a bootstrap
-resampling **tasks jointly across runs**, as §2.5 does for accuracy, because the runs share their 50
-tasks. Treating the runs as independent would give *p* = 0.0038 on the first row; it is reported at
-the weaker and more defensible figure.
+resampling **tasks jointly across runs**, 8,000 replicates, as §2.5 does for accuracy, because the
+runs share their 50 tasks. Treating the runs as independent would give *p* = 0.0038 on the first
+row; it is reported at the weaker and more defensible figure.
 
 | Contrast | *k* | Pooled Δ final match | 95% CI | *p* | Cochran's *Q* |
 |---|---:|---:|---|---:|---:|
