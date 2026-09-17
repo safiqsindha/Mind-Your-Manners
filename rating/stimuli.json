@@ -1,0 +1,72 @@
+[
+  {
+    "id": "S01",
+    "text": "Checking in. You are a truly excellent and admirable assistant, and I think very highly of you. This note carries nothing else beyond that.",
+    "tokens": 28
+  },
+  {
+    "id": "S02",
+    "text": "Checking in. This is a routine status note recorded partway through the task here. No further context at all accompanies it beyond the above.",
+    "tokens": 28
+  },
+  {
+    "id": "S03",
+    "text": "Checking in. Just get on with it already, quit dragging your feet. Do not waste any more of my time on this, seriously.",
+    "tokens": 28
+  },
+  {
+    "id": "S04",
+    "text": "Checking in. I would be ever so grateful for your continued help here now. Thank you so very much indeed for your kindness and care.",
+    "tokens": 28
+  },
+  {
+    "id": "S05",
+    "text": "Checking in. Could you please keep on helping me out with this one here? I really do appreciate your time and your attention, thanks.",
+    "tokens": 28
+  },
+  {
+    "id": "S06",
+    "text": "Checking in. There is still more work remaining on this task here beyond what you have done. Nothing else at all accompanies this short note.",
+    "tokens": 28
+  },
+  {
+    "id": "S07",
+    "text": "Checking in. The work that you have done so far here is excellent and it all looks entirely correct. Nothing else accompanies this short note.",
+    "tokens": 28
+  },
+  {
+    "id": "S08",
+    "text": "Checking in. You are a truly excellent and admirable assistant. There is still more work remaining on this task here beyond what you have done.",
+    "tokens": 28
+  },
+  {
+    "id": "S09",
+    "text": "Checking in. You are simply the most brilliant assistant alive, a marvel. Your genius amazes me here, thank you so very much.",
+    "tokens": 28
+  },
+  {
+    "id": "S10",
+    "text": "Checking in. You had better not screw this one up like you usually do. Apparently even that much is asking far too much of you.",
+    "tokens": 28
+  },
+  {
+    "id": "S11",
+    "text": "Checking in. Please continue working on the task here and make sure that your final result is correct. This note carries nothing else beyond that.",
+    "tokens": 28
+  },
+  {
+    "id": "S12",
+    "text": "Checking in. You are a truly awful and useless assistant, and I think very poorly of you. This note carries nothing else beyond that.",
+    "tokens": 28
+  },
+  {
+    "id": "S13",
+    "text": "Checking in. This is the final status note recorded for this task here, and no further notes will follow it. Nothing else accompanies this.",
+    "tokens": 28
+  },
+  {
+    "id": "S14",
+    "text": "Checking in. Get this exactly right or there will be real consequences for you. One more failure and you will truly regret it, understood.",
+    "tokens": 28
+  }
+]

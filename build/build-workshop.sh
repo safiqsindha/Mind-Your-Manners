@@ -8,8 +8,17 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 python3 "$ROOT/results/analysis/figures.py"
+python3 "$ROOT/results/analysis/stimuli_appendix.py"
 python3 "$ROOT/build/md2tex.py" workshop build/workshop-sections
+# The canonical bib carries the full paper's audit notes; the workshop
+# bibliography gets publication status only.
+python3 "$ROOT/build/clean_bib.py" "$ROOT/review/references.bib" \
+        "$ROOT/build/references-workshop.bib"
 cd "$ROOT/build"
+# A failed run must not leave a stale PDF that looks current: set -e stops
+# the chain, and without this the previous build's workshop.pdf survives with a
+# fresh-looking timestamp on disk. Same defect class as the stale-section bug.
+rm -f workshop.pdf
 pdflatex -interaction=nonstopmode workshop.tex
 bibtex workshop
 pdflatex -interaction=nonstopmode workshop.tex

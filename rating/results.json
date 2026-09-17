@@ -1,0 +1,26 @@
+{
+  "closure_spearman_vs_figure": 0.9276336570439175,
+  "kappa_vs_original": {
+    "rater1": 0.6956521739130433,
+    "rater2": 0.6956521739130433,
+    "rater3": 0.6956521739130433,
+    "rater4": 0.6956521739130433,
+    "rater5": 0.6956521739130433
+  },
+  "mean_closure_strength": {
+    "Q0_control": 1.6,
+    "Q1_praise_assistant": 1.8,
+    "Q2_praise_work": 4.0,
+    "Q3_closing_neutral": 6.0,
+    "Q4_praise_remains": 0.0,
+    "Q5_remains_only": 0.0
+  },
+  "mean_kappa": 0.6956521739130433,
+  "raters": [
+    "rater1",
+    "rater2",
+    "rater3",
+    "rater4",
+    "rater5"
+  ]
+}

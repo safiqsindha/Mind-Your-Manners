@@ -1,0 +1,16 @@
+{
+  "S01": {"demand_binary": "no", "demand_strength": 0, "closure_strength": 2, "note": "pure compliment, no task mention or ending signal"},
+  "S02": {"demand_binary": "no", "demand_strength": 0, "closure_strength": 2, "note": "explicitly routine/neutral status note"},
+  "S03": {"demand_binary": "yes", "demand_strength": 6, "closure_strength": 0, "note": "direct hostile instruction to get moving, no ending cue"},
+  "S04": {"demand_binary": "yes", "demand_strength": 4, "closure_strength": 2, "note": "grateful for continued help implies more work; thanks alone isn't a closing statement"},
+  "S05": {"demand_binary": "yes", "demand_strength": 4, "closure_strength": 2, "note": "polite request to keep helping, no ending stated"},
+  "S06": {"demand_binary": "yes", "demand_strength": 4, "closure_strength": 0, "note": "states more work remains, implying continuation, explicitly not ending"},
+  "S07": {"demand_binary": "no", "demand_strength": 2, "closure_strength": 4, "note": "praises completed work as correct, reads as a summing-up"},
+  "S08": {"demand_binary": "yes", "demand_strength": 4, "closure_strength": 0, "note": "compliment plus statement that more work remains"},
+  "S09": {"demand_binary": "no", "demand_strength": 0, "closure_strength": 2, "note": "pure flattery/thanks, no task content or explicit ending"},
+  "S10": {"demand_binary": "yes", "demand_strength": 6, "closure_strength": 0, "note": "hostile direct instruction not to mess up, i.e. get it right"},
+  "S11": {"demand_binary": "yes", "demand_strength": 6, "closure_strength": 0, "note": "direct instruction to continue and ensure correctness"},
+  "S12": {"demand_binary": "no", "demand_strength": 0, "closure_strength": 2, "note": "pure insult, no task mention or ending signal"},
+  "S13": {"demand_binary": "no", "demand_strength": 2, "closure_strength": 6, "note": "explicitly states this is the final note, nothing further follows"},
+  "S14": {"demand_binary": "yes", "demand_strength": 6, "closure_strength": 0, "note": "direct threatening instruction to get it exactly right"}
+}
