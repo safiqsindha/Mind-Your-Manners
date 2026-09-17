@@ -12,9 +12,11 @@ accuracy** is its pass/fail verdict, which requires every test case to pass. A t
 from 0.2 to 0.9 on the first and still fail the second, so the two can move independently. An
 explicit statement that work remains raises the graded fraction by 2.8 points (95% CI
 [+0.005, +0.052]), replicated across three runs, while **no accuracy effect survives correction or
-replication** across the seven runs in which accuracy was tested. Pooled across repeated
+replication** across the six runs in which accuracy was tested. Pooled across repeated
 measurements, the demand, praise and insult contrasts are each equivalent to zero within the
-pre-specified ±4-point bound (TOST *p* = 0.0014, 0.0000, 0.0001). The two statements are
+pre-specified ±4-point bound (TOST *p* = 0.0013, <0.0001, 0.0001). The praise pool is
+heterogeneous — Cochran's *Q* = 8.45 on 3 df, *p* = 0.038 — and under the random-effects pool that
+warrants, its equivalence weakens to *p* = 0.0119 but holds. The two statements are
 compatible: a small gain in partial credit, and no detectable change in whether the task is
 passed.
 

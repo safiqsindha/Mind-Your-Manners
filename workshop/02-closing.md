@@ -15,8 +15,7 @@ and no further notes will follow it" — produces the largest reduction we measu
 
 **A floor could manufacture this, and does not.** A trajectory cannot be shorter than its
 injection turn, so a shortening effect has less room at turn 2 than at turn 1. Split by position,
-the closing cue gives **−1.55 [−2.07, −1.03] at turn 1** and −0.99 [−1.59, −0.43] at turn 2
-(`results/analysis/injection_position.py`). The
+the closing cue gives **−1.55 [−2.07, −1.03] at turn 1** and −0.99 [−1.59, −0.43] at turn 2. The
 effect is largest where there is most room and survives at both, so it is not an artefact of the
 floor; the turn-2 estimates also rest on the 35–38 tasks whose trajectories reach turn 2 at all,
 against all 50 at turn 1.
@@ -36,10 +35,14 @@ Closing sequences are a well-described conversational object, and appreciations 
 canonical pre-closing tokens [schegloff-sacks-1973]; that praise operates *through* that structure
 is the hypothesis this is consistent with, not one the design establishes.
 
-**What is new here against the nearest prior work.** A mid-flight halt signal has been delivered to
-a working agent before, and whether it stops has been measured [munirathinam-2026-recuse] — but
-that signal is an explicit stop instruction with normative force, and closing-sequence pragmatics
-appear nowhere in it. Prior work shows that explicit mid-flight halt instructions need not stop an
+**What is new here against the nearest prior work.** That prompt wording moves agentic spend at
+equal task success is already established across 4,644 preregistered runs, and the one variant free
+or better on all six models there carries an explicit stop condition [weinberger-hozez-2026] — so
+"a stop instruction reduces agentic work" is not a claim we make. A mid-flight halt signal has also
+been delivered to a working agent before, and whether it stops has been measured
+[munirathinam-2026-recuse] — but that signal is an explicit stop instruction with normative force,
+and closing-sequence pragmatics appear nowhere in it. Prior work shows that explicit mid-flight
+halt instructions need not stop an
 agent; our distinct question is whether ordinary conversational closing structure can alter
 termination without instructing the agent to stop. Read against ours it raises the stakes: an explicit halt
 that agents acknowledged in 20 of 20 trials stopped none of them, while a note issuing no
