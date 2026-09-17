@@ -11,7 +11,7 @@ claim is checked rather than asserted.
 
 Both documents get the same appendix from this one script; they differ only in
 where their own demand coding lives, so the cross-references are parameterised
-rather than duplicated. Writes paper/09-appendix-stimuli.md and
+rather than duplicated. Writes paper/08-appendix-stimuli.md and
 workshop/99-appendix.md.
 """
 from __future__ import annotations
@@ -34,11 +34,11 @@ from harness.tone_wrappers import (  # noqa: E402
 # one dangles in the other. Everything the appendix points at is listed here.
 TARGETS = {
     "paper": {
-        "out": ROOT / "paper" / "09-appendix-stimuli.md",
-        "coding": "§4.2",          # where our demand coding is stated
-        "reruns": "§2.8",          # where the two praise estimates are reported
-        "closure_fig": "§5.4",     # where the closure ordering is argued
-        "rater_allowance": "§8.4",
+        "out": ROOT / "paper" / "08-appendix-stimuli.md",
+        "coding": "§4.1",          # where our demand coding is stated
+        "reruns": "Appendix C.1",  # where the two praise estimates are reported
+        "closure_fig": "§5.3",     # where the closure ordering is argued
+        "rater_allowance": "§7.3",
         "artifact": True,
     },
     "workshop": {
@@ -46,7 +46,7 @@ TARGETS = {
         "coding": "§3",
         "reruns": "§3",
         "closure_fig": "Figure 2A",
-        "rater_allowance": "the long version's §8.7",
+        "rater_allowance": "the long version's §7.3",
         "artifact": True,
     },
 }
@@ -88,7 +88,8 @@ def _rating_appendix(t: dict) -> list[str]:
         f"{len(r['raters'])} held-out model raters, drawn from three model sizes, each rating "
         "alone from the rubric and the texts of Appendix A -- no outcome data, no arm names, no "
         "project access. The rubric, the statistics to be computed and the interpretation bands "
-        "were committed and pushed before any rating existed; see `rating/PROTOCOL.md`.",
+        "were committed and pushed before any rating existed; the protocol is in the "
+        "released artifact.",
         "",
         "## B.1 Against the original coding",
         "",
@@ -143,8 +144,8 @@ def _build(t: dict) -> tuple[list[str], dict[str, str], set[int]]:
         "# A. Interjections, verbatim",
         "",
         "**Artifact.** Code, the full stimulus set, the per-turn regrade pipeline, the rating "
-        "protocol and per-trajectory outcomes are available at "
-        "`[AUTHOR: anonymized artifact URL]`.",
+        "protocol and per-trajectory outcomes are released with the paper. "
+        "**TODO (authors): insert the Zenodo DOI and GitHub URL here before submission.**",
         "",
         "Every arm delivers exactly one of these, appended to an execution "
         "observation mid-task. Token counts are recomputed here under the "

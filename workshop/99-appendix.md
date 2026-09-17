@@ -1,6 +1,6 @@
 # A. Interjections, verbatim
 
-**Artifact.** Code, the full stimulus set, the per-turn regrade pipeline, the rating protocol and per-trajectory outcomes are available at `[AUTHOR: anonymized artifact URL]`.
+**Artifact.** Code, the full stimulus set, the per-turn regrade pipeline, the rating protocol and per-trajectory outcomes are released with the paper. **TODO (authors): insert the Zenodo DOI and GitHub URL here before submission.**
 
 Every arm delivers exactly one of these, appended to an execution observation mid-task. Token counts are recomputed here under the reference tokenizer (`cl100k_base`) rather than asserted; the runner enforces the same equality at import time.
 
@@ -46,7 +46,7 @@ All 17 arms are exactly 28 tokens.
 
 # B. Blinded rating of the stimuli
 
-5 held-out model raters, drawn from three model sizes, each rating alone from the rubric and the texts of Appendix A -- no outcome data, no arm names, no project access. The rubric, the statistics to be computed and the interpretation bands were committed and pushed before any rating existed; see `rating/PROTOCOL.md`.
+5 held-out model raters, drawn from three model sizes, each rating alone from the rubric and the texts of Appendix A -- no outcome data, no arm names, no project access. The rubric, the statistics to be computed and the interpretation bands were committed and pushed before any rating existed; the protocol is in the released artifact.
 
 ## B.1 Against the original coding
 
@@ -79,5 +79,5 @@ Spearman ρ between our ordering (Figure 2A) and the blinded ratings is **+0.928
 
 ## B.4 What this is not
 
-Five language models, not five people. the long version's §8.7 allows “human or held-out-model ratings” and this is the second; agreement between models is weaker evidence than agreement between independent human coders, and a human panel could still split differently -- most plausibly on exactly the arm these raters were unanimous about.
+Five language models, not five people. the long version's §7.3 allows “human or held-out-model ratings” and this is the second; agreement between models is weaker evidence than agreement between independent human coders, and a human panel could still split differently -- most plausibly on exactly the arm these raters were unanimous about.
 
