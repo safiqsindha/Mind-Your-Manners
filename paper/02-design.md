@@ -36,7 +36,8 @@ tokens) — the same shape as accuracy — and length predicted accuracy better 
 Injection turn is **crossed**, not sampled, in every run but the first micro-experiment; that
 sampling made a selection artefact look like a timing effect (Appendix C.2). Arm order is shuffled
 per (model, task) from a fixed seed and position does not predict accuracy (*p* = 0.61). Temperature
-is 0 where settable, which is **not** deterministic on any roster model; that is why trials exist.
+is 0 where settable — Luna's advertised parameters omit it entirely — and no roster model
+returned identical output across repeated identical calls, which is why trials exist.
 Trajectories that end before the interjection is due received no dose and are excluded — a
 pre-treatment exclusion that does not differ by arm, 54.0% to 59.5% firing across the probe's four
 arms at turn 2, but differs sharply **across** injection turns, roughly 98% at turn 0 against 55% at
@@ -63,18 +64,20 @@ ceiling** — so an arm's absolute cost against an *uninterrupted* agent is not 
 bounds, though a shared offset cancels in every contrast reported here.
 
 Every trajectory belongs to one of 50 tasks, and each (task, arm) cell holds six to nine
-trajectories, which are not independent. For every arm-versus-control contrast and both designed
-within-run contrasts: **point estimates are paired within task** (per task, the mean over that
-task's trials in each arm, differenced, then averaged — the paired-and-clustered form of Miller's
-clustered estimator [miller-2024]); **intervals come from a cluster bootstrap over tasks**, 20,000
-resamples; ***p*-values come from a task-clustered sign-flip permutation test**, 20,000 draws,
-reported as (count + 1)/(draws + 1) so that no *p* is quoted as exactly zero. Three analyses run a
-different number of replicates, and each says so where it appears: the pooled accuracy contrasts of
-§2.5 (4,000), the closure-run contrasts of §5.2 (8,000) and the pooled progress contrasts of §6.3
-(8,000). Clustering is not a formality: Miller reports clustered-to-CLT standard-error ratios of
-1.10, 1.88 and 3.05 across three datasets, and an early unclustered version of our own results had
-accuracy intervals roughly 35% too narrow. Following [sclar-2024] and [mizrahi-2024] we report
-ranges wherever a quantity was measured more than once.
+trajectories, which are not independent. Throughout: **point estimates are paired within task** (per
+task, the mean over that task's trials in each arm, differenced, then averaged — the
+paired-and-clustered form of Miller's clustered estimator [miller-2024]); **intervals come from a
+cluster bootstrap over tasks**, 20,000 resamples; ***p*-values come from a task-clustered sign-flip
+permutation test**, 20,000 draws, reported as (count + 1)/(draws + 1) so that no *p* is quoted as
+exactly zero. **20,000 is the only replicate count in this paper.** Every interval and every
+*p*-value, in every table and every figure, is read from one run of that procedure, so a contrast
+quoted twice is quoted identically; the pooled contrasts of §2.5 and §6.3 resample tasks jointly
+across runs rather than within one, at the same 20,000. A permutation *p* at this count cannot
+resolve below 1/20,001, so anything smaller is reported as <0.0001 rather than as a more
+precise-looking figure. Clustering is not a formality: Miller reports clustered-to-CLT
+standard-error ratios of 1.10, 1.88 and 3.05 across three datasets, and an early unclustered version
+of our own results had accuracy intervals roughly 35% too narrow. Following [sclar-2024] and
+[mizrahi-2024] we report ranges wherever a quantity was measured more than once.
 
 ## 2.4 Multiplicity
 
@@ -119,24 +122,24 @@ task.
 
 The pre-specified smallest effect of interest is **±4 accuracy points**, the polite-versus-rude gap
 of the paper this work is positioned against. Pooling each contrast's repeated measurements, with
-the interval from a bootstrap that resamples tasks **jointly across runs**, 4,000 draws, since the
-runs share their 50 tasks:
+the interval from a bootstrap that resamples tasks **jointly across runs**, since the runs share
+their 50 tasks:
 
 | Contrast | *k* | Ceilings | Estimate | 95% CI | MDE₈₀ | TOST at ±4 |
 |---|---:|---|---:|---|---:|---:|
-| Demand vs control | 3 | 10, 20, 20 | −0.31 pts | [−2.72, +2.10] | 3.45 | 0.0014 |
-| Praise vs control | 4 | 10, 10, 20, 20 | −0.12 pts | [−1.79, +1.55] | 2.39 | 0.0000 |
-| Insult vs control | 3 | 10, 20, 20 | −0.04 pts | [−2.11, +2.04] | 2.97 | 0.0001 |
+| Demand vs control | 3 | 10, 20, 20 | −0.31 pts | [−2.71, +2.09] | 3.43 | 0.0013 |
+| Praise vs control | 4 | 10, 10, 20, 20 | −0.12 pts | [−1.80, +1.57] | 2.41 | <0.0001 |
+| Insult vs control | 3 | 10, 20, 20 | −0.04 pts | [−2.15, +2.08] | 3.03 | 0.0001 |
 
 So the claim is bounded and specific: **a mid-task interjection — demanding, praising, or insulting
 — does not change task accuracy by as much as the four points the tone literature reports, while
-demand raises turn count by 18–34%, praise lowers it by 11–24%, and insult does not move it at
+demand raises turn count by 18–33%, praise lowers it by 11–24%, and insult does not move it at
 all.** It is not "register does not affect accuracy"; it is that an effect of the published size is
 excluded and an effect of a point or two is not.
 
 Two caveats, both against us. The praise pooling is heterogeneous — Cochran's *Q* = 8.45 on 3 df,
 *p* = 0.038 — and between models rather than within: Luna's three praise measurements alone give
-*Q* = 0.36 and −1.27 points, 95% CI [−3.13, +0.59]. Under a random-effects pool the praise estimate
+*Q* = 0.36 and −1.27 points, 95% CI [−3.11, +0.57]. Under a random-effects pool the praise estimate
 becomes +0.21 with a standard error of 1.68 and the ±4 equivalence weakens to *p* = 0.0119 but
 holds. And **no accuracy effect in this study has replicated**: the larger nominal hit, +6.6 points
 on the continue-signal contrast, came back at −1.8 on identical tasks and ceiling.

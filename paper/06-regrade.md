@@ -47,16 +47,15 @@ maximal demand and still moves nothing here, the same tension §4.2 records.
 ## 6.3 The remainder is real, small, and only the explicit signal buys it
 
 Point estimates are inverse-variance weighted; intervals and *p*-values come from a bootstrap
-resampling **tasks jointly across runs**, 8,000 replicates, as §2.5 does for accuracy, because the
-runs share their 50 tasks. Treating the runs as independent would give *p* = 0.0038 on the first
-row; it is reported at the weaker and more defensible figure.
+resampling **tasks jointly across runs**, 20,000 resamples, as §2.5 does for accuracy, because the
+runs share their 50 tasks. Treating the runs as independent would give *p* ≈ 0.004 on the first row; it is reported at the weaker and more defensible figure.
 
 | Contrast | *k* | Pooled Δ final match | 95% CI | *p* | Cochran's *Q* |
 |---|---:|---:|---|---:|---:|
-| **"Work remains" vs control** | 3 | **+0.028** | [+0.005, +0.052] | **0.022** | 0.20/2 df (*p* = 0.91) |
-| Demand only vs control | 3 | +0.009 | [−0.020, +0.039] | 0.52 | 6.42/2 df (*p* = 0.040) |
-| Insult only vs control | 3 | +0.009 | [−0.018, +0.030] | 0.62 | 2.26/2 df (*p* = 0.32) |
-| Praise vs control | 4 | −0.008 | [−0.027, +0.013] | 0.52 | 9.63/3 df (*p* = 0.022) |
+| **"Work remains" vs control** | 3 | **+0.028** | [+0.005, +0.052] | **0.024** | 0.20/2 df (*p* = 0.91) |
+| Demand only vs control | 3 | +0.009 | [−0.020, +0.039] | 0.51 | 6.42/2 df (*p* = 0.040) |
+| Insult only vs control | 3 | +0.009 | [−0.018, +0.031] | 0.61 | 2.25/2 df (*p* = 0.33) |
+| Praise vs control | 4 | −0.008 | [−0.026, +0.014] | 0.55 | 9.57/3 df (*p* = 0.023) |
 
 **The explicit continue signal — "there is still more work remaining on this task here beyond what
 you have done" — raises the graded fraction by 2.8 points**, across two turn ceilings and three
@@ -111,7 +110,7 @@ register moves output length rather than correctness is already published for si
 by [kumar-dobariya-2026] and [yin-2024], and independently in the near-null of [cai-2025-tone]
 (§3.4); our accuracy null is a replication of that in an agentic substrate, not a new finding. We
 state it as equivalence rather than absence: demand versus control at −0.31 accuracy points, 95% CI
-[−2.72, +2.10], and praise versus control at −0.12, [−1.79, +1.55], each equivalent to zero within
+[−2.71, +2.09], and praise versus control at −0.12, [−1.80, +1.57], each equivalent to zero within
 the four points the tone literature reports (§2.5). The design cannot exclude an effect of a point
 or two and we do not claim it does. What it excludes is an accuracy effect of the size this
 literature reports, in a setting where the same interjections move turn count by roughly 15 to 40%.

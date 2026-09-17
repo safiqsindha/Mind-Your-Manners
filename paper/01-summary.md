@@ -22,6 +22,14 @@ headline above was re-run by its own authors and did not reproduce on GPT-4o, 82
 and five prompt-engineering techniques including emotional prompting largely failed to replicate
 [vaugrante-2024].
 
+Affect has already been shown to reach an agent's actions: agents select less healthy baskets in a
+shopping task after an anxiety-inducing narrative delivered in its own turn between two complete
+runs of that task [benzion-2026], and emotion introduced at the representation level, by steering
+hidden states rather than through any prompt, shapes multi-step agent trajectories
+[sun-2026-esteer]. What is untested is varying *register* in a message that reaches the agent while
+it is working, on a task with verifiable ground truth, and separating affect from implied demand as
+experimental factors.
+
 ## 1.2 What we did, and what we found
 
 We put a ReAct coding agent on SpreadsheetBench [ma-2024] — real workbook-editing tasks from Excel

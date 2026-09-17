@@ -287,7 +287,7 @@ def pool_progress(rng):
     return out
 
 
-def joint_task_bootstrap(pairs, weights, rng, reps=8000):
+def joint_task_bootstrap(pairs, weights, rng, reps=BOOT):
     """Pool across runs resampling TASKS jointly, not runs independently."""
     per_run = []
     for treat_stem, control_stem in pairs:

@@ -23,10 +23,12 @@ seven prefixes are length-matched at 18–25 words and scored with VADER, delibe
 the effect of emotional valence on the output token length rather than the differing lengths of
 prefixes" — they controlled the *length* of the instruction. What varies is its *content*. Three of
 the seven prefixes constrain output length: **Neutral** asks for "the single letter corresponding to
-the correct option", the most explicit output-form instruction of the seven; **Rude** says "do not
-waste my time or give any extra text"; **Very Rude** says "without any useless commentary". The
-other four — Sycophantic (VADER +0.95), Very Polite (+0.85), Polite (+0.65, an *attend* demand) and
-Threatening (−0.77, immediacy only) — do not.
+the correct option", the most explicit output-form instruction of the seven; **Rude** says "Do not waste my time or give any extra text… answer it
+immediately", carrying a brevity clause and an immediacy clause; **Very Rude** says "without any
+useless commentary". The other four — Sycophantic (VADER +0.95), Very Polite (+0.85), Polite
+(+0.65, an *attend* demand) and Threatening (−0.77, immediacy but no clause about length) — do not.
+Rude is coded as length-constraining on its "extra text" clause; immediacy is what Threatening
+carries alone.
 
 | Output tokens | GPT-4o | 5-nano | Flash | Flash Lite |
 |---|---:|---:|---:|---:|

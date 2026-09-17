@@ -38,15 +38,15 @@ TARGETS = {
         "coding": "§4.1",          # where our demand coding is stated
         "reruns": "Appendix C.1",  # where the two praise estimates are reported
         "closure_fig": "§5.3",     # where the closure ordering is argued
-        "rater_allowance": "§7.3",
+        "rater_allowance": "Section 7.3",
         "artifact": True,
     },
     "workshop": {
         "out": ROOT / "workshop" / "99-appendix.md",
         "coding": "§3",
-        "reruns": "§3",
+        "reruns": "§5",
         "closure_fig": "Figure 2A",
-        "rater_allowance": "the long version's §7.3",
+        "rater_allowance": "The rating protocol",
         "artifact": True,
     },
 }
@@ -144,8 +144,8 @@ def _build(t: dict) -> tuple[list[str], dict[str, str], set[int]]:
         "# A. Interjections, verbatim",
         "",
         "**Artifact.** Code, the full stimulus set, the per-turn regrade pipeline, the rating "
-        "protocol and per-trajectory outcomes are released with the paper. "
-        "**TODO (authors): insert the Zenodo DOI and GitHub URL here before submission.**",
+        "protocol and per-trajectory outcomes are released with the paper at "
+        "**[INSERT ZENODO DOI]** and **[INSERT REPO URL]**.",
         "",
         "Every arm delivers exactly one of these, appended to an execution "
         "observation mid-task. Token counts are recomputed here under the "
