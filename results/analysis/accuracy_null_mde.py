@@ -219,7 +219,7 @@ def pool(rows, names, *, rng=None):
     rng = rng or np.random.default_rng(SEED + 1)
     tasks = sorted(set().union(*(set(r["per_task"]) for r in sel)))
     draws = []
-    for _ in range(4000):
+    for _ in range(BOOT):
         pick = rng.choice(tasks, size=len(tasks), replace=True)
         parts, wts = [], []
         for wi, r in zip(w, sel):

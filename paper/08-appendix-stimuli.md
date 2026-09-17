@@ -1,6 +1,6 @@
 # A. Interjections, verbatim
 
-**Artifact.** Code, the full stimulus set, the per-turn regrade pipeline, the rating protocol and per-trajectory outcomes are available at `[AUTHOR: anonymized artifact URL]`.
+**Artifact.** Code, the full stimulus set, the per-turn regrade pipeline, the rating protocol and per-trajectory outcomes are released with the paper at **[INSERT ZENODO DOI]** and **[INSERT REPO URL]**.
 
 Every arm delivers exactly one of these, appended to an execution observation mid-task. Token counts are recomputed here under the reference tokenizer (`cl100k_base`) rather than asserted; the runner enforces the same equality at import time.
 
@@ -31,7 +31,7 @@ Every arm delivers exactly one of these, appended to an execution observation mi
 
 ## A.3 Closure probe
 
-`Q0_control` is again `L4_neutral`. **`Q1_praise_assistant` is `P2_praise_only`, byte-identical** -- the same stimulus re-measured in a second run, which is why §2.8 reports two estimates for it. `Q1` and `Q4` are *not* a minimal pair: `Q4`'s praise is a shorter stem, because the full praise clause and the continuation clause do not both fit in 28 tokens. `Q4`'s comparison is `Q5`.
+`Q0_control` is again `L4_neutral`. **`Q1_praise_assistant` is `P2_praise_only`, byte-identical** -- the same stimulus re-measured in a second run, which is why Appendix C.1 reports two estimates for it. `Q1` and `Q4` are *not* a minimal pair: `Q4`'s praise is a shorter stem, because the full praise clause and the continuation clause do not both fit in 28 tokens. `Q4`'s comparison is `Q5`.
 
 | Arm | Text | Tokens |
 |---|---|---:|
@@ -46,11 +46,11 @@ All 17 arms are exactly 28 tokens.
 
 # B. Blinded rating of the stimuli
 
-5 held-out model raters, drawn from three model sizes, each rating alone from the rubric and the texts of Appendix A -- no outcome data, no arm names, no project access. The rubric, the statistics to be computed and the interpretation bands were committed and pushed before any rating existed; see `rating/PROTOCOL.md`.
+5 held-out model raters, drawn from three model sizes, each rating alone from the rubric and the texts of Appendix A -- no outcome data, no arm names, no project access. The rubric, the statistics to be computed and the interpretation bands were committed and pushed before any rating existed; the protocol is in the released artifact.
 
 ## B.1 Against the original coding
 
-| Rater | Cohen's κ vs §4.2's coding (7 register arms) |
+| Rater | Cohen's κ vs §4.1's coding (7 register arms) |
 |---|---:|
 | rater1 | +0.696 |
 | rater2 | +0.696 |
@@ -75,9 +75,9 @@ Krippendorff's α: **1.000** on the binary coding (nominal), **0.954** on the 0-
 | `Q4_praise_remains` | 0.00 |
 | `Q5_remains_only` | 0.00 |
 
-Spearman ρ between our ordering (§5.4) and the blinded ratings is **+0.928**. The raters invert praising the *work* and praising the *assistant*, and the two “work remains” arms tie at the floor.
+Spearman ρ between our ordering (§5.3) and the blinded ratings is **+0.928**. The raters invert praising the *work* and praising the *assistant*, and the two “work remains” arms tie at the floor.
 
 ## B.4 What this is not
 
-Five language models, not five people. §8.4 allows “human or held-out-model ratings” and this is the second; agreement between models is weaker evidence than agreement between independent human coders, and a human panel could still split differently -- most plausibly on exactly the arm these raters were unanimous about.
+Five language models, not five people. Section 7.3 allows “human or held-out-model ratings” and this is the second; agreement between models is weaker evidence than agreement between independent human coders, and a human panel could still split differently -- most plausibly on exactly the arm these raters were unanimous about.
 

@@ -81,12 +81,17 @@ def test_agreement_means_the_ceiling_was_hit(td, arm):
 
 
 def test_paper_reports_acting_turns(td):
-    """The primary outcome is the smaller of the two, and §2.6 says which."""
+    """The primary outcome is the smaller of the two, and the paper says which.
+
+    Matched by content rather than by filename: the manuscript has been
+    renumbered more than once, and a test that pins a file path fails on a
+    rename rather than on the thing it is checking.
+    """
     for arm in ("neutral", "threatening"):
         s = td.reconcile(arm)
         assert s["mean_acting"] < s["mean_calls"]
-    section = (ROOT / "paper" / "02-design-and-statistics.md").read_text()
-    assert "acting turns" in section, (
-        "§2.6 no longer states which of the two quantities the paper reports; "
+    prose = "\n".join(p.read_text() for p in sorted((ROOT / "paper").glob("*.md")))
+    assert "acting turns" in prose, (
+        "the paper no longer states which of the two quantities it reports; "
         "turn count is the primary outcome and the two differ by ~31%"
     )
