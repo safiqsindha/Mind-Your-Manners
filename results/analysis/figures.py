@@ -192,7 +192,7 @@ CLOSING = [
 # the rendered tick-label boxes. The arms are named in the Q-notation the
 # section uses, which fits on one line and is what the text cross-references.
 WITHIN = [
-    ("praise isolated (Q4 \u2212 Q5)", "praise isolated, Q4 minus Q5 [turns] (praise run, Luna, ceiling 10)"),
+    ("praise added (Q4 \u2212 Q5)", "praise isolated, Q4 minus Q5 [turns] (praise run, Luna, ceiling 10)"),
     ("closing cue vs praise (Q3 \u2212 Q1)", "closing cue vs praise, Q3 minus Q1 [turns] (praise run, Luna, ceiling 10)"),
 ]
 
@@ -210,11 +210,11 @@ def figure_dissociation(contrasts, verdicts, out: pathlib.Path):
     gutter(ax_a, rows_a, contrasts, ys, 1.02)
     # The grouping is the argument: register-only arms above, demand-carrying below.
     ax_a.axhline(len(SEVEN_DEMAND) - 0.5, color=GRID, linewidth=1, linestyle=(0, (4, 3)))
-    ax_a.text(-1.35, len(rows_a) - 0.45, "carries no demand", fontsize=7,
+    ax_a.text(-1.35, len(rows_a) - 0.45, "no demand (our coding)", fontsize=7,
               color=INK_2, style="italic", va="center")
-    ax_a.text(-1.35, len(SEVEN_DEMAND) - 0.75, "carries a demand", fontsize=7,
+    ax_a.text(-1.35, len(SEVEN_DEMAND) - 0.75, "demand (our coding)", fontsize=7,
               color=INK_2, style="italic", va="center")
-    ax_a.set_title("A.  Six non-control registers: the gradient tracks demand, not politeness",
+    ax_a.set_title("A.  Six non-control registers: ordered by implied demand, not politeness",
                    fontsize=8.5, loc="left", pad=6)
 
     rows_b = PROBE
@@ -239,7 +239,7 @@ def figure_closing(contrasts, verdicts, out: pathlib.Path):
     ys = forest(ax_a, CLOSING, contrasts, verdicts, xlabel="")
     ax_a.set_xlim(-2.3, 4.2)
     gutter(ax_a, CLOSING, contrasts, ys, 1.02)
-    ax_a.set_title("A.  Ordered by how strongly the message projects an end to the exchange",
+    ax_a.set_title("A.  Ordered by how strongly the message projects an end (our ordering, post hoc)",
                    fontsize=8.5, loc="left", pad=6)
     ax_a.annotate("", xy=(-2.15, len(CLOSING) - 1.1), xytext=(-2.15, 0.1),
                   arrowprops=dict(arrowstyle="-|>", color=MUTED, linewidth=1.1))

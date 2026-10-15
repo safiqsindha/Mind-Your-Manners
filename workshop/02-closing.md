@@ -1,50 +1,49 @@
-# 4. Praise behaves as a closing move
+# 4. Praise and closing cues shorten the trajectory
 
-That praise shortens the trajectory needs its own explanation, and three compete: praise is read
-as evidence the task is **finished**; praise raises the agent's **confidence** in work already
-produced; or praise is a conversational **closing** move, and the agent is responding to discourse
-structure rather than to any claim about task state. Six arms separate them (Figure 2).
+Three accounts compete for why praise shortens the trajectory: praise is read as evidence the task
+is **finished**; it raises the agent's **confidence** in work already produced; or it is a
+conversational **closing** move. We designed six arms to separate them (Figure 2). They narrow the
+field less than we hoped.
 
-Praise still removes **1.35 turns** relative to the identical message without it *even when that
-message states the task is unfinished* (*p* < 0.0001), which is inconsistent with a simple
-propositional completion account: the text explicitly denies completion and the praise acts
-anyway. Praising the *work* is no stronger than praising the *assistant* (−0.93 against −1.08),
-which does not support a confidence account. And a bare closing cue carrying no praise, no
-evaluation and no task-state claim — "this is the final status note recorded for this task here,
-and no further notes will follow it" — produces the largest reduction we measured, **−1.44 turns**.
+**Praise acts even when the message denies completion.** It removes **1.35 turns** relative to the
+same "work remains" message without it (`Q4` − `Q5`, *p* < 0.0001), which argues against a simple
+completion account. But `Q4` and `Q5` are not a strict minimal pair (praise replaces a filler
+sentence; Appendix A.3), and blinded raters score both at 0 on projected closure, so this contrast
+does not support the closing account either. Against control, `Q4` (+0.50) sits near the sum of
+praise alone and "work remains" alone (−1.08 + 1.85 = +0.77), as if two opposing signals were
+weighed.
 
-**A floor could manufacture this, and does not.** A trajectory cannot be shorter than its
-injection turn, so a shortening effect has less room at turn 2 than at turn 1. Split by position,
-the closing cue gives **−1.55 [−2.07, −1.03] at turn 1** and −0.99 [−1.59, −0.43] at turn 2. The
-effect is largest where there is most room and survives at both, so it is not an artefact of the
-floor; the turn-2 estimates also rest on the 35–38 tasks whose trajectories reach turn 2 at all,
-against all 50 at turn 1.
+**Confidence is not cleanly tested.** Praising the *work* is not measurably stronger than praising
+the *assistant* (difference +0.15, [−0.18, +0.48]), but the work-praise arm also says the work
+"looks entirely correct", a claim the other lacks.
 
-**The ordering is ours and was not fixed in advance — but blinded readers reproduce it.** Figure
-2A arranges the arms by how strongly each message projects an end to the exchange, and that
-ordering is monotone in the effect. The arm definitions, their predictions and the run's results
-entered our repository in a single commit, so we have no dated evidence that the ranking preceded
-the outcomes. What we do have is the blinded rating of §3: five raters who never saw a turn count
-scored each text for projected closure, and their mean ranks the arms as Figure 2A does, Spearman
-ρ = +0.93. They invert one pair — they read praising the *work* as more closing than praising the
-*assistant*, where we had it the other way — and the two "work remains" arms tie at the floor. The
-ordering is therefore recoverable from the text by someone with no access to the outcome, which is
-what it needed to stop being an author artefact.
+**A closing cue produces the largest reduction we measured.** "This is the final status note
+recorded for this task here, and no further notes will follow it" carries no praise or evaluation
+and removes **1.44 turns**. Its control describes itself as recorded "partway through the task",
+so the contrast is final against partway, not closing against nothing.
 
-Closing sequences are a well-described conversational object, and appreciations are among the
-canonical pre-closing tokens [schegloff-sacks-1973]; that praise operates *through* that structure
-is the hypothesis this is consistent with, not one the design establishes.
+**A floor could manufacture this, and does not.** A trajectory cannot be shorter than its injection
+turn, so shortening has less room at turn 2. The closing cue gives **−1.55 [−2.07, −1.03] at turn
+1** and −0.99 [−1.59, −0.43] at turn 2, on the 35 tasks reaching turn 2 in both arms; turn 1
+restricted to those tasks gives −1.49 [−2.12, −0.87], so the difference is not task survivorship
+(Appendix C.4).
 
-**What is new here against the nearest prior work.** That prompt wording moves agentic spend at
-equal task success is already established across 4,644 preregistered runs, and the one variant free
-or better on all six models there carries an explicit stop condition [weinberger-hozez-2026] — so
-"a stop instruction reduces agentic work" is not a claim we make. A mid-flight halt signal has also
-been delivered to a working agent before, and whether it stops has been measured
-[munirathinam-2026-recuse] — but that signal is an explicit stop instruction with normative force,
-and closing-sequence pragmatics appear nowhere in it. Prior work shows that explicit mid-flight
-halt instructions need not stop an
-agent; our distinct question is whether ordinary conversational closing structure can alter
-termination without instructing the agent to stop. Read against ours it raises the stakes: an explicit halt
-that agents acknowledged in 20 of 20 trials stopped none of them, while a note issuing no
-instruction removed 1.44 turns. **This experiment — the six-arm closure study of this section — is
-the least replicated in the paper: one run, one model, one turn ceiling.**
+**The ordering is ours and post hoc, but blinded readers reproduce it.** Figure 2A orders arms by
+how strongly each projects an end to the exchange, and that ordering is monotone in the effect. The
+arms, predictions and results entered our repository in one commit, so nothing dates the ranking
+before the outcomes. The blinded raters, who saw no turn counts, rank the six arms (control
+included) the same way, ρ = +0.928, inverting only work- and assistant-praise.
+
+Appreciations are canonical pre-closing tokens [schegloff-sacks-1973], and the closing cue's effect
+is consistent with an agent responding to closing structure. We do not claim it as the mechanism:
+praise shortens `Q4` without being read as closing, and three register arms end in thanks while
+only one shortens.
+
+**Against the nearest prior work.** Prompt wording is known to move agentic spend at equal success,
+with an explicit stop condition the one consistently cheap variant [weinberger-hozez-2026]. Explicit mid-flight halts have been measured as an immediate stop
+[munirathinam-2026-recuse]: in the prompt channel, acknowledged in 20 of 20 trials and obeyed in
+none; in-band with tool output, neither. Our outcome, a shift in mean trajectory length, is not
+directly comparable; what ours adds is that a note issuing no instruction moved termination at all.
+**This six-arm study is the least replicated in the paper: one run, one model, one budget**; given
+§5's drift, differences under half a turn, such as closing cue against praise (−0.36), may not
+replicate.

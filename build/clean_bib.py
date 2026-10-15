@@ -55,6 +55,50 @@ def clean_note(body: str) -> str:
     return body
 
 
+# A submission bibliography carries venue and identifier, nothing else. The
+# stripping above keeps "Unrefereed preprint" and version-provenance clauses,
+# which a reviewer reads as working notes (flagged in the 2026-10-15 review), so
+# the workshop bib goes one step further: every `note` is dropped except an
+# explicit venue line, and every arXiv-only entry prints its identifier.
+VENUE_NOTE = {
+    "huang-2024": "ICLR 2024",
+    "ma-2024": "NeurIPS 2024 Spotlight",
+    "sclar-2024": "ICLR 2024",
+    "zhang-2026-politejudge": "RecSys 2026, Reproducibility and Practice Notes",
+}
+# Version pins that the text depends on (the cited content differs across versions).
+VERSION_PIN = {
+    "munirathinam-2026-recuse": "v4",
+    "weinberger-hozez-2026": "v6",
+    "cai-2025-tone": "v2",
+}
+ENTRY = re.compile(r"(@(\w+)\{([^,]+),)(.*?)(\n\}\s*\n)", re.S)
+
+
+def submission_pass(text: str) -> str:
+    def fix(m):
+        head, kind, key, body, tail = m.groups()
+        body = re.sub(r"\n\s*note\s*=\s*\{.*?\}\s*,?(?=\n|\Z)", "", body, flags=re.S)
+        if key in VENUE_NOTE:
+            body = body.rstrip().rstrip(",") + f",\n  note         = {{{VENUE_NOTE[key]}}}"
+        eprint = re.search(r"eprint\s*=\s*\{([^}]+)\}", body)
+        if kind.lower() == "misc" and eprint and "howpublished" not in body:
+            ident = eprint.group(1) + VERSION_PIN.get(key, "")
+            body = body.rstrip().rstrip(",") + f",\n  howpublished = {{arXiv:{ident}}}"
+        # BibTeX styles lower-case titles; protect the word after a question
+        # mark so "...stop? Measuring" does not print as "...stop? measuring".
+        body = re.sub(
+            r"(title\s*=\s*\{)(.*?)(\}\s*,?\n)",
+            lambda t: t.group(1) + re.sub(
+                # Mixed-case names ("SpreadsheetBench") must also survive lower-casing.
+                r"(?<![{\w])([A-Z]?[a-z]+[A-Z]\w*)(?![\w}])", r"{\1}",
+                re.sub(r"(\?\s+)([A-Z][\w-]*)", r"\1{\2}", t.group(2))) + t.group(3),
+            body, count=1, flags=re.S,
+        )
+        return head + body + tail
+    return ENTRY.sub(fix, text)
+
+
 def main() -> None:
     if len(sys.argv) != 3:
         sys.exit(__doc__.strip().splitlines()[-1])
@@ -75,6 +119,7 @@ def main() -> None:
         return m.group(1) + after + m.group(3)
 
     out = NOTE.sub(repl, text)
+    out = submission_pass(out)
 
     leaked = [
         (k, mark)
