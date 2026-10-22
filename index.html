@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Mind your manners? — LLM-agent persistence tracks demand, not social register</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="A coding agent, 11,850 graded trajectories, two models. Persistence tracks implied task demand, not social register — demand costs turns, closing cues remove them, and no accuracy effect survives correction.">
+<meta name="description" content="Mind your manners? v1.0 preprint by Safiq Sindha. Implied demand, not register, drives LLM-agent persistence; praise and closing cues shorten trajectories; no accuracy effect.">
 <meta name="color-scheme" content="light dark">
 
 <meta property="og:type" content="website">
@@ -48,7 +48,7 @@
       <a href="#closing" class="hide-s">Finding&nbsp;2</a>
       <a href="#extra-turns" class="hide-s">Finding&nbsp;3</a>
       <a href="#cite" class="hide-s">Cite</a>
-      <a class="navbtn" href="assets/mind-your-manners.pdf">PDF</a>
+      <a class="navbtn" href="assets/mind-your-manners-v1.0.pdf">PDF</a>
       <button class="tbtn" data-theme-toggle type="button">Dark</button>
     </nav>
   </div>
@@ -59,27 +59,27 @@
   <!-- ═══════════════════════════ HERO ═══════════════════════════ -->
   <section class="hero" id="top">
     <div class="hero-in">
-      <p class="eyebrow rv in">Technical Report &middot; 2026</p>
+      <p class="eyebrow rv in">Preprint v1.0 &middot; October 2026</p>
 
       <h1 class="papertitle rv in d1">Mind your manners?</h1>
       <p class="subtitle rv in d1">LLM-agent persistence tracks demand, not social register</p>
-      <p class="authors rv in d1">[Author name withheld — pending Zenodo posting]</p>
+      <p class="authors rv in d1">Safiq Sindha &middot; Independent Researcher</p>
 
       <p class="tagline rv in d2">
-        A message that tells a working agent to <b>keep going</b> makes it take more turns —
-        in whatever register it's phrased. A message that merely <i>sounds</i> polite or rude
-        does nothing measurable. A message that merely signals the exchange is over makes the
-        agent <b>stop early</b>. None of it changes how often the task gets solved.
+        <b>Implied demand, not register, drives persistence.</b> A message that tells a working
+        agent to keep going makes it take more turns, in whatever register it's phrased.
+        <b>Praise and closing cues shorten trajectories.</b> And there is <b>no accuracy
+        effect</b>: none of it changes how often the task gets solved.
       </p>
 
       <div class="cta rv in d3">
-        <a class="btn-hero primary" href="assets/mind-your-manners.pdf">
+        <a class="btn-hero primary" href="assets/mind-your-manners-v1.0.pdf">
           <svg class="bicon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2.5h7l5 5v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-18a1 1 0 0 1 1-1z"/><path d="M13 2.5v5h5"/></svg>
-          Technical report (PDF)
+          Paper v1.0 (PDF)
         </a>
-        <a class="btn-hero ghost" href="assets/mind-your-manners-workshop.pdf">
+        <a class="btn-hero ghost" href="assets/mind-your-manners.pdf">
           <svg class="bicon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2.5h7l5 5v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-18a1 1 0 0 1 1-1z"/><path d="M13 2.5v5h5"/></svg>
-          Workshop paper (PDF)
+          Long technical report (PDF)
         </a>
         <a class="btn-hero ghost" href="https://github.com/safiqsindha/Mind-Your-Manners">
           <svg class="bicon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18.5L3 12l6-6.5M15 5.5L21 12l-6 6.5"/></svg>
@@ -90,7 +90,7 @@
       <ul class="kcards hero-keys rv in d3">
         <li class="kcard">
           <span class="kn">FINDING 01</span>
-          <h3>Demand drives turn count, not politeness</h3>
+          <h3>Implied demand, not register, drives persistence</h3>
           <p>An affect-free "please continue working" costs <b>+1.17 turns</b>. A length-matched,
              syntactically identical insult carrying no demand does not move it at all
              (&minus;0.08, 95% CI [&minus;0.40, +0.24]).</p>
@@ -103,9 +103,10 @@
         </li>
         <li class="kcard">
           <span class="kn">FINDING 03</span>
-          <h3>No accuracy effect survives correction</h3>
-          <p>55&ndash;65% of each turn-count effect is redundant repetition. Every accuracy
-             contrast is equivalent to zero within a pre-specified <b>&plusmn;4-point</b> bound.</p>
+          <h3>No accuracy effect</h3>
+          <p>Roughly 40&ndash;65% of each turn-count effect is repeated work. No accuracy effect
+             survives correction or replication; pooled accuracy
+             contrasts are equivalent to zero within a pre-specified <b>&plusmn;4-point</b> bound.</p>
         </li>
       </ul>
 
@@ -119,8 +120,8 @@
           <b>Demand, not register, orders the effect.</b>
           Change in acting turns against the control interjection, with 95% clustered intervals
           and nominal permutation <i>p</i>-values, <code>gpt-5.6-luna</code>, ten-turn ceiling.
-          <b>A:</b> the seven-register scale — register does not sort the arms; each side of the
-          split holds one flattering and one hostile arm. <b>B:</b> demand and affect varied
+          <b>A:</b> the six non-control registers, ordered by our demand coding; polite and hostile
+          arms sit on both sides. <b>B:</b> demand and affect varied
           separately, holding syntax, length and the opening stem constant. Hollow markers do not
           survive multiplicity correction.
         </figcaption>
@@ -177,10 +178,11 @@
       <div class="secno">02 &mdash; Finding 1</div>
       <h2>Demand, not politeness, drives turn count</h2>
       <p class="lead">
-        Coding each arm by whether it instructs the model to <b>persist or be correct</b> splits
-        the seven-register scale cleanly: the four demand-carrying arms span +0.70 to +1.80 turns
-        and the two carrying none span &minus;0.68 to +0.09, with no overlap in point estimates.
-        Register does not sort them &mdash; each side holds one flattering and one hostile arm.
+        Coding each arm by whether it asks the model to <b>persist or be correct</b> orders the
+        six non-control registers: the four demand-carrying arms span +0.70 to +1.80 turns and the
+        two carrying none span &minus;0.68 to +0.09, with no overlap in point estimates (the
+        intervals do overlap). Register does not sort them &mdash; polite and hostile arms sit on
+        both sides: <i>very polite</i> +0.70 beside <i>very rude</i> +0.71.
       </p>
     </div>
 
@@ -247,12 +249,12 @@
       <div class="secno">03 &mdash; Finding 2</div>
       <h2>Praise and closing cues shorten trajectories</h2>
       <p class="lead">
-        Register acts on its own in exactly one direction. Praise carrying no task reference
-        shortens the trajectory even when the same message explicitly states the task is
-        unfinished &mdash; inconsistent with a simple completion account. Praising the work is no
-        stronger than praising the assistant, against a confidence account. What's left is
-        <b>closing</b>: the agent responding to discourse structure, not to any claim about task
-        state.
+        Register acts on its own in one direction only. Praise carrying no task reference
+        shortens the trajectory, and so does a note saying no further notes will follow
+        (&minus;1.44 turns). Praise still shortens when the same message says work remains, and
+        praising the work is not measurably stronger than praising the assistant. The pattern is
+        consistent with a closing reading, but <b>the mechanism is left open</b>: the arms are not
+        all clean minimal pairs, and this leg is one run on one model.
       </p>
     </div>
 
@@ -263,7 +265,7 @@
       </div>
       <figcaption>
         <span class="fnum">Figure 2</span>
-        <b>Closing cues curtail the agent.</b>
+        <b>Praise and closing cues shorten the trajectory.</b>
         <code>gpt-5.6-luna</code>, ten-turn ceiling, acting turns, 95% clustered intervals.
         <b>A:</b> six arms ordered by how strongly the message projects an end to the exchange —
         the bare closing cue, which praises nothing and claims nothing about task state, produces
@@ -304,14 +306,14 @@
       <h2>What the extra turns contain</h2>
       <p class="lead">
         Regrading every turn against the benchmark's own evaluator turns a binary pass/fail into a
-        curve. Most of what demand buys turns out to be repetition, and no accuracy contrast in
+        curve. Much of what demand buys turns out to be repeated work, and no accuracy contrast in
         the study survives correction or replication.
       </p>
     </div>
 
     <ul class="mgrid rv">
-      <li class="mitem"><b>55&ndash;65%</b><span>of each turn-count effect is redundant steps</span></li>
-      <li class="mitem"><b>80&ndash;91%</b><span>of the time the first gradable attempt is already the best</span></li>
+      <li class="mitem"><b>~40&ndash;65%</b><span>of each turn-count effect on Luna is repeated work</span></li>
+      <li class="mitem"><b>77&ndash;91%</b><span>of the time the first gradable output is already the best (Luna; 69&ndash;88% on GLM)</span></li>
       <li class="mitem warm"><b>+2.8 pts</b><span>graded-fraction gain from an explicit &ldquo;work remains&rdquo; signal, replicated across three runs</span></li>
     </ul>
 
@@ -337,7 +339,7 @@
     <div class="callout rv">
       <h4>Not lost correctness — altered control flow</h4>
       <p>
-        Accuracy did not fall in any arm. What moved is <b>when the agent decided to stop</b>: text
+        We did not detect lost correctness in any arm. What moved is <b>when the agent decided to stop</b>: text
         arriving in the observation channel — where tool output arrives, not where the user speaks
         — changed that decision without ever instructing the agent to stop.
       </p>
@@ -350,29 +352,31 @@
       <div class="secno">05 &mdash; Cite</div>
       <h2>BibTeX</h2>
       <p class="lead">
-        Author, DOI and repository URL are placeholders pending Zenodo posting — <span class="todo">marked, not silent</span>.
+        Version 1.0.0. The Zenodo DOI is added here once it is minted — <span class="todo">DOI pending</span>.
       </p>
     </div>
 
     <div class="bib rv">
       <button class="copy" data-copy="#bibtex" type="button">Copy</button>
-<pre id="bibtex"><code>@techreport{mindyourmanners2026,
-  title  = {Mind your manners? LLM-agent persistence tracks demand, not social register},
-  author = {[INSERT AUTHOR NAME]},
-  year   = {2026},
-  note   = {Technical report. [INSERT ZENODO DOI]},
-  url    = {[INSERT REPO URL]}
+<pre id="bibtex"><code>@techreport{sindha2026mindyourmanners,
+  title       = {Mind your manners? Demand, not register, is what moves an {LLM} agent},
+  author      = {Sindha, Safiq},
+  institution = {Independent Researcher},
+  type        = {Working paper},
+  year        = {2026},
+  version     = {1.0.0},
+  url         = {https://github.com/safiqsindha/Mind-Your-Manners}
 }</code></pre>
     </div>
 
     <div class="artifact-links rv">
+      <a href="assets/mind-your-manners-v1.0.pdf">
+        <svg class="bicon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2.5h7l5 5v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-18a1 1 0 0 1 1-1z"/><path d="M13 2.5v5h5"/></svg>
+        Paper v1.0 (PDF)
+      </a>
       <a href="assets/mind-your-manners.pdf">
         <svg class="bicon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2.5h7l5 5v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-18a1 1 0 0 1 1-1z"/><path d="M13 2.5v5h5"/></svg>
-        Technical report (PDF)
-      </a>
-      <a href="assets/mind-your-manners-workshop.pdf">
-        <svg class="bicon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2.5h7l5 5v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-18a1 1 0 0 1 1-1z"/><path d="M13 2.5v5h5"/></svg>
-        Workshop paper (PDF)
+        Long technical report (PDF)
       </a>
       <a href="https://github.com/safiqsindha/Mind-Your-Manners">
         <svg class="bicon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18.5L3 12l6-6.5M15 5.5L21 12l-6 6.5"/></svg>
@@ -385,11 +389,11 @@
 
 <footer class="footer">
   <div class="footer-inner">
-    <p>Mind your manners? &middot; Technical report, 2026</p>
+    <p>Mind your manners? &middot; Safiq Sindha &middot; Preprint v1.0, 2026</p>
     <p class="footer-links">
       <a href="https://github.com/safiqsindha/Mind-Your-Manners">GitHub</a>
       <span>&middot;</span>
-      <a href="assets/mind-your-manners.pdf">PDF</a>
+      <a href="assets/mind-your-manners-v1.0.pdf">PDF</a>
     </p>
   </div>
 </footer>
