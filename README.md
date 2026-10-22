@@ -9,7 +9,7 @@
 
 **[Paper (v1.0, PDF)](paper/mind-your-manners-v1.0.pdf)** · [Project page](https://safiqsindha.github.io/Mind-Your-Manners/) · [Long technical report](build/main.pdf) · [Cite](#citation)
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXXX) <!-- TODO: replace XXXXXXX with the Zenodo DOI once v1.0.0 is minted -->
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23578767.svg)](https://doi.org/10.5281/zenodo.23578767)
 ![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)
 ![Tests](https://img.shields.io/badge/tests-422%20passing-22c55e?style=flat-square)
 
@@ -80,12 +80,13 @@ of this repository.
   type        = {Working paper},
   year        = {2026},
   version     = {1.0.0},
-  doi         = {10.5281/zenodo.XXXXXXX},
+  doi         = {10.5281/zenodo.23578768},
   url         = {https://github.com/safiqsindha/Mind-Your-Manners}
 }
 ```
 
-Machine-readable metadata is in [`CITATION.cff`](CITATION.cff).
+This cites v1.0 ([doi:10.5281/zenodo.23578768](https://doi.org/10.5281/zenodo.23578768)); the concept DOI [10.5281/zenodo.23578767](https://doi.org/10.5281/zenodo.23578767) always
+resolves to the newest version. Machine-readable metadata is in [`CITATION.cff`](CITATION.cff).
 
 ## License
 
