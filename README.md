@@ -21,7 +21,7 @@ This extends Dobariya & Kumar's *Mind Your Tone* line one rung up the autonomy l
 - **Flattery makes the agent quit early** — −0.68 turns, p < 0.0001, the most surprising result in the study
 - **"Rude costs more" is disconfirmed, not just unsupported** — an insult with no demand attached does nothing at all (p = 0.63); an affect-free *"please continue"* reproduces the whole effect
 - **Praise is a stop signal, because it is a closing move** — and a bare closing cue carrying no praise at all stops the agent hardest of anything measured (−1.44 turns). The agent reads mid-task messages as *"am I still expected to be working?"*, not as claims about the task
-- **A continue signal does buy a little real progress** — +0.028 of the graded fraction, replicated three times. We only know because a defect in our own per-turn regrade, which had made it look like nothing, was found and fixed
+- **A continue signal may buy a little real progress, but this is not established** — +0.022 of the graded fraction (95% CI [−0.002, +0.047], *p* = 0.09) over three runs on the primary population; the runs give +0.020, +0.051 and +0.009. A defect in our own per-turn regrade had made it look like nothing and was found and fixed; a later audit then found the progress figures had been computed on a different population from the turn counts (see below)
 
 ![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)
 ![Python](https://img.shields.io/badge/python-3.11%2B-0891b2?style=flat-square)
@@ -187,9 +187,9 @@ final verdict into a curve. 9,850 trajectories across 28 arms.
 > but never run. Fixed, all 28 arms re-run; passed trajectories scoring 1.0
 > went from 29.4% to **94.4%**. Everything below is post-fix.
 
-- **The first attempt is usually the answer.** Among trajectories that *could* improve — those with at least two gradable outputs, a sixth to a third of each sample — the first gradable attempt is already the best in **80–91%**, depending on the run.
-- **Most extra turns change nothing.** Redundant steps account for **55–65%** of each turn-count effect on Luna: demand +0.75 against +1.17 turns, praise −0.61 against −1.08, the closing cue −0.86 against −1.44.
-- **But not all of it.** An explicit *"there is still more work remaining"* raises the graded fraction by **+0.028, 95% CI [+0.005, +0.052]**, across three runs with no detectable heterogeneity. The milder affect-free demand does *not* (+0.009, n.s.). The pattern tracks how explicitly the message says work remains, not register.
+- **The first attempt is usually the answer.** Among trajectories that *could* improve — those with at least two gradable outputs, a sixth to a third of each sample — the first gradable attempt is already the best in **77–94%** on Luna (69–88% on GLM), depending on the run.
+- **Most extra turns change nothing.** Steps that leave the graded range unchanged account for **56–93%** of each clear turn-count effect on Luna (median 80%): demand +0.92 against +1.17 turns, praise −0.33 against −0.59, the closing cue −1.04 against −1.44. These use the same trajectories in numerator and denominator (those on which the message fired). An earlier version divided progress measured on every scheduled trajectory by turns measured on the fired ones, and so reported 55–65%.
+- **Possibly not all of it.** An explicit *"there is still more work remaining"* raises the graded fraction by **+0.022, 95% CI [−0.002, +0.047], *p* = 0.09**, over three runs (+0.020, +0.051, +0.009); that does not exclude zero. On every scheduled trajectory, including those that never received the message, the same pooling gave +0.028 [+0.005, +0.052]. The affect-free demand does not move it (−0.003, n.s.).
 - **The timing effect was a proxy.** Turn 0 looked inert because at turn 0 *no candidate answer exists yet* — 98% of first turns run code, 0% produce output; the agent's first move is inspection. Holding turn index fixed and splitting by whether an answer existed: +0.34 turns without one, **+1.97 with one**.
 - **A 20-turn ceiling is ample.** In the dedicated ceiling-20 run the best match was first reached at a median turn of **2**, with 98.3% peaked by turn 10 and 100% by turn 14.
 
@@ -207,7 +207,7 @@ Demand above control above praise, insult null, on two models from different lab
 
 The structural facts generalise too: among trajectories that could improve, the first gradable attempt is already the best in 84% on each model, and turn 0 is inspection on both (98%/90% run code, 0%/5% produce an answer).
 
-The *waste* does not generalise. Luna's control averages 1.51 redundant steps and demand adds 1.03; GLM's control averages 0.26 and demand adds 0.19 (p=0.086). GLM barely repeats itself because it barely persists — so how wasteful a continue signal is depends on how inclined the model already was to keep going.
+The *waste* does not generalise. Luna's control averages 1.83 redundant steps and demand adds 1.57; GLM's control averages 0.36 and demand adds 0.26 (p=0.087). GLM barely repeats itself because it barely persists — so how wasteful a continue signal is depends on how inclined the model already was to keep going.
 
 ## Accuracy has never been established as moving
 
@@ -252,7 +252,7 @@ This is the study's actual methodological record, and the reason nothing here is
 | Injection turn confounded with task difficulty | timing split p = 0.004 | **p = 0.32**, withdrawn |
 | Two arms shared scratch directories | 800 grades corrupted | recovered free by re-grading from raw logs |
 | Pooling the inert turn-0 cell | threatening +28.9% | **+36.7%**; sycophantic flipped from null to significant |
-| **The per-turn regrade never recalculated formula answers** | "persistence buys nothing" | **+0.028 graded fraction, p=0.022** — the conclusion inverted |
+| **The per-turn regrade never recalculated formula answers** | "persistence buys nothing" | **a small positive graded-fraction effect for "work remains"** (+0.022, *p* = 0.09 on the primary population; +0.028, *p* = 0.022 on all scheduled trajectories) — the sign inverted, the significance did not survive alignment |
 
 The pattern is consistent enough to be a working assumption: **this instrument keeps producing effects that dissolve under a better-specified comparison** — and once, an effect that *appeared* only because the measure was broken. Every new headline should be attacked before it is believed.
 

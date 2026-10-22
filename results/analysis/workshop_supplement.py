@@ -13,6 +13,7 @@ draws), so nothing in this appendix is computed a second way.
   C.4  closure-run checks: Q2-Q1, closing-cue accuracy, the floor check on
        matched tasks, control means by position, and run-to-run drift
   C.5  the blinded ratings, all fourteen texts
+  C.6  the per-turn progress measure: definitions, population, redundant-step shares
 
 Writes workshop/99c-supplement.md. Run after turn_count_family.py.
 """
@@ -113,9 +114,43 @@ def mean_sd(recs):
     return st.fmean(x), st.stdev(x), len(x)
 
 
+def _flagged(recs, *, turns=None, model=None):
+    """(delivered, primary-analysis) counts, or None where the run has no firing flag."""
+    d = e = 0
+    for r in recs:
+        if model is not None and r.get("model_key") != model:
+            continue
+        if "interjection_fired" not in r:
+            return None
+        if A._as_bool(r["interjection_fired"]):
+            d += 1
+            if turns is None or r.get("interjection_turn") in turns:
+                e += 1
+    return d, e
+
+
+def population():
+    """Delivered and primary-analysis counts per INVENTORY row, from the records."""
+    arch = lambda n: json.loads((A.ARCHIVE / n).read_text())
+    s1 = arch("stage1_cross_model_records.json")
+    c20 = load("study2_core_gpt-luna-ceiling20-Q0_control_records.json") + \
+        load("study2_core_gpt-luna-ceiling20-Q5_remains_only_records.json")
+    # The register run is analysed at injection turns 1 and 2 only (Appendix C.2).
+    return {
+        "Register run (Figure 1A)": _flagged(arch("core_gpt-luna_cross7_records.json"), turns={1, 2}),
+        "Probe run (Figure 1B)": _flagged(arch("core_gpt-luna_probe_records.json")),
+        "Closure run (Figure 2)": _flagged(arch("core_gpt-luna_praise_records.json")),
+        "Cross-model run": _flagged(s1),
+        "Re-measurement of \"work remains\"": _flagged(c20),
+    }
+
+
 def c1():
     if not FAMILY.exists():
         runpy.run_path(str(AN / "turn_count_family.py"), run_name="__main__")
+    probe = json.loads((A.ARCHIVE / "core_gpt-luna_probe_records.json").read_text())
+    rates = [100 * f / t for f, t in A.firing_rates(probe, turn=2).values()]
+    FIRING = f"{min(rates):.1f}–{max(rates):.1f}% across the four arms"
     fam = json.loads(FAMILY.read_text())["arm_vs_control"]["contrasts"]
     m = len(fam)
     ranked = sorted(range(m), key=lambda i: fam[i]["p"])
@@ -126,11 +161,25 @@ def c1():
             k = rank
     survive = {ranked[j] for j in range(k)}
     out = ["## C.1 Runs and the 22-contrast family", "",
-           "All 11,850 trajectories, by run. The six mid-task runs on which every turn was "
-           "regraded (counting the cross-model run once per model) hold the 9,850 analysed in §5.", "",
-           "| Run | Model | Turn budget | Trajectories | Regraded per turn |", "|---|---|---:|---:|:---:|"]
+           "All 11,850 scheduled trajectories, by run. *Delivered* means the interjection fired "
+           "before the trajectory ended; firing is decided before delivery, so it differs by arm only "
+           "by chance (probe run, injection at turn 2: "
+           f"{FIRING}). *Primary analysis* means delivered and, in the register run, injected at "
+           "turn 1 or 2 (turn 0 is Appendix C.2). Runs without a firing flag, or without a mid-task "
+           "interjection, show a dash.", "",
+           "| Run | Model | Turn budget | Scheduled | Delivered | Primary analysis | Regraded per turn |",
+           "|---|---|---:|---:|---:|---:|:---:|"]
+    pop, tot = population(), [0, 0, 0]
     for name, model, budget, n, rg in INVENTORY:
-        out.append(f"| {name} | {model} | {budget} | {n:,} | {rg} |")
+        d_e = pop.get(name)
+        if rg == "yes":
+            tot[0] += n
+            tot[1] += d_e[0]
+            tot[2] += d_e[1]
+        cells = f"{d_e[0]:,} | {d_e[1]:,}" if d_e else "— | —"
+        out.append(f"| {name} | {model} | {budget} | {n:,} | {cells} | {rg} |")
+    out += ["", f"The six regraded runs hold {tot[0]:,} scheduled trajectories, {tot[1]:,} delivered and "
+            f"{tot[2]:,} in the primary analysis; the per-turn figures of §5 use the last."]
     out += ["",
            "Every arm-versus-control turn-count contrast in every run that delivered a mid-task "
            f"interjection, sorted by *p*. Benjamini–Hochberg at *q* = 0.05: {k} of {m} survive.", "",
@@ -262,9 +311,80 @@ def c5():
     return out
 
 
+def c6():
+    import regrade_summary as R
+
+    rng = np.random.default_rng(R.SEED + 1)
+    table = R.share_table(rng)
+    out = ["## C.6 The per-turn progress measure", "",
+           "**Definitions.** The regrade replays each acting turn's code on the original workbook, "
+           "recalculates formulas, and compares the graded cells with the answer file of the "
+           "benchmark's *first* test case. A turn is *readable* if its code ran and produced a value "
+           "over the graded range; *match* is the fraction of graded cells equal to the answer. The "
+           "**graded fraction** is the match at the last readable turn, which need not be the final "
+           "turn, and turns with no readable output are skipped. A **redundant step** is a readable "
+           "turn whose graded range equals that of the previous readable turn; the first readable turn "
+           "has no predecessor and is not counted. Binary accuracy uses the benchmark's evaluator over "
+           "all test cases.", ""]
+
+    # Instrument validation, from the probe control (all 400 scheduled trajectories).
+    recs = R.load_aligned("gpt-luna-probe-P0_control")
+    allrows = R.ALL_ROWS
+    ctrl = json.loads((A.ARCHIVE / "core_gpt-luna_probe_records.json").read_text())
+    passed = {(r["task_id"], r["trial"], r["interjection_turn"]): A._as_bool(r["passed"])
+              for r in ctrl if r["interjection"] == "P0_control"}
+    prog = R.load("gpt-luna-probe-P0_control")
+    one = lambda p: p["final_match"] is not None and p["final_match"] >= 1 - 1e-9
+    ok = [p for p in prog if passed[(p["task_id"], p["trial"], p["interjection_turn"])]]
+    bad = [p for p in prog if not passed[(p["task_id"], p["trial"], p["interjection_turn"])]]
+    miss = [p["task_id"] for p in ok if not one(p)]
+    top = max(set(miss), key=miss.count) if miss else None
+    out += [f"**Validation.** In the probe control (all {len(prog)} scheduled trajectories), {sum(map(one, ok))} of {len(ok)} trajectories that pass "
+            f"the benchmark end with match 1 on the first test case, and the {len(miss)} that do not are all "
+            f"in one task ({top}); {sum(map(one, bad))} of {len(bad)} that fail also reach match 1, because "
+            "a trajectory can solve the first test case and fail a later one. Progress is therefore a "
+            "first-test-case measure and not a second grader of accuracy.", ""]
+
+    # Disagreement among passing trajectories, by arm, on the primary population.
+    rates = []
+    for run, (cstem, arms) in R.RUNS.items():
+        for stem in [cstem] + [a for _, a in arms]:
+            rows = R.load_aligned(stem)
+            if rows is None:
+                continue
+            ps = [r for r in rows if r["passed"]]
+            if len(ps) >= 10:
+                rates.append(sum(not one(r) for r in ps) / len(ps))
+    out += [f"Among passing trajectories on the primary population, the share that end below match 1 "
+            f"ranges from {100*min(rates):.0f}% to {100*max(rates):.0f}% across {len(rates)} arms with at "
+            "least ten, so the instrument's disagreement is not concentrated in any one arm.", ""]
+
+    out += ["**Population.** Progress and turn counts use the same trajectories: those on which the "
+            "interjection fired (and, in the register run, turns 1 and 2), joined to the run records on "
+            "task, trial and injection turn. The turn-count effect below is the primary outcome, "
+            "reproduced on those trajectories. Each share is redundant steps divided by acting turns, "
+            "both as paired per-task differences against the arm's control, with a task-bootstrap "
+            "interval. It is undefined when the turn effect itself is indistinguishable from zero, and its "
+            "interval can pass 100% when that effect is small.", "",
+            "| Run | Arm | Δ turns | Δ redundant steps | Share of turn effect [95% CI] | Treated / control |",
+            "|---|---|---:|---:|---|---:|"]
+    for r in table:
+        share = (f"{100*r['share']:.0f}% [{100*r['lo']:.0f}%, {100*r['hi']:.0f}%]"
+                 if r["clear"] else "not defined (turn effect not clear)")
+        sg = lambda x: f"{x:+.2f}".replace("-", "−")
+        out.append(f"| {r['run']} | {r['arm']} | {sg(r['turns'])} | {sg(r['noop'])} | "
+                   f"{share.replace('-', '−')} | {r['n_treat']} / {r['n_control']} |")
+    for tag, is_glm in (("Luna", False), ("GLM", True)):
+        sel = [r["share"] for r in table if r["clear"] and (("GLM" in r["run"]) == is_glm)]
+        out.append("")
+        out.append(f"{tag}, arms with a clear turn effect (n = {len(sel)}): "
+                   f"{100*min(sel):.0f}% to {100*max(sel):.0f}%, median {100*st.median(sel):.0f}%.")
+    return out + [""]
+
+
 def main() -> None:
     lines = ["# C. Supplementary analyses", ""]
-    for part in (c1, c2, c3, c4, c5):
+    for part in (c1, c2, c3, c4, c5, c6):
         lines += part()
     OUT.write_text("\n".join(lines))
     print(f"wrote {OUT.relative_to(ROOT)}")

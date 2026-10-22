@@ -51,22 +51,26 @@ of anything measured, and praise removes 1.35 turns relative to the identical
 message without it, even when that message says the task is unfinished. No
 accuracy effect survives correction or replication across seven runs.
 Per-turn regrading shows the agent's first gradable attempt is usually already
-its best, so **most** of what a continue signal buys is repetition -- 55-65%
-of the turn effect -- but not all of it: an explicit "there is still more work
-remaining" raises the graded fraction by +0.028 [+0.005, +0.052], replicated
-three times.
+its best, so **most** of what a continue signal buys is steps that leave the
+graded range unchanged -- 56-93% of each clear turn effect on Luna -- and an
+explicit "there is still more work remaining" raises the graded fraction by
++0.022 [-0.002, +0.047], p = 0.09: suggestive, not established.
 
 ### Two things a draft must not overstate
 
-**⚠ "Persistence buys no better outcome" WAS WRONG AND IS WITHDRAWN.** Earlier
-drafts of this file said it was resolved and safe to say. It was an artefact
-of a defective instrument. Corrected, the three measurements of the continue
-signal on final match are +0.026 / +0.034 / +0.025, pooling to **+0.028, 95%
-CI [+0.005, +0.052], p = 0.022**. The honest line is: a continue signal buys
-more turns, most of them repetition, **and** a small real gain in how much of
-the graded range is right -- too small to move the pass/fail rate, which
-accuracy is anyway underpowered to resolve. Do NOT say the extra turns are
-"pure thrashing": it was never true of GLM and is now not wholly true of Luna.
+**⚠ "Persistence buys no better outcome" WAS WRONG AND IS WITHDRAWN -- and its
+replacement is only suggestive.** Earlier drafts said it was safe to say; it was
+an artefact of a defective instrument. A later audit also found that the first
+corrected figure, +0.028 [+0.005, +0.052], p = 0.022, counted trajectories that
+never received the message. On the trajectories the turn-count outcome uses, the
+three measurements are +0.020 / +0.051 / +0.009, pooling to **+0.022, 95% CI
+[-0.002, +0.047], p = 0.09**. The honest line is: a continue signal buys
+more turns, most of them steps that leave the graded range unchanged, and
+possibly a small gain in how much of the graded range is right -- too small to
+move the pass/fail rate, which accuracy is anyway underpowered to resolve, and
+not established on its own. Do NOT say the extra turns are "pure thrashing" or
+that the gain is "real": the first was never true of GLM, and the second is
+only suggestive.
 
 **No accuracy effect survives correction or replication, across seven runs.**
 State it as an equivalence, not an absence: pooled, a mid-task interjection
@@ -78,8 +82,8 @@ more turns, since more attempts means more chances for the maximum to be
 high. Report final match -- what the agent ended with.
 
 **The waste is model-specific.** On the matched demand-only contrast at
-ceiling 20, Luna adds +1.03 redundant steps (p=0.0063) against GLM's +0.19
-(p=0.086), from control baselines of 1.51 and 0.26 — GLM barely thrashes
+ceiling 20, Luna adds +1.57 redundant steps (p=0.0012) against GLM's +0.26
+(p=0.087), from control baselines of 1.83 and 0.36 — GLM barely thrashes
 because it barely persists. How wasteful the signal is depends on the model's own stopping
 behaviour. A draft that generalises Luna's thrashing to agents in general is
 overclaiming.
@@ -295,7 +299,7 @@ Self-Debug rather than a quotation from Chen et al.
 - [x] No v1 effect size quoted anywhere as an estimate
 - [x] Both headlines present: opening tone null AND interruption effect
 - [x] Turn count reported as the mechanism, not buried under token counts
-- [x] Accuracy reported as an equivalence against a pre-specified bound, never as "no effect"
+- [x] Accuracy reported as an equivalence against a stated bound (±4 points, taken from the literature and fixed during analysis, so exploratory), never as "no effect"
 - [x] Turn-ceiling censoring stated as a limitation
 - [x] "Rude interruptions cost more" appears nowhere
 

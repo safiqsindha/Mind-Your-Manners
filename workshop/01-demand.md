@@ -10,13 +10,15 @@ both sides: *very polite* (+0.70) sits with *very rude* (+0.71), *sycophantic* (
 [+0.23, +1.18] and *rude* [−0.30, +0.48] overlap — so the data support an ordering, not a gap.
 
 To test the split rather than assert it, we wrote three interjections that vary demand and affect
-separately while holding syntax, length and stem constant (Figure 1B). An affect-free *please
+separately, matching length and opening stem across all four arms; the praise and insult arms
+also share syntax, the demand arm does not (Figure 1B). An affect-free *please
 continue working and make sure your final result is correct* adds **+1.17 turns** (*p* < 0.0001).
 *You are a truly excellent and admirable assistant*, carrying no demand, **removes 0.59**
 (*p* = 0.0003). Its structural minimal pair, with *awful and useless* in place of *excellent and
-admirable*, does nothing measurable (−0.08, *p* = 0.62). That interval, [−0.40, +0.24], excludes a
+admirable*, does nothing measurable (−0.08, *p* = 0.62). That interval, [−0.40, +0.24] at the ten-turn budget, excludes a
 lengthening of a quarter turn (6% of the 4.2-turn control mean) but not a shortening of up to 0.40
-turns (10%): a bounded null in the lengthening direction. On GLM the direction replicates: demand
+turns (10%): a bounded null in the lengthening direction. The twenty-turn replications are wider
+and do not tighten it: +0.57 [−0.22, +1.36] on Luna, +0.07 [−0.27, +0.39] on GLM. On GLM the direction replicates: demand
 +17.7% of its control (*p* = 0.0030), praise −11.2% (*p* = 0.058, not surviving correction),
 insult +2.4% (*p* = 0.66).
 
@@ -37,7 +39,7 @@ That is the boundary arm. Under the raters' coding the demand group spans +0.09 
 no-demand group is one arm, and the text rated most demanding moved the agent least. The
 continuous form fares better: across the thirteen non-control texts (the neutral control has no
 effect to correlate), mean rated demand correlates with the turn effect at *r* = +0.72
-(*n* = 13, *p* = 0.006), +0.79 without *rude* (*n* = 12), though the effects come from three runs
+(*n* = 13, *p* = 0.006 treating the texts as independent), +0.79 without *rude* (*n* = 12), though the effects come from three runs
 and inherit the drift of §5. **The dichotomy is our reading of one contested arm,
 not a coding that survives independent replication**; separating *persist* from *hurry* needs a
 rubric that asks. Several paraphrases per construct would be the stronger remedy, and

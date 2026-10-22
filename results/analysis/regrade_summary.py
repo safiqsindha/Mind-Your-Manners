@@ -29,6 +29,7 @@ import ast
 import json
 import math
 import pathlib
+import re
 import statistics
 import sys
 from collections import defaultdict
@@ -123,6 +124,65 @@ def load(stem):
     return json.loads(path.read_text())
 
 
+ARCHIVE = ROOT / "results_archive"
+ALL_ROWS = "--all-rows" in sys.argv     # the old, unaligned population, for comparison
+
+_STEM = re.compile(r"^(gpt-luna|glm-current)-(probe|praise|cross7|s1luna|s1glm|ceiling20)-(.+)$")
+_RECORDS = {
+    "probe": "core_gpt-luna_probe_records.json",
+    "praise": "core_gpt-luna_praise_records.json",
+    "cross7": "core_gpt-luna_cross7_records.json",
+    "s1luna": "stage1_cross_model_records.json",
+    "s1glm": "stage1_cross_model_records.json",
+}
+
+
+def _source(stem):
+    """The run record file, model, arm and injection positions the primary
+    turn-count and accuracy analyses (accuracy_null_mde.py) use for this arm."""
+    model, run, arm = _STEM.match(stem).groups()
+    if run == "ceiling20":
+        path = ANALYSIS / f"study2_core_{model}-ceiling20-{arm}_records.json"
+    else:
+        path = ARCHIVE / _RECORDS[run]
+    # The register run is analysed at injection turns 1 and 2 only; turn 0 is
+    # reported separately (Appendix C.2).
+    return path, (model if run in ("s1luna", "s1glm") else None), arm, ({1, 2} if run == "cross7" else None)
+
+
+def load_aligned(stem):
+    """The regrade restricted to the population the primary turn-count outcome uses.
+
+    The per-turn regrade covers every scheduled trajectory and carries no firing
+    flag, while the primary analyses exclude trajectories on which the
+    interjection never fired (no dose was delivered) and, for the register run,
+    injection position 0. Dividing a progress effect measured on one population
+    by a turn effect measured on another mixes two estimands. This joins each
+    regrade row back to its run record on (task, trial, injection turn), applies
+    the primary filters, and adds `n_acting`, the record's acting-turn count --
+    the primary outcome -- so a ratio has the same trajectories in both parts.
+    Pass --all-rows to see the unaligned population.
+    """
+    rows = load(stem)
+    if rows is None:
+        return rows
+    path, model, arm, turns = _source(stem)
+    by_key = {(r["task_id"], r["trial"], r["interjection_turn"]): r
+              for r in json.loads(path.read_text())
+              if r["interjection"] == arm and (model is None or r.get("model_key") == model)}
+    out = []
+    for row in rows:
+        rec = by_key[(row["task_id"], row["trial"], row["interjection_turn"])]
+        if not ALL_ROWS:
+            if str(rec.get("interjection_fired", "True")).strip().lower() != "true":
+                continue
+            if turns is not None and row["interjection_turn"] not in turns:
+                continue
+        out.append(dict(row, n_acting=rec["n_turns"],
+                        passed=str(rec["passed"]).strip().lower() == "true"))
+    return out
+
+
 def curve(rec):
     raw = rec["curve"]
     return ast.literal_eval(raw) if isinstance(raw, str) else raw
@@ -173,6 +233,50 @@ def structural(records):
         "first_is_best": first_best / len(eligible) if eligible else float("nan"),
         "still_improving": improving / len(eligible) if eligible else float("nan"),
     }
+
+
+def share_of_turn_effect(treat, control, rng):
+    """Redundant steps as a share of the turn-count effect, same trajectories in both.
+
+    Ratio of two paired per-task differences -- redundant steps and acting turns,
+    both from the records `load_aligned` kept -- with a task-clustered bootstrap
+    interval. Undefined when the turn effect is indistinguishable from zero, so
+    callers report it only where the turn-count contrast itself is clear.
+    """
+    nt, nc = per_task(treat, lambda r: r["n_noop_turns"]), per_task(control, lambda r: r["n_noop_turns"])
+    tt, tc = per_task(treat, lambda r: r["n_acting"]), per_task(control, lambda r: r["n_acting"])
+    shared = sorted(set(nt) & set(nc) & set(tt) & set(tc))
+    if len(shared) < 5:
+        return None
+    dn = np.array([nt[t] - nc[t] for t in shared])
+    dt = np.array([tt[t] - tc[t] for t in shared])
+    idx = rng.integers(0, len(shared), size=(BOOT, len(shared)))
+    bt = dt[idx].mean(axis=1)
+    ok = np.abs(bt) > 1e-9
+    boot = (dn[idx].mean(axis=1)[ok] / bt[ok])
+    tlo, thi = (float(x) for x in np.percentile(bt, [2.5, 97.5]))
+    return {"turns": float(dt.mean()), "noop": float(dn.mean()),
+            "clear": tlo > 0 or thi < 0,      # the turn effect's own interval excludes zero
+            "share": float(dn.mean() / dt.mean()) if abs(dt.mean()) > 1e-9 else float("nan"),
+            "lo": float(np.percentile(boot, 2.5)), "hi": float(np.percentile(boot, 97.5))}
+
+
+def share_table(rng):
+    """One row per treated arm: redundant steps as a share of its turn effect."""
+    rows = []
+    for run, (control_stem, arms) in RUNS.items():
+        control = load_aligned(control_stem)
+        if control is None:
+            continue
+        for label, stem in arms:
+            recs = load_aligned(stem)
+            if recs is None:
+                continue
+            sh = share_of_turn_effect(recs, control, rng)
+            if sh is not None:
+                rows.append({"run": run, "arm": label, "n_treat": len(recs),
+                             "n_control": len(control), **sh})
+    return rows
 
 
 def peak_turns(records):
@@ -255,7 +359,7 @@ def pool_progress(rng):
     for label, pairs in POOLED.items():
         ms = []
         for treat_stem, control_stem in pairs:
-            t, c = load(treat_stem), load(control_stem)
+            t, c = load_aligned(treat_stem), load_aligned(control_stem)
             if t is None or c is None:
                 continue
             m = contrast(per_task(t, lambda r: r["final_match"]),
@@ -291,7 +395,7 @@ def joint_task_bootstrap(pairs, weights, rng, reps=BOOT):
     """Pool across runs resampling TASKS jointly, not runs independently."""
     per_run = []
     for treat_stem, control_stem in pairs:
-        t, c = load(treat_stem), load(control_stem)
+        t, c = load_aligned(treat_stem), load_aligned(control_stem)
         if t is None or c is None:
             continue
         tt = per_task(t, lambda r: r["final_match"])
@@ -330,7 +434,7 @@ def main() -> None:
     missing = []
 
     for run, (control_stem, arms) in RUNS.items():
-        control = load(control_stem)
+        control = load_aligned(control_stem)
         if control is None:
             missing.append(control_stem)
             continue
@@ -347,7 +451,7 @@ def main() -> None:
         print(f"  {'arm':<24}{'Δ redundant':>13}{'p':>9}{'Δ final match':>15}{'p':>9}"
               f"{'first-best':>12}{'n':>5}")
         for label, stem in arms:
-            recs = load(stem)
+            recs = load_aligned(stem)
             if recs is None:
                 missing.append(stem)
                 continue
@@ -362,6 +466,21 @@ def main() -> None:
                   f"   still-improving {100*st['still_improving']:.1f}%"
                   f" (control {100*cs['still_improving']:.1f}%)")
 
+    print("\n=== redundant steps as a share of the turn-count effect "
+          f"({'ALL scheduled rows' if ALL_ROWS else 'primary population: fired, register turns 1-2'}) ===")
+    print(f"  {'run':<32}{'arm':<24}{'Δ turns':>9}{'Δ redundant':>13}{'share':>8}{'95% CI':>18}{'n trt/ctl':>12}")
+    table = share_table(np.random.default_rng(SEED + 1))
+    for r in table:
+        ci = f"[{100*r['lo']:.0f}%, {100*r['hi']:.0f}%]"
+        print(f"  {r['run']:<32}{r['arm']:<24}{r['turns']:>+9.2f}{r['noop']:>+13.2f}"
+              f"{100*r['share']:>7.0f}%{ci:>18}{r['n_treat']:>7}/{r['n_control']}"
+              f"{'' if r['clear'] else '   (turn effect not clear)'}")
+    for model, tag in (("GLM", "GLM"), ("Luna", "Luna")):
+        sel = [r["share"] for r in table if r["clear"] and (("GLM" in r["run"]) == (model == "GLM"))]
+        if sel:
+            print(f"  {tag}, arms with a clear turn effect (n = {len(sel)}): share "
+                  f"{100*min(sel):.0f}% to {100*max(sel):.0f}%, median {100*statistics.median(sel):.0f}%")
+
     pooled = pool_progress(rng)
     if pooled:
         print("\n=== final match, pooled across measurements ===")
@@ -375,8 +494,8 @@ def main() -> None:
                   + ", ".join(f"{e:+.3f}" for e in m["each"])
                   + f"   (heterogeneity p={m['q_p']:.3f})")
 
-    c20 = load("gpt-luna-ceiling20-Q5_remains_only")
-    c20c = load("gpt-luna-ceiling20-Q0_control")
+    c20 = load_aligned("gpt-luna-ceiling20-Q5_remains_only")
+    c20c = load_aligned("gpt-luna-ceiling20-Q0_control")
     if c20 and c20c:
         peaks, imps = peak_turns(c20 + c20c)
         if peaks:

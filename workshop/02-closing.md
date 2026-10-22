@@ -39,10 +39,13 @@ is consistent with an agent responding to closing structure. We do not claim it 
 praise shortens `Q4` without being read as closing, and three register arms end in thanks while
 only one shortens.
 
-**Against the nearest prior work.** Prompt wording is known to move agentic spend at equal success,
-with an explicit stop condition the one consistently cheap variant [weinberger-hozez-2026]. Explicit mid-flight halts have been measured as an immediate stop
-[munirathinam-2026-recuse]: in the prompt channel, acknowledged in 20 of 20 trials and obeyed in
-none; in-band with tool output, neither. Our outcome, a shift in mean trajectory length, is not
+**Against the nearest prior work.** Prompt wording is known to move agentic spend at equal success;
+the one consistently cheap variant combined scope, minimal change, verification and an explicit
+stop condition, so its effect is not attributable to stopping alone [weinberger-hozez-2026]. How far
+an explicit mid-flight halt works depends on the model [munirathinam-2026-recuse]: for two OpenAI
+models a halt in the prompt channel was acknowledged in 20 of 20 trials and obeyed in none, and
+an in-band halt was neither acknowledged nor obeyed, yet Gemini 2.5 Flash stopped in 16 of 20 on
+the same apparatus. Our outcome, a shift in mean trajectory length, is not
 directly comparable; what ours adds is that a note issuing no instruction moved termination at all.
 **This six-arm study is the least replicated in the paper: one run, one model, one budget**; given
 §5's drift, differences under half a turn, such as closing cue against praise (−0.36), may not
