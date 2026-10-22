@@ -60,8 +60,8 @@ this paper means acting turns throughout.**
 Every contrast is against a *neutral interjection*, not against silence: each arm is compared with a
 control arm that also receives a 28-token message at the same turn, which isolates register from the
 fact of being interrupted. How much the baseline itself moves was measured **once** — a neutral
-interruption against no interruption, 3.47 versus 4.11 turns, ***p* = 0.15, on one model at one
-ceiling** — so an arm's absolute cost against an *uninterrupted* agent is not something this design
+interruption against no interruption, 3.47 versus 4.11 turns, **+0.45 [+0.08, +0.81], *p* = 0.019, on
+one model at one ceiling and with an earlier wrapper version** — so an arm's absolute cost against an *uninterrupted* agent is not something this design
 bounds, though a shared offset cancels in every contrast reported here.
 
 Every trajectory belongs to one of 50 tasks, and each (task, arm) cell holds six to nine

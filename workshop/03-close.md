@@ -8,34 +8,42 @@ code and compares the graded cells with the answer to the benchmark's **first te
 figure below uses the trajectories of the primary turn-count analysis (those on which the
 interjection fired, and turns 1–2 in the register run), so a ratio has the same trajectories in
 numerator and denominator. On Luna, redundant steps make up **56–93% of each turn-count effect that
-is clear** (median 80% over 16 arms), and 48% of GLM's demand effect (95% CI −20% to 80%; Appendix
+is clear** (sign-flip *p* below 0.05; median 80% over 16 arms), and 48% of GLM's demand effect (95% CI −20% to 80%; Appendix
 C.6). Among trajectories with at least two **gradable outputs** (turns whose code produced a
 readable value over the graded range), the first is already the best in 77–94% on Luna and 69–88%
-on GLM. Unchanged cells need not be wasted work: checking a result can leave them unchanged.
+on GLM (80–94% and 83% in the controls alone: conditioning on two readable outputs conditions on
+an outcome the interjection can change). Unchanged cells need not be wasted work: checking a result
+can leave them unchanged. For arms that shorten trajectories the share counts steps given up that
+would have changed nothing; the rest of each effect is other readable and unreadable turns
+(Appendix C.6).
 
 The **graded fraction** is the share of the graded range matching the answer at the last turn that
 produced a readable value; **binary accuracy** requires every test case to pass, so the two can move
 independently. An explicit statement that work remains raises the graded fraction by 2.2 points over
 three measurements (95% CI [−0.2, +4.8], *p* = 0.09; the runs give +2.0, +5.1 and +0.9), an estimate
 that does not exclude zero and falls to +1.4 points [−0.8, +3.5] without the one task on which the
-instrument disagrees with the benchmark (Appendix C.6), so we treat it as suggestive. This outcome
+instrument disagrees with the benchmark (Appendix C.6; cause undiagnosed), so we treat it as
+suggestive. This outcome
 sits outside both correction families.
 
 **No accuracy effect survives correction or replication**; the largest nominal one, +6.6 points for
 "work remains", came back at −1.8 on identical tasks. Pooled across runs, with tasks resampled
 jointly, the demand, praise and insult contrasts are each equivalent to zero within ±4 points, an
 exploratory bound (§2; TOST
-*p* = 0.0013, <0.0001, 0.0001). The praise pool is heterogeneous (Cochran's *Q* = 8.45, 3 df,
-*p* = 0.038); under random effects its equivalence weakens to *p* = 0.0119 but holds. Both treat
-the runs as independent although they share tasks, so read them as descriptive. The bound is
+*p* = 0.0013, <0.0001, 0.0001, from a bootstrap that resamples tasks jointly across runs). The
+praise pool is heterogeneous (Cochran's *Q* = 8.45, 3 df, *p* = 0.038); under random effects its
+equivalence weakens to *p* = 0.0119 but holds. Those two use inverse-variance weights that treat the
+runs as independent although they share tasks, so read them as descriptive. Pooled estimates, their
+intervals and the runs in each pool are in Appendix C.7. The bound is
 looser than it looks: 30 of 50 tasks are never or always solved, so ±4 points over all 50 allows
 about ±10 on the 20 that can change. The closing cue, measured once, is −2.6 points [−6.0, +0.6].
 
 The regrade also caught our worst defect, a regrader that scored formula answers as empty; fixing
 it reversed a conclusion. **Direction and significance reproduced on
 remeasurement for the larger effects; point estimates did not.** Byte-identical praise gives −0.59
-and −1.08 turns in two runs, within the 1.5×–3.4× spread across re-measurements of one contrast; the
-shared control moving from 4.23 to 4.50 turns accounts for 0.27 of that 0.49 gap (Appendix C.4). We report ranges by default.
+and −1.08 turns in two runs, within the spread across re-measurements of one contrast (1.5×–3.4×, most of it across turn
+budgets; 1.1× for "work remains" and 1.8× for praise at a matched budget); on task-weighted means
+the shared control moving from 4.07 to 4.32 turns accounts for 0.25 of that 0.49 gap (Appendix C.4). We report ranges by default.
 
 # 6. Limitations
 
@@ -45,8 +53,9 @@ right design. **The agent is told its turn budget and asked to commit early**, s
 measured in a budget-aware agent, and the closure result may depend on it. **The interjection is a
 harness status note appended to tool output inside a user-role message**; text inside the task
 data, or in a tool-role message, is untested. **Every contrast is against a neutral interjection,
-not silence**; the one check against no interruption (*p* = 0.15, one model) was never repeated, so absolute
-costs are unbounded.
+not silence**; the one check against no interjection, with an earlier wrapper version, found the neutral
+interjection adding +0.45 turns [+0.08, +0.81] (Appendix C.7), so the neutral baseline is not free
+and absolute costs are unbounded.
 
 # 7. What this means
 

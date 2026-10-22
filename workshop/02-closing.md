@@ -9,7 +9,8 @@ field less than we hoped.
 same "work remains" message without it (`Q4` − `Q5`, *p* < 0.0001), which argues against a simple
 completion account. But `Q4` and `Q5` are not a strict minimal pair (praise replaces a filler
 sentence; Appendix A.3), and blinded raters score both at 0 on projected closure, so this contrast
-does not support the closing account either. Against control, `Q4` (+0.50) sits near the sum of
+does not support the closing account either (the raters scored the whole message, continuation
+clause included, so a 0 does not rule out a competing closing cue in the praise clause). Against control, `Q4` (+0.50) sits near the sum of
 praise alone and "work remains" alone (−1.08 + 1.85 = +0.77), as if two opposing signals were
 weighed.
 
@@ -22,8 +23,9 @@ recorded for this task here, and no further notes will follow it" carries no pra
 and removes **1.44 turns**. Its control describes itself as recorded "partway through the task",
 so the contrast is final against partway, not closing against nothing.
 
-**A floor could manufacture this, and does not.** A trajectory cannot be shorter than its injection
-turn, so shortening has less room at turn 2. The closing cue gives **−1.55 [−2.07, −1.03] at turn
+**A floor could distort this, and does not explain it.** A trajectory cannot be shorter than its
+injection turn, so shortening has less room at turn 2, which would attenuate an effect there, not
+create one. The closing cue gives **−1.55 [−2.07, −1.03] at turn
 1** and −0.99 [−1.59, −0.43] at turn 2, on the 35 tasks reaching turn 2 in both arms; turn 1
 restricted to those tasks gives −1.49 [−2.12, −0.87], so the difference is not task survivorship
 (Appendix C.4).
@@ -48,5 +50,5 @@ an in-band halt was neither acknowledged nor obeyed, yet Gemini 2.5 Flash stoppe
 the same apparatus. Our outcome, a shift in mean trajectory length, is not
 directly comparable; what ours adds is that a note issuing no instruction moved termination at all.
 **This six-arm study is the least replicated in the paper: one run, one model, one budget**; given
-§5's drift, differences under half a turn, such as closing cue against praise (−0.36), may not
+§5's drift, differences under half a turn, such as closing cue against praise (−0.36), which also differ in their padding clauses, may not
 replicate.

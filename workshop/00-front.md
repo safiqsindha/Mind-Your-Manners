@@ -63,7 +63,8 @@ in this harness.
 follows acting turn *k* (0-indexed). Every interjection is exactly 28 tokens under `cl100k_base`
 and opens with the same `Checking in.` stem, so *being interrupted* does not covary with what the
 interruption says; every contrast is against a neutral interjection, not silence. Appendix A lists
-all seventeen, including where their padding clauses differ.
+all seventeen, including where their padding clauses differ. The control says it was recorded
+*partway through the task*; every treated arm replaces that clause, so each contrast also removes it.
 
 **Turn budget and injection position.** The three Luna runs in the figures used a ten-turn budget,
 the cross-model run twenty. Because the agent is told its budget, the budget is a condition it
@@ -85,7 +86,9 @@ Temperature is 0 where settable; outputs still vary across calls, hence trials.
 **Estimator and multiplicity.** Each (task, arm) cell is scheduled for six to nine trajectories, fewer once those on which the
 interjection did not fire are excluded (Appendix C.1). Point
 estimates are paired within task: per task, the mean over firing trajectories in each arm, pooled
-across positions, differenced, then averaged over tasks. Intervals come from a task bootstrap and
+across positions, differenced, then averaged over tasks. A task with no firing trajectory in an arm
+drops from that contrast (none does in Luna's, three or four in GLM's); Appendix C.2 gives
+position-stratified estimates. Intervals come from a task bootstrap and
 *p*-values from a task-level sign-flip permutation, **20,000 draws each, everywhere**; pooled
 contrasts resample tasks jointly across runs, which share their 50 tasks. **Intervals are
 within-run and exclude run-to-run variation, which §5 shows is substantial.** Turn count is the

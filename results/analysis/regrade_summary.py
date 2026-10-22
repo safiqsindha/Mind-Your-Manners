@@ -259,9 +259,17 @@ def share_of_turn_effect(treat, control, rng):
     bt = dt[idx].mean(axis=1)
     ok = np.abs(bt) > 1e-9
     boot = (dn[idx].mean(axis=1)[ok] / bt[ok])
-    tlo, thi = (float(x) for x in np.percentile(bt, [2.5, 97.5]))
+    # "Clear" means the arm's turn-count contrast is nominally significant (p < 0.05, the same
+    # sign-flip permutation as the primary outcome), the criterion used for both models.
+    p_turn = contrast(tt, tc, rng)["p"]
+    # Net turn effect = redundant steps + other readable turns + unreadable acting turns.
+    nr = lambda recs: per_task(recs, lambda r: sum(1 for t in curve(r) if t.get("readable")) - r["n_noop_turns"])
+    nu = lambda recs: per_task(recs, lambda r: r["n_acting"] - sum(1 for t in curve(r) if t.get("readable")))
+    d_other = float(np.mean([nr(treat)[t] - nr(control)[t] for t in shared]))
+    d_unread = float(np.mean([nu(treat)[t] - nu(control)[t] for t in shared]))
     return {"turns": float(dt.mean()), "noop": float(dn.mean()),
-            "clear": tlo > 0 or thi < 0,      # the turn effect's own interval excludes zero
+            "d_other": d_other, "d_unread": d_unread, "p_turn": p_turn,
+            "clear": p_turn < 0.05,
             "share": float(dn.mean() / dt.mean()) if abs(dt.mean()) > 1e-9 else float("nan"),
             "lo": float(np.percentile(boot, 2.5)), "hi": float(np.percentile(boot, 97.5))}
 

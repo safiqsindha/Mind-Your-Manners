@@ -2,12 +2,12 @@
 
 ## C.1 Runs and the 22-contrast family
 
-All 11,850 scheduled trajectories, by run. *Delivered* means the interjection fired before the trajectory ended; firing is decided before delivery, so it differs by arm only by chance (probe run, injection at turn 2: 54.0–59.5% across the four arms). *Primary analysis* means delivered and, in the register run, injected at turn 1 or 2 (turn 0 is Appendix C.2). Runs without a firing flag, or without a mid-task interjection, show a dash.
+All 11,850 scheduled trajectories, by run. *Delivered* means the interjection fired before the trajectory ended; firing is decided before delivery, so it differs by arm only by chance (probe run, injection at turn 2: 54.0–59.5% across the four arms). *Primary analysis* means delivered and, in the register run, injected at turn 1 or 2 (turn 0 is Appendix C.2). Runs without a mid-task interjection show a dash.
 
 | Run | Model | Turn budget | Scheduled | Delivered | Primary analysis | Regraded per turn |
 |---|---|---:|---:|---:|---:|:---:|
 | Opening tone (wrapper on the first message, no mid-task interjection) | Luna | 10 | 1,050 | — | — | no |
-| Micro-experiment: threatening vs neutral, re-injected mid-task | Luna | 10 | 800 | — | — | no |
+| Micro-experiment: threatening vs neutral, re-injected mid-task | Luna | 10 | 800 | 618 | 618 | no |
 | Superseded control batch (earlier wrapper version) | Luna | 10 | 150 | — | — | no |
 | Register run (Figure 1A) | Luna | 10 | 3,150 | 2,662 | 1,613 | yes |
 | Probe run (Figure 1B) | Luna | 10 | 1,600 | 1,237 | 1,237 | yes |
@@ -15,9 +15,11 @@ All 11,850 scheduled trajectories, by run. *Delivered* means the interjection fi
 | Cross-model run | Luna, GLM | 20 | 2,700 | 1,916 | 1,916 | yes |
 | Re-measurement of "work remains" | Luna | 20 | 600 | 454 | 454 | yes |
 
-The six regraded runs hold 9,850 scheduled trajectories, 7,665 delivered and 6,616 in the primary analysis; the per-turn figures of §5 use the last.
+The six regraded runs (the cross-model run counts once per model, so the table has five regraded rows) hold 9,850 scheduled trajectories, 7,665 delivered and 6,616 in the primary analysis; the per-turn figures of §5 use the last.
 
-Every arm-versus-control turn-count contrast in every run that delivered a mid-task interjection, sorted by *p*. Benjamini–Hochberg at *q* = 0.05: 17 of 22 survive.
+**What the family leaves out.** The cross-model run's Luna half has a fifth arm, `work remains`, that the 22 contrasts do not include (+5.77 turns against its control); it is in the delivered counts above and in the progress analysis of §5. Adding it as a 23rd test leaves the correction unchanged: 18 of 23 survive, the 17 that already did and this one. The micro-experiment's contrast uses its run records, which carry the firing flag (618 of 800 delivered).
+
+Every arm-versus-control turn-count contrast in every run that delivered a mid-task interjection, sorted by *p*. Benjamini–Hochberg at *q* = 0.05: 17 of 22 survive. Intervals are bootstrap percentiles and *p*-values come from the sign-flip permutation, so at the margin they can disagree (GLM praise: upper bound −0.00, *p* = 0.058).
 
 | Contrast | Turns [95% CI] | *p* | BH |
 |---|---|---:|:---:|
@@ -57,6 +59,8 @@ Turn *k* means the interjection is appended to the observation that follows the 
 | `L6_very_rude` | −0.42 [−0.88, +0.04] | 0.0848 | +0.32 [−0.08, +0.72] | 0.1177 |
 | `L7_threatening` | +0.02 [−0.54, +0.61] | 0.9654 | +0.95 [+0.64, +1.27] | <0.0001 |
 
+**Position weighting.** The main estimator pools turns 1 and 2 within each task before differencing, so a chance imbalance in how many trajectories fired at each position could tilt a contrast. Differencing within each position and then averaging the two with equal weight, on the tasks that fired at both (31–36 of 50), gives `L1_sycophantic` −0.76, `L2_very_polite` +0.83, `L3_polite` +1.54, `L5_rude` +0.32, `L6_very_rude` +0.91, `L7_threatening` +1.46: the four arms we code as carrying a demand still sit above the two we code as carrying none.
+
 No turn-0 contrast survives correction across the six (smallest *p* = 0.037), and their signs are mixed. Pooled over all three positions, the four arms we code as carrying a demand still sit above the two we code as carrying none in point estimates.
 
 ## C.3 Both models at the twenty-turn budget
@@ -85,9 +89,9 @@ The cross-model run: both models, same 50 tasks, twenty-turn budget, injections 
 | `Q1_praise_assistant` | −1.47 [−2.12, −0.86] | −0.75 [−1.40, −0.17] | 38 |
 | `Q2_praise_work` | −1.22 [−1.79, −0.64] | −0.91 [−1.67, −0.14] | 39 |
 
-Control means by position: 4.37 acting turns (SD 2.77) at turn 1, 4.71 (SD 2.48) at turn 2.
+Control means by position: 4.37 acting turns (SD 2.77) at turn 1, 4.71 (SD 2.48) at turn 2 (means over trajectories).
 
-**Run-to-run drift.** The byte-identical control text averaged 4.23 acting turns in the probe run and 4.50 in the closure run; the byte-identical praise text averaged 3.61 and 3.36. The two praise estimates (−0.59 and −1.08) differ by 0.49 turns, and the control moving accounts for 0.27 of that. The paper's intervals resample tasks within a run and do not include this variation, so single-run differences of under about half a turn should be read as provisional.
+**Run-to-run drift.** On task-weighted means, the same ones the contrasts difference, the byte-identical control text averaged 4.07 acting turns in the probe run and 4.32 in the closure run, and the byte-identical praise text 3.48 and 3.24. The two praise estimates (−0.59 and −1.08) therefore differ by 0.49 turns, of which 0.25 is the control moving and 0.24 the praise arm moving. The paper's intervals resample tasks within a run and do not include this variation, so single-run differences of under about half a turn should be read as provisional.
 
 ## C.5 Blinded ratings, all fourteen texts
 
@@ -118,42 +122,82 @@ Item counts: Cohen's κ is computed over the 7 register arms, Krippendorff's α 
 
 **Validation.** In the probe control (all 400 scheduled trajectories), 119 of 126 trajectories that pass the benchmark end with match 1 on the first test case, and the 7 that do not are all in one task (54513); 47 of 274 that fail also reach match 1, because a trajectory can solve the first test case and fail a later one. Progress is therefore a first-test-case measure and not a second grader of accuracy.
 
-All seven disagreements are in task 54513. Its graded range is a single cell, and it scores both 0.0 and 1.0 in different trajectories of the same arm, so it does not cancel in paired contrasts. The graded-fraction contrasts are sensitive to it, in points of the graded range:
+All seven disagreements are in task 54513, whose graded range is a single cell; the cause is undiagnosed. It scores both 0.0 and 1.0 in different trajectories of the same arm, so it does not cancel in paired contrasts. The pooled graded-fraction contrasts are sensitive to it, in points of the graded range:
 
-| Contrast | All 50 tasks | Without that task |
-|---|---|---|
-| demand vs control | −0.3 [−4.6, +1.9], *p* = 0.54 | −0.5 [−4.9, +1.7], *p* = 0.45 |
-| praise vs control | −1.5 [−4.0, +0.6], *p* = 0.17 | −1.8 [−4.3, 0.0], *p* = 0.08 |
-| insult vs control | −0.3 [−3.4, +1.6], *p* = 0.50 | −0.9 [−3.9, +0.7], *p* = 0.21 |
-| work remains vs control | +2.2 [−0.2, +4.8], *p* = 0.09 | +1.4 [−0.8, +3.5], *p* = 0.21 |
+| Contrast | Runs pooled | All 50 tasks | Without that task |
+|---|---|---|---|
+| demand vs control | probe; cross-model Luna; cross-model GLM | −0.3 [−4.6, +1.9], *p* = 0.54 | −0.5 [−4.9, +1.7], *p* = 0.45 |
+| praise vs control | probe; closure (`Q1`); cross-model Luna; cross-model GLM | −1.5 [−4.0, +0.6], *p* = 0.17 | −1.8 [−4.3, 0.0], *p* = 0.08 |
+| insult vs control | probe; cross-model Luna; cross-model GLM | −0.3 [−3.4, +1.6], *p* = 0.50 | −0.9 [−3.9, +0.7], *p* = 0.21 |
+| work remains vs control | closure; re-measurement; cross-model Luna | +2.2 [−0.2, +4.8], *p* = 0.09 | +1.4 [−0.8, +3.5], *p* = 0.21 |
 
-**Population.** Progress and turn counts use the same trajectories: those on which the interjection fired (and, in the register run, turns 1 and 2), joined to the run records on task, trial and injection turn. The turn-count effect below is the primary outcome, reproduced on those trajectories. Each share is redundant steps divided by acting turns, both as paired per-task differences against the arm's control, with a task-bootstrap interval. It is undefined when the turn effect itself is indistinguishable from zero, and its interval can pass 100% when that effect is small.
+The three `work remains` measurements are +2.0 (closure run), +5.1 (re−measurement run) and +0.9 (cross−model run) points.
 
-| Run | Arm | Δ turns | Δ redundant steps | Share of turn effect [95% CI] | Treated / control |
+**Population.** Progress and turn counts use the same trajectories: those on which the interjection fired (and, in the register run, turns 1 and 2), joined to the run records on task, trial and injection turn. The turn-count effect below is the primary outcome, reproduced on those trajectories. Each share is redundant steps divided by acting turns, both as paired per-task differences against the arm's control, with a task-bootstrap interval. An arm's turn effect is *clear* if its sign-flip *p* is below 0.05, the criterion used for both models; the share is undefined otherwise, and its interval can pass 100% when the effect is small. Shares are computed from unrounded values and can differ by a point from the ratio of the printed columns. For arms that shorten trajectories the share is the fraction of the steps given up that would have left the graded range unchanged.
+
+| Run | Arm | Δ turns | Δ redundant steps | Share of turn effect [95% CI] | Trajectories (treated / control) |
 |---|---|---:|---:|---|---:|
-| probe (Luna, ceiling 10) | demand only | +1.17 | +0.92 | 78% [64%, 91%] | 310 / 300 |
-| probe (Luna, ceiling 10) | praise only | −0.59 | −0.33 | 56% [17%, 76%] | 312 / 300 |
-| probe (Luna, ceiling 10) | insult only | −0.08 | −0.06 | not defined (turn effect not clear) | 315 / 300 |
-| praise run (Luna, ceiling 10) | praise the assistant | −1.08 | −0.72 | 67% [46%, 87%] | 232 / 236 |
-| praise run (Luna, ceiling 10) | praise the work | −0.93 | −0.61 | 65% [43%, 83%] | 235 / 236 |
-| praise run (Luna, ceiling 10) | closing cue | −1.44 | −1.04 | 72% [56%, 87%] | 231 / 236 |
-| praise run (Luna, ceiling 10) | praise + work remains | +0.50 | +0.38 | 76% [37%, 128%] | 233 / 236 |
-| praise run (Luna, ceiling 10) | work remains | +1.85 | +1.53 | 83% [73%, 92%] | 229 / 236 |
-| seven-level (Luna, ceiling 10) | L1 sycophantic | −0.68 | −0.62 | 92% [66%, 126%] | 224 / 220 |
-| seven-level (Luna, ceiling 10) | L2 very polite | +0.70 | +0.58 | 82% [54%, 134%] | 229 / 220 |
-| seven-level (Luna, ceiling 10) | L3 polite | +1.80 | +1.47 | 82% [72%, 91%] | 233 / 220 |
-| seven-level (Luna, ceiling 10) | L5 rude | +0.09 | +0.05 | not defined (turn effect not clear) | 231 / 220 |
-| seven-level (Luna, ceiling 10) | L6 very rude | +0.71 | +0.66 | 93% [59%, 191%] | 239 / 220 |
-| seven-level (Luna, ceiling 10) | L7 threatening | +1.46 | +1.11 | 76% [64%, 88%] | 237 / 220 |
-| stage 1 (Luna, ceiling 20) | demand only | +1.75 | +1.57 | 90% [76%, 103%] | 223 / 229 |
-| stage 1 (Luna, ceiling 20) | praise only | −1.01 | −0.65 | 64% [0%, 91%] | 228 / 229 |
-| stage 1 (Luna, ceiling 20) | insult only | +0.57 | +0.42 | not defined (turn effect not clear) | 228 / 229 |
-| stage 1 (Luna, ceiling 20) | work remains | +5.77 | +4.66 | 81% [71%, 88%] | 222 / 229 |
-| stage 1 (GLM, ceiling 20) | demand only | +0.55 | +0.26 | 48% [−20%, 80%] | 199 / 193 |
-| stage 1 (GLM, ceiling 20) | praise only | −0.35 | −0.24 | 69% [−2%, 230%] | 199 / 193 |
-| stage 1 (GLM, ceiling 20) | insult only | +0.07 | −0.05 | not defined (turn effect not clear) | 195 / 193 |
-| dedicated re-run (Luna, ceiling 20) | work remains | +6.20 | +5.20 | 84% [76%, 90%] | 227 / 227 |
+| Probe run, Luna, budget 10 | demand only | +1.17 | +0.92 | 78% [64%, 91%] | 310 / 300 |
+| Probe run, Luna, budget 10 | praise only | −0.59 | −0.33 | 56% [17%, 76%] | 312 / 300 |
+| Probe run, Luna, budget 10 | insult only | −0.08 | −0.06 | not defined (turn effect not clear) | 315 / 300 |
+| Closure run, Luna, budget 10 | praise the assistant | −1.08 | −0.72 | 67% [47%, 87%] | 232 / 236 |
+| Closure run, Luna, budget 10 | praise the work | −0.93 | −0.61 | 65% [43%, 83%] | 235 / 236 |
+| Closure run, Luna, budget 10 | closing cue | −1.44 | −1.04 | 72% [56%, 87%] | 231 / 236 |
+| Closure run, Luna, budget 10 | praise + work remains | +0.50 | +0.38 | 76% [38%, 126%] | 233 / 236 |
+| Closure run, Luna, budget 10 | work remains | +1.85 | +1.53 | 83% [74%, 92%] | 229 / 236 |
+| Register run, Luna, budget 10 | L1 sycophantic | −0.68 | −0.62 | 92% [66%, 127%] | 224 / 220 |
+| Register run, Luna, budget 10 | L2 very polite | +0.70 | +0.58 | 82% [54%, 138%] | 229 / 220 |
+| Register run, Luna, budget 10 | L3 polite | +1.80 | +1.47 | 82% [72%, 91%] | 233 / 220 |
+| Register run, Luna, budget 10 | L5 rude | +0.09 | +0.05 | not defined (turn effect not clear) | 231 / 220 |
+| Register run, Luna, budget 10 | L6 very rude | +0.71 | +0.66 | 93% [59%, 191%] | 239 / 220 |
+| Register run, Luna, budget 10 | L7 threatening | +1.46 | +1.11 | 76% [64%, 88%] | 237 / 220 |
+| Cross-model run, Luna, budget 20 | demand only | +1.75 | +1.57 | 90% [76%, 104%] | 223 / 229 |
+| Cross-model run, Luna, budget 20 | praise only | −1.01 | −0.65 | 64% [−1%, 91%] | 228 / 229 |
+| Cross-model run, Luna, budget 20 | insult only | +0.57 | +0.42 | not defined (turn effect not clear) | 228 / 229 |
+| Cross-model run, Luna, budget 20 | work remains | +5.77 | +4.66 | 81% [71%, 88%] | 222 / 229 |
+| Cross-model run, GLM, budget 20 | demand only | +0.55 | +0.26 | 48% [−19%, 81%] | 199 / 193 |
+| Cross-model run, GLM, budget 20 | praise only | −0.35 | −0.24 | not defined (turn effect not clear) | 199 / 193 |
+| Cross-model run, GLM, budget 20 | insult only | +0.07 | −0.05 | not defined (turn effect not clear) | 195 / 193 |
+| Re-measurement run, Luna, budget 20 | work remains | +6.20 | +5.20 | 84% [76%, 90%] | 227 / 227 |
 
 Luna, arms with a clear turn effect (n = 16): 56% to 93%, median 80%.
 
-GLM, arms with a clear turn effect (n = 2): 48% to 69%, median 58%.
+GLM, arms with a clear turn effect (n = 1): 48% to 48%, median 48%.
+
+**What the rest of the turn effect is.** Acting turns split into redundant steps, other readable turns (including each trajectory's first readable turn) and unreadable turns whose code ran but produced no value over the graded range. For the arms with a clear effect:
+
+| Run | Arm | Δ turns | Δ redundant | Δ other readable | Δ unreadable |
+|---|---|---:|---:|---:|---:|
+| Probe run, Luna, budget 10 | demand only | +1.17 | +0.92 | +0.16 | +0.09 |
+| Probe run, Luna, budget 10 | praise only | −0.59 | −0.33 | −0.08 | −0.18 |
+| Closure run, Luna, budget 10 | praise the assistant | −1.08 | −0.72 | −0.13 | −0.23 |
+| Closure run, Luna, budget 10 | praise the work | −0.93 | −0.61 | −0.12 | −0.20 |
+| Closure run, Luna, budget 10 | closing cue | −1.44 | −1.04 | −0.17 | −0.23 |
+| Closure run, Luna, budget 10 | praise + work remains | +0.50 | +0.38 | +0.09 | +0.03 |
+| Closure run, Luna, budget 10 | work remains | +1.85 | +1.53 | +0.23 | +0.09 |
+| Register run, Luna, budget 10 | L1 sycophantic | −0.68 | −0.62 | −0.02 | −0.04 |
+| Register run, Luna, budget 10 | L2 very polite | +0.70 | +0.58 | +0.16 | −0.04 |
+| Register run, Luna, budget 10 | L3 polite | +1.80 | +1.47 | +0.20 | +0.13 |
+| Register run, Luna, budget 10 | L6 very rude | +0.71 | +0.66 | +0.18 | −0.13 |
+| Register run, Luna, budget 10 | L7 threatening | +1.46 | +1.11 | +0.26 | +0.09 |
+| Cross-model run, Luna, budget 20 | demand only | +1.75 | +1.57 | +0.11 | +0.06 |
+| Cross-model run, Luna, budget 20 | praise only | −1.01 | −0.65 | −0.20 | −0.16 |
+| Cross-model run, Luna, budget 20 | work remains | +5.77 | +4.66 | +0.68 | +0.43 |
+| Cross-model run, GLM, budget 20 | demand only | +0.55 | +0.26 | +0.07 | +0.22 |
+| Re-measurement run, Luna, budget 20 | work remains | +6.20 | +5.20 | +0.51 | +0.48 |
+
+A trajectory with no readable turn has no match and drops out of the graded-fraction contrasts; it is not scored 0.0. Its unreadable turns still count in the turn effect, which is why a share is a share of the net turn effect and not of the turns that changed the graded range.
+
+
+## C.7 Pooled accuracy, and the one comparison against no interjection
+
+Binary accuracy, in percentage points, pooled over repeated measurements of one contrast. The 95% and 90% intervals and the fixed-effect TOST come from a bootstrap that resamples tasks jointly across runs; Cochran's *Q* and the random-effects TOST use inverse-variance weights that treat the runs as independent although they share their 50 tasks, so read them as descriptive.
+
+| Contrast | Runs pooled | Estimate [95% CI] | 90% CI | TOST ±4 (joint) | TOST ±4 (random effects) | *Q* *p* |
+|---|---|---|---|---:|---:|---:|
+| demand vs control | probe; cross-model Luna; cross-model GLM | −0.31 [−2.71, +2.09] | [−2.33, +1.71] | 0.0013 | 0.0057 | 0.196 |
+| praise vs control | probe; closure (`Q1`); cross-model Luna; cross-model GLM | −0.12 [−1.80, +1.57] | [−1.53, +1.30] | <0.0001 | 0.0119 | 0.038 |
+| insult vs control | probe; cross-model Luna; cross-model GLM | −0.04 [−2.15, +2.08] | [−1.81, +1.74] | 0.0001 | 0.0039 | 0.246 |
+| praise vs control, Luna only | probe; closure (`Q1`); cross-model Luna | −1.27 [−3.11, +0.57] | [−2.82, +0.28] | 0.0018 | 0.0040 | 0.834 |
+
+**No interjection at all.** Every contrast in the paper is against a neutral interjection. The one comparison against none uses the 150-trajectory batch run with an earlier wrapper version (no interjection; 3.47 acting turns) and the 304 fired trajectories of the neutral arm of the re-injection micro-experiment (4.11). Paired within task, a neutral interjection adds +0.45 turns [+0.08, +0.81], *p* = 0.0192. The two batches differ in wrapper version, so the difference is not cleanly the interjection, but it does not support treating the neutral baseline as free: an arm's cost against an uninterrupted agent is not bounded here.
