@@ -46,7 +46,7 @@ All 17 arms are exactly 28 tokens.
 
 # B. Blinded rating of the stimuli
 
-5 held-out model raters, all Claude models at three sizes: Haiku 4.5 (2), Opus 5 (1), Sonnet 5 (2). The identities were established after the rating, not logged at the time, and sampling settings were not recorded. Each rated alone from the rubric and the texts of Appendix A -- no outcome data, no arm names, no project access. The rubric, the statistics to be computed and the interpretation bands were committed and pushed before any rating existed; the protocol is in the released artifact.
+5 held-out model raters, all Claude models at three sizes: Haiku 4.5 (2), Opus 5 (1), Sonnet 5 (2). The identities were recovered afterwards from the rating session's transcript rather than logged with the ratings, and sampling settings were not recorded. Each rated alone from the rubric and the texts of Appendix A -- no outcome data, no arm names, no project access. The rubric, the statistics to be computed and the interpretation bands were committed and pushed before any rating existed; the protocol is in the released artifact.
 
 ## B.1 Against the original coding
 

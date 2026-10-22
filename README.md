@@ -20,7 +20,7 @@ This extends Dobariya & Kumar's *Mind Your Tone* line one rung up the autonomy l
 - **The mechanism is persistence, not effort** — thinking per step is flat across every tone; what changes is how many steps the agent takes before it stops
 - **Flattery makes the agent quit early** — −0.68 turns, p < 0.0001, the most surprising result in the study
 - **"Rude costs more" is disconfirmed, not just unsupported** — an insult with no demand attached does nothing at all (p = 0.63); an affect-free *"please continue"* reproduces the whole effect
-- **Praise is a stop signal, because it is a closing move** — and a bare closing cue carrying no praise at all stops the agent hardest of anything measured (−1.44 turns). The agent reads mid-task messages as *"am I still expected to be working?"*, not as claims about the task
+- **Praise is a stop signal, and so is a closing cue** — a bare closing cue carrying no praise at all stops the agent hardest of anything measured (−1.44 turns). That is consistent with the agent reading mid-task messages as *"am I still expected to be working?"*, but the mechanism is not established
 - **A continue signal may buy a little real progress, but this is not established** — +0.022 of the graded fraction (95% CI [−0.002, +0.047], *p* = 0.09) over three runs on the primary population; the runs give +0.020, +0.051 and +0.009. A defect in our own per-turn regrade had made it look like nothing and was found and fixed; a later audit then found the progress figures had been computed on a different population from the turn counts (see below)
 
 ![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)
@@ -28,7 +28,7 @@ This extends Dobariya & Kumar's *Mind Your Tone* line one rung up the autonomy l
 ![Models](https://img.shields.io/badge/models-2%20of%204-f59e0b?style=flat-square)
 ![Trajectories](https://img.shields.io/badge/trajectories-11%2C850-7C3AED?style=flat-square)
 ![Spend](https://img.shields.io/badge/spend-%2461.53-7C3AED?style=flat-square)
-![Tests](https://img.shields.io/badge/tests-418%20passing-22c55e?style=flat-square)
+![Tests](https://img.shields.io/badge/tests-422%20passing-22c55e?style=flat-square)
 
 **[Paper](paper/)** · **[Results](RESULTS.md)** · **[Communications](COMMUNICATIONS.md)** · **[Tone wrappers](harness/tone_wrappers.py)** · **[Analysis](harness/study2/analysis.py)** · **[Harness](harness/study2/runner.py)**
 
@@ -42,7 +42,7 @@ This extends Dobariya & Kumar's *Mind Your Tone* line one rung up the autonomy l
 | Graded trajectories | **11,850** across eight runs, plus 9,850 regraded turn by turn |
 | Total spend | **$61.53** across ~48,000 model calls |
 | Substrate | SpreadsheetBench, graded by the authors' own evaluator |
-| Tests | **418 passing** |
+| Tests | **422 passing** |
 | Write-up | **`paper/` — nine sections, drafted and reviewed** |
 | Prior-work verification | **complete** — both primary-PDF checks closed, 15 Sep 2026 |
 | Open blockers | **none** — v1.0 preprint released with author block and CRediT; a venue remains |
@@ -71,7 +71,7 @@ The same register delivered *partway through* a trajectory, alongside an executi
 | Micro-experiment | +27.5% reasoning tokens | 800 trajectories |
 | Seven-level crossed | **+36.7%** | 3,150 trajectories |
 
-The control is a *neutral interruption*, not the absence of one, so this isolates the register of the interruption from the fact of being interrupted. A neutral interruption costs +51 tokens against no interruption at all (p = 0.15); a threatening one costs +336 (p < 0.0001).
+The control is a *neutral interruption*, not the absence of one, so this isolates the register of the interruption from the fact of being interrupted. On reasoning tokens a neutral interruption costs +51 against no interruption at all (p = 0.15) and a threatening one +336 (p < 0.0001); on turn count, though, the neutral interruption itself adds +0.45 turns [+0.08, +0.81] (p = 0.019; one comparison, earlier wrapper version), so being interrupted is not free.
 
 **Where it lands decides whether it costs anything.** An interjection delivered at turn 0 — the observation after the model's first response — is inert in *every* arm. The same words two turns later cost half again as much thinking.
 
@@ -273,7 +273,7 @@ The regrade subsystem alone produced four silent failures and one near miss, eac
 ## Next
 
 1. ~~The demand/affect probe~~ — **done**. Demand drives the cost effect; insult is inert; praise shortens work.
-2. ~~Why praise stops the agent~~ — **done**. It is a closing move. Praise plus an explicit *"there is still more work remaining"* still cuts 1.35 turns (p<0.0001) against that sentence alone, which refutes the completion reading; praising the output is no stronger than praising the assistant (p=0.40), which rules out confidence; and a pure closing cue with no praise stops the agent harder than praise does.
+2. ~~Why praise stops the agent~~ — **narrowed, not settled**. The pattern is consistent with a closing move, and the mechanism is left open. Praise plus an explicit *"there is still more work remaining"* still cuts 1.35 turns (p<0.0001) against that sentence alone, which refutes the completion reading; praising the output is no stronger than praising the assistant (p=0.40), which rules out confidence; and a pure closing cue with no praise stops the agent harder than praise does.
 3. ~~The write-up~~ — **done**. `paper/`, nine sections, each drafted and independently reviewed.
 4. ~~The primary-PDF checks~~ — **done** (15 Sep 2026). Both closed; see *The same confound, in the published stimulus sets* above for what they found.
 5. ~~An author block and CRediT contributions~~ — **done** (v1.0, 22 Oct 2026). **A venue** remains.
@@ -288,7 +288,7 @@ Every subcommand defaults to **dry-run** — it forces the mock provider regardl
 pip install -r requirements.txt
 cp .env.example .env          # OpenRouter key
 
-python -m pytest -q           # 418 tests, no keys needed
+python -m pytest -q           # 422 tests, no keys needed
 ```
 
 Committed records recompute every table above with no API access:

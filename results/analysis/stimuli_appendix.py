@@ -101,8 +101,8 @@ def _rating_appendix(t: dict) -> list[str]:
         "# B. Blinded rating of the stimuli",
         "",
         f"{len(r['raters'])} held-out model raters, all Claude models at three sizes: {mix_txt}. "
-        "The identities were established after the rating, not logged at the time, and sampling "
-        "settings were not recorded. "
+        "The identities were recovered afterwards from the rating session's transcript rather than "
+        "logged with the ratings, and sampling settings were not recorded. "
         "Each rated alone from the rubric and the texts of Appendix A -- "
         "no outcome data, no arm names, no project access. "
         + (f"{t['ratings_table']} gives the rubric anchors and every text's ratings. "

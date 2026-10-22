@@ -45,7 +45,7 @@ replicated on two models. The operative variable is NOT politeness: an
 affect-free "please continue and make sure it is correct" reproduces the
 effect, while an insult carrying no demand does nothing at all. The mechanism
 is persistence rather than effort -- thinking per step is flat and turn count
-is what moves. Praise shortens the work, and does so because it reads as a
+is what moves. Praise shortens the work, consistent with (not shown to be) a
 closing move: a bare closing cue with no praise in it stops the agent hardest
 of anything measured, and praise removes 1.35 turns relative to the identical
 message without it, even when that message says the task is unfinished. No
@@ -290,7 +290,7 @@ Self-Debug rather than a quotation from Chen et al.
 **Done**
 
 - [x] Demand/affect probe — demand drives cost; insult is inert; praise shortens work
-- [x] Why praise stops the agent — it is a closing move; a bare closing cue stops it hardest
+- [x] Why praise stops the agent — narrowed: consistent with a closing move, mechanism open; a bare closing cue stops it hardest
 - [x] A third measurement of the progress contrast
 - [x] **The per-turn regrade defect found, fixed, and all 28 arms re-run** — it had inverted the progress conclusion
 - [x] The paper written and independently reviewed, section by section

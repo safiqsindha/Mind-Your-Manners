@@ -1,5 +1,5 @@
 {
-  "note": "Model identities for rater1-rater5 of the blinded rating (rating/ratings/). Supplied by the author after the rating was run; they were not logged at the time. Sampling settings (temperature, effort, seed) were not recorded.",
+  "note": "Model identities for rater1-rater5 of the blinded rating (rating/ratings/). Recovered by the author from the rating session's transcript; they were not logged alongside the ratings at the time. Sampling settings (temperature, effort, seed) were not recorded.",
   "raters": {
     "rater1": "Claude Opus 5",
     "rater2": "Claude Sonnet 5",
