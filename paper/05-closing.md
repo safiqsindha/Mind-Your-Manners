@@ -62,8 +62,9 @@ largest reduction measured anywhere in this study, −1.443 turns, and stops the
 harder than praise itself (−0.363, [−0.643, −0.081]). A content-free discourse cue is a stronger
 termination lever than any register we tested.
 
-**A floor could manufacture this, and does not.** A trajectory cannot be shorter than its injection
-turn, so a shortening effect has less room at turn 2 than at turn 1. Split by position, the closing
+**A floor could distort this, and does not explain it.** A trajectory cannot be shorter than its
+injection turn, so a shortening effect has less room at turn 2 than at turn 1, which would attenuate an
+effect there, not create one. Split by position, the closing
 cue gives **−1.55 [−2.07, −1.03] at turn 1** and **−0.99 [−1.59, −0.43] at turn 2**: largest where
 there is most room, and surviving at both, which is the opposite of what an artefact predicts. The turn-2 estimates rest on the 35–38 tasks
 whose trajectories reach turn 2 at all, against all 50 at turn 1. Accuracy does not move on any arm (every arm within 2.6 points of control, all *p* > 0.13).
@@ -102,12 +103,14 @@ censors the continue-signal arms hardest, so the `Q4`–`Q5` gap is if anything 
 **What is new here, and what is not.** Weinberger & Hozez [weinberger-hozez-2026] establish that
 prompt wording moves agentic spend at equal task success across 4,644 preregistered runs, and their
 `bounded_efficiency` variant — scope, smallest-sufficient-change, and **an explicit stop condition**
-— is the only arm free or better on all six models. So "a stop instruction in the opening prompt
-reduces agentic work" is already established, and we do not claim it. Mid-task delivery is not ours
+— is the only arm free or better on all six models. That arm is a bundle, so its effect is not
+attributable to the stop condition alone; that bounding instructions in the opening prompt reduce
+agentic work is already established, and we do not claim it. Mid-task delivery is not ours
 either: [munirathinam-2026-recuse] delivers an explicit halt directive to a working agent mid-flight
-and measures whether it issues further commands — and an explicit halt that agents *acknowledged* in
+and measures whether it issues further commands — and for two OpenAI models an explicit halt that agents *acknowledged* in
 20 of 20 prompt-channel trials stopped none of them, which raises the stakes on ours rather than
-lowering them. What remains ours is that the cue **instructs nothing**: `Q3` scopes nothing,
+lowering them, though the result is model-scoped: Gemini 2.5 Flash stopped in 16 of 20 on the same
+apparatus. What remains ours is that the cue **instructs nothing**: `Q3` scopes nothing,
 evaluates nothing, makes no claim about task state and carries no directive, and it still
 outperforms every register manipulation we tested. The narrowed novelty claim is that no prior work
 connects closing-sequence pragmatics — as distinct from stop instructions, interrupts, or governance

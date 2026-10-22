@@ -58,7 +58,7 @@ All 17 arms are exactly 28 tokens.
 | rater4 | +0.696 |
 | rater5 | +0.696 |
 
-Mean κ = **+0.696**. Every rater agrees on six of seven arms and every rater dissents on the same one, `L5_rude`; excluding it, agreement is 6/6 and κ = 1.000 for all five. The protocol fixed 0.40--0.70 in advance as *defensible but soft*, and this sits at the top of that band; we do not round it into the band above.
+The binary judgement was elicited directly (*does this message imply the recipient should continue working on, or take more care over, the task?*), separately from the 0--6 strength scale; our own binary coding exists only for the seven register arms, so κ is computed over those and α over all fourteen texts. Mean κ = **+0.696**. Every rater agrees on six of seven arms and every rater dissents on the same one, `L5_rude`; excluding it, agreement is 6/6 and κ = 1.000 for all five. The protocol fixed 0.40--0.70 in advance as *defensible but soft*, and this sits at the top of that band; we do not round it into the band above.
 
 ## B.2 Between raters
 
@@ -75,7 +75,7 @@ Krippendorff's α over all fourteen texts: **1.000** on the binary coding (nomin
 | `Q4_praise_remains` | 0.00 |
 | `Q5_remains_only` | 0.00 |
 
-Spearman ρ between our ordering (Figure 2A) and the blinded ratings, over the six closure arms including the control, is **+0.928**. The raters invert praising the *work* and praising the *assistant*, and the two “work remains” arms tie at the floor.
+Spearman ρ between our ordering (Figure 2A) and the blinded ratings, over the six closure arms including the control, is **+0.928**. The raters invert praising the *work* and praising the *assistant*, and the two “work remains” arms tie at the floor (rank 5.5 each in the ratings), which the correlation handles as a tie.
 
 ## B.4 What this is not
 

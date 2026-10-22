@@ -59,7 +59,8 @@ this paper means acting turns throughout.**
 
 Every contrast is against a *neutral interjection*, not against silence: each arm is compared with a
 control arm that also receives a 28-token message at the same turn, which isolates register from the
-fact of being interrupted. How much the baseline itself moves was measured **once** — a neutral
+fact of being interrupted. The control text says it was recorded *partway through the task*, and every
+treated arm replaces that clause, so each contrast also removes it. How much the baseline itself moves was measured **once** — a neutral
 interruption against no interruption, 3.47 versus 4.11 turns, **+0.45 [+0.08, +0.81], *p* = 0.019, on
 one model at one ceiling and with an earlier wrapper version** — so an arm's absolute cost against an *uninterrupted* agent is not something this design
 bounds, though a shared offset cancels in every contrast reported here.
@@ -144,5 +145,7 @@ Two caveats, both against us. The praise pooling is heterogeneous — Cochran's 
 *p* = 0.038 — and between models rather than within: Luna's three praise measurements alone give
 *Q* = 0.36 and −1.27 points, 95% CI [−3.11, +0.57]. Under a random-effects pool the praise estimate
 becomes +0.21 with a standard error of 1.68 and the ±4 equivalence weakens to *p* = 0.0119 but
-holds. And **no accuracy effect in this study has replicated**: the larger nominal hit, +6.6 points
+holds; Cochran's *Q* and the random-effects weights treat the runs as independent although they
+share their 50 tasks, so those two are descriptive, while the equivalence tests quoted in the table
+use the joint task bootstrap. And **no accuracy effect in this study has replicated**: the larger nominal hit, +6.6 points
 on the continue-signal contrast, came back at −1.8 on identical tasks and ceiling.

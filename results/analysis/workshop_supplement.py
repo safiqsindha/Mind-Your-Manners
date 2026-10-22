@@ -63,7 +63,10 @@ def p_str(p):
 
 def num(x):
     """Signed, two decimals, with a typographic minus to match the prose."""
-    return f"{x:+.2f}".replace("-", "\u2212")
+    out = f"{x:+.2f}"
+    if out in ("+0.00", "-0.00"):          # a value that rounds to zero carries no sign
+        return "0.00"
+    return out.replace("-", "\u2212")
 
 
 def fmt(r, unit=""):
@@ -202,11 +205,17 @@ def c1():
             f"23rd test leaves the correction unchanged: {sv23} of 23 survive, the {sv22} that already did and "
             "this one. The micro-experiment's contrast uses its run records, which carry the firing flag "
             "(618 of 800 delivered)."]
+    mn_ = mean_sd(fired(json.loads((A.ARCHIVE / "core_gpt-luna_reinject_neutral_records.json").read_text()),
+                        "L4_neutral"))
+    rm_ = mean_sd(fired(load("study2_core_gpt-luna-ceiling20-Q0_control_records.json"), "Q0_control"))
+    out += ["", "Control means, in acting turns over delivered trajectories: the micro-experiment's neutral arm "
+            f"{mn_[0]:.2f} (SD {mn_[1]:.2f}, {mn_[2]} trajectories); the re-measurement run's control "
+            f"{rm_[0]:.2f} (SD {rm_[1]:.2f}, {rm_[2]})."]
     out += ["",
            "Every arm-versus-control turn-count contrast in every run that delivered a mid-task "
            f"interjection, sorted by *p*. Benjamini–Hochberg at *q* = 0.05: {k} of {m} survive. Intervals "
            "are bootstrap percentiles and *p*-values come from the sign-flip permutation, so at the "
-           "margin they can disagree (GLM praise: upper bound −0.00, *p* = 0.058).", "",
+           "margin they can disagree (GLM praise: upper bound just below zero, *p* = 0.058).", "",
            "| Contrast | Turns [95% CI] | *p* | BH |", "|---|---|---:|:---:|"]
     for i in ranked:
         r = fam[i]
@@ -258,7 +267,7 @@ def c2():
             + (", though `L3_polite` and `L7_threatening` exchange the top place."
                if max(strat, key=lambda t: t[1])[0] != "L3_polite" else ".")]
     out += ["", f"No turn-0 contrast survives correction across the six (smallest *p* = "
-            f"{min(t0p):.3f}), and their signs are mixed. Pooled over all three positions, the "
+            f"{min(t0p):.4f}), and their signs are mixed. Pooled over all three positions, the "
             "four arms we code as carrying a demand still sit above the two we code as carrying "
             "none in point estimates.", ""]
     return out
@@ -471,12 +480,19 @@ def c7():
             "insult vs control": "probe; cross-model Luna; cross-model GLM",
             "praise vs control, Luna only": "probe; closure (`Q1`); cross-model Luna"}
     mn = lambda x: f"{x:+.2f}".replace("-", "−")
-    out = ["## C.7 Pooled accuracy, and the one comparison against no interjection", "",
-           "Binary accuracy, in percentage points, pooled over repeated measurements of one contrast. "
-           "The 95% and 90% intervals and the fixed-effect TOST come from a bootstrap that resamples tasks "
-           "jointly across runs; Cochran's *Q* and the random-effects TOST use inverse-variance weights "
-           "that treat the runs as independent although they share their 50 tasks, so read them as "
-           "descriptive.", "",
+    acc = json.loads((AN / "accuracy_null_mde.json").read_text())["accuracy"]
+    out = ["## C.7 Binary accuracy, per run and pooled, and the one comparison against no interjection", "",
+           "Every arm-versus-control contrast of the 22-contrast family, on binary accuracy in percentage "
+           "points (paired within task; 95% task-bootstrap interval; sign-flip permutation *p*):", "",
+           "| Contrast | Accuracy [95% CI] | *p* |", "|---|---|---:|"]
+    for r in sorted(acc, key=lambda r: r["p"]):
+        out.append(f"| {run_label(r['contrast'])} | {mn(r['estimate'])} [{mn(r['ci_lo'])}, {mn(r['ci_hi'])}] "
+                   f"| {p_str(r['p'])} |")
+    out += ["", "None survives Benjamini–Hochberg at *q* = 0.05. Pooled over repeated measurements of one "
+            "contrast, the 95% and 90% intervals and the fixed-effect TOST come from a bootstrap that resamples "
+            "tasks jointly across runs; Cochran's *Q* and the random-effects TOST use inverse-variance weights "
+            "that treat the runs as independent although they share their 50 tasks, so read them as "
+            "descriptive.", "",
            "| Contrast | Runs pooled | Estimate [95% CI] | 90% CI | TOST ±4 (joint) | TOST ±4 (random effects) | *Q* *p* |",
            "|---|---|---|---|---:|---:|---:|"]
     for label, m in pools.items():

@@ -19,7 +19,9 @@ The six regraded runs (the cross-model run counts once per model, so the table h
 
 **What the family leaves out.** The cross-model run's Luna half has a fifth arm, `work remains`, that the 22 contrasts do not include (+5.77 turns against its control); it is in the delivered counts above and in the progress analysis of §5. Adding it as a 23rd test leaves the correction unchanged: 18 of 23 survive, the 17 that already did and this one. The micro-experiment's contrast uses its run records, which carry the firing flag (618 of 800 delivered).
 
-Every arm-versus-control turn-count contrast in every run that delivered a mid-task interjection, sorted by *p*. Benjamini–Hochberg at *q* = 0.05: 17 of 22 survive. Intervals are bootstrap percentiles and *p*-values come from the sign-flip permutation, so at the margin they can disagree (GLM praise: upper bound −0.00, *p* = 0.058).
+Control means, in acting turns over delivered trajectories: the micro-experiment's neutral arm 4.11 (SD 2.51, 304 trajectories); the re-measurement run's control 5.22 (SD 5.61, 227).
+
+Every arm-versus-control turn-count contrast in every run that delivered a mid-task interjection, sorted by *p*. Benjamini–Hochberg at *q* = 0.05: 17 of 22 survive. Intervals are bootstrap percentiles and *p*-values come from the sign-flip permutation, so at the margin they can disagree (GLM praise: upper bound just below zero, *p* = 0.058).
 
 | Contrast | Turns [95% CI] | *p* | BH |
 |---|---|---:|:---:|
@@ -40,7 +42,7 @@ Every arm-versus-control turn-count contrast in every run that delivered a mid-t
 | L6_very_rude vs neutral (register run, Luna, budget 10) | +0.71 [+0.16, +1.23] | 0.0130 | yes |
 | praise vs control (cross-model run, Luna, budget 20) | −1.01 [−1.80, −0.22] | 0.0190 | yes |
 | praise+remains vs control (closure run, Luna, budget 10) | +0.50 [+0.10, +0.90] | 0.0192 | yes |
-| praise vs control (cross-model run, GLM, budget 20) | −0.35 [−0.71, −0.00] | 0.0583 | no |
+| praise vs control (cross-model run, GLM, budget 20) | −0.35 [−0.71, 0.00] | 0.0583 | no |
 | insult vs control (cross-model run, Luna, budget 20) | +0.57 [−0.22, +1.36] | 0.1654 | no |
 | insult vs control (probe run, Luna, budget 10) | −0.08 [−0.40, +0.24] | 0.6241 | no |
 | L5_rude vs neutral (register run, Luna, budget 10) | +0.09 [−0.30, +0.48] | 0.6536 | no |
@@ -55,13 +57,13 @@ Turn *k* means the interjection is appended to the observation that follows the 
 | `L1_sycophantic` | −0.04 [−0.49, +0.41] | 0.8858 | −0.38 [−0.65, −0.11] | 0.0093 |
 | `L2_very_polite` | +0.49 [+0.05, +0.93] | 0.0366 | +0.65 [+0.27, +1.04] | 0.0020 |
 | `L3_polite` | +0.31 [−0.15, +0.76] | 0.2084 | +1.24 [+0.87, +1.61] | <0.0001 |
-| `L5_rude` | −0.30 [−0.76, +0.15] | 0.2094 | −0.00 [−0.32, +0.31] | 0.9770 |
+| `L5_rude` | −0.30 [−0.76, +0.15] | 0.2094 | 0.00 [−0.32, +0.31] | 0.9770 |
 | `L6_very_rude` | −0.42 [−0.88, +0.04] | 0.0848 | +0.32 [−0.08, +0.72] | 0.1177 |
 | `L7_threatening` | +0.02 [−0.54, +0.61] | 0.9654 | +0.95 [+0.64, +1.27] | <0.0001 |
 
 **Position weighting.** The main estimator pools turns 1 and 2 within each task before differencing, so a chance imbalance in how many trajectories fired at each position could tilt a contrast. Differencing within each position and then averaging the two with equal weight, on the tasks that fired at both (31–36 of 50), gives `L1_sycophantic` −0.76, `L2_very_polite` +0.83, `L3_polite` +1.54, `L5_rude` +0.32, `L6_very_rude` +0.91, `L7_threatening` +1.46: the four arms we code as carrying a demand still sit above the two we code as carrying none.
 
-No turn-0 contrast survives correction across the six (smallest *p* = 0.037), and their signs are mixed. Pooled over all three positions, the four arms we code as carrying a demand still sit above the two we code as carrying none in point estimates.
+No turn-0 contrast survives correction across the six (smallest *p* = 0.0366), and their signs are mixed. Pooled over all three positions, the four arms we code as carrying a demand still sit above the two we code as carrying none in point estimates.
 
 ## C.3 Both models at the twenty-turn budget
 
@@ -73,7 +75,7 @@ The cross-model run: both models, same 50 tasks, twenty-turn budget, injections 
 | | | | praise | −1.01 [−1.80, −0.22] | −19.3% | 0.0190 |
 | | | | insult | +0.57 [−0.22, +1.36] | +10.9% | 0.1654 |
 | GLM | 3.08 (2.17) | 3/786 | demand | +0.55 [+0.19, +0.88] | +17.7% | 0.0030 |
-| | | | praise | −0.35 [−0.71, −0.00] | −11.2% | 0.0583 |
+| | | | praise | −0.35 [−0.71, 0.00] | −11.2% | 0.0583 |
 | | | | insult | +0.07 [−0.27, +0.39] | +2.4% | 0.6586 |
 
 ## C.4 Closure-run checks
@@ -189,9 +191,36 @@ GLM, arms with a clear turn effect (n = 1): 48% to 48%, median 48%.
 A trajectory with no readable turn has no match and drops out of the graded-fraction contrasts; it is not scored 0.0. Its unreadable turns still count in the turn effect, which is why a share is a share of the net turn effect and not of the turns that changed the graded range.
 
 
-## C.7 Pooled accuracy, and the one comparison against no interjection
+## C.7 Binary accuracy, per run and pooled, and the one comparison against no interjection
 
-Binary accuracy, in percentage points, pooled over repeated measurements of one contrast. The 95% and 90% intervals and the fixed-effect TOST come from a bootstrap that resamples tasks jointly across runs; Cochran's *Q* and the random-effects TOST use inverse-variance weights that treat the runs as independent although they share their 50 tasks, so read them as descriptive.
+Every arm-versus-control contrast of the 22-contrast family, on binary accuracy in percentage points (paired within task; 95% task-bootstrap interval; sign-flip permutation *p*):
+
+| Contrast | Accuracy [95% CI] | *p* |
+|---|---|---:|
+| remains-only vs control (re-measurement run, Luna, budget 20) | +6.57 [+2.43, +11.23] | 0.0040 |
+| praise vs control (cross-model run, GLM, budget 20) | +6.16 [+1.67, +11.09] | 0.0137 |
+| L2_very_polite vs neutral (register run, Luna, budget 10) | −2.73 [−6.20, +0.50] | 0.1218 |
+| closing cue vs control (closure run, Luna, budget 10) | −2.57 [−5.97, +0.50] | 0.1390 |
+| insult vs control (cross-model run, GLM, budget 20) | +4.20 [−0.87, +9.93] | 0.1415 |
+| L5_rude vs neutral (register run, Luna, budget 10) | −2.50 [−5.93, +0.90] | 0.1700 |
+| demand vs control (cross-model run, Luna, budget 20) | −2.83 [−6.50, +1.20] | 0.1726 |
+| L3_polite vs neutral (register run, Luna, budget 10) | −3.27 [−7.77, +1.30] | 0.1794 |
+| remains-only vs control (closure run, Luna, budget 10) | +2.43 [−1.37, +6.47] | 0.2405 |
+| demand vs control (cross-model run, GLM, budget 20) | +2.70 [−1.88, +7.73] | 0.2888 |
+| praise-assistant vs control (closure run, Luna, budget 10) | −2.00 [−6.13, +1.60] | 0.3562 |
+| L1_sycophantic vs neutral (register run, Luna, budget 10) | +1.60 [−1.83, +5.30] | 0.4122 |
+| praise vs control (cross-model run, Luna, budget 20) | −1.90 [−6.57, +3.07] | 0.4654 |
+| praise-work vs control (closure run, Luna, budget 10) | −1.47 [−5.77, +2.43] | 0.5179 |
+| L6_very_rude vs neutral (register run, Luna, budget 10) | −0.87 [−3.50, +1.77] | 0.5526 |
+| insult vs control (probe run, Luna, budget 10) | −0.73 [−3.52, +1.89] | 0.6093 |
+| praise vs control (probe run, Luna, budget 10) | −0.71 [−3.58, +1.87] | 0.6196 |
+| insult vs control (cross-model run, Luna, budget 20) | −1.20 [−6.07, +3.67] | 0.6701 |
+| threatening vs neutral (micro-experiment, Luna, budget 10) | −1.00 [−5.50, +3.25] | 0.7436 |
+| L7_threatening vs neutral (register run, Luna, budget 10) | −0.57 [−3.60, +2.73] | 0.7592 |
+| praise+remains vs control (closure run, Luna, budget 10) | +0.20 [−2.87, +3.27] | 0.9232 |
+| demand vs control (probe run, Luna, budget 10) | +0.17 [−3.34, +3.62] | 0.9256 |
+
+None survives Benjamini–Hochberg at *q* = 0.05. Pooled over repeated measurements of one contrast, the 95% and 90% intervals and the fixed-effect TOST come from a bootstrap that resamples tasks jointly across runs; Cochran's *Q* and the random-effects TOST use inverse-variance weights that treat the runs as independent although they share their 50 tasks, so read them as descriptive.
 
 | Contrast | Runs pooled | Estimate [95% CI] | 90% CI | TOST ±4 (joint) | TOST ±4 (random effects) | *Q* *p* |
 |---|---|---|---|---:|---:|---:|

@@ -43,11 +43,16 @@ primary population.
 
 Against each run's own neutral control, paired and clustered by task: on Luna's single-signal arms,
 **every arm that moves turn count moves redundant steps, and the arms that do not, do not.**
-Redundant steps account for **56–93%** of each turn effect that is clear (median 80% over 16 arms) —
+Redundant steps account for **56–93%** of each turn effect that is clear (sign-flip *p* below 0.05 for the
+turn contrast; median 80% over 16 arms) —
 demand +0.92 against +1.17 turns (78%), praise −0.33 against −0.59 (56%), the closing cue −1.04
 against −1.44 (72%) — and the same band holds at ceiling 20, where the demand arm adds +1.57 against
 +1.75 turns (90%). "Redundant" means only that the graded range did not change; checking a result can
-leave it unchanged without being wasted. The full per-arm table is Appendix C.4.
+leave it unchanged without being wasted. For arms that shorten trajectories the share counts steps
+given up that would have changed nothing; the remainder of each effect is other readable turns and
+unreadable ones, whose trajectories without any readable turn have no match and drop out of the
+graded-fraction contrasts rather than scoring 0.0. The full per-arm table is Appendix C.4, and the
+workshop paper's Appendix C.6 decomposes the net effect.
 
 One exception bounds that sentence. GLM's demand arm moves turns (+0.55) but its redundant steps
 only +0.26 (*p* = 0.087), 48% of the effect with an interval from −20% to 80%: a model that barely
@@ -104,7 +109,8 @@ threshold.**
 
 The denominator matters: a trajectory that never produced two readable answers cannot exhibit
 improvement. Among trajectories that *could* improve — a quarter to two-fifths of each sample — the
-first gradable output is already the best in **80–94%**. Huang et al. [huang-2024] report "No Change"
+first gradable output is already the best in **80–94%** in the controls shown. The table compares no arms: the
+subset with two readable outputs is itself an outcome an interjection can change. Huang et al. [huang-2024] report "No Change"
 rates of 90.5% on GPT-4 and 96.0% / 88.0% on GPT-4-Turbo; the numbers sit close together and the
 statistics are not the same one. Their argument is that LLMs cannot reliably self-correct **without
 external feedback**, and they point to execution feedback as the expected fix — a code executor

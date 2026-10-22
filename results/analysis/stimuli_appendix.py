@@ -112,6 +112,10 @@ def _rating_appendix(t: dict) -> list[str]:
         out.append(f"| {name} | {kappas[name]:+.3f} |")
     out += [
         "",
+        "The binary judgement was elicited directly (*does this message imply the recipient should "
+        "continue working on, or take more care over, the task?*), separately from the 0--6 strength "
+        "scale; our own binary coding exists only for the seven register arms, so κ is computed over "
+        "those and α over all fourteen texts. "
         f"Mean κ = **{r['mean_kappa']:+.3f}**. Every rater agrees on six of seven arms and "
         "every rater dissents on the same one, `L5_rude`; excluding it, agreement is 6/6 and "
         "κ = 1.000 for all five. The protocol fixed 0.40--0.70 in advance as *defensible "
@@ -139,7 +143,8 @@ def _rating_appendix(t: dict) -> list[str]:
         f"Spearman ρ between our ordering ({t['closure_fig']}) and the blinded ratings, over "
         f"the six closure arms including the control, is "
         f"**{r['closure_spearman_vs_figure']:+.3f}**. The raters invert praising the *work* and "
-        "praising the *assistant*, and the two “work remains” arms tie at the floor.",
+        "praising the *assistant*, and the two “work remains” arms tie at the floor (rank 5.5 each in "
+        "the ratings), which the correlation handles as a tie.",
         "",
         "## B.4 What this is not",
         "",
