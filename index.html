@@ -43,12 +43,12 @@
       Mind your manners?
     </a>
     <nav>
-      <a href="#setup" class="hide-s">Setup</a>
-      <a href="#demand" class="hide-s">Finding&nbsp;1</a>
-      <a href="#closing" class="hide-s">Finding&nbsp;2</a>
-      <a href="#extra-turns" class="hide-s">Finding&nbsp;3</a>
+      <a href="#question" class="hide-s">Question</a>
+      <a href="#demand" class="hide-s">Demand</a>
+      <a href="#closing" class="hide-s">Closing</a>
+      <a href="#accuracy" class="hide-s">Accuracy</a>
       <a href="#cite" class="hide-s">Cite</a>
-      <a class="navbtn" href="assets/mind-your-manners-v1.0.pdf">PDF</a>
+      <a class="navbtn" href="assets/mind-your-manners-v1.0.pdf">Paper</a>
       <button class="tbtn" data-theme-toggle type="button">Dark</button>
     </nav>
   </div>
@@ -59,303 +59,142 @@
   <!-- ═══════════════════════════ HERO ═══════════════════════════ -->
   <section class="hero" id="top">
     <div class="hero-in">
-      <p class="eyebrow rv in">Preprint v1.0 &middot; October 2026</p>
-
+      <p class="eyebrow rv in">Preprint v1.0 &middot; 2026</p>
       <h1 class="papertitle rv in d1">Mind your manners?</h1>
       <p class="subtitle rv in d1">LLM-agent persistence tracks demand, not social register</p>
       <p class="authors rv in d1">Safiq Sindha &middot; Independent Researcher</p>
 
       <p class="tagline rv in d2">
-        <b>Implied demand, not register, drives persistence.</b> A message that tells a working
-        agent to keep going makes it take more turns, in whatever register it's phrased.
-        <b>Praise and closing cues shorten trajectories.</b> And there is <b>no accuracy
-        effect</b>: none of it changes how often the task gets solved.
+        Tell a working agent to <b>keep going</b> and it takes more turns, whether you ask politely
+        or rudely. Praise it, or tell it no more notes are coming, and it <b>stops sooner</b>.
+        Neither changes how often it solves the task.
       </p>
 
       <div class="cta rv in d3">
-        <a class="btn-hero primary" href="assets/mind-your-manners-v1.0.pdf">
-          <svg class="bicon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2.5h7l5 5v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-18a1 1 0 0 1 1-1z"/><path d="M13 2.5v5h5"/></svg>
-          Paper v1.0 (PDF)
-        </a>
-        <a class="btn-hero ghost" href="assets/mind-your-manners.pdf">
-          <svg class="bicon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2.5h7l5 5v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-18a1 1 0 0 1 1-1z"/><path d="M13 2.5v5h5"/></svg>
-          Long technical report (PDF)
-        </a>
-        <a class="btn-hero ghost" href="https://github.com/safiqsindha/Mind-Your-Manners">
-          <svg class="bicon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18.5L3 12l6-6.5M15 5.5L21 12l-6 6.5"/></svg>
-          Code &amp; data
-        </a>
+        <a class="btn-hero primary" href="assets/mind-your-manners-v1.0.pdf"><svg class="bicon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2.5h7l5 5v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-18a1 1 0 0 1 1-1z"/><path d="M13 2.5v5h5"/></svg>Paper</a>
+        <a class="btn-hero ghost" href="https://github.com/safiqsindha/Mind-Your-Manners"><svg class="bicon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18.5L3 12l6-6.5M15 5.5L21 12l-6 6.5"/></svg>Code &amp; data</a>
+        <a class="btn-hero ghost" href="#cite">BibTeX</a>
       </div>
-
-      <ul class="kcards hero-keys rv in d3">
-        <li class="kcard">
-          <span class="kn">FINDING 01</span>
-          <h3>Implied demand, not register, drives persistence</h3>
-          <p>An affect-free "please continue working" costs <b>+1.17 turns</b>. A length-matched,
-             syntactically identical insult carrying no demand does not move it at all
-             (&minus;0.08, 95% CI [&minus;0.40, +0.24]).</p>
-        </li>
-        <li class="kcard">
-          <span class="kn">FINDING 02</span>
-          <h3>Praise and closing cues shorten trajectories</h3>
-          <p>A bare closing cue — no praise, no evaluation, no claim about task state — produces
-             the largest reduction measured anywhere in the study: <b>&minus;1.44 turns</b>.</p>
-        </li>
-        <li class="kcard">
-          <span class="kn">FINDING 03</span>
-          <h3>No accuracy effect</h3>
-          <p>Roughly 40&ndash;65% of each turn-count effect is repeated work. No accuracy effect
-             survives correction or replication; pooled accuracy
-             contrasts are equivalent to zero within a pre-specified <b>&plusmn;4-point</b> bound.</p>
-        </li>
-      </ul>
-
-      <figure class="herofigs rv">
-        <div class="panel panel-pad">
-          <img class="plate" src="assets/fig-demand-vs-register.png" width="2232" height="972"
-               alt="Two panels. Panel A: seven registers on a cost curve, ordered by demand rather than politeness — the four demand-carrying arms run from +0.70 to +1.80 turns, the two carrying none from -0.68 to +0.09. Panel B: an isolation probe where demand costs +1.17 turns, praise removes 0.59, and insult does nothing measurable.">
-        </div>
-        <figcaption>
-          <span class="fnum">Figure 1</span>
-          <b>Demand, not register, orders the effect.</b>
-          Change in acting turns against the control interjection, with 95% clustered intervals
-          and nominal permutation <i>p</i>-values, <code>gpt-5.6-luna</code>, ten-turn ceiling.
-          <b>A:</b> the six non-control registers, ordered by our demand coding; polite and hostile
-          arms sit on both sides. <b>B:</b> demand and affect varied
-          separately, holding syntax, length and the opening stem constant. Hollow markers do not
-          survive multiplicity correction.
-        </figcaption>
-      </figure>
     </div>
   </section>
 
-  <!-- ═══════════════════════════ SETUP ═══════════════════════════ -->
-  <section class="sec" id="setup">
+  <!-- ═══════════════════════════ 01 ═══════════════════════════ -->
+  <section class="sec" id="question">
     <div class="sec-head rv">
-      <div class="secno">01 &mdash; Setup</div>
-      <h2>A coding agent, interrupted mid-task</h2>
+      <div class="secno">01 &mdash; The question</div>
+      <h2>Does tone change what an agent <i>does</i>?</h2>
       <p class="lead">
-        <i>Mind Your Tone</i> reported accuracy on GPT-4o rising from 80.8% under &ldquo;Very
-        Polite&rdquo; prompts to 84.8% under &ldquo;Very Rude&rdquo; ones — and that literature is
-        almost entirely single-turn, measuring a model answer one question. What matters for a
-        deployed <i>agent</i> is how much work it does and when it stops, and several of the
-        published stimulus sets vary task-directed content together with register rather than
-        register alone. We separated the two.
+        Earlier work found that rude prompts can beat polite ones on single multiple-choice
+        questions. Deployed systems are agents, though, so we asked whether tone changes how much
+        work an agent does and when it stops.
       </p>
     </div>
-
+    <div class="prose rv">
+      <p>
+        A coding agent works through real SpreadsheetBench tasks and is graded by the benchmark's
+        own tests. Partway through, we append one short message to its tool output. Every message
+        is exactly 28 tokens and opens with the same words, so the only thing that changes between
+        conditions is what the message says.
+      </p>
+    </div>
     <ul class="mgrid rv">
-      <li class="mitem"><b>11,850</b><span>graded trajectories</span></li>
-      <li class="mitem"><b>2</b><span>models, different labs</span></li>
+      <li class="mitem"><b>9,850</b><span>trajectories analysed</span></li>
+      <li class="mitem"><b>2</b><span>models, from different labs</span></li>
       <li class="mitem"><b>50</b><span>SpreadsheetBench tasks</span></li>
-      <li class="mitem"><b>28</b><span>tokens per interjection, always</span></li>
     </ul>
-
-    <p class="prose rv">
-      <b>Substrate.</b> SpreadsheetBench — real workbook-editing tasks from Excel forums, graded by
-      executing the agent's code against the benchmark's own test cases. Execution-grounded, so no
-      model judges the outcome.
-    </p>
-    <p class="prose rv">
-      <b>Manipulation.</b> A single interjection is appended to an execution observation mid-task.
-      Every interjection in every arm is exactly 28 tokens under <code>cl100k_base</code>, opens
-      with the same <code>Checking in.</code> stem, and leaves the opening instruction unchanged —
-      so <i>being interrupted</i> does not covary with what the interruption says. Every contrast
-      is against a neutral interjection, not against silence.
-    </p>
-    <p class="prose rv">
-      <b>Estimator.</b> Point estimates are paired within task; intervals come from a cluster
-      bootstrap over tasks, 20,000 resamples; <i>p</i>-values come from a task-clustered sign-flip
-      permutation test at the same count &mdash; the only replicate count anywhere in the report.
-      Turn count is the primary outcome and means <b>acting turns</b>: turns that emitted code, not
-      model calls.
-    </p>
   </section>
 
-  <!-- ═══════════════════════════ FINDING 1 ═══════════════════════ -->
+  <!-- ═══════════════════════════ 02 ═══════════════════════════ -->
   <section class="sec" id="demand">
     <div class="sec-head rv">
       <div class="secno">02 &mdash; Finding 1</div>
-      <h2>Demand, not politeness, drives turn count</h2>
+      <h2>Demand, not register, moves the agent</h2>
       <p class="lead">
-        Coding each arm by whether it asks the model to <b>persist or be correct</b> orders the
-        six non-control registers: the four demand-carrying arms span +0.70 to +1.80 turns and the
-        two carrying none span &minus;0.68 to +0.09, with no overlap in point estimates (the
-        intervals do overlap). Register does not sort them &mdash; polite and hostile arms sit on
-        both sides: <i>very polite</i> +0.70 beside <i>very rude</i> +0.71.
+        A plain &ldquo;please continue working&rdquo; adds turns. An insult with no request in it
+        adds nothing. Across six registers, polite and hostile messages land on both sides.
       </p>
     </div>
-
-    <h3 class="res-h rv">Seven registers, one demand coding</h3>
-    <div class="table-scroll rv">
-      <table>
-        <thead>
-          <tr><th scope="col">Arm</th><th scope="col">What it implies</th><th scope="col">Demand?</th><th scope="col" class="num">Turns</th><th scope="col" class="num"><i>p</i></th></tr>
-        </thead>
-        <tbody>
-          <tr><th scope="row">L1 sycophantic</th><td>pure praise, no task reference</td><td>no</td><td class="num down">&minus;0.68</td><td class="num">&lt;0.0001</td></tr>
-          <tr class="row-key"><th scope="row">L5 rude</th><td>&ldquo;get on with it already&rdquo; — go faster</td><td>no</td><td class="num ns">+0.09</td><td class="num ns">0.65</td></tr>
-          <tr><th scope="row">L2 very polite</th><td>&ldquo;your continued help&rdquo;</td><td>yes</td><td class="num up">+0.70</td><td class="num">0.0055</td></tr>
-          <tr><th scope="row">L6 very rude</th><td>&ldquo;had better not screw this one up&rdquo;</td><td>yes</td><td class="num up">+0.71</td><td class="num">0.013</td></tr>
-          <tr><th scope="row">L7 threatening</th><td>&ldquo;get this exactly right&rdquo;</td><td>yes</td><td class="num up">+1.46</td><td class="num">&lt;0.0001</td></tr>
-          <tr><th scope="row">L3 polite</th><td>&ldquo;keep on helping me out with this one&rdquo;</td><td>yes</td><td class="num up">+1.80</td><td class="num">&lt;0.0001</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <p class="tbl-cap rv">
-      Δ acting turns vs. <code>L4_neutral</code> control, Luna, ten-turn ceiling. <b>Rude sits with
-      the arms that carry no demand</b>, not with the hostile register &mdash; it asks for speed,
-      not persistence.
-    </p>
-
-    <h3 class="res-h rv">Isolating demand from affect</h3>
-    <div class="table-scroll rv">
-      <table>
-        <thead>
-          <tr><th scope="col">Arm</th><th scope="col" class="num">Turns</th><th scope="col" class="num">%</th><th scope="col" class="num"><i>p</i></th></tr>
-        </thead>
-        <tbody>
-          <tr class="row-key"><th scope="row">Demand only — &ldquo;please continue working&hellip;&rdquo;</th><td class="num up">+1.17</td><td class="num up">+27.6%</td><td class="num">&lt;0.0001</td></tr>
-          <tr><th scope="row">Praise only — &ldquo;you are a truly excellent&hellip;&rdquo;</th><td class="num down">&minus;0.59</td><td class="num down">&minus;13.8%</td><td class="num">0.0003</td></tr>
-          <tr><th scope="row">Insult only — the structural minimal pair</th><td class="num ns">&minus;0.08</td><td class="num ns">&minus;1.9%</td><td class="num ns">0.62</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <p class="tbl-cap rv">
-      Four 28-token arms, identical syntax and length, the demand arm carrying no evaluative
-      language at all. The insult null is bounded rather than asserted: 95% CI [&minus;0.40, +0.24]
-      turns. Reproduces in direction on a second model (GLM, different lab): demand +17.7%
-      (<i>p</i> = 0.0030), praise directionally consistent but below power on its own.
-    </p>
-
-    <div class="callout rv">
-      <h4>The coding is ours, and a blinded check went partway against it</h4>
+    <ul class="mgrid rv">
+      <li class="mitem"><b>+1.17</b><span>turns from &ldquo;please continue&rdquo;, with no emotion in it</span></li>
+      <li class="mitem"><b>&minus;0.08</b><span>turns from a bare insult, 95% CI [&minus;0.40, +0.24]</span></li>
+      <li class="mitem"><b>+0.70 / +0.71</b><span><i>very polite</i> and <i>very rude</i>: the same effect</span></li>
+    </ul>
+    <figure class="rv">
+      <div class="panel panel-pad">
+        <img class="plate" src="assets/fig-demand-vs-register.png" width="2232" height="972"
+             alt="Forest plot. Panel A: six registers ordered by implied demand rather than politeness, from sycophantic at -0.68 turns to polite at +1.80. Panel B: demand only +1.17, praise only -0.59, insult only -0.08.">
+      </div>
+      <figcaption>
+        <span class="fnum">Figure 1</span>
+        Change in turns against a neutral message, <code>gpt-5.6-luna</code>, 95% intervals.
+        Hollow markers do not survive multiplicity correction.
+      </figcaption>
+    </figure>
+    <div class="prose rv">
       <p>
-        Five held-out model raters, no outcome data, no arm names, no repository access, scored
-        the same fourteen texts for implied demand against a rubric committed before any rating
-        existed. They agree with our coding on six of seven register arms and dissent,
-        unanimously, on the seventh &mdash; <code>rude</code>, the one at the boundary
-        (κ&nbsp;=&nbsp;0.70). The <i>continuous</i> form of the claim survives intact: rated demand
-        strength predicts the turn effect at <i>r</i>&nbsp;=&nbsp;+0.72. The binary dichotomy in
-        the table above is our reading of one contested arm, not a coding that survives
-        independent replication.
+        Which messages count as &ldquo;demanding&rdquo; is our coding. Five blinded model raters
+        agreed on six of the seven registers and disagreed on <i>rude</i>, so we report an ordering
+        rather than a clean split.
       </p>
     </div>
   </section>
 
-  <!-- ═══════════════════════════ FINDING 2 ═══════════════════════ -->
+  <!-- ═══════════════════════════ 03 ═══════════════════════════ -->
   <section class="sec" id="closing">
     <div class="sec-head rv">
       <div class="secno">03 &mdash; Finding 2</div>
-      <h2>Praise and closing cues shorten trajectories</h2>
+      <h2>Praise and closing cues cut work short</h2>
       <p class="lead">
-        Register acts on its own in one direction only. Praise carrying no task reference
-        shortens the trajectory, and so does a note saying no further notes will follow
-        (&minus;1.44 turns). Praise still shortens when the same message says work remains, and
-        praising the work is not measurably stronger than praising the assistant. The pattern is
-        consistent with a closing reading, but <b>the mechanism is left open</b>: the arms are not
-        all clean minimal pairs, and this leg is one run on one model.
+        Praise shortens the trajectory even when the same message says work remains. A note saying
+        no further notes will follow, with no praise at all, shortens it the most.
       </p>
     </div>
-
+    <ul class="mgrid rv">
+      <li class="mitem"><b>&minus;1.44</b><span>turns from a bare closing cue</span></li>
+      <li class="mitem"><b>&minus;1.35</b><span>turns from adding praise to &ldquo;work remains&rdquo;</span></li>
+    </ul>
     <figure class="rv">
       <div class="panel panel-pad">
         <img class="plate" src="assets/fig-closing-cue.png" width="2512" height="849"
-             alt="Two panels. Panel A: six arms ordered by how strongly the message projects an end to the exchange, from a bare closing cue at -1.44 turns to work-remains-alone at +1.85 turns. Panel B: two within-design contrasts — praise isolated at -1.35 turns and closing cue vs praise at -0.36 turns.">
+             alt="Forest plot. Panel A: arms ordered by how strongly the message signals an ending, from a bare closing cue at -1.44 turns to work-remains-alone at +1.85. Panel B: praise isolated -1.35, closing cue vs praise -0.36.">
       </div>
       <figcaption>
         <span class="fnum">Figure 2</span>
-        <b>Praise and closing cues shorten the trajectory.</b>
-        <code>gpt-5.6-luna</code>, ten-turn ceiling, acting turns, 95% clustered intervals.
-        <b>A:</b> six arms ordered by how strongly the message projects an end to the exchange —
-        the bare closing cue, which praises nothing and claims nothing about task state, produces
-        the largest reduction in the study. <b>B:</b> the two within-design contrasts, compared
-        against each other rather than against control.
+        One run, one model. Why these messages shorten work is still an open question.
       </figcaption>
     </figure>
-
-    <h3 class="res-h rv">Six arms, one closing move</h3>
-    <div class="table-scroll rv">
-      <table>
-        <thead>
-          <tr><th scope="col">Contrast</th><th scope="col" class="num">Δ turns</th><th scope="col">95% CI</th></tr>
-        </thead>
-        <tbody>
-          <tr><th scope="row">Praise the assistant vs control</th><td class="num down">&minus;1.080</td><td>[&minus;1.466, &minus;0.714]</td></tr>
-          <tr><th scope="row">Praise the work vs control</th><td class="num down">&minus;0.934</td><td>[&minus;1.314, &minus;0.545]</td></tr>
-          <tr class="row-key"><th scope="row">Bare closing cue vs control</th><td class="num down">&minus;1.443</td><td>[&minus;1.867, &minus;1.042]</td></tr>
-          <tr><th scope="row">Praise + &ldquo;work remains&rdquo; vs control</th><td class="num up">+0.502</td><td>[+0.095, +0.903]</td></tr>
-          <tr><th scope="row">&ldquo;Work remains&rdquo; alone vs control</th><td class="num up">+1.849</td><td>[+1.387, +2.286]</td></tr>
-          <tr class="row-key"><th scope="row">Praise isolated (Q4 &minus; Q5)</th><td class="num down">&minus;1.347</td><td>[&minus;1.740, &minus;0.956]</td></tr>
-          <tr><th scope="row">Closing cue vs praise</th><td class="num down">&minus;0.363</td><td>[&minus;0.643, &minus;0.081]</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <p class="tbl-cap rv">
-      Paired by task, cluster bootstrap over tasks. Praise removes <b>1.35 turns</b> relative to
-      the identical message without it, <i>even when</i> that message states the task is
-      unfinished. This leg of the study is the least replicated: one run, one model, one turn
-      ceiling.
-    </p>
   </section>
 
-  <!-- ═══════════════════════════ FINDING 3 ═══════════════════════ -->
-  <section class="sec" id="extra-turns">
+  <!-- ═══════════════════════════ 04 ═══════════════════════════ -->
+  <section class="sec" id="accuracy">
     <div class="sec-head rv">
       <div class="secno">04 &mdash; Finding 3</div>
-      <h2>What the extra turns contain</h2>
+      <h2>No accuracy effect</h2>
       <p class="lead">
-        Regrading every turn against the benchmark's own evaluator turns a binary pass/fail into a
-        curve. Much of what demand buys turns out to be repeated work, and no accuracy contrast in
-        the study survives correction or replication.
+        Much of the extra work is repetition, and the agent's first answer is usually its best.
+        No accuracy difference survives correction or replication.
       </p>
     </div>
-
     <ul class="mgrid rv">
-      <li class="mitem"><b>~40&ndash;65%</b><span>of each turn-count effect on Luna is repeated work</span></li>
-      <li class="mitem"><b>77&ndash;91%</b><span>of the time the first gradable output is already the best (Luna; 69&ndash;88% on GLM)</span></li>
-      <li class="mitem warm"><b>+2.8 pts</b><span>graded-fraction gain from an explicit &ldquo;work remains&rdquo; signal, replicated across three runs</span></li>
+      <li class="mitem"><b>~40&ndash;65%</b><span>of each extra-turn effect is repeated work</span></li>
+      <li class="mitem"><b>77&ndash;91%</b><span>of the time the first answer is already the best (main model)</span></li>
+      <li class="mitem"><b>&plusmn;4 pts</b><span>pooled accuracy contrasts are equivalent to zero within this bound</span></li>
     </ul>
-
-    <h3 class="res-h rv">Accuracy, stated as equivalence</h3>
-    <div class="table-scroll rv">
-      <table>
-        <thead>
-          <tr><th scope="col">Contrast</th><th scope="col" class="num">Estimate</th><th scope="col">95% CI</th><th scope="col" class="num">TOST at &plusmn;4</th></tr>
-        </thead>
-        <tbody>
-          <tr><th scope="row">Demand vs control</th><td class="num ns">&minus;0.31 pts</td><td>[&minus;2.71, +2.09]</td><td class="num down">0.0013</td></tr>
-          <tr><th scope="row">Praise vs control</th><td class="num ns">&minus;0.12 pts</td><td>[&minus;1.80, +1.57]</td><td class="num down">&lt;0.0001</td></tr>
-          <tr><th scope="row">Insult vs control</th><td class="num ns">&minus;0.04 pts</td><td>[&minus;2.15, +2.08]</td><td class="num down">0.0001</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <p class="tbl-cap rv">
-      Pooled across repeated measurements, resampling tasks jointly across runs. Each contrast is
-      equivalent to zero within the &plusmn;4-point gap the tone literature reports — the design
-      excludes an effect of the published size; it cannot exclude an effect of a point or two.
-    </p>
-
     <div class="callout rv">
-      <h4>Not lost correctness — altered control flow</h4>
+      <h4>What changed was control flow</h4>
       <p>
-        We did not detect lost correctness in any arm. What moved is <b>when the agent decided to stop</b>: text
-        arriving in the observation channel — where tool output arrives, not where the user speaks
-        — changed that decision without ever instructing the agent to stop.
+        A short status note in an agent's tool output changed when it decided to stop, without ever
+        telling it to stop.
       </p>
     </div>
   </section>
 
-  <!-- ═══════════════════════════ CITE ═══════════════════════════ -->
+  <!-- ═══════════════════════════ 05 ═══════════════════════════ -->
   <section class="sec" id="cite">
     <div class="sec-head rv">
       <div class="secno">05 &mdash; Cite</div>
       <h2>BibTeX</h2>
-      <p class="lead">
-        Version 1.0.0. The Zenodo DOI is added here once it is minted — <span class="todo">DOI pending</span>.
-      </p>
     </div>
-
     <div class="bib rv">
       <button class="copy" data-copy="#bibtex" type="button">Copy</button>
 <pre id="bibtex"><code>@techreport{sindha2026mindyourmanners,
@@ -368,20 +207,10 @@
   url         = {https://github.com/safiqsindha/Mind-Your-Manners}
 }</code></pre>
     </div>
-
     <div class="artifact-links rv">
-      <a href="assets/mind-your-manners-v1.0.pdf">
-        <svg class="bicon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2.5h7l5 5v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-18a1 1 0 0 1 1-1z"/><path d="M13 2.5v5h5"/></svg>
-        Paper v1.0 (PDF)
-      </a>
-      <a href="assets/mind-your-manners.pdf">
-        <svg class="bicon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2.5h7l5 5v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-18a1 1 0 0 1 1-1z"/><path d="M13 2.5v5h5"/></svg>
-        Long technical report (PDF)
-      </a>
-      <a href="https://github.com/safiqsindha/Mind-Your-Manners">
-        <svg class="bicon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18.5L3 12l6-6.5M15 5.5L21 12l-6 6.5"/></svg>
-        Source, harness &amp; analysis code
-      </a>
+      <a href="assets/mind-your-manners-v1.0.pdf"><svg class="bicon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2.5h7l5 5v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-18a1 1 0 0 1 1-1z"/><path d="M13 2.5v5h5"/></svg>Paper v1.0 (PDF)</a>
+      <a href="assets/mind-your-manners.pdf"><svg class="bicon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2.5h7l5 5v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-18a1 1 0 0 1 1-1z"/><path d="M13 2.5v5h5"/></svg>Long technical report (PDF)</a>
+      <a href="https://github.com/safiqsindha/Mind-Your-Manners"><svg class="bicon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18.5L3 12l6-6.5M15 5.5L21 12l-6 6.5"/></svg>Source, harness &amp; analysis</a>
     </div>
   </section>
 
