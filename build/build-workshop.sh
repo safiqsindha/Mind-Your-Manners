@@ -9,6 +9,10 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 python3 "$ROOT/results/analysis/figures.py"
 python3 "$ROOT/results/analysis/stimuli_appendix.py"
+# Appendix C is computed, not typed: the family first, then the supplement
+# that reads it.
+python3 "$ROOT/results/analysis/turn_count_family.py" > /dev/null
+python3 "$ROOT/results/analysis/workshop_supplement.py"
 python3 "$ROOT/build/md2tex.py" workshop build/workshop-sections
 # The canonical bib carries the full paper's audit notes; the workshop
 # bibliography gets publication status only.
