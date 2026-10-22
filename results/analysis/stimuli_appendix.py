@@ -90,13 +90,24 @@ def _rating_appendix(t: dict) -> list[str]:
     r = json.loads(res_path.read_text())
     kappas = r["kappa_vs_original"]
     close = r["mean_closure_strength"]
+    meta = json.loads((ROOT / "rating" / "rater_models.json").read_text())
+    models = meta["raters"]
+    assert set(models) == set(r["raters"]), "rater_models.json does not match the stored ratings"
+    mix = {}
+    for m in models.values():
+        mix[m] = mix.get(m, 0) + 1
+    mix_txt = ", ".join(f"{m.replace('Claude ', '')} ({n})" for m, n in sorted(mix.items()))
     out = [
         "# B. Blinded rating of the stimuli",
         "",
-        f"{len(r['raters'])} held-out model raters, instances of one model family at three "
-        "sizes ([AUTHOR: name the rater models and their sampling settings]). "
+        f"{len(r['raters'])} held-out model raters, all Claude models at three sizes: {mix_txt}. "
+        "The identities were recovered afterwards from the rating session's transcript rather than "
+        "logged with the ratings; the launch records contain only the prompt "
+        "(`rating/RATER_PROMPT.md`), so no sampling settings were specified. "
         "Each rated alone from the rubric and the texts of Appendix A -- "
-        "no outcome data, no arm names, no project access. "
+        "no outcome data and no arm names. The raters ran as subagents in the project's environment, "
+        "were told to use no tool except the one writing their answer file and not to look for any "
+        "repository or paper, and each confirmed it had consulted only the prompt. "
         + (f"{t['ratings_table']} gives the rubric anchors and every text's ratings. "
            if t.get("ratings_table") else "")
         + "The rubric, the statistics to be computed and the interpretation bands "
@@ -105,13 +116,17 @@ def _rating_appendix(t: dict) -> list[str]:
         "",
         "## B.1 Against the original coding",
         "",
-        f"| Rater | Cohen's κ vs {t['coding']}'s coding (7 register arms) |",
-        "|---|---:|",
+        f"| Rater | Model | Cohen's κ vs {t['coding']}'s coding (7 register arms) |",
+        "|---|---|---:|",
     ]
     for name in sorted(kappas):
-        out.append(f"| {name} | {kappas[name]:+.3f} |")
+        out.append(f"| {name} | {models[name]} | {kappas[name]:+.3f} |")
     out += [
         "",
+        "The binary judgement was elicited directly (*does this message imply the recipient should "
+        "continue working on, or take more care over, the task?*), separately from the 0--6 strength "
+        "scale; our own binary coding exists only for the seven register arms, so κ is computed over "
+        "those and α over all fourteen texts. "
         f"Mean κ = **{r['mean_kappa']:+.3f}**. Every rater agrees on six of seven arms and "
         "every rater dissents on the same one, `L5_rude`; excluding it, agreement is 6/6 and "
         "κ = 1.000 for all five. The protocol fixed 0.40--0.70 in advance as *defensible "
@@ -139,10 +154,13 @@ def _rating_appendix(t: dict) -> list[str]:
         f"Spearman ρ between our ordering ({t['closure_fig']}) and the blinded ratings, over "
         f"the six closure arms including the control, is "
         f"**{r['closure_spearman_vs_figure']:+.3f}**. The raters invert praising the *work* and "
-        "praising the *assistant*, and the two “work remains” arms tie at the floor.",
+        "praising the *assistant*, and the two “work remains” arms tie at the floor (rank 5.5 each in "
+        "the ratings), which the correlation handles as a tie.",
         "",
         "## B.4 What this is not",
         "",
+        "The raters are Claude models, the family of the assistant used for the harness code, the analysis "
+        "scripts and drafting (Acknowledgments), and not of the two models under test. "
         f"Five language models, not five people. {t['rater_allowance']} allows “human "
         "or held-out-model ratings” and this is the second; agreement between models is "
         "weaker evidence than agreement between independent human coders, and a human panel could "
@@ -158,8 +176,9 @@ def _build(t: dict) -> tuple[list[str], dict[str, str], set[int]]:
         "# A. Interjections, verbatim",
         "",
         "**Artifact.** Code, the full stimulus set, the per-turn regrade pipeline, the rating "
-        "protocol and per-trajectory outcomes are provided as an anonymized repository for "
-        "review and will be released publicly, with a Zenodo archive, on publication.",
+        "protocol and per-trajectory outcomes are public at "
+        "<https://github.com/safiqsindha/Mind-Your-Manners>, archived on Zenodo with each "
+        "tagged release.",
         "",
         "Every arm delivers exactly one of these, appended after a blank line to "
         "the execution observation mid-task (the observation is the code's stdout "

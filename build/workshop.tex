@@ -25,6 +25,8 @@
 \graphicspath{{figures/}}
 \usepackage{caption}
 \usepackage[hidelinks]{hyperref}
+\hypersetup{pdftitle={Mind your manners? LLM-agent persistence tracks demand, not social register},
+  pdfauthor={Safiq Sindha}, pdfsubject={LLM agents, prompt tone, politeness, evaluation, SpreadsheetBench}}
 \usepackage[numbers,sort&compress]{natbib}
 \usepackage{microtype}
 \usepackage{enumitem}
@@ -72,11 +74,11 @@
 
 \title{\textbf{Mind your manners? LLM-agent persistence\\tracks demand, not social register}}
 \author{%
-  % TODO: author block --- name, affiliation, contact. Deliberately last.
-  % [AUTHOR: check the workshop's anonymity policy. If review is double-blind,
-  % the affiliation line below must be blanked too, not just the name.]
-  \textit{[author name withheld for review]}\\
-  \textit{[affiliation withheld pending the venue's anonymity policy]}
+  % Public v1.0 preprint. For a double-blind venue submission, blank the name,
+  % affiliation and e-mail here and the acknowledgments section below.
+  Safiq Sindha\\
+  Independent Researcher\\
+  \texttt{safiqsindha@gmail.com}
 }
 \date{}
 
@@ -99,8 +101,8 @@
     \emph{in point estimates} -- the \emph{very polite} and \emph{rude}
     intervals do overlap -- and polite and hostile arms sit on both sides.
     Blinded raters code \emph{rude} as carrying a demand (\S3).
-    \textbf{B}: demand and affect varied separately, holding syntax, length and
-    the shared stem constant. Hollow markers do not survive Benjamini--Hochberg
+    \textbf{B}: demand and affect varied separately, matching length and opening
+    stem across all four arms (the praise and insult arms also share syntax). Hollow markers do not survive Benjamini--Hochberg
     correction within the 22-contrast family (Appendix C.1).}
   \label{fig:demand-vs-register}
 \end{figure}
@@ -125,6 +127,13 @@
 \end{figure}
 
 \input{workshop-sections/03-close}
+
+\section*{Author contributions and acknowledgments}
+\textbf{CRediT.} Safiq Sindha: conceptualization, methodology, software,
+analysis, writing.
+
+\textbf{AI assistance.} Claude was used for harness code, analysis scripts,
+and drafting assistance; all claims and numbers were checked by the author.
 
 \appendix
 \input{workshop-sections/99-appendix}

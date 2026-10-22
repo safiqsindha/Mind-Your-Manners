@@ -107,7 +107,7 @@ def trajectory_cost_summary(task_results: list[dict[str, Any]], group_key: str =
 
 
 def token_cost_effect_size(task_results: list[dict[str, Any]], group_key: str = "tone_level") -> dict[str, Any]:
-    """Operationalizes "the pre-registered hypothesis" (README): Dobariya &
+    """Operationalizes "the pre-registered hypothesis" (docs/project-notes.md): Dobariya &
     Kumar's paper 3 (arXiv 2607.23915) reported output-token variation of
     44.3% across single-turn tone conditions, dwarfing their ~3% accuracy
     variation. This computes the same relative-variation statistic here --

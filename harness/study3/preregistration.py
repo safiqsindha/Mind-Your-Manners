@@ -23,7 +23,7 @@ fair split, relative to both sides being neutral -- not every pairwise
 combination against every other, most of which nobody hypothesized about
 in advance.
 
-NOTE: Study 3 is currently retired (see README/RESULTS -- prior art,
+NOTE: Study 3 is currently retired (see docs/project-notes.md and RESULTS.md -- prior art,
 TERMS-BENCH arXiv 2605.13909, already covers this ground more rigorously
 with 13 models and dollar-scale regret). This module is kept, not
 deleted, since the crossed buyer-tone x seller-tone matrix here is called

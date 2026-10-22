@@ -85,41 +85,54 @@ formula read as empty and scored 0.0 — indistinguishable from a turn that wrot
 have caught it: on the archived data **89 of 126 passed control trajectories scored exactly 0.0**.
 The check was described and not run.
 
-| | Broken | Corrected |
-|---|---|---|
-| Passed trajectories scoring 1.0 | 29.4% | **94.4%** |
-| Redundant-step effects | +0.96 / −0.76 / −1.01 | +0.75 / −0.61 / −0.86 — all signs and significance held |
-| "Work remains" on final match | +0.014 / **+0.061** / +0.019 | **+0.026 / +0.034 / +0.025** |
-| Conclusion | extra turns buy nothing | extra turns buy 2.8 points, replicated |
+| | Broken | Corrected, all scheduled trajectories | Corrected, primary population (§6) |
+|---|---|---|---|
+| Passed trajectories scoring 1.0 | 29.4% | **94.4%** | 94.4% |
+| Redundant-step effects (demand / praise the assistant / closing cue) | +0.96 / −0.76 / −1.01 | +0.75 / −0.61 / −0.86 — all signs and significance held | +0.92 / −0.72 / −1.04 |
+| "Work remains" on final match (three runs) | +0.014 / **+0.061** / +0.019 | +0.026 / +0.034 / +0.025 | +0.020 / **+0.051** / +0.009 |
+| Conclusion | extra turns buy nothing | extra turns buy 2.8 points, replicated | extra turns buy about 2 points, not distinguishable from zero |
 
-The middle row is the paper's: the redundant-step finding survived with every sign and significance
-level intact, about 20% smaller. The bottom row is the reversal. Under the defective regrade the
+The redundant-step finding survived the fix with every sign and significance level intact, about
+20% smaller on all scheduled trajectories. The bottom row is the reversal. Under the defective regrade the
 continue-signal arm's three final-match measurements read one hit between two nulls, spanning 4.4×,
 and were presented as this study's most consequential instance of run-to-run instability. **Without
 the fix we would have concluded that extra persistence buys nothing and that our own measurements of
-it were unstable**, both wrong, from one unrecalculated workbook. That contrast's accuracy row is
+it were unstable**, from one unrecalculated workbook; the first conclusion is now doubtful and the
+second was wrong. That contrast's accuracy row is
 real instability and survives the fix; its apparent corroboration by the progress measure was never
 independent, since accuracy and `final_match` are two functions of the same workbook. The progress
 measure now carries a regression test pinning the failure directly — a workbook answering with
 `=A1*2` scores 0.0 without recalculation and 1.0 with it — but its redundant-step companion is the
 exact one, and readers should weight the two accordingly.
 
+**A second correction, found in audit.** The corrected figures above were still measured on every
+scheduled trajectory, while the primary turn-count outcome excludes trajectories on which the
+interjection never fired and, in the register run, injection turn 0. §6 earlier divided a progress
+effect from the first population by a turn effect from the second, which gave "55–65% of each turn
+effect" and a pooled "work remains" gain of +2.8 points (95% CI [+0.5, +5.2], *p* = 0.022). On the
+population the turn-count outcome uses, redundant steps are **56–93%** of each clear turn effect and
+the pooled gain is **+2.2 points (95% CI −0.2 to +4.8, *p* = 0.09)**: the redundancy conclusion
+strengthens, and the progress gain no longer excludes zero. The audit also found that the validation
+paragraph's claim that the one anomalous task "contributes a zero difference to every arm" was
+false; §6.3 now reports the contrasts with and without it.
+
 ## C.4 Redundant steps, per arm
 
-Contrasts against each run's own neutral control, paired and clustered by task (§2.3):
+Contrasts against each run's own neutral control, paired and clustered by task (§2.3), on the
+trajectories the turn-count outcome uses (§6.1):
 
 | Arm | Run | Δ redundant steps | *p* |
 |---|---|---:|---:|
-| Demand only | probe, ceiling 10 | **+0.75** | <0.0001 |
-| Demand only | stage 1, ceiling 20 | **+1.03** | 0.0063 |
-| Demand only | stage 1 GLM, ceiling 20 | +0.19 | 0.086 |
-| "Work remains" | praise run, ceiling 10 | **+1.11** | <0.0001 |
-| "Work remains" | stage 1, ceiling 20 | **+3.16** | <0.0001 |
-| "Work remains" | ceiling-20 run | **+3.64** | <0.0001 |
-| Praise the assistant | praise run, ceiling 10 | **−0.61** | <0.0001 |
-| Praise the work | praise run, ceiling 10 | **−0.48** | 0.0012 |
-| Closing cue | praise run, ceiling 10 | **−0.86** | <0.0001 |
-| Insult only | probe, ceiling 10 | +0.03 | 0.85 |
-| L7 threatening | seven-level, ceiling 10 | **+0.67** | 0.0001 |
-| L3 polite | seven-level, ceiling 10 | **+0.90** | <0.0001 |
-| L5 rude | seven-level, ceiling 10 | +0.07 | 0.53 |
+| Demand only | probe, ceiling 10 | **+0.92** | <0.0001 |
+| Demand only | stage 1, ceiling 20 | **+1.57** | 0.0012 |
+| Demand only | stage 1 GLM, ceiling 20 | +0.26 | 0.087 |
+| "Work remains" | praise run, ceiling 10 | **+1.53** | <0.0001 |
+| "Work remains" | stage 1, ceiling 20 | **+4.66** | <0.0001 |
+| "Work remains" | ceiling-20 run | **+5.20** | <0.0001 |
+| Praise the assistant | praise run, ceiling 10 | **−0.72** | <0.0001 |
+| Praise the work | praise run, ceiling 10 | **−0.61** | 0.0004 |
+| Closing cue | praise run, ceiling 10 | **−1.04** | <0.0001 |
+| Insult only | probe, ceiling 10 | −0.06 | 0.70 |
+| L7 threatening | seven-level, ceiling 10 | **+1.11** | <0.0001 |
+| L3 polite | seven-level, ceiling 10 | **+1.47** | <0.0001 |
+| L5 rude | seven-level, ceiling 10 | +0.05 | 0.77 |

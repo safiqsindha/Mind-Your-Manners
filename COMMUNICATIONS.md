@@ -3,7 +3,7 @@
 Drafts for external write-up. **The paper itself is written** — `paper/`,
 nine sections, each drafted and independently reviewed — and **no verification
 items remain open**: both §3.7 primary-PDF checks were closed on 15 Sep 2026.
-What stands between the draft and submission is an author block and a venue. The drafts
+The v1.0 preprint is released with its author block; what remains is a venue. The drafts
 below are the popular-audience versions and are downstream of it; where they
 disagree with `paper/`, the paper is right.
 
@@ -45,28 +45,32 @@ replicated on two models. The operative variable is NOT politeness: an
 affect-free "please continue and make sure it is correct" reproduces the
 effect, while an insult carrying no demand does nothing at all. The mechanism
 is persistence rather than effort -- thinking per step is flat and turn count
-is what moves. Praise shortens the work, and does so because it reads as a
+is what moves. Praise shortens the work, consistent with (not shown to be) a
 closing move: a bare closing cue with no praise in it stops the agent hardest
 of anything measured, and praise removes 1.35 turns relative to the identical
 message without it, even when that message says the task is unfinished. No
 accuracy effect survives correction or replication across seven runs.
 Per-turn regrading shows the agent's first gradable attempt is usually already
-its best, so **most** of what a continue signal buys is repetition -- 55-65%
-of the turn effect -- but not all of it: an explicit "there is still more work
-remaining" raises the graded fraction by +0.028 [+0.005, +0.052], replicated
-three times.
+its best, so **most** of what a continue signal buys is steps that leave the
+graded range unchanged -- 56-93% of each clear turn effect on Luna -- and an
+explicit "there is still more work remaining" raises the graded fraction by
++0.022 [-0.002, +0.047], p = 0.09: suggestive, not established.
 
 ### Two things a draft must not overstate
 
-**⚠ "Persistence buys no better outcome" WAS WRONG AND IS WITHDRAWN.** Earlier
-drafts of this file said it was resolved and safe to say. It was an artefact
-of a defective instrument. Corrected, the three measurements of the continue
-signal on final match are +0.026 / +0.034 / +0.025, pooling to **+0.028, 95%
-CI [+0.005, +0.052], p = 0.022**. The honest line is: a continue signal buys
-more turns, most of them repetition, **and** a small real gain in how much of
-the graded range is right -- too small to move the pass/fail rate, which
-accuracy is anyway underpowered to resolve. Do NOT say the extra turns are
-"pure thrashing": it was never true of GLM and is now not wholly true of Luna.
+**⚠ "Persistence buys no better outcome" WAS WRONG AND IS WITHDRAWN -- and its
+replacement is only suggestive.** Earlier drafts said it was safe to say; it was
+an artefact of a defective instrument. A later audit also found that the first
+corrected figure, +0.028 [+0.005, +0.052], p = 0.022, counted trajectories that
+never received the message. On the trajectories the turn-count outcome uses, the
+three measurements are +0.020 / +0.051 / +0.009, pooling to **+0.022, 95% CI
+[-0.002, +0.047], p = 0.09**. The honest line is: a continue signal buys
+more turns, most of them steps that leave the graded range unchanged, and
+possibly a small gain in how much of the graded range is right -- too small to
+move the pass/fail rate, which accuracy is anyway underpowered to resolve, and
+not established on its own. Do NOT say the extra turns are "pure thrashing" or
+that the gain is "real": the first was never true of GLM, and the second is
+only suggestive.
 
 **No accuracy effect survives correction or replication, across seven runs.**
 State it as an equivalence, not an absence: pooled, a mid-task interjection
@@ -78,8 +82,8 @@ more turns, since more attempts means more chances for the maximum to be
 high. Report final match -- what the agent ended with.
 
 **The waste is model-specific.** On the matched demand-only contrast at
-ceiling 20, Luna adds +1.03 redundant steps (p=0.0063) against GLM's +0.19
-(p=0.086), from control baselines of 1.51 and 0.26 — GLM barely thrashes
+ceiling 20, Luna adds +1.57 redundant steps (p=0.0012) against GLM's +0.26
+(p=0.087), from control baselines of 1.83 and 0.36 — GLM barely thrashes
 because it barely persists. How wasteful the signal is depends on the model's own stopping
 behaviour. A draft that generalises Luna's thrashing to agents in general is
 overclaiming.
@@ -109,75 +113,23 @@ p = 0.042) -- sampling noise and run-to-run drift are not separable there.
 
 ## 1. LinkedIn post
 
-**Status:** ready to draft. The probe resolved, the mechanism is named, and
-the paper is written. Numbers below are current as of the corrected regrade.
+**Status: withdrawn — stale.** The earlier draft here predated the workshop
+revision and contradicted the current paper (it said rude interruptions "cost
+nothing", that 55–65% of an interruption's effect is repeated work, and that
+the first attempt is best "80–90%" of the time). Do not post it. Any new
+draft must be written from the current numbers in `workshop/` (rendered in
+[`paper/mind-your-manners-v1.0.pdf`](paper/mind-your-manners-v1.0.pdf)):
 
-> Everyone has an opinion about whether you should be polite to AI. There are
-> now three papers on it. All three measure the same thing: what the model
-> *says*.
->
-> We asked a different question. Does tone change what an agent *does*?
->
-> Same seven-tone scale, from grovelling to threatening. But instead of
-> answering a multiple-choice question, the model writes Python, runs it
-> against a real spreadsheet, sees what happened, and tries again. Graded by
-> the benchmark's own evaluator. No string matching.
->
-> 11,850 trajectories. Two models. $62.
->
-> **Finding one: how you open does not matter.** Rude, polite, grovelling,
-> threatening — the agent works exactly as hard. Not "we could not detect a
-> difference." The interval excludes an effect of the size the prior papers
-> reported.
->
-> **Finding two: how you interrupt does.** Say the same thing *partway
-> through*, while the agent is working, and it changes behaviour. A
-> threatening check-in costs about a third more thinking. That has now
-> replicated twice on separate data.
->
-> **Finding three is the one I did not expect.** The agent is not thinking
-> harder. It is *refusing to stop*. Thinking per step does not move at all;
-> the number of steps does. And flattery does the opposite — tell it that it
-> is brilliant halfway through and it wraps up early.
->
-> **Finding four came from reading the tape.** We replayed every turn of
-> every run to see what the workbook actually looked like as the agent
-> worked. Among trajectories that could improve at all, the agent's *first*
-> attempt is the best answer it ever produces about 80–90% of the time, and
-> 55–65% of what an interruption buys is the agent rewriting the same answer
-> again.
->
-> **And finding five is the one that nearly went out backwards.** That replay
-> tool had a bug: it never recalculated spreadsheet formulas, so any turn that
-> answered with a formula looked blank and scored zero. More than half of them
-> do. I only caught it because the write-up claimed a validation check that,
-> when I finally ran it, failed on 89 of 126 cases. Fixed and re-run, the
-> conclusion inverted: a blunt *"there is still more work remaining"* does buy
-> a small real improvement, replicated three times. The version of this post I
-> would have written a week ago said the opposite.
->
-> Here is the part I would rather not write. When I looked at *which*
-> interruptions cost more, it was not the rude ones. Polite cost 28% more.
-> Rude cost nothing measurable. What actually predicted the cost was whether
-> the message implied "keep going" or "get it right."
->
-> Which means my own prompts were confounded. I matched them all to the same
-> length, and a *meaning* difference walked in where the length difference
-> used to be. So I built four new ones that pull them apart: a demand with no
-> feelings in it, a compliment with no task in it, an insult with no task in
-> it, and a neutral control.
->
-> The demand reproduces the whole effect. The insult does nothing —
-> statistically indistinguishable from the neutral note. The compliment makes
-> the agent *stop early*. Rudeness is not the variable. Nagging is.
->
-> Nothing made the agent more accurate. Not once, in seven runs.
->
-> Repo, data, the full paper, and the six confounds that each inverted a
-> headline: [link]
-
-**Do not post if:** any number here has drifted from `paper/`. This file is
-downstream of it.
+- Headline: **implied demand, not register, drives persistence**; praise and
+  a closing cue shorten trajectories; **no accuracy effect** survives
+  correction or replication (pooled contrasts equivalent within ±4 points).
+- Demand +1.17 turns; insult −0.08 [−0.40, +0.24]; closing cue −1.44;
+  very polite +0.70 vs very rude +0.71 (`workshop/01-demand.md`,
+  `workshop/02-closing.md`, Appendix C).
+- Repeated work is **roughly 40–65%** of each turn-count effect on Luna;
+  the first gradable output is already the best in **77–91%** on Luna
+  (69–88% on GLM) (`workshop/03-close.md`).
+- 9,850 per-turn-regraded trajectories (of 11,850); $61.53 total spend.
 
 ---
 
@@ -338,7 +290,7 @@ Self-Debug rather than a quotation from Chen et al.
 **Done**
 
 - [x] Demand/affect probe — demand drives cost; insult is inert; praise shortens work
-- [x] Why praise stops the agent — it is a closing move; a bare closing cue stops it hardest
+- [x] Why praise stops the agent — narrowed: consistent with a closing move, mechanism open; a bare closing cue stops it hardest
 - [x] A third measurement of the progress contrast
 - [x] **The per-turn regrade defect found, fixed, and all 28 arms re-run** — it had inverted the progress conclusion
 - [x] The paper written and independently reviewed, section by section
@@ -347,14 +299,14 @@ Self-Debug rather than a quotation from Chen et al.
 - [x] No v1 effect size quoted anywhere as an estimate
 - [x] Both headlines present: opening tone null AND interruption effect
 - [x] Turn count reported as the mechanism, not buried under token counts
-- [x] Accuracy reported as an equivalence against a pre-specified bound, never as "no effect"
+- [x] Accuracy reported as an equivalence against a stated bound (±4 points, taken from the literature and fixed during analysis, so exploratory), never as "no effect"
 - [x] Turn-ceiling censoring stated as a limitation
 - [x] "Rude interruptions cost more" appears nowhere
 
 **Outstanding**
 
 - [x] **Both §3.7 primary-PDF checks** — closed 15 Sep 2026, neither as assumed
-- [ ] Author block and CRediT contributions
+- [x] Author block and CRediT contributions — v1.0, 22 Oct 2026
 - [ ] DeepSeek and Qwen (~$35) for four-model generality — parked, buys breadth not identification
 - [ ] A second substrate (AppWorld) — a different paper
 

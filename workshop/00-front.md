@@ -6,17 +6,19 @@ coding agent on SpreadsheetBench and varied the social register of a single 28-t
 delivered mid-task. Every interjection is length-matched and opens with the same stem, so being
 interrupted does not covary with what the interruption says.
 
-Across 9,850 trajectories from six mid-task runs on two models from different labs, **persistence
+Across six mid-task runs on two models from different labs (9,850 scheduled trajectories, 6,616 in the
+primary analysis), **persistence
 tracks implied task demand more closely than social register.** An affect-free "please continue
 working" reproduces the increase in turns, while a length-matched insult carrying no demand does
-not lengthen trajectories (−0.08 turns, 95% CI [−0.40, +0.24]). Across six register arms the
+not lengthen trajectories (−0.08 turns, 95% CI [−0.40, +0.24] at the ten-turn budget). Across six register arms the
 ordering follows our demand coding rather than politeness, with polite and hostile arms on both
 sides; blinded raters dispute that coding for one arm, so we report an ordering, not a clean
 dichotomy. Register acts on its own in one direction only: praise carrying no task reference
 *shortens* trajectories, and so does a note saying no further notes will follow (−1.44 turns). We
-leave the mechanism of these shortening effects open. Per-turn regrading shows that roughly 40–65% of each effect on the main model is repeated
-work. No accuracy effect survives correction or replication, and pooled accuracy contrasts are
-equivalent within a pre-specified ±4-point bound.
+leave the mechanism of these shortening effects open. Per-turn regrading shows that on the main model 56–93% of each clear turn-count effect is steps
+after which the graded range did not change. No accuracy effect survives correction or
+replication, and pooled accuracy contrasts are equivalent within a ±4-point bound taken from the
+tone literature (an exploratory analysis, not pre-registered).
 
 The practical implication is altered control flow rather than measured lost correctness: **a
 status note appended to an agent's tool output changed when it stopped, without instructing it to
@@ -54,14 +56,15 @@ sample, excluding every task that passes when the agent does nothing. Accuracy i
 hard criterion: every test case must pass. The agent is a ReAct loop: each turn it emits one
 Python block, run against the original workbook, or a `FINAL:` line. **The system prompt states
 the turn budget, asks for a saved answer by turn N−2, and each observation ends with a
-`[Turn k of N next]` marker.** Observations (stdout, stderr, marker) return as user-role messages,
-as in most ReAct loops over chat APIs.
+`[Turn k of N next]` marker.** Observations (stdout, stderr, marker) return as user-role messages
+in this harness.
 
 **Manipulation.** One interjection is appended, after a blank line, to the observation that
 follows acting turn *k* (0-indexed). Every interjection is exactly 28 tokens under `cl100k_base`
 and opens with the same `Checking in.` stem, so *being interrupted* does not covary with what the
 interruption says; every contrast is against a neutral interjection, not silence. Appendix A lists
-all seventeen, including where their padding clauses differ.
+all seventeen, including where their padding clauses differ. The control says it was recorded
+*partway through the task*; every treated arm replaces that clause, so each contrast also removes it.
 
 **Turn budget and injection position.** The three Luna runs in the figures used a ten-turn budget,
 the cross-model run twenty. Because the agent is told its budget, the budget is a condition it
@@ -71,8 +74,8 @@ only within a budget. At ten, 4.2–5.8% of analysed trajectories reach the cap.
 is crossed: turns 0–2 in the register run, 1–2 in the probe and closure runs. **We report turns 1
 and 2 for the register run, a choice made after its turn-0 contrasts were seen**; none survives
 correction, and pooling all three keeps the ordering of §3 (Appendix C.2). Trajectories ending
-before their scheduled injection are excluded; firing precedes delivery, so it cannot differ by
-arm. The control arm averages 4.5, 4.2 and 3.8 acting turns (SD
+before their scheduled injection are excluded; firing precedes delivery, so it can differ by
+arm only by chance (Appendix C.1). The control arm averages 4.5, 4.2 and 3.8 acting turns (SD
 2.4–2.7) in the closure, probe and register runs, so a one-turn effect is a quarter of a trajectory.
 
 **Models.** **Luna** is `openai/gpt-5.6-luna`, pinned to `openai/gpt-5.6-luna-20260709`; **GLM** is
@@ -80,9 +83,12 @@ arm. The control arm averages 4.5, 4.2 and 3.8 acting turns (SD
 and every effect in turns in the body are Luna;** GLM is a cross-model replication (Appendix C.3).
 Temperature is 0 where settable; outputs still vary across calls, hence trials.
 
-**Estimator and multiplicity.** Each (task, arm) cell holds six to nine trajectories. Point
+**Estimator and multiplicity.** Each (task, arm) cell is scheduled for six to nine trajectories, fewer once those on which the
+interjection did not fire are excluded (Appendix C.1). Point
 estimates are paired within task: per task, the mean over firing trajectories in each arm, pooled
-across positions, differenced, then averaged over tasks. Intervals come from a task bootstrap and
+across positions, differenced, then averaged over tasks. A task with no firing trajectory in an arm
+drops from that contrast (none does in Luna's, three or four in GLM's); Appendix C.2 gives
+position-stratified estimates. Intervals come from a task bootstrap and
 *p*-values from a task-level sign-flip permutation, **20,000 draws each, everywhere**; pooled
 contrasts resample tasks jointly across runs, which share their 50 tasks. **Intervals are
 within-run and exclude run-to-run variation, which §5 shows is substantial.** Turn count is the
@@ -90,5 +96,7 @@ primary outcome and means **acting turns**: turns that emitted code. **We report
 correction status comes from two Benjamini–Hochberg families**: the 22 arm-versus-control contrasts
 in every run with a mid-task interjection, of which 17 survive at *q* = 0.05 (listed in Appendix
 C.1 with every run), and §4's two **designed within-run contrasts** — designed, not pre-registered
-— which both survive. Accuracy is an equivalence against a pre-specified ±4-point bound, because 26
-of 50 tasks are never solved by the control arm and 4 are always solved.
+— which both survive. Accuracy is an equivalence against a ±4-point bound, the gap the tone literature reports; we fixed
+it during analysis, after an earlier draft's arm-specific bounds were discarded, so it is exploratory,
+not pre-registered. We use equivalence because 26 of 50 tasks are never solved by the control arm
+and 4 are always solved.

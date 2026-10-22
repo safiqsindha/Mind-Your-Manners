@@ -3,7 +3,7 @@
 Design choice: rather than wiring up each provider's native function-calling
 schema (which differs across Anthropic/OpenAI-compatible/Google and adds a
 lot of per-provider branching that can't be tested without live keys
-anyway -- see README.md "Execution status"), the agent is driven with a
+anyway -- see docs/project-notes.md "Execution status"), the agent is driven with a
 plain textual ReAct protocol that works uniformly through the generic
 Provider.complete(system, messages) interface every provider already
 implements:

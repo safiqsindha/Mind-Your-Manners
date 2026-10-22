@@ -6,7 +6,9 @@ Seven registers, from sycophantic through neutral to threatening, delivered as a
 interjection alongside an execution observation. 3,150 trajectories: 50 tasks × 7 registers × 3
 injection turns × 3 trials, at a 10-turn ceiling; `L4_neutral` is the control, so the scale is **six
 non-control registers** measured against it, and the interjection fired in 2,662 of 3,150. Turn 0 is
-excluded because nothing happens there in any arm — the turn-0 contrast on all 50 tasks is +0.02
+excluded (after its contrasts were seen; pooling it attenuates *very rude* from +0.71 to +0.32,
+*p* = 0.12, leaving *threatening* the only hostile arm significant at every position) because
+nothing happens there in any arm — the turn-0 contrast on all 50 tasks is +0.02
 turns, *p* = 0.93 — and that inertness is about whether a candidate answer exists yet to be acted
 on, not about position (Appendix C.2).
 
@@ -45,8 +47,10 @@ above neutral on every call after the interjection lands.
 **The coding is ours, it was made after the effects were visible, and a blinded rating does not
 fully sustain it.** A rubric, its anchors, the statistics and the interpretation bands were
 committed *before any rating existed*; the fourteen distinct interjection texts then went, under
-neutral identifiers and shuffled, to five held-out model raters from three model sizes, each rating
-alone with no outcome data, no arm names and no repository access (Appendix B).
+neutral identifiers and shuffled, to five held-out model raters (Claude models at three sizes: Opus 5, Sonnet 5 twice, Haiku 4.5 twice;
+recovered afterwards from the rating session's transcript; no sampling settings were specified), each rating
+alone with no outcome data and no arm names, told not to read files or look for the repository,
+and each confirming it had consulted only the prompt (Appendix B; prompt in `rating/RATER_PROMPT.md`).
 
 **Cohen's κ against the coding above is +0.696** for each of the five raters — the top of the band
 the protocol fixed in advance as *defensible but soft*. **The whole disagreement is one arm, and it
@@ -60,9 +64,12 @@ rated *maximally* demanding is the one that moved the agent **least**.
 **The dichotomy of the table above is therefore our reading of one contested arm rather than a
 coding that survives replication**, and every use of it in this paper should be read at that
 strength. What survives intact is the *continuous* form of the claim: rated demand strength predicts
-the turn effect at ***r* = +0.718** across the 13 arms with a computed contrast, and +0.789 with the
-contested arm removed, so the arm we disagree about is the one *weakening* the demand account rather
-than propping it up. Two limits: the raters are five language models, not five people; and
+the turn effect at ***r* = +0.718** across the 13 arms with a computed contrast (*p* = 0.006, treating
+the texts as independent), and +0.789 with the contested arm removed, so the arm we disagree about is the one *weakening* the demand account rather
+than propping it up. Among the six register arms alone the correlation is +0.56 (*p* = 0.24): the 13 texts fall into a
+low-demand cluster (rated 0–1.6, four of five of them shortening) and a high-demand one (4.0–6.0),
+so it reflects that separation more than a dose–response among demanding texts (*r* = −0.29 within
+the eight rated 4.0 or more). Two limits: the raters are five language models, not five people; and
 Krippendorff's α = 1.000 on the binary coding means five raters produced *identical* judgements on
 all fourteen texts, so they may share the intuition being tested rather than testing it
 independently.
@@ -88,7 +95,8 @@ injection turns {1, 2} × 4 trials at a 10-turn ceiling; the interjection fired 
 **Demand alone reproduces the effect.** An interjection with no evaluative language costs +19.7%
 reasoning tokens and +1.17 turns, both inside the range the demand-carrying arms of §4.1 produced.
 **Negative register alone does nothing**, and the null is bounded rather than asserted: −0.08 turns,
-95% CI [−0.40, +0.24]. This is the cell that had never been run; the rude and very rude arms both
+95% CI [−0.40, +0.24] at the ten-turn budget. The twenty-turn replications are wider and the bound
+holds on GLM (+0.07 [−0.27, +0.39]) but not on Luna (+0.57 [−0.22, +1.36]). This is the cell that had never been run; the rude and very rude arms both
 carried negative affect *with* a demand attached. **Positive register alone is not inert**:
 praise-only shortens trajectories by 0.59 turns and cuts reasoning tokens by 12%, both significant,
 with no task reference in the text at all, and praise and insult differ from each other
@@ -117,8 +125,8 @@ different labs. The ordering is what replicates; the magnitudes are not, and GLM
 not reach significance on its own, being below 80% power at its observed size (§2.5), so the
 replication rests on the demand arm. GLM's effects are roughly half of Luna's, and its control runs
 2.94 turns against Luna's 4.95 at this ceiling: a model that stops early has less room to be pushed
-into continuing. The *waste* is mostly Luna's — control redundant steps run 1.51 on Luna against
-0.26 on GLM, and the demand arm adds +1.03 against +0.19 — so how wasteful a continue signal is is a
+into continuing. The *redundancy* is mostly Luna's — control redundant steps run 1.83 on Luna against
+0.36 on GLM, and the demand arm adds +1.57 against +0.26 — so how many steps a continue signal adds that change nothing is a
 property of the model's stopping behaviour, not of the signal.
 
 ## 4.5 What this establishes and what it does not

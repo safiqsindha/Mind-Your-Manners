@@ -67,12 +67,13 @@ def test_figures_are_referenced_not_orphaned():
         assert pdf in tex, f"{pdf} is generated but not included in the carve"
 
 
-def test_author_block_is_still_a_placeholder():
-    """Deliberate: the author block is filled in last, after the venue is chosen.
-
-    If this fails because a real author block was added, delete the test.
-    """
-    assert "author name withheld" in TEX.read_text()
+def test_author_block_is_the_public_v1_block():
+    """v1.0 is a public preprint: the real author block, no placeholder, and
+    no employer affiliation."""
+    tex = TEX.read_text()
+    assert "withheld" not in tex
+    assert "Safiq Sindha" in tex and "Independent Researcher" in tex
+    assert "microsoft" not in tex.lower()
 
 
 @pytest.mark.skipif(

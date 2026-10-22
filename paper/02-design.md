@@ -49,8 +49,9 @@ turn 2, so for timing contrasts only we fix the comparison population from the *
 is far better powered than accuracy at our *n*. Reasoning tokens per trajectory are secondary; they
 were the pre-registered primary in the first run and were demoted on evidence. Accuracy is reported
 and underpowered by design (§2.5). The per-turn regrade adds `final_match`, the fraction of the
-graded range correct in the **last** turn, and **redundant steps**, turns after which the graded
-range is unchanged, a measure adopted from [redundancybench]. One definition a reader comparing our
+graded range correct, on the first test case, in the last turn that produced a readable output, and
+**redundant steps**, turns after which the graded range is unchanged, a measure adopted from
+[redundancybench]. One definition a reader comparing our
 turn counts with another paper's needs: the run records store *acting* turns, those that emitted
 code, while the per-turn regrade stores model calls, including the closing `FINAL:` message that
 carries none — mean 3.57 against 4.69 on the micro-experiment, a 31% relative gap. **Turn count in
@@ -58,9 +59,10 @@ this paper means acting turns throughout.**
 
 Every contrast is against a *neutral interjection*, not against silence: each arm is compared with a
 control arm that also receives a 28-token message at the same turn, which isolates register from the
-fact of being interrupted. How much the baseline itself moves was measured **once** — a neutral
-interruption against no interruption, 3.47 versus 4.11 turns, ***p* = 0.15, on one model at one
-ceiling** — so an arm's absolute cost against an *uninterrupted* agent is not something this design
+fact of being interrupted. The control text says it was recorded *partway through the task*, and every
+treated arm replaces that clause, so each contrast also removes it. How much the baseline itself moves was measured **once** — a neutral
+interruption against no interruption, 3.47 versus 4.11 turns, **+0.45 [+0.08, +0.81], *p* = 0.019, on
+one model at one ceiling and with an earlier wrapper version** — so an arm's absolute cost against an *uninterrupted* agent is not something this design
 bounds, though a shared offset cancels in every contrast reported here.
 
 Every trajectory belongs to one of 50 tasks, and each (task, arm) cell holds six to nine
@@ -120,8 +122,10 @@ solved by the control arm and 4 are always solved**, so for more than half the s
 accuracy difference is pinned at zero whatever the manipulation does. Turn count varies on every
 task.
 
-The pre-specified smallest effect of interest is **±4 accuracy points**, the polite-versus-rude gap
-of the paper this work is positioned against. Pooling each contrast's repeated measurements, with
+The smallest effect of interest is **±4 accuracy points**, the polite-versus-rude gap of the paper
+this work is positioned against. We fixed it during analysis, after the runs and after an earlier
+draft's arm-specific bounds, chosen once we had seen which passed, were discarded; it is not
+pre-registered, and the equivalence analysis is exploratory in that sense. Pooling each contrast's repeated measurements, with
 the interval from a bootstrap that resamples tasks **jointly across runs**, since the runs share
 their 50 tasks:
 
@@ -141,5 +145,7 @@ Two caveats, both against us. The praise pooling is heterogeneous — Cochran's 
 *p* = 0.038 — and between models rather than within: Luna's three praise measurements alone give
 *Q* = 0.36 and −1.27 points, 95% CI [−3.11, +0.57]. Under a random-effects pool the praise estimate
 becomes +0.21 with a standard error of 1.68 and the ±4 equivalence weakens to *p* = 0.0119 but
-holds. And **no accuracy effect in this study has replicated**: the larger nominal hit, +6.6 points
+holds; Cochran's *Q* and the random-effects weights treat the runs as independent although they
+share their 50 tasks, so those two are descriptive, while the equivalence tests quoted in the table
+use the joint task bootstrap. And **no accuracy effect in this study has replicated**: the larger nominal hit, +6.6 points
 on the continue-signal contrast, came back at −1.8 on identical tasks and ceiling.

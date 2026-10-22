@@ -1,7 +1,7 @@
 # Blinded rating — results
 
 Ratings collected after `PROTOCOL.md` and `stimuli.json` were committed and pushed (b0bffd0).
-Five held-out model raters, deliberately drawn from three different model sizes so that
+Five held-out model raters (recovered afterwards from the rating session's transcript, in `rater_models.json`: Claude Opus 5, Sonnet 5 twice, Haiku 4.5 twice), deliberately drawn from three different model sizes so that
 agreement is not agreement between five copies of one model. Each rated alone, with the rubric
 and the fourteen texts and nothing else: no outcome data, no arm names, no repository access.
 Every rater's transcript shows two or three tool calls — writing its answer file — and no reads,

@@ -58,18 +58,20 @@ closing cue carrying no praise, no evaluation and no task-state claim produces t
 in the study, −1.44 turns. **This leg is the least replicated thing in the paper — one run, one
 model, one turn ceiling.**
 
-**Finding 3: no accuracy effect survives correction, and the extra turns are mostly repetition
-(§6).** Regrading every turn against the benchmark's own evaluator shows 55–65% of each turn-count
-effect is redundant steps, and that among trajectories that could improve the first gradable attempt
-is already the best in 80–91%. The remainder is real but small: an explicit statement that work
-remains raises the graded fraction by 2.8 points (95% CI [+0.005, +0.052]), replicated across three
-runs. No accuracy contrast survives multiplicity correction or replication, and we state that as an
-equivalence against a pre-specified ±4-point bound rather than as an absence (§2.5).
+**Finding 3: no accuracy effect survives correction, and the extra turns are mostly steps that change
+nothing (§6).** Regrading every turn against the benchmark's own evaluator shows that 56–93% of each
+clear turn-count effect on Luna is redundant steps, turns after which the graded range is unchanged,
+and that among trajectories that could improve the first gradable attempt is already the best in
+80–94%. The remainder is small and not distinguishable from zero: an explicit statement that work
+remains raises the graded fraction by 2.2 points (95% CI [−0.2, +4.8], *p* = 0.09), an estimate that
+rests on one task. No accuracy contrast survives multiplicity correction or replication, and we state
+that as an equivalence against a ±4-point bound taken from the tone literature, fixed during analysis
+and so exploratory, rather than as an absence (§2.5).
 
 ## 1.3 What this means, and scope
 
 For practitioners the inference is the reverse of the popular one. Manners are not the lever; what
-the agent acts on is the demand, and the work it buys is mostly repeated. The hazard runs the other
+the agent acts on is the demand, and the work it buys is mostly steps that change nothing. The hazard runs the other
 way: closing-like language can curtail an agent that is still working. **It is not a correctness
 hazard** — accuracy did not fall in any arm, and the pooled contrasts are equivalent within ±4
 points. What moved was **control flow**: text arriving in the agent's observation channel, where

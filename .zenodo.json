@@ -1,0 +1,50 @@
+{
+  "title": "Mind your manners? LLM-agent persistence tracks demand, not social register",
+  "upload_type": "publication",
+  "publication_type": "workingpaper",
+  "version": "1.0.0",
+  "publication_date": "2026-10-22",
+  "language": "eng",
+  "creators": [
+    {
+      "name": "Sindha, Safiq",
+      "affiliation": "Independent Researcher"
+    }
+  ],
+  "description": "<p>A widely-discussed result reports that impolite prompts outperform polite ones on multiple-choice questions. That literature is single-turn; deployed systems are agents. We put a coding agent on SpreadsheetBench and varied the social register of a single 28-token interjection delivered mid-task. Every interjection is length-matched and opens with the same stem, so being interrupted does not covary with what the interruption says.</p><p>Across six mid-task runs on two models from different labs (9,850 scheduled trajectories, 6,616 in the primary analysis), persistence tracks implied task demand more closely than social register. An affect-free \"please continue working\" reproduces the increase in turns, while a length-matched insult carrying no demand does not lengthen trajectories (−0.08 turns, 95% CI [−0.40, +0.24] at the ten-turn budget). Across six register arms the ordering follows our demand coding rather than politeness, with polite and hostile arms on both sides; blinded raters dispute that coding for one arm, so we report an ordering, not a clean dichotomy. Register acts on its own in one direction only: praise carrying no task reference shortens trajectories, and so does a note saying no further notes will follow (−1.44 turns). We leave the mechanism of these shortening effects open. Per-turn regrading shows that on the main model 56–93% of each clear turn-count effect is steps after which the graded range did not change. No accuracy effect survives correction or replication, and pooled accuracy contrasts are equivalent within a ±4-point bound taken from the tone literature (an exploratory analysis, not pre-registered).</p><p>The practical implication is altered control flow rather than measured lost correctness: a status note appended to an agent's tool output changed when it stopped, without instructing it to stop.</p>",
+  "access_right": "open",
+  "license": "MIT",
+  "keywords": [
+    "LLM agents",
+    "prompt tone",
+    "politeness",
+    "evaluation",
+    "SpreadsheetBench"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "arXiv:2510.04950",
+      "relation": "cites",
+      "scheme": "arxiv",
+      "resource_type": "publication-preprint"
+    },
+    {
+      "identifier": "arXiv:2605.29027",
+      "relation": "cites",
+      "scheme": "arxiv",
+      "resource_type": "publication-conferencepaper"
+    },
+    {
+      "identifier": "arXiv:2607.23915",
+      "relation": "cites",
+      "scheme": "arxiv",
+      "resource_type": "publication-preprint"
+    },
+    {
+      "identifier": "https://github.com/safiqsindha/Mind-Your-Manners",
+      "relation": "isSupplementedBy",
+      "scheme": "url",
+      "resource_type": "software"
+    }
+  ]
+}

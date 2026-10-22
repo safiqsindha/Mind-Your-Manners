@@ -1,6 +1,6 @@
 # Mind your manners? LLM-agent persistence tracks demand, not social register
 
-**Authors.** *[to be completed]*
+**Authors.** Safiq Sindha, Independent Researcher (safiqsindha@gmail.com).
 
 ---
 
@@ -13,8 +13,8 @@ varied the social register of one 28-token interjection delivered mid-task. Inte
 length-matched and share an opening stem, so being interrupted does not covary with what the
 interruption says. **11,850 graded trajectories, two models from different labs.** **Demand, not
 politeness, drives turn count:** an affect-free "please continue working on the task here and make
-sure that your final result is correct" costs +1.17 turns, while a length-matched, syntactically
-identical insult does not move it (−0.08 turns, 95% CI [−0.40, +0.24]). **Praise and closing cues
+sure that your final result is correct" costs +1.17 turns, while a length-matched insult
+carrying no demand does not move it (−0.08 turns, 95% CI [−0.40, +0.24] at the ten-turn budget). **Praise and closing cues
 shorten trajectories; insult has no measurable effect:** a bare closing cue carrying no praise, no
 evaluation and no task-state claim gives the largest reduction in the study, −1.44 turns. **No
 accuracy effect survives correction or replication,** which we state as equivalence within ±4

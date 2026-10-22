@@ -9,7 +9,8 @@ field less than we hoped.
 same "work remains" message without it (`Q4` − `Q5`, *p* < 0.0001), which argues against a simple
 completion account. But `Q4` and `Q5` are not a strict minimal pair (praise replaces a filler
 sentence; Appendix A.3), and blinded raters score both at 0 on projected closure, so this contrast
-does not support the closing account either. Against control, `Q4` (+0.50) sits near the sum of
+does not support the closing account either (the raters scored the whole message, continuation
+clause included, so a 0 does not rule out a competing closing cue in the praise clause). Against control, `Q4` (+0.50) sits near the sum of
 praise alone and "work remains" alone (−1.08 + 1.85 = +0.77), as if two opposing signals were
 weighed.
 
@@ -22,8 +23,9 @@ recorded for this task here, and no further notes will follow it" carries no pra
 and removes **1.44 turns**. Its control describes itself as recorded "partway through the task",
 so the contrast is final against partway, not closing against nothing.
 
-**A floor could manufacture this, and does not.** A trajectory cannot be shorter than its injection
-turn, so shortening has less room at turn 2. The closing cue gives **−1.55 [−2.07, −1.03] at turn
+**A floor could distort this, and does not explain it.** A trajectory cannot be shorter than its
+injection turn, so shortening has less room at turn 2, which would attenuate an effect there, not
+create one. The closing cue gives **−1.55 [−2.07, −1.03] at turn
 1** and −0.99 [−1.59, −0.43] at turn 2, on the 35 tasks reaching turn 2 in both arms; turn 1
 restricted to those tasks gives −1.49 [−2.12, −0.87], so the difference is not task survivorship
 (Appendix C.4).
@@ -39,11 +41,14 @@ is consistent with an agent responding to closing structure. We do not claim it 
 praise shortens `Q4` without being read as closing, and three register arms end in thanks while
 only one shortens.
 
-**Against the nearest prior work.** Prompt wording is known to move agentic spend at equal success,
-with an explicit stop condition the one consistently cheap variant [weinberger-hozez-2026]. Explicit mid-flight halts have been measured as an immediate stop
-[munirathinam-2026-recuse]: in the prompt channel, acknowledged in 20 of 20 trials and obeyed in
-none; in-band with tool output, neither. Our outcome, a shift in mean trajectory length, is not
+**Against the nearest prior work.** Prompt wording is known to move agentic spend at equal success;
+the one consistently cheap variant combined scope, minimal change, verification and an explicit
+stop condition, so its effect is not attributable to stopping alone [weinberger-hozez-2026]. How far
+an explicit mid-flight halt works depends on the model [munirathinam-2026-recuse]: for two OpenAI
+models a halt in the prompt channel was acknowledged in 20 of 20 trials and obeyed in none, and
+an in-band halt was neither acknowledged nor obeyed, yet Gemini 2.5 Flash stopped in 16 of 20 on
+the same apparatus. Our outcome, a shift in mean trajectory length, is not
 directly comparable; what ours adds is that a note issuing no instruction moved termination at all.
 **This six-arm study is the least replicated in the paper: one run, one model, one budget**; given
-§5's drift, differences under half a turn, such as closing cue against praise (−0.36), may not
+§5's drift, differences under half a turn, such as closing cue against praise (−0.36), which also differ in their padding clauses, may not
 replicate.

@@ -21,7 +21,7 @@ DROPPED, with reasons (checked live, 2026-09-10):
     tradeoff is accepted for a 4x-ish budget improvement at equal or better
     agentic capability from GLM instead (see below).
   - Gemini 3.1 Flash-Lite: existed only to pair with Gemini 3.8 Flash for
-    Study 1's two-Gemini-tier design; Study 1 is retired (see README "Why
+    Study 1's two-Gemini-tier design; Study 1 is retired (see docs/project-notes.md "Why
     this is one study now, not three"), so this model has no remaining
     reason to be in the roster at all.
   - GLM and Kimi were considered and dropped in the original roster pass on
@@ -230,7 +230,7 @@ REASONING CONTROL, per model (checked live 2026-09-10 against each
 model's `reasoning` catalog field -- not every model in this roster can
 truly disable reasoning, so conditions are recorded per-model below rather
 than described as "thinking on/off" uniformly; see also `thinking_enabled`
-on ModelConfig and README "The thinking arm"):
+on ModelConfig and docs/project-notes.md "The thinking arm"):
 
   model            mandatory?   effort levels available    "off" exists?
   GPT-5.6 Luna     no           max/xhigh/high/medium/low/none   yes ("none")
@@ -243,7 +243,7 @@ on ModelConfig and README "The thinking arm"):
 
   Only GPT-5.6 Luna has an explicit, harness-controllable "none" effort
   level, which is why it's the model that carries the on/off thinking arm
-  (see README "The thinking arm" and the with_thinking() helper below).
+  (see docs/project-notes.md "The thinking arm" and the with_thinking() helper below).
   GLM's reasoning is mandatory -- reasoning_effort is pinned explicitly to
   its cheapest allowed level ("low") specifically so a run never silently
   defaults to GLM's own default_effort ("max"), which would be far more
@@ -257,7 +257,7 @@ provider (`provider_pin`) chosen for vendor fidelity over marginal cost
 savings -- e.g. several third-party fp8/fp4 re-hosts of GLM/DeepSeek's same
 weights would be cheaper, and it's still the right choice, for the same
 reason the harness routes everything through OpenRouter on one key rather
-than chasing per-provider savings (see README "Single provider path").
+than chasing per-provider savings (see docs/project-notes.md "Single provider path").
 Full `provider.only`/`allow_fallbacks`/`quantizations` enforcement and the
 served-provider assertion live in harness/providers/openai_compatible.py,
 not here -- this file only records the *intended* pin (see item (a) above
@@ -317,7 +317,7 @@ GPT_LUNA = ModelConfig(
     output_price_per_1m=1.20,
 )
 
-# The calibration arm (README "The thinking arm"): same model, same tasks,
+# The calibration arm (docs/project-notes.md "The thinking arm"): same model, same tasks,
 # same tones as GPT_LUNA's main-run condition, but with reasoning turned
 # off via its real "none" effort level -- not a different model pinned
 # for the "on" state (e.g. gpt-5.6-luna-pro), since that would bake the
@@ -401,7 +401,7 @@ QWEN_CURRENT = ModelConfig(
 # Models used in every study.
 CORE_MODELS: list[ModelConfig] = [GPT_LUNA, GLM_CURRENT, DEEPSEEK_CURRENT, QWEN_CURRENT]
 
-# Study 1 is retired (see README) and no longer pulls in an extra model --
+# Study 1 is retired (see docs/project-notes.md) and no longer pulls in an extra model --
 # kept as a distinct name since study1/cli.py still imports it.
 STUDY1_MODELS: list[ModelConfig] = CORE_MODELS
 
@@ -412,7 +412,7 @@ STUDY1_MODELS: list[ModelConfig] = CORE_MODELS
 FRONTIER_SPOTCHECK = ModelConfig(
     key="frontier-spotcheck",
     provider="anthropic",
-    model_id="claude-sonnet-5",  # VERIFY exact public API model string before use -- see README caveat
+    model_id="claude-sonnet-5",  # VERIFY exact public API model string before use -- see docs/project-notes.md caveat
     display_name="Claude (frontier spot-check)",
     temperature=0.0,
     max_tokens=2048,
@@ -440,7 +440,7 @@ CLAUDE_CLI_SMOKETEST = ModelConfig(
 # NOT a target model -- for validating a real, live OpenRouter call (the
 # actual triple-pin/cache-assertion/instrumentation code path in
 # harness/providers/openai_compatible.py) once an OPENROUTER_API_KEY exists,
-# before spending on the real roster. README's "Single provider path"
+# before spending on the real roster. docs/project-notes.md's "Single provider path"
 # already flags free-tier OpenRouter endpoints as "for debugging/pilots
 # only" -- this is that.
 #

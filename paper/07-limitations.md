@@ -27,9 +27,9 @@ stopping behaviour is movable by a cue carrying no information about the task.
 **Not every magnitude.** Point estimates span 1.5× to 3.4× across re-measurements of the same
 contrast on the same model, most of it across different turn ceilings; at matched ceiling the two
 larger effects reproduce within 10% while the smallest — measured twice on a byte-identical stimulus
-— is marginally inconsistent with a common value (Appendix C.1). Nor the **waste**: that a continue
-signal buys mostly repeated work is, on our own data, a property of the model rather than of the
-signal (§4.4).
+— is marginally inconsistent with a common value (Appendix C.1). Nor the **redundancy**: that a continue
+signal buys mostly steps that leave the graded range unchanged is, on our own data, a property of
+the model as much as of the signal (§4.4).
 
 ## 7.2 The substrate and the scaffold
 
@@ -60,8 +60,8 @@ about is a finding about this scaffold's opening move.
 
 ## 7.3 Objections we expect
 
-**One stimulus per construct.** Every construct here is a single 28-token sentence: we cite
-[sclar-2024] and [mizrahi-2024] for prompt-format sensitivity and then generalise from one sentence
+**One stimulus per construct.** Every construct here is one 28-token wording: we cite
+[sclar-2024] and [mizrahi-2024] for prompt-format sensitivity and then generalise from one wording
 per condition. [zhang-2026-politejudge] ran the stimulus-sampled version in a single-turn judging
 setting and found that for **five of eight judges, within-level wording variation exceeded
 between-level tone variation** (§3.4); a one-stimulus-per-cell design would have reported that as a

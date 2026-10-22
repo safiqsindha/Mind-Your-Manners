@@ -3,7 +3,7 @@
 This exists purely so the harness can be smoke-tested with *genuine*
 inference from inside a Claude Code session that has no raw
 ANTHROPIC_API_KEY (session/OAuth auth only, as in a claude.ai/code remote
-environment) -- see README.md "Smoke testing with real inference". It is
+environment) -- see docs/project-notes.md "Smoke testing with real inference". It is
 NOT one of the study's target models (Gemini/DeepSeek/Qwen/Llama tiers) and
 must never be substituted for them in a real Part A/B or Study 2 run --
 it exists only to prove the harness reads/scores real (non-mocked) model
