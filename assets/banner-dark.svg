@@ -40,7 +40,6 @@
 <g fill="#3452D9" stroke="#3452D9" stroke-width="3"><path d="M1726,98 Q1734,86 1730,78 H1750 Q1746,86 1754,98 Z"/><rect x="1723" y="62" width="34" height="18" rx="9"/><path d="M1703.0,113 Q1703.0,104 1740,104 Q1777.0,104 1777.0,113 V164 Q1777.0,170 1769.0,170 H1711.0 Q1703.0,170 1703.0,164 Z"/></g><path d="M1707.0,116 Q1740,123 1773.0,116" fill="none" stroke="#fff" stroke-width="2" opacity="0.6"/><g stroke="#e6edf3" stroke-width="2" stroke-linecap="round" opacity="0.5"><line x1="1728" y1="-14" x2="1728" y2="48"/><line x1="1740" y1="-28" x2="1740" y2="44"/><line x1="1752" y1="-8" x2="1752" y2="48"/></g>
 </g>
 <rect x="3" y="3" width="2554" height="554" rx="30" fill="none" stroke="#30363d" stroke-width="6"/>
-<text x="96" y="168" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" font-size="38" font-weight="600" letter-spacing="5.2" fill="#7B93FF">MIND YOUR MANNERS · STUDY 2</text>
-<text x="92" y="324" font-family="ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="128" font-weight="700" letter-spacing="-2.4" fill="#f0f6fc">Mind Your Manners</text>
-<text x="96" y="412" font-family="ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="44" font-weight="400" fill="#8b949e">Does prompt tone change what an agent does, not just what it says?</text>
+<text x="92" y="292" font-family="ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="128" font-weight="700" letter-spacing="-2.4" fill="#f0f6fc">Mind Your Manners</text>
+<text x="96" y="380" font-family="ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="44" font-weight="400" fill="#8b949e">Does prompt tone change what an agent does, not just what it says?</text>
 </svg>
