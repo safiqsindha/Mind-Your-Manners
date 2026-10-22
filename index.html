@@ -99,7 +99,7 @@
       </p>
     </div>
     <ul class="mgrid rv">
-      <li class="mitem"><b>9,850</b><span>trajectories analysed</span></li>
+      <li class="mitem"><b>9,850</b><span>scheduled trajectories, in six runs</span></li>
       <li class="mitem"><b>2</b><span>models, from different labs</span></li>
       <li class="mitem"><b>50</b><span>SpreadsheetBench tasks</span></li>
     </ul>
@@ -117,7 +117,7 @@
     </div>
     <ul class="mgrid rv">
       <li class="mitem"><b>+1.17</b><span>turns from &ldquo;please continue&rdquo;, with no emotion in it</span></li>
-      <li class="mitem"><b>&minus;0.08</b><span>turns from a bare insult, 95% CI [&minus;0.40, +0.24]</span></li>
+      <li class="mitem"><b>&minus;0.08</b><span>turns from a bare insult, 95% CI [&minus;0.40, +0.24] at a ten-turn budget</span></li>
       <li class="mitem"><b>+0.70 / +0.71</b><span><i>very polite</i> and <i>very rude</i>: the same effect</span></li>
     </ul>
     <figure class="rv">
@@ -172,14 +172,14 @@
       <div class="secno">04 &mdash; Finding 3</div>
       <h2>No accuracy effect</h2>
       <p class="lead">
-        Much of the extra work is repetition, and the agent's first answer is usually its best.
+        Most of the extra work changes nothing, and the agent's first answer is usually its best.
         No accuracy difference survives correction or replication.
       </p>
     </div>
     <ul class="mgrid rv">
-      <li class="mitem"><b>~40&ndash;65%</b><span>of each extra-turn effect is repeated work</span></li>
-      <li class="mitem"><b>77&ndash;91%</b><span>of the time the first answer is already the best (main model)</span></li>
-      <li class="mitem"><b>&plusmn;4 pts</b><span>pooled accuracy contrasts are equivalent to zero within this bound</span></li>
+      <li class="mitem"><b>56&ndash;93%</b><span>of each clear extra-turn effect is steps that change nothing (main model)</span></li>
+      <li class="mitem"><b>77&ndash;94%</b><span>of the time the first answer is already the best (main model)</span></li>
+      <li class="mitem"><b>&plusmn;4 pts</b><span>pooled accuracy contrasts are equivalent to zero within this bound (exploratory)</span></li>
     </ul>
     <div class="callout rv">
       <h4>What changed was control flow</h4>
@@ -212,7 +212,7 @@
         <span class="kn">&ldquo;KEEP GOING&rdquo;</span>
         <h3>Nudges to continue cost turns, not accuracy</h3>
         <p>&ldquo;Please continue and make sure it&rsquo;s correct&rdquo; added 1.17 turns on a
-           four-turn baseline, mostly repeated work. Use it when you want extra checking, and
+           four-turn baseline, mostly steps that change nothing. Use it when you want extra checking, and
            expect the extra cost.</p>
       </li>
       <li class="kcard">
