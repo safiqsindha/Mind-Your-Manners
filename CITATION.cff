@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it as below."
+type: software
+title: "Mind your manners? Demand, not register, is what moves an LLM agent"
+version: 1.0.0
+date-released: 2026-10-22
+license: MIT
+repository-code: "https://github.com/safiqsindha/Mind-Your-Manners"
+authors:
+  - family-names: Sindha
+    given-names: Safiq
+    affiliation: Independent Researcher
+    email: safiqsindha@gmail.com
+keywords:
+  - LLM agents
+  - prompt tone
+  - politeness
+  - evaluation
+  - SpreadsheetBench
+preferred-citation:
+  type: report
+  title: "Mind your manners? Demand, not register, is what moves an LLM agent"
+  authors:
+    - family-names: Sindha
+      given-names: Safiq
+      affiliation: Independent Researcher
+  year: 2026
+  month: 10
+  version: 1.0.0
+  url: "https://github.com/safiqsindha/Mind-Your-Manners/blob/v1.0.0/paper/mind-your-manners-v1.0.pdf"

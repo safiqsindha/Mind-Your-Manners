@@ -3,7 +3,7 @@
 Drafts for external write-up. **The paper itself is written** — `paper/`,
 nine sections, each drafted and independently reviewed — and **no verification
 items remain open**: both §3.7 primary-PDF checks were closed on 15 Sep 2026.
-What stands between the draft and submission is an author block and a venue. The drafts
+The v1.0 preprint is released with its author block; what remains is a venue. The drafts
 below are the popular-audience versions and are downstream of it; where they
 disagree with `paper/`, the paper is right.
 
@@ -109,75 +109,23 @@ p = 0.042) -- sampling noise and run-to-run drift are not separable there.
 
 ## 1. LinkedIn post
 
-**Status:** ready to draft. The probe resolved, the mechanism is named, and
-the paper is written. Numbers below are current as of the corrected regrade.
+**Status: withdrawn — stale.** The earlier draft here predated the workshop
+revision and contradicted the current paper (it said rude interruptions "cost
+nothing", that 55–65% of an interruption's effect is repeated work, and that
+the first attempt is best "80–90%" of the time). Do not post it. Any new
+draft must be written from the current numbers in `workshop/` (rendered in
+[`paper/mind-your-manners-v1.0.pdf`](paper/mind-your-manners-v1.0.pdf)):
 
-> Everyone has an opinion about whether you should be polite to AI. There are
-> now three papers on it. All three measure the same thing: what the model
-> *says*.
->
-> We asked a different question. Does tone change what an agent *does*?
->
-> Same seven-tone scale, from grovelling to threatening. But instead of
-> answering a multiple-choice question, the model writes Python, runs it
-> against a real spreadsheet, sees what happened, and tries again. Graded by
-> the benchmark's own evaluator. No string matching.
->
-> 11,850 trajectories. Two models. $62.
->
-> **Finding one: how you open does not matter.** Rude, polite, grovelling,
-> threatening — the agent works exactly as hard. Not "we could not detect a
-> difference." The interval excludes an effect of the size the prior papers
-> reported.
->
-> **Finding two: how you interrupt does.** Say the same thing *partway
-> through*, while the agent is working, and it changes behaviour. A
-> threatening check-in costs about a third more thinking. That has now
-> replicated twice on separate data.
->
-> **Finding three is the one I did not expect.** The agent is not thinking
-> harder. It is *refusing to stop*. Thinking per step does not move at all;
-> the number of steps does. And flattery does the opposite — tell it that it
-> is brilliant halfway through and it wraps up early.
->
-> **Finding four came from reading the tape.** We replayed every turn of
-> every run to see what the workbook actually looked like as the agent
-> worked. Among trajectories that could improve at all, the agent's *first*
-> attempt is the best answer it ever produces about 80–90% of the time, and
-> 55–65% of what an interruption buys is the agent rewriting the same answer
-> again.
->
-> **And finding five is the one that nearly went out backwards.** That replay
-> tool had a bug: it never recalculated spreadsheet formulas, so any turn that
-> answered with a formula looked blank and scored zero. More than half of them
-> do. I only caught it because the write-up claimed a validation check that,
-> when I finally ran it, failed on 89 of 126 cases. Fixed and re-run, the
-> conclusion inverted: a blunt *"there is still more work remaining"* does buy
-> a small real improvement, replicated three times. The version of this post I
-> would have written a week ago said the opposite.
->
-> Here is the part I would rather not write. When I looked at *which*
-> interruptions cost more, it was not the rude ones. Polite cost 28% more.
-> Rude cost nothing measurable. What actually predicted the cost was whether
-> the message implied "keep going" or "get it right."
->
-> Which means my own prompts were confounded. I matched them all to the same
-> length, and a *meaning* difference walked in where the length difference
-> used to be. So I built four new ones that pull them apart: a demand with no
-> feelings in it, a compliment with no task in it, an insult with no task in
-> it, and a neutral control.
->
-> The demand reproduces the whole effect. The insult does nothing —
-> statistically indistinguishable from the neutral note. The compliment makes
-> the agent *stop early*. Rudeness is not the variable. Nagging is.
->
-> Nothing made the agent more accurate. Not once, in seven runs.
->
-> Repo, data, the full paper, and the six confounds that each inverted a
-> headline: [link]
-
-**Do not post if:** any number here has drifted from `paper/`. This file is
-downstream of it.
+- Headline: **implied demand, not register, drives persistence**; praise and
+  a closing cue shorten trajectories; **no accuracy effect** survives
+  correction or replication (pooled contrasts equivalent within ±4 points).
+- Demand +1.17 turns; insult −0.08 [−0.40, +0.24]; closing cue −1.44;
+  very polite +0.70 vs very rude +0.71 (`workshop/01-demand.md`,
+  `workshop/02-closing.md`, Appendix C).
+- Repeated work is **roughly 40–65%** of each turn-count effect on Luna;
+  the first gradable output is already the best in **77–91%** on Luna
+  (69–88% on GLM) (`workshop/03-close.md`).
+- 9,850 per-turn-regraded trajectories (of 11,850); $61.53 total spend.
 
 ---
 
@@ -354,7 +302,7 @@ Self-Debug rather than a quotation from Chen et al.
 **Outstanding**
 
 - [x] **Both §3.7 primary-PDF checks** — closed 15 Sep 2026, neither as assumed
-- [ ] Author block and CRediT contributions
+- [x] Author block and CRediT contributions — v1.0, 22 Oct 2026
 - [ ] DeepSeek and Qwen (~$35) for four-model generality — parked, buys breadth not identification
 - [ ] A second substrate (AppWorld) — a different paper
 
