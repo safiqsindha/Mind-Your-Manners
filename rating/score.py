@@ -15,6 +15,8 @@ import pathlib
 import statistics
 import sys
 
+from scipy import stats
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 RATING = ROOT / "rating"
 
@@ -235,7 +237,11 @@ def main() -> None:
         ds = [statistics.fmean(by_arm[a][r]["demand_strength"] for r in names if r in by_arm[a])
               for a in common]
         te = [eff[a] for a in common]
-        print(f"   Pearson r  = {pearson(ds, te):+.3f}")
+        r_all, p_all = stats.pearsonr(ds, te)
+        print(f"   Pearson r  = {pearson(ds, te):+.3f}   (n = {len(common)}, two-sided p = {p_all:.4f})")
+        keep = [i for i, a in enumerate(common) if a != "L5_rude"]
+        r_x, p_x = stats.pearsonr([ds[i] for i in keep], [te[i] for i in keep])
+        print(f"   Pearson r without L5_rude = {r_x:+.3f}   (n = {len(keep)}, two-sided p = {p_x:.4f})")
         print(f"   Spearman rho = {spearman(ds, te):+.3f}")
         for a, d, t in sorted(zip(common, ds, te), key=lambda z: -z[1]):
             print(f"     {a:20s} demand {d:4.1f}   turns {t:+.2f}")

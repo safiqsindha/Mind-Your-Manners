@@ -94,7 +94,7 @@ def _rating_appendix(t: dict) -> list[str]:
         "# B. Blinded rating of the stimuli",
         "",
         f"{len(r['raters'])} held-out model raters, instances of one model family at three "
-        "sizes ([AUTHOR: name the rater models and their sampling settings]). "
+        "sizes (the specific models and sampling settings were not recorded). "
         "Each rated alone from the rubric and the texts of Appendix A -- "
         "no outcome data, no arm names, no project access. "
         + (f"{t['ratings_table']} gives the rubric anchors and every text's ratings. "

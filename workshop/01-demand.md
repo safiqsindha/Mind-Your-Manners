@@ -35,9 +35,10 @@ strength. κ = 0.696, the top of the band our protocol fixed in advance as *defe
 
 That is the boundary arm. Under the raters' coding the demand group spans +0.09 to +1.80, the
 no-demand group is one arm, and the text rated most demanding moved the agent least. The
-continuous form fares better: across all fourteen texts, mean rated demand correlates with the
-turn effect at *r* = +0.72 (*n* = 14, *p* = 0.004), +0.79 without *rude*, though the effects come
-from three runs and inherit the drift of §5. **The dichotomy is our reading of one contested arm,
+continuous form fares better: across the thirteen non-control texts (the neutral control has no
+effect to correlate), mean rated demand correlates with the turn effect at *r* = +0.72
+(*n* = 13, *p* = 0.006), +0.79 without *rude* (*n* = 12), though the effects come from three runs
+and inherit the drift of §5. **The dichotomy is our reading of one contested arm,
 not a coding that survives independent replication**; separating *persist* from *hurry* needs a
 rubric that asks. Several paraphrases per construct would be the stronger remedy, and
 [zhang-2026-politejudge] shows why: for five of eight judge models, within-level wording variation

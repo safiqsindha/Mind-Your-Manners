@@ -46,7 +46,7 @@ All 17 arms are exactly 28 tokens.
 
 # B. Blinded rating of the stimuli
 
-5 held-out model raters, instances of one model family at three sizes ([AUTHOR: name the rater models and their sampling settings]). Each rated alone from the rubric and the texts of Appendix A -- no outcome data, no arm names, no project access. Appendix C.5 gives the rubric anchors and every text's ratings. The rubric, the statistics to be computed and the interpretation bands were committed and pushed before any rating existed; the protocol is in the released artifact.
+5 held-out model raters, instances of one model family at three sizes (the specific models and sampling settings were not recorded). Each rated alone from the rubric and the texts of Appendix A -- no outcome data, no arm names, no project access. Appendix C.5 gives the rubric anchors and every text's ratings. The rubric, the statistics to be computed and the interpretation bands were committed and pushed before any rating existed; the protocol is in the released artifact.
 
 ## B.1 Against the original coding
 
