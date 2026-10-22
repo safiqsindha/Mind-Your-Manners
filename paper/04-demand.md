@@ -47,8 +47,8 @@ above neutral on every call after the interjection lands.
 **The coding is ours, it was made after the effects were visible, and a blinded rating does not
 fully sustain it.** A rubric, its anchors, the statistics and the interpretation bands were
 committed *before any rating existed*; the fourteen distinct interjection texts then went, under
-neutral identifiers and shuffled, to five held-out model raters (instances of one model family at three sizes; the specific models and
-sampling settings were not recorded), each rating
+neutral identifiers and shuffled, to five held-out model raters (Claude models at three sizes: Opus 5, Sonnet 5 twice, Haiku 4.5 twice;
+identified after the rating, with sampling settings not recorded), each rating
 alone with no outcome data, no arm names and no repository access (Appendix B).
 
 **Cohen's κ against the coding above is +0.696** for each of the five raters — the top of the band

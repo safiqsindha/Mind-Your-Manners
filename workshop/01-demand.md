@@ -32,8 +32,8 @@ indirectly, through requests or challenges, so the probe tests explicit demand. 
 reduces to "explicit instructions change behaviour, decorative text does not" is raising the right
 objection.
 
-**A blinded check half holds** (Appendix B, C.5). Five held-out model raters (instances of one model family at three sizes) coded the fourteen
-distinct texts for implied demand, with no outcome data or arm names, against a rubric committed
+**A blinded check half holds** (Appendix B, C.5). Five held-out model raters (Claude models at three sizes: Opus 5, Sonnet 5, Haiku 4.5) coded the
+fourteen distinct texts for implied demand, with no outcome data or arm names, against a rubric committed
 before any rating existed. They agree with our coding on six of seven register arms and disagree,
 unanimously, on *rude*. We read "just get on with it already" as a demand for speed, not
 persistence — in an agent loop, if anything an argument for fewer turns. The rubric asked about

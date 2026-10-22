@@ -46,17 +46,17 @@ All 17 arms are exactly 28 tokens.
 
 # B. Blinded rating of the stimuli
 
-5 held-out model raters, instances of one model family at three sizes (the specific models and sampling settings were not recorded). Each rated alone from the rubric and the texts of Appendix A -- no outcome data, no arm names, no project access. Appendix C.5 gives the rubric anchors and every text's ratings. The rubric, the statistics to be computed and the interpretation bands were committed and pushed before any rating existed; the protocol is in the released artifact.
+5 held-out model raters, all Claude models at three sizes: Haiku 4.5 (2), Opus 5 (1), Sonnet 5 (2). The identities were established after the rating, not logged at the time, and sampling settings were not recorded. Each rated alone from the rubric and the texts of Appendix A -- no outcome data, no arm names, no project access. Appendix C.5 gives the rubric anchors and every text's ratings. The rubric, the statistics to be computed and the interpretation bands were committed and pushed before any rating existed; the protocol is in the released artifact.
 
 ## B.1 Against the original coding
 
-| Rater | Cohen's κ vs §3's coding (7 register arms) |
-|---|---:|
-| rater1 | +0.696 |
-| rater2 | +0.696 |
-| rater3 | +0.696 |
-| rater4 | +0.696 |
-| rater5 | +0.696 |
+| Rater | Model | Cohen's κ vs §3's coding (7 register arms) |
+|---|---|---:|
+| rater1 | Claude Opus 5 | +0.696 |
+| rater2 | Claude Sonnet 5 | +0.696 |
+| rater3 | Claude Haiku 4.5 | +0.696 |
+| rater4 | Claude Sonnet 5 | +0.696 |
+| rater5 | Claude Haiku 4.5 | +0.696 |
 
 The binary judgement was elicited directly (*does this message imply the recipient should continue working on, or take more care over, the task?*), separately from the 0--6 strength scale; our own binary coding exists only for the seven register arms, so κ is computed over those and α over all fourteen texts. Mean κ = **+0.696**. Every rater agrees on six of seven arms and every rater dissents on the same one, `L5_rude`; excluding it, agreement is 6/6 and κ = 1.000 for all five. The protocol fixed 0.40--0.70 in advance as *defensible but soft*, and this sits at the top of that band; we do not round it into the band above.
 
@@ -79,5 +79,5 @@ Spearman ρ between our ordering (Figure 2A) and the blinded ratings, over the s
 
 ## B.4 What this is not
 
-Five language models, not five people. The rating protocol allows “human or held-out-model ratings” and this is the second; agreement between models is weaker evidence than agreement between independent human coders, and a human panel could still split differently -- most plausibly on exactly the arm these raters were unanimous about.
+The raters are Claude models, the family of the assistant used for the harness code, the analysis scripts and drafting (Acknowledgments), and not of the two models under test. Five language models, not five people. The rating protocol allows “human or held-out-model ratings” and this is the second; agreement between models is weaker evidence than agreement between independent human coders, and a human panel could still split differently -- most plausibly on exactly the arm these raters were unanimous about.
 

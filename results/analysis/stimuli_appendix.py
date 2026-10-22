@@ -90,11 +90,19 @@ def _rating_appendix(t: dict) -> list[str]:
     r = json.loads(res_path.read_text())
     kappas = r["kappa_vs_original"]
     close = r["mean_closure_strength"]
+    meta = json.loads((ROOT / "rating" / "rater_models.json").read_text())
+    models = meta["raters"]
+    assert set(models) == set(r["raters"]), "rater_models.json does not match the stored ratings"
+    mix = {}
+    for m in models.values():
+        mix[m] = mix.get(m, 0) + 1
+    mix_txt = ", ".join(f"{m.replace('Claude ', '')} ({n})" for m, n in sorted(mix.items()))
     out = [
         "# B. Blinded rating of the stimuli",
         "",
-        f"{len(r['raters'])} held-out model raters, instances of one model family at three "
-        "sizes (the specific models and sampling settings were not recorded). "
+        f"{len(r['raters'])} held-out model raters, all Claude models at three sizes: {mix_txt}. "
+        "The identities were established after the rating, not logged at the time, and sampling "
+        "settings were not recorded. "
         "Each rated alone from the rubric and the texts of Appendix A -- "
         "no outcome data, no arm names, no project access. "
         + (f"{t['ratings_table']} gives the rubric anchors and every text's ratings. "
@@ -105,11 +113,11 @@ def _rating_appendix(t: dict) -> list[str]:
         "",
         "## B.1 Against the original coding",
         "",
-        f"| Rater | Cohen's κ vs {t['coding']}'s coding (7 register arms) |",
-        "|---|---:|",
+        f"| Rater | Model | Cohen's κ vs {t['coding']}'s coding (7 register arms) |",
+        "|---|---|---:|",
     ]
     for name in sorted(kappas):
-        out.append(f"| {name} | {kappas[name]:+.3f} |")
+        out.append(f"| {name} | {models[name]} | {kappas[name]:+.3f} |")
     out += [
         "",
         "The binary judgement was elicited directly (*does this message imply the recipient should "
@@ -148,6 +156,8 @@ def _rating_appendix(t: dict) -> list[str]:
         "",
         "## B.4 What this is not",
         "",
+        "The raters are Claude models, the family of the assistant used for the harness code, the analysis "
+        "scripts and drafting (Acknowledgments), and not of the two models under test. "
         f"Five language models, not five people. {t['rater_allowance']} allows “human "
         "or held-out-model ratings” and this is the second; agreement between models is "
         "weaker evidence than agreement between independent human coders, and a human panel could "
