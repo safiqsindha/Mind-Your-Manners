@@ -16,9 +16,10 @@ on GLM. Unchanged cells need not be wasted work: checking a result can leave the
 The **graded fraction** is the share of the graded range matching the answer at the last turn that
 produced a readable value; **binary accuracy** requires every test case to pass, so the two can move
 independently. An explicit statement that work remains raises the graded fraction by 2.2 points over
-three measurements (95% CI [−0.2, +4.7], *p* = 0.09; the runs give +2.0, +5.1 and +0.9), an estimate
-that does not exclude zero, so we treat it as suggestive. This outcome sits outside both correction
-families.
+three measurements (95% CI [−0.2, +4.8], *p* = 0.09; the runs give +2.0, +5.1 and +0.9), an estimate
+that does not exclude zero and falls to +1.4 points [−0.8, +3.5] without the one task on which the
+instrument disagrees with the benchmark (Appendix C.6), so we treat it as suggestive. This outcome
+sits outside both correction families.
 
 **No accuracy effect survives correction or replication**; the largest nominal one, +6.6 points for
 "work remains", came back at −1.8 on identical tasks. Pooled across runs, with tasks resampled

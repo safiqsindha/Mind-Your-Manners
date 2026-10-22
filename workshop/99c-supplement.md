@@ -118,7 +118,14 @@ Item counts: Cohen's κ is computed over the 7 register arms, Krippendorff's α 
 
 **Validation.** In the probe control (all 400 scheduled trajectories), 119 of 126 trajectories that pass the benchmark end with match 1 on the first test case, and the 7 that do not are all in one task (54513); 47 of 274 that fail also reach match 1, because a trajectory can solve the first test case and fail a later one. Progress is therefore a first-test-case measure and not a second grader of accuracy.
 
-Among passing trajectories on the primary population, the share that end below match 1 ranges from 0% to 10% across 28 arms with at least ten, so the instrument's disagreement is not concentrated in any one arm.
+All seven disagreements are in task 54513. Its graded range is a single cell, and it scores both 0.0 and 1.0 in different trajectories of the same arm, so it does not cancel in paired contrasts. The graded-fraction contrasts are sensitive to it, in points of the graded range:
+
+| Contrast | All 50 tasks | Without that task |
+|---|---|---|
+| demand vs control | −0.3 [−4.6, +1.9], *p* = 0.54 | −0.5 [−4.9, +1.7], *p* = 0.45 |
+| praise vs control | −1.5 [−4.0, +0.6], *p* = 0.17 | −1.8 [−4.3, 0.0], *p* = 0.08 |
+| insult vs control | −0.3 [−3.4, +1.6], *p* = 0.50 | −0.9 [−3.9, +0.7], *p* = 0.21 |
+| work remains vs control | +2.2 [−0.2, +4.8], *p* = 0.09 | +1.4 [−0.8, +3.5], *p* = 0.21 |
 
 **Population.** Progress and turn counts use the same trajectories: those on which the interjection fired (and, in the register run, turns 1 and 2), joined to the run records on task, trial and injection turn. The turn-count effect below is the primary outcome, reproduced on those trajectories. Each share is redundant steps divided by acting turns, both as paired per-task differences against the arm's control, with a task-bootstrap interval. It is undefined when the turn effect itself is indistinguishable from zero, and its interval can pass 100% when that effect is small.
 

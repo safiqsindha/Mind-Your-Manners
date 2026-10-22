@@ -345,19 +345,24 @@ def c6():
             "a trajectory can solve the first test case and fail a later one. Progress is therefore a "
             "first-test-case measure and not a second grader of accuracy.", ""]
 
-    # Disagreement among passing trajectories, by arm, on the primary population.
-    rates = []
-    for run, (cstem, arms) in R.RUNS.items():
-        for stem in [cstem] + [a for _, a in arms]:
-            rows = R.load_aligned(stem)
-            if rows is None:
-                continue
-            ps = [r for r in rows if r["passed"]]
-            if len(ps) >= 10:
-                rates.append(sum(not one(r) for r in ps) / len(ps))
-    out += [f"Among passing trajectories on the primary population, the share that end below match 1 "
-            f"ranges from {100*min(rates):.0f}% to {100*max(rates):.0f}% across {len(rates)} arms with at "
-            "least ten, so the instrument's disagreement is not concentrated in any one arm.", ""]
+    # The pooled graded-fraction contrasts with and without the one task on which the
+    # instrument disagrees with the benchmark. That task scores 0.0 and 1.0 in different
+    # trajectories of the same arm, so it does not cancel in paired contrasts.
+    full = R.pool_progress(np.random.default_rng(R.SEED))
+    R.EXCLUDE_TASKS = {top}
+    try:
+        without = R.pool_progress(np.random.default_rng(R.SEED))
+    finally:
+        R.EXCLUDE_TASKS = set()
+    pts = lambda m: (f"{100*m['est']:+.1f} [{100*m['lo']:+.1f}, {100*m['hi']:+.1f}], "
+                     f"*p* = {m['p']:.2f}").replace("-", "−").replace("−0.0]", "0.0]")
+    out += [f"All seven disagreements are in task {top}. Its graded range is a single cell, and it scores "
+            "both 0.0 and 1.0 in different trajectories of the same arm, so it does not cancel in paired "
+            "contrasts. The graded-fraction contrasts are sensitive to it, in points of the graded range:", "",
+            "| Contrast | All 50 tasks | Without that task |", "|---|---|---|"]
+    for label in full:
+        out.append(f"| {label.replace(chr(39), '')} | {pts(full[label])} | {pts(without[label])} |")
+    out.append("")
 
     out += ["**Population.** Progress and turn counts use the same trajectories: those on which the "
             "interjection fired (and, in the register run, turns 1 and 2), joined to the run records on "

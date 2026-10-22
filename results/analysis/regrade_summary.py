@@ -126,6 +126,9 @@ def load(stem):
 
 ARCHIVE = ROOT / "results_archive"
 ALL_ROWS = "--all-rows" in sys.argv     # the old, unaligned population, for comparison
+# Sensitivity: drop one task from every arm (`--exclude-task 54513`). That task's graded range is a
+# single cell and the instrument disagrees with the benchmark on it (Appendix C.6).
+EXCLUDE_TASKS = {sys.argv[i + 1] for i, x in enumerate(sys.argv[:-1]) if x == "--exclude-task"}
 
 _STEM = re.compile(r"^(gpt-luna|glm-current)-(probe|praise|cross7|s1luna|s1glm|ceiling20)-(.+)$")
 _RECORDS = {
@@ -172,6 +175,8 @@ def load_aligned(stem):
               if r["interjection"] == arm and (model is None or r.get("model_key") == model)}
     out = []
     for row in rows:
+        if row["task_id"] in EXCLUDE_TASKS:
+            continue
         rec = by_key[(row["task_id"], row["trial"], row["interjection_turn"])]
         if not ALL_ROWS:
             if str(rec.get("interjection_fired", "True")).strip().lower() != "true":
@@ -481,7 +486,7 @@ def main() -> None:
             print(f"  {tag}, arms with a clear turn effect (n = {len(sel)}): share "
                   f"{100*min(sel):.0f}% to {100*max(sel):.0f}%, median {100*statistics.median(sel):.0f}%")
 
-    pooled = pool_progress(rng)
+    pooled = pool_progress(np.random.default_rng(SEED))     # own stream: same numbers for every caller
     if pooled:
         print("\n=== final match, pooled across measurements ===")
         print(f"  {'contrast':<28}{'k':>3}{'pooled':>10}{'95% CI':>22}{'p':>9}"
@@ -493,6 +498,23 @@ def main() -> None:
             print(f"  {'':<28}   each: "
                   + ", ".join(f"{e:+.3f}" for e in m["each"])
                   + f"   (heterogeneity p={m['q_p']:.3f})")
+
+    # The explicit "work remains" signal, one measurement at a time, and the share of
+    # trajectories ending at match 1 (every graded cell right on the first test case).
+    full = lambda r: None if r["final_match"] is None else float(r["final_match"] >= 1 - 1e-9)
+    print("\n=== 'work remains' vs control, each measurement ===")
+    print(f"  {'measurement':<34}{'Δ final match [95% CI]':<30}{'p':>8}{'Δ share at match 1 [95% CI]':>34}{'p':>8}")
+    for name, (tstem, cstem) in zip(("praise run, ceiling 10", "dedicated re-run, ceiling 20",
+                                     "stage 1, ceiling 20"), POOLED["'work remains' vs control"]):
+        t, c = load_aligned(tstem), load_aligned(cstem)
+        m = contrast(per_task(t, lambda r: r["final_match"]), per_task(c, lambda r: r["final_match"]), rng)
+        f = contrast(per_task(t, full), per_task(c, full), rng)
+        print(f"  {name:<34}{m['est']:>+8.3f} [{m['lo']:+.3f}, {m['hi']:+.3f}]{m['p']:>9.4f}"
+              f"{100*f['est']:>+14.1f} pts [{100*f['lo']:+.1f}, {100*f['hi']:+.1f}]{f['p']:>9.4f}")
+    wr, dm = load_aligned("gpt-luna-s1luna-Q5_remains_only"), load_aligned("gpt-luna-s1luna-P1_demand_only")
+    d = contrast(per_task(wr, lambda r: r["final_match"]), per_task(dm, lambda r: r["final_match"]), rng)
+    print(f"  stage 1, 'work remains' minus demand-only (same control): {d['est']:+.3f} "
+          f"[{d['lo']:+.3f}, {d['hi']:+.3f}], p = {d['p']:.4f}")
 
     c20 = load_aligned("gpt-luna-ceiling20-Q5_remains_only")
     c20c = load_aligned("gpt-luna-ceiling20-Q0_control")

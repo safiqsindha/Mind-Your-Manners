@@ -49,8 +49,9 @@ turn 2, so for timing contrasts only we fix the comparison population from the *
 is far better powered than accuracy at our *n*. Reasoning tokens per trajectory are secondary; they
 were the pre-registered primary in the first run and were demoted on evidence. Accuracy is reported
 and underpowered by design (§2.5). The per-turn regrade adds `final_match`, the fraction of the
-graded range correct in the **last** turn, and **redundant steps**, turns after which the graded
-range is unchanged, a measure adopted from [redundancybench]. One definition a reader comparing our
+graded range correct, on the first test case, in the last turn that produced a readable output, and
+**redundant steps**, turns after which the graded range is unchanged, a measure adopted from
+[redundancybench]. One definition a reader comparing our
 turn counts with another paper's needs: the run records store *acting* turns, those that emitted
 code, while the per-turn regrade stores model calls, including the closing `FINAL:` message that
 carries none — mean 3.57 against 4.69 on the micro-experiment, a 31% relative gap. **Turn count in
@@ -120,8 +121,10 @@ solved by the control arm and 4 are always solved**, so for more than half the s
 accuracy difference is pinned at zero whatever the manipulation does. Turn count varies on every
 task.
 
-The pre-specified smallest effect of interest is **±4 accuracy points**, the polite-versus-rude gap
-of the paper this work is positioned against. Pooling each contrast's repeated measurements, with
+The smallest effect of interest is **±4 accuracy points**, the polite-versus-rude gap of the paper
+this work is positioned against. We fixed it during analysis, after the runs and after an earlier
+draft's arm-specific bounds, chosen once we had seen which passed, were discarded; it is not
+pre-registered, and the equivalence analysis is exploratory in that sense. Pooling each contrast's repeated measurements, with
 the interval from a bootstrap that resamples tasks **jointly across runs**, since the runs share
 their 50 tasks:
 

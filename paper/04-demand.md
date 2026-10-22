@@ -117,8 +117,8 @@ different labs. The ordering is what replicates; the magnitudes are not, and GLM
 not reach significance on its own, being below 80% power at its observed size (§2.5), so the
 replication rests on the demand arm. GLM's effects are roughly half of Luna's, and its control runs
 2.94 turns against Luna's 4.95 at this ceiling: a model that stops early has less room to be pushed
-into continuing. The *waste* is mostly Luna's — control redundant steps run 1.51 on Luna against
-0.26 on GLM, and the demand arm adds +1.03 against +0.19 — so how wasteful a continue signal is is a
+into continuing. The *redundancy* is mostly Luna's — control redundant steps run 1.83 on Luna against
+0.36 on GLM, and the demand arm adds +1.57 against +0.26 — so how many steps a continue signal adds that change nothing is a
 property of the model's stopping behaviour, not of the signal.
 
 ## 4.5 What this establishes and what it does not
