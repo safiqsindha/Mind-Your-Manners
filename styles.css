@@ -416,3 +416,8 @@ thead th.num { font-size: 10px; }
   a { color: #000; text-decoration: underline; }
   .rv { opacity: 1 !important; transform: none !important; }
 }
+
+/* "In practice": six cards, always an even 3 x 2 (2 x 3, then 1 column, as it narrows) */
+.kcards.practice { max-width: 1080px; grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 900px) { .kcards.practice { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .kcards.practice { grid-template-columns: 1fr; } }

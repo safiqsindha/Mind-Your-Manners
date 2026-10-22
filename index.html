@@ -47,6 +47,7 @@
       <a href="#demand" class="hide-s">Demand</a>
       <a href="#closing" class="hide-s">Closing</a>
       <a href="#accuracy" class="hide-s">Accuracy</a>
+      <a href="#practice" class="hide-s">In practice</a>
       <a href="#cite" class="hide-s">Cite</a>
       <a class="navbtn" href="assets/mind-your-manners-v1.0.pdf">Paper</a>
       <button class="tbtn" data-theme-toggle type="button">Dark</button>
@@ -189,10 +190,74 @@
     </div>
   </section>
 
-  <!-- ═══════════════════════════ 05 ═══════════════════════════ -->
+  <!-- ═══════════════════════════ 05 IN PRACTICE ═══════════════════════════ -->
+  <section class="sec" id="practice">
+    <div class="sec-head rv">
+      <div class="secno">05 &mdash; In practice</div>
+      <h2>If you build or run agents</h2>
+      <p class="lead">
+        What the results suggest for the messages your system sends an agent. This is one benchmark
+        and two models, so treat each point as something to check on your own setup.
+      </p>
+    </div>
+
+    <ul class="kcards practice rv">
+      <li class="kcard">
+        <span class="kn">TONE</span>
+        <h3>Don&rsquo;t spend effort on politeness</h3>
+        <p>Very polite and very rude messages had the same effect (+0.70 and +0.71 turns), and an
+           insult with no request in it did nothing. Write for clarity, not for manners.</p>
+      </li>
+      <li class="kcard">
+        <span class="kn">&ldquo;KEEP GOING&rdquo;</span>
+        <h3>Nudges to continue cost turns, not accuracy</h3>
+        <p>&ldquo;Please continue and make sure it&rsquo;s correct&rdquo; added 1.17 turns on a
+           four-turn baseline, mostly repeated work. Use it when you want extra checking, and
+           expect the extra cost.</p>
+      </li>
+      <li class="kcard">
+        <span class="kn">PRAISE &amp; SIGN-OFFS</span>
+        <h3>They read as &ldquo;you can stop&rdquo;</h3>
+        <p>Thanks, praise and &ldquo;this is the final note&rdquo; made agents stop sooner
+           (&minus;0.6 to &minus;1.4 turns). Don&rsquo;t thank an agent mid-task if you want it to
+           carry on. Accuracy held up, though one interval reaches &minus;6 points.</p>
+      </li>
+      <li class="kcard">
+        <span class="kn">SYSTEM TEXT</span>
+        <h3>Audit what your tooling writes into the loop</h3>
+        <p>Our messages arrived in the tool output, where status lines, retry notices, monitors
+           and orchestrator pings also arrive. The agent read the cue, not who sent it. Check
+           what yours imply about whether work is done.</p>
+      </li>
+      <li class="kcard">
+        <span class="kn">STOP RULES</span>
+        <h3>Say it outright</h3>
+        <p>Hints about continuing or finishing moved behavior without being instructions. If you
+           need an agent to stop, or keep going, write that as an explicit rule and a turn
+           budget. <i>This one is our inference; we did not test it.</i></p>
+      </li>
+      <li class="kcard">
+        <span class="kn">MEASURING</span>
+        <h3>Track turns and cost, not only pass rate</h3>
+        <p>Behavior changed while accuracy did not, so a pass-rate dashboard would have missed it.
+           Compare any new wording against a neutral note; we never compared against silence.</p>
+      </li>
+    </ul>
+
+    <div class="callout rv">
+      <h4>Where this stops</h4>
+      <p>
+        Two models, 50 spreadsheet tasks, 28-token messages. We did not test other agent types,
+        longer messages, or messages from a user rather than from tool output. The closing-cue
+        result is one run, and why these cues work is still open.
+      </p>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ 06 ═══════════════════════════ -->
   <section class="sec" id="cite">
     <div class="sec-head rv">
-      <div class="secno">05 &mdash; Cite</div>
+      <div class="secno">06 &mdash; Cite</div>
       <h2>BibTeX</h2>
     </div>
     <div class="bib rv">
