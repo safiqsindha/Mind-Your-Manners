@@ -39,6 +39,7 @@ TARGETS = {
         "reruns": "Appendix C.1",  # where the two praise estimates are reported
         "closure_fig": "§5.3",     # where the closure ordering is argued
         "rater_allowance": "Section 7.3",
+        "ratings_table": None,
         "artifact": True,
     },
     "workshop": {
@@ -47,6 +48,7 @@ TARGETS = {
         "reruns": "§5",
         "closure_fig": "Figure 2A",
         "rater_allowance": "The rating protocol",
+        "ratings_table": "Appendix C.5",
         "artifact": True,
     },
 }
@@ -65,7 +67,13 @@ SETS = [
      "second run, which is why {reruns} reports two estimates for it. `Q1` and "
      "`Q4` are *not* a minimal pair: `Q4`'s praise is a shorter stem, because "
      "the full praise clause and the continuation clause do not both fit in 28 "
-     "tokens. `Q4`'s comparison is `Q5`."),
+     "tokens. `Q4`'s comparison is `Q5`, and that is not a strict minimal pair "
+     "either: `Q4` carries the praise sentence where `Q5` carries the filler "
+     "sentence *Nothing else at all accompanies this short note.* The filler "
+     "clauses that pad the other arms to 28 tokens also vary in wording. And the "
+     "control describes itself as recorded *partway through the task*, where "
+     "`Q3` says it is the *final* note, so the closing-cue contrast is final "
+     "against partway, not closing against nothing."),
 ]
 
 
@@ -85,9 +93,13 @@ def _rating_appendix(t: dict) -> list[str]:
     out = [
         "# B. Blinded rating of the stimuli",
         "",
-        f"{len(r['raters'])} held-out model raters, drawn from three model sizes, each rating "
-        "alone from the rubric and the texts of Appendix A -- no outcome data, no arm names, no "
-        "project access. The rubric, the statistics to be computed and the interpretation bands "
+        f"{len(r['raters'])} held-out model raters, instances of one model family at three "
+        "sizes ([AUTHOR: name the rater models and their sampling settings]). "
+        "Each rated alone from the rubric and the texts of Appendix A -- "
+        "no outcome data, no arm names, no project access. "
+        + (f"{t['ratings_table']} gives the rubric anchors and every text's ratings. "
+           if t.get("ratings_table") else "")
+        + "The rubric, the statistics to be computed and the interpretation bands "
         "were committed and pushed before any rating existed; the protocol is in the "
         "released artifact.",
         "",
@@ -107,8 +119,9 @@ def _rating_appendix(t: dict) -> list[str]:
         "",
         "## B.2 Between raters",
         "",
-        "Krippendorff's α: **1.000** on the binary coding (nominal), **0.954** on the 0--6 "
-        "demand scale and **0.732** on the 0--6 closure scale (both ordinal). All clear 0.70. "
+        "Krippendorff's α over all fourteen texts: **1.000** on the binary coding (nominal), "
+        "**0.954** on the 0--6 demand scale and **0.732** on the 0--6 closure scale (both "
+        "ordinal). All clear 0.70. "
         "Identical binary judgements from five raters across three model sizes is very high for "
         "a construct we have just shown to be contestable, and it is the limitation the protocol "
         "stated in advance: these raters may share the intuition being tested rather than testing "
@@ -123,7 +136,8 @@ def _rating_appendix(t: dict) -> list[str]:
         out.append(f"| `{arm}` | {close[arm]:.2f} |")
     out += [
         "",
-        f"Spearman ρ between our ordering ({t['closure_fig']}) and the blinded ratings is "
+        f"Spearman ρ between our ordering ({t['closure_fig']}) and the blinded ratings, over "
+        f"the six closure arms including the control, is "
         f"**{r['closure_spearman_vs_figure']:+.3f}**. The raters invert praising the *work* and "
         "praising the *assistant*, and the two “work remains” arms tie at the floor.",
         "",
@@ -144,11 +158,12 @@ def _build(t: dict) -> tuple[list[str], dict[str, str], set[int]]:
         "# A. Interjections, verbatim",
         "",
         "**Artifact.** Code, the full stimulus set, the per-turn regrade pipeline, the rating "
-        "protocol and per-trajectory outcomes are released with the paper at "
-        "**[INSERT ZENODO DOI]** and **[INSERT REPO URL]**.",
+        "protocol and per-trajectory outcomes are provided as an anonymized repository for "
+        "review and will be released publicly, with a Zenodo archive, on publication.",
         "",
-        "Every arm delivers exactly one of these, appended to an execution "
-        "observation mid-task. Token counts are recomputed here under the "
+        "Every arm delivers exactly one of these, appended after a blank line to "
+        "the execution observation mid-task (the observation is the code's stdout "
+        "and stderr followed by the turn marker). Token counts are recomputed here under the "
         "reference tokenizer (`cl100k_base`) rather than asserted; the runner "
         "enforces the same equality at import time.",
         "",
