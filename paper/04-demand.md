@@ -48,8 +48,9 @@ above neutral on every call after the interjection lands.
 fully sustain it.** A rubric, its anchors, the statistics and the interpretation bands were
 committed *before any rating existed*; the fourteen distinct interjection texts then went, under
 neutral identifiers and shuffled, to five held-out model raters (Claude models at three sizes: Opus 5, Sonnet 5 twice, Haiku 4.5 twice;
-recovered afterwards from the rating session's transcript, with sampling settings not recorded), each rating
-alone with no outcome data, no arm names and no repository access (Appendix B).
+recovered afterwards from the rating session's transcript; no sampling settings were specified), each rating
+alone with no outcome data and no arm names, told not to read files or look for the repository,
+and each confirming it had consulted only the prompt (Appendix B; prompt in `rating/RATER_PROMPT.md`).
 
 **Cohen's κ against the coding above is +0.696** for each of the five raters — the top of the band
 the protocol fixed in advance as *defensible but soft*. **The whole disagreement is one arm, and it

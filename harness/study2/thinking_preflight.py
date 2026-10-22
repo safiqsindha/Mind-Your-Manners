@@ -1,4 +1,4 @@
-"""Phase 0.5 gate for the thinking arm (README "The thinking arm"): three
+"""Phase 0.5 gate for the thinking arm (docs/project-notes.md "The thinking arm"): three
 cheap, blocking probe checks that must pass before the calibration arm
 (harness/config.py:GPT_LUNA_CALIBRATION) gets real spend.
 

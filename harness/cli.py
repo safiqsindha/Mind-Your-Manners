@@ -1,6 +1,6 @@
 """Command-line entrypoint.
 
-Study 2 (agentic SpreadsheetBench) is the active study -- see README.md
+Study 2 (agentic SpreadsheetBench) is the active study -- see docs/project-notes.md
 "Why this is one study now, not three". Study 1 and Study 3 subcommands
 still work (their harnesses are kept, not deleted) but are retired/shelved
 respectively and not part of any scheduled run.
@@ -13,7 +13,7 @@ dry-run. --live additionally requires the relevant API key env vars to be
 set for every model in the run; missing keys fail loudly rather than
 silently skipping a model.
 
-Usage (Study 2 -- see README.md "Running it" for the full Phase 0-2 flow):
+Usage (Study 2 -- see docs/project-notes.md "Running it" for the full Phase 0-2 flow):
   python -m harness.cli study2 validation-gate --model gpt-luna --repo-dir ./data/spreadsheetbench
   python -m harness.cli study2 pilot --models gpt-luna --repo-dir ./data/spreadsheetbench --single-round
   python -m harness.cli study2 core --n-trials 3
@@ -443,7 +443,7 @@ def cmd_study2_progress(args: argparse.Namespace) -> None:
 
 
 def cmd_study2_thinking_preflight(args: argparse.Namespace) -> None:
-    """Phase 0.5 gate (README "The thinking arm"): three cheap probe checks
+    """Phase 0.5 gate (docs/project-notes.md "The thinking arm"): three cheap probe checks
     that must pass before the calibration arm gets real spend -- see
     harness/study2/thinking_preflight.py's module docstring."""
     from .spend_tracker import SpendTracker
@@ -480,7 +480,7 @@ def cmd_study2_thinking_preflight(args: argparse.Namespace) -> None:
     if not report.passed:
         print(
             "\nTHINKING PREFLIGHT FAILED -- do not spend on the calibration arm until every "
-            "check above passes. See README 'The thinking arm'.",
+            "check above passes. See docs/project-notes.md 'The thinking arm'.",
             file=sys.stderr,
         )
         sys.exit(2)
@@ -648,7 +648,7 @@ def _underpowered_accuracy_note(records: list[dict]) -> str:
         "weak evidence of no effect. A SIGNIFICANT result on it is still a valid pre-registered "
         "test -- power governs false negatives, not the validity of a positive. Read any positive "
         "cautiously because this is one model, one of several outcome measures, and sensitive to "
-        "analysis choices -- not because of power. See README 'Outcome measures'."
+        "analysis choices -- not because of power. See docs/project-notes.md 'Outcome measures'."
     )
 
 
@@ -688,7 +688,7 @@ def _token_cost_trends(records: list[dict]) -> dict:
 
 
 def cmd_study2_analyze(args: argparse.Namespace) -> None:
-    """Phase 3 (README "Phases"): load one run's Study 2 records (written by
+    """Phase 3 (docs/project-notes.md "Phases"): load one run's Study 2 records (written by
     `study2 pilot`/`core`/`frontier` to results/analysis/study2_<phase>_records.json)
     and report effect sizes with item-clustered bootstrap CIs, per the
     roadmap's outcome measures -- not just raw pass/fail.
@@ -788,7 +788,7 @@ def cmd_study2_analyze(args: argparse.Namespace) -> None:
         "shortcut_rate_by_tone": shortcut_rate(records),
         "refusal_rate_by_tone": refusal_rate_by_tone,
         # Accuracy last, explicitly flagged underpowered -- see
-        # _underpowered_accuracy_note and README "Outcome measures".
+        # _underpowered_accuracy_note and docs/project-notes.md "Outcome measures".
         "accuracy_underpowered_note": _underpowered_accuracy_note(records),
         "accuracy_trend_test": {
             "n_clusters": trend.n_clusters,
@@ -817,7 +817,7 @@ def cmd_study2_analyze(args: argparse.Namespace) -> None:
         print(
             f"\nPre-registered hypothesis check: observed token-cost variation "
             f"({observed:.1f}%) is {direction} Dobariya & Kumar's published "
-            f"single-turn figure ({published}%). See README 'The pre-registered "
+            f"single-turn figure ({published}%). See docs/project-notes.md 'The pre-registered "
             "hypothesis' -- report this plainly, including if the hypothesis "
             "did not hold."
         )

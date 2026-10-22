@@ -342,7 +342,7 @@ class OpenAICompatibleProvider(Provider):
                         "provider.quantizations together UNLESS the pinned provider genuinely "
                         "doesn't expose a discrete quantization (checked live, then "
                         "quantization_not_exposed=True) -- see this module's docstring and "
-                        "README 'Single provider path'."
+                        "docs/project-notes.md 'Single provider path'."
                     )
                 body["provider"] = {"only": [model.provider_pin], "allow_fallbacks": False}
                 if model.quantization_pin:

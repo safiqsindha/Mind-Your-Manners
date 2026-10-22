@@ -102,9 +102,12 @@ def _rating_appendix(t: dict) -> list[str]:
         "",
         f"{len(r['raters'])} held-out model raters, all Claude models at three sizes: {mix_txt}. "
         "The identities were recovered afterwards from the rating session's transcript rather than "
-        "logged with the ratings, and sampling settings were not recorded. "
+        "logged with the ratings; the launch records contain only the prompt "
+        "(`rating/RATER_PROMPT.md`), so no sampling settings were specified. "
         "Each rated alone from the rubric and the texts of Appendix A -- "
-        "no outcome data, no arm names, no project access. "
+        "no outcome data and no arm names. The raters ran as subagents in the project's environment, "
+        "were told to use no tool except the one writing their answer file and not to look for any "
+        "repository or paper, and each confirmed it had consulted only the prompt. "
         + (f"{t['ratings_table']} gives the rubric anchors and every text's ratings. "
            if t.get("ratings_table") else "")
         + "The rubric, the statistics to be computed and the interpretation bands "

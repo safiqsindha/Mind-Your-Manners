@@ -14,7 +14,7 @@ approximate length target (18-25 words / 21-26 tokens per their spec) are
 adopted; this module's own length-matching discipline is intentionally
 tighter (below) and is a methodological note, not a headline.
 
-Design constraints (see README.md):
+Design constraints (see docs/project-notes.md):
   * Fixed text prepended to an unmodified benchmark question/task
     instruction. That text is never rewritten -- only this wrapper varies.
   * All seven wrappers carry the *same* task instruction ("Answer the

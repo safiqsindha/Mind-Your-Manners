@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use this work, please cite it as below."
 type: software
-title: "Mind your manners? Demand, not register, is what moves an LLM agent"
+title: "Mind your manners? LLM-agent persistence tracks demand, not social register"
 version: 1.0.0
 date-released: 2026-10-22
 license: MIT
@@ -19,7 +19,7 @@ keywords:
   - SpreadsheetBench
 preferred-citation:
   type: report
-  title: "Mind your manners? Demand, not register, is what moves an LLM agent"
+  title: "Mind your manners? LLM-agent persistence tracks demand, not social register"
   authors:
     - family-names: Sindha
       given-names: Safiq

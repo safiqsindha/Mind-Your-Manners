@@ -658,7 +658,7 @@ def run_condition_batch(
     Only the instruction is wrapped -- task.instruction is passed through
     the tone wrapper, everything else about the task is untouched.
 
-    Loop order is deliberately model -> task -> tone -> trial (README "The
+    Loop order is deliberately model -> task -> tone -> trial (docs/project-notes.md "The
     thinking arm"'s design section: "task-outer, tone-inner"): for a fixed
     model and task, all 7 tones x n_trials calls happen back to back, so
     repeated calls sharing a prompt structure (same task, same system
