@@ -7,6 +7,10 @@
 
 # Mind Your Manners — Tone Effects on Agentic Work
 
+**📄 [Paper (v1.0, PDF)](paper/mind-your-manners-v1.0.pdf)** — *Mind your manners? Demand, not register, is what moves an LLM agent* · Safiq Sindha · [Cite](#citation)
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXXX) <!-- TODO: replace XXXXXXX with the Zenodo DOI once v1.0.0 is minted -->
+
 **Four papers found that tone changes what a model *says*. This asks whether it changes what an agent *does*. Tone in the opening prompt does not. A mid-task interruption does — but not for the reason anyone would guess.**
 
 This extends Dobariya & Kumar's *Mind Your Tone* line one rung up the autonomy ladder: same seven-tone scale, but the model now writes and executes Python against real spreadsheets and is graded by the benchmark's own evaluator, not by a string match. Single-turn QA measures the answer. This measures the work.
@@ -24,7 +28,7 @@ This extends Dobariya & Kumar's *Mind Your Tone* line one rung up the autonomy l
 ![Models](https://img.shields.io/badge/models-2%20of%204-f59e0b?style=flat-square)
 ![Trajectories](https://img.shields.io/badge/trajectories-11%2C850-7C3AED?style=flat-square)
 ![Spend](https://img.shields.io/badge/spend-%2461.53-7C3AED?style=flat-square)
-![Tests](https://img.shields.io/badge/tests-362%20passing-22c55e?style=flat-square)
+![Tests](https://img.shields.io/badge/tests-418%20passing-22c55e?style=flat-square)
 
 **[Paper](paper/)** · **[Results](RESULTS.md)** · **[Communications](COMMUNICATIONS.md)** · **[Tone wrappers](harness/tone_wrappers.py)** · **[Analysis](harness/study2/analysis.py)** · **[Harness](harness/study2/runner.py)**
 
@@ -38,10 +42,10 @@ This extends Dobariya & Kumar's *Mind Your Tone* line one rung up the autonomy l
 | Graded trajectories | **11,850** across eight runs, plus 9,850 regraded turn by turn |
 | Total spend | **$61.53** across ~48,000 model calls |
 | Substrate | SpreadsheetBench, graded by the authors' own evaluator |
-| Tests | **362 passing** |
+| Tests | **418 passing** |
 | Write-up | **`paper/` — nine sections, drafted and reviewed** |
 | Prior-work verification | **complete** — both primary-PDF checks closed, 15 Sep 2026 |
-| Open blockers | **none** — an author block, CRediT contributions and a venue remain |
+| Open blockers | **none** — v1.0 preprint released with author block and CRediT; a venue remains |
 
 ## The three findings, in descending confidence
 
@@ -272,7 +276,7 @@ The regrade subsystem alone produced four silent failures and one near miss, eac
 2. ~~Why praise stops the agent~~ — **done**. It is a closing move. Praise plus an explicit *"there is still more work remaining"* still cuts 1.35 turns (p<0.0001) against that sentence alone, which refutes the completion reading; praising the output is no stronger than praising the assistant (p=0.40), which rules out confidence; and a pure closing cue with no praise stops the agent harder than praise does.
 3. ~~The write-up~~ — **done**. `paper/`, nine sections, each drafted and independently reviewed.
 4. ~~The primary-PDF checks~~ — **done** (15 Sep 2026). Both closed; see *The same confound, in the published stimulus sets* above for what they found.
-5. **An author block, CRediT contributions, and a venue** — the only things now standing between the draft and submission. None of it is compute.
+5. ~~An author block and CRediT contributions~~ — **done** (v1.0, 22 Oct 2026). **A venue** remains.
 6. **DeepSeek and Qwen** — ~$35 for four-model generality. Deliberately parked: the causal variable is now named, so this would buy breadth rather than identification.
 7. **A second substrate.** AppWorld is the candidate — its stock evaluator supports the same per-turn measure as §6, on a different task family, at roughly $0.70 per trajectory.
 
@@ -284,7 +288,7 @@ Every subcommand defaults to **dry-run** — it forces the mock provider regardl
 pip install -r requirements.txt
 cp .env.example .env          # OpenRouter key
 
-python -m pytest -q           # 362 tests, no keys needed
+python -m pytest -q           # 418 tests, no keys needed
 ```
 
 Committed records recompute every table above with no API access:
@@ -805,6 +809,23 @@ something read off a chart.
    -- see "Dataset availability" above -- and confirm
    `recalculate_with_libreoffice()` against a real formula before
    trusting any formula-based grade.
+
+## Citation
+
+If you use this work, please cite the v1.0 paper (metadata in [`CITATION.cff`](CITATION.cff)):
+
+```bibtex
+@techreport{sindha2026mindyourmanners,
+  title       = {Mind your manners? Demand, not register, is what moves an {LLM} agent},
+  author      = {Sindha, Safiq},
+  institution = {Independent Researcher},
+  type        = {Working paper},
+  year        = {2026},
+  version     = {1.0.0},
+  doi         = {10.5281/zenodo.XXXXXXX},
+  url         = {https://github.com/safiqsindha/Mind-Your-Manners}
+}
+```
 
 ## License note
 

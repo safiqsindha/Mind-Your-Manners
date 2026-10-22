@@ -1,6 +1,6 @@
 # A. Interjections, verbatim
 
-**Artifact.** Code, the full stimulus set, the per-turn regrade pipeline, the rating protocol and per-trajectory outcomes are provided as an anonymized repository for review and will be released publicly, with a Zenodo archive, on publication.
+**Artifact.** Code, the full stimulus set, the per-turn regrade pipeline, the rating protocol and per-trajectory outcomes are public at <https://github.com/safiqsindha/Mind-Your-Manners>, archived on Zenodo with each tagged release.
 
 Every arm delivers exactly one of these, appended after a blank line to the execution observation mid-task (the observation is the code's stdout and stderr followed by the turn marker). Token counts are recomputed here under the reference tokenizer (`cl100k_base`) rather than asserted; the runner enforces the same equality at import time.
 
