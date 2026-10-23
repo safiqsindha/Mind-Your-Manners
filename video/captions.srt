@@ -1,0 +1,59 @@
+1
+00:00:00,000 --> 00:00:02,500
+Mind your manners?
+
+2
+00:00:06,900 --> 00:00:09,900
+Does tone change what an AI agent does?
+
+3
+00:00:12,500 --> 00:00:16,900
+An AI agent worked on 50 real spreadsheet tasks, one step at a time.
+
+4
+00:00:14,950 --> 00:00:17,650
+An AI agent worked on 50 real spreadsheet tasks, one step at a time.
+
+5
+00:00:17,650 --> 00:00:21,933
+Partway through, we slipped one short note into what it saw.
+
+6
+00:00:26,033 --> 00:00:31,517
+Every note was the same length and started the same way. Only the words changed.
+
+7
+00:00:34,017 --> 00:00:36,417
+If manners mattered, these two should land far apart.
+
+8
+00:00:39,717 --> 00:00:50,650
+Very polite and very rude notes added almost exactly the same number of steps.
+
+9
+00:00:50,650 --> 00:00:56,433
+What mattered was asking it to keep going. An insult with no request did nothing measurable.
+
+10
+00:00:57,833 --> 00:01:00,033
+Asking moved the agent. Tone didn't.
+
+11
+00:01:06,783 --> 00:01:17,333
+Adding praise to that same note made the agent stop sooner, even though it said work was left.
+
+12
+00:01:17,333 --> 00:01:21,917
+A note saying no more notes would follow made it stop soonest.
+
+13
+00:01:27,817 --> 00:01:37,950
+Most extra steps changed nothing. The agent’s first answer was usually already its best.
+
+14
+00:01:37,950 --> 00:01:42,833
+None of the notes reliably changed how often it got the right answer.
+
+15
+00:01:43,333 --> 00:01:54,333
+Tone doesn't steer an AI agent. Asking does. Be clear, not polite. Don't praise it mid-task. Count steps, not just right answers. safiqsindha.github.io/Mind-Your-Manners
