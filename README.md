@@ -13,6 +13,15 @@
 ![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)
 ![Tests](https://img.shields.io/badge/tests-422%20passing-22c55e?style=flat-square)
 
+<p align="center">
+  <a href="https://safiqsindha.github.io/Mind-Your-Manners/#watch">
+    <img src="video/thumbnail.jpg" width="720" alt="Play the two-minute explainer video. Frame shown: on a number line of extra steps, very polite lands at +0.70 and very rude at +0.71.">
+  </a>
+  <br>
+  <sub><b>Watch the two-minute explainer</b> on the <a href="https://safiqsindha.github.io/Mind-Your-Manners/#watch">project page</a>
+  · <a href="video/mind-your-manners-explainer.mp4">MP4</a> · <a href="video/transcript.md">transcript</a></sub>
+</p>
+
 Does the tone of a message change what an LLM agent *does*? A coding agent works through 50
 SpreadsheetBench tasks, graded by the benchmark's own evaluator. Partway through, one 28-token
 note is appended to its tool output. Every note is length-matched and opens with the same words,
@@ -47,6 +56,7 @@ rating/         the blinded rating: protocol, prompt, stimuli, ratings, scorer
 harness/        the agent loop, sandbox, grader, providers and CLI
 tests/          pytest suite (mock provider, no API keys)
 RESULTS.md      chronological lab notebook, including withdrawn claims
+video/          the two-minute explainer video, its Manim source and transcript
 docs/           the pre-release README, kept as a detailed project record
 ```
 
