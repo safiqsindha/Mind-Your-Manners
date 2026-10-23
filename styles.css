@@ -6,7 +6,7 @@
      prose      Literata        — leads, abstract, captions only
      machine    JetBrains Mono  — eyebrows, labels, numbers, table cells
 
-   Light is the default; dark is a toggle on <html data-theme>, not a
+   Dark is the default; light is a toggle on <html data-theme>, not a
    media query, so the choice is the reader's and it persists.
    ============================================================ */
 
@@ -17,19 +17,21 @@
   --ink:#1F2328; --ink-2:#4A5058; --ink-3:#6B7178;
   --env:#3452D9; --env-deep:#2538A8;      /* accent: the demand finding */
   --warm:#B4650C; --warm-deep:#8F4F09;    /* second: the closing-cue finding */
-  --good:#1F8A5C;
+  --good:#17744C;
   --bad:#C23B3B;
   --shadow:0 1px 3px rgba(15,20,30,.06);
 }
 
+/* Dark is the default. Every text colour here is at least 7:1 on --bg0 (WCAG AAA);
+   blue and orange stay distinct under protan, deutan and tritan simulation. */
 [data-theme="dark"] {
-  --bg0:#0D1117; --bg1:#11161D; --bg2:#151B23;
+  --bg0:#0D1117; --bg1:#11161D; --bg2:#161B22;
   --panel:#141A21;
-  --line:#262C36; --line-2:#39414D;
-  --ink:#E6EDF3; --ink-2:#A8B3BF; --ink-3:#7D8794;
-  --env:#7C93F5; --env-deep:#5A73D8;
-  --warm:#E2A64B; --warm-deep:#C88B36;
-  --good:#4FBF8C;
+  --line:#30363D; --line-2:#444C56;
+  --ink:#F0F3F6; --ink-2:#C2CAD3; --ink-3:#A3ADB9;
+  --env:#82A2FF; --env-deep:#4A5FC4;
+  --warm:#F2A541; --warm-deep:#C88B36;
+  --good:#56D39A;
   --bad:#E5726F;
   --shadow:0 1px 3px rgba(0,0,0,.4);
 }
@@ -421,3 +423,133 @@ thead th.num { font-size: 10px; }
 .kcards.practice { max-width: 1080px; grid-template-columns: repeat(3, 1fr); }
 @media (max-width: 900px) { .kcards.practice { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px) { .kcards.practice { grid-template-columns: 1fr; } }
+
+/* ============================================================
+   TRY IT — one tap, one answer
+   Meaning never rides on colour alone: every result has a shape
+   (▲ more, ▼ fewer, ● no change) and words.
+   ============================================================ */
+.demo {
+  max-width: var(--measure); margin-inline: auto;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
+  padding: clamp(18px, 3vw, 30px); box-shadow: var(--shadow);
+}
+.demo-ask { font-family: var(--display); font-weight: 600; font-size: 17px; color: var(--ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.chip {
+  min-height: 44px; padding: 0 15px; border-radius: 999px; cursor: pointer;
+  font: 500 15.5px var(--sans); color: var(--ink-2);
+  background: transparent; border: 1.5px solid var(--line-2);
+  transition: border-color .15s, background .15s, color .15s;
+}
+.chip:hover { border-color: var(--ink-2); color: var(--ink); }
+.chip[aria-pressed="true"] {
+  color: var(--ink); border-color: var(--env); border-width: 2px;
+  background: color-mix(in srgb, var(--env) 16%, transparent);
+}
+.chip[aria-pressed="true"]::before { content: "\2713\00a0"; color: var(--env); }
+.chip:focus-visible { outline: 3px solid var(--env); outline-offset: 3px; }
+
+.note { margin-top: 20px; }
+.note blockquote {
+  font: 15.5px/1.6 var(--mono); color: var(--ink);
+  background: var(--bg2); border-left: 3px solid var(--env); border-radius: 0 10px 10px 0;
+  padding: 14px 16px;
+}
+.note blockquote::before { content: "\201C"; } .note blockquote::after { content: "\201D"; }
+.note figcaption { font-family: var(--mono); font-size: 12.5px; color: var(--ink-3); margin-top: 8px; }
+
+.lanes { margin-top: 22px; display: grid; gap: 10px; }
+.lane { display: grid; grid-template-columns: 92px 1fr 54px; align-items: center; gap: 12px; }
+.lname { font-family: var(--mono); font-size: 13px; color: var(--ink-2); text-align: right; }
+.lval { font-family: var(--mono); font-size: 15px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.track {
+  position: relative; height: 26px; border-radius: 6px; overflow: hidden;
+  background: var(--bg2); border: 1px solid var(--line);
+}
+/* one tick per step, so length reads as a count */
+.track::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(90deg, transparent 0 calc(100% / 7 - 2px), var(--bg0) calc(100% / 7 - 2px) calc(100% / 7));
+}
+.fill {
+  display: block; height: 100%; width: calc(var(--w) / 7 * 100%);
+  transition: width .6s var(--ease);
+}
+.fill.base { background: var(--ink-3); }
+.fill.this[data-dir="more"] { background: var(--env); }
+.fill.this[data-dir="fewer"] { background: var(--warm); }
+.fill.this[data-dir="flat"] { background: var(--ink-3); }
+
+.verdict { margin-top: 20px; }
+.v-num { font-family: var(--display); font-size: clamp(22px, 3vw, 28px); font-weight: 700; color: var(--ink); line-height: 1.25; }
+.v-icon { margin-right: 10px; font-size: .8em; }
+.verdict[data-dir="more"] .v-icon, .verdict[data-dir="more"] #v-num { color: var(--env); }
+.verdict[data-dir="fewer"] .v-icon, .verdict[data-dir="fewer"] #v-num { color: var(--warm); }
+.verdict[data-dir="flat"] .v-icon, .verdict[data-dir="flat"] #v-num { color: var(--ink-2); }
+.v-dir { font-weight: 500; font-size: .72em; color: var(--ink-2); }
+.v-line { font-family: var(--read); font-size: 17px; color: var(--ink-2); margin-top: 6px; }
+.v-acc { font-family: var(--mono); font-size: 14px; color: var(--good); margin-top: 10px; }
+.demo-foot { font-family: var(--read); font-size: 13.5px; line-height: 1.6; color: var(--ink-3); margin-top: 18px; border-top: 1px solid var(--line); padding-top: 14px; }
+
+@media (max-width: 560px) {
+  .lane { grid-template-columns: 74px 1fr 46px; gap: 8px; }
+  .chip { flex: 1 1 calc(50% - 10px); }
+}
+
+/* ============================================================
+   TAKEAWAY CARD — complete on its own, so a screenshot carries
+   the claim, the numbers, the source and the link.
+   ============================================================ */
+.takeaway-wrap { max-width: 1080px; margin: 0 auto; }
+.takeaway {
+  position: relative; background: var(--bg1); color: var(--ink);
+  border: 1px solid var(--line-2); border-radius: 18px;
+  padding: clamp(22px, 4vw, 48px) clamp(20px, 4.4vw, 56px);
+  box-shadow: var(--shadow);
+}
+.tk-eyebrow { font-family: var(--mono); font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.tk-head {
+  font-family: var(--display); font-weight: 800; letter-spacing: -.02em; line-height: 1.12;
+  font-size: clamp(26px, 4vw, 44px); margin-top: 10px; text-wrap: balance;
+}
+.tk-head span { color: var(--env); }
+.tk-cols { list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(16px, 2.6vw, 30px); margin-top: clamp(20px, 3vw, 34px); }
+.tk { border-top: 5px solid var(--c); padding-top: 16px; --c: var(--ink); }
+.tk[data-dir="more"] { --c: var(--env); }
+.tk[data-dir="fewer"] { --c: var(--warm); }
+.tk-n { font-family: var(--mono); font-weight: 500; font-size: clamp(26px, 3.2vw, 38px); color: var(--c); letter-spacing: -.02em; line-height: 1.1; white-space: nowrap; }
+.tk-n span { font-size: .6em; vertical-align: .18em; }
+.tk-u { font-family: var(--mono); font-size: 13px; color: var(--ink-3); margin-top: 4px; }
+.tk h3 { font-size: clamp(18px, 2vw, 22px); margin: 14px 0 6px; }
+.tk-p { font-family: var(--read); font-size: 16px; line-height: 1.5; color: var(--ink-2); }
+.tk-src {
+  display: flex; justify-content: space-between; gap: 8px 20px; flex-wrap: wrap;
+  margin-top: clamp(20px, 3vw, 34px); padding-top: 14px; border-top: 1px solid var(--line);
+  font-family: var(--mono); font-size: 13px; color: var(--ink-3);
+}
+.tk-src b { color: var(--ink); font-weight: 500; }
+.tk-url { color: var(--env); font-weight: 500; }
+.tk-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 16px; }
+.tk-actions .btn-hero { min-height: 44px; cursor: pointer; font-size: 14.5px; }
+@media (max-width: 760px) { .tk-cols { grid-template-columns: 1fr; } .tk-n { white-space: normal; } }
+
+/* the exported share image: fixed 1200 x 630, 1.91:1 like link previews */
+.takeaway.export { width: 1200px; height: 630px; padding: 46px 56px 0; border-radius: 0; border: 0; }
+.takeaway.export { padding-top: 50px; }
+.takeaway.export .tk-eyebrow { font-size: 15px; }
+.takeaway.export .tk-head { font-size: 52px; margin-top: 12px; }
+.takeaway.export .tk-cols { margin-top: 38px; gap: 36px; }
+.takeaway.export .tk-n { font-size: 40px; }
+.takeaway.export .tk-u { font-size: 15px; }
+.takeaway.export .tk h3 { font-size: 27px; margin-top: 18px; }
+.takeaway.export .tk-p { font-size: 20px; line-height: 1.45; }
+.takeaway.export .tk-src { font-size: 15px; }
+.takeaway.export .tk-src { position: absolute; left: 56px; right: 56px; bottom: 30px; }
+
+/* small text on the page, lifted for low vision */
+.kcard .kn, .fnum { font-size: 11.5px; }
+.mitem span { font-size: 13.5px; }
+
+/* links inside running text are underlined, so they never depend on colour alone */
+.lead a, .prose a, .tagline a, .callout a, .tk-p a { text-decoration: underline; text-underline-offset: 3px; }

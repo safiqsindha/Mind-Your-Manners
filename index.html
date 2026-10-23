@@ -12,6 +12,12 @@
 <meta property="og:description" content="11,850 graded trajectories, two models, 50 SpreadsheetBench tasks. Demand drives agent persistence; social register does not.">
 <meta property="og:url" content="https://safiqsindha.github.io/Mind-Your-Manners/">
 <meta name="twitter:card" content="summary_large_image">
+<meta property="og:image" content="https://safiqsindha.github.io/Mind-Your-Manners/assets/takeaways-card.png">
+<meta property="og:image:width" content="2400">
+<meta property="og:image:height" content="1260">
+<meta property="og:image:alt" content="Mind your manners? Tone doesn't steer an AI agent. Asking does. Be clear, not polite: very polite and very rude notes added +0.70 and +0.71 steps. Don't praise it mid-task: praise and a final-note cue cut 0.59 and 1.44 steps. Count steps, not just answers: please continue added 1.17 steps but not accuracy.">
+<meta name="twitter:image" content="https://safiqsindha.github.io/Mind-Your-Manners/assets/takeaways-card.png">
+<meta name="twitter:image:alt" content="Mind your manners? Tone doesn't steer an AI agent. Asking does. Three takeaways with numbers from the paper.">
 
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="styles.css">
@@ -23,7 +29,7 @@
   /* Set theme before first paint, so there is no flash of the wrong one. */
   try {
     var saved = localStorage.getItem('mym-theme');
-    var theme = saved || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    var theme = saved || 'dark';
     document.documentElement.dataset.theme = theme;
   } catch (e) {}
 </script>
@@ -44,6 +50,7 @@
     </a>
     <nav>
       <a href="#question" class="hide-s">Question</a>
+      <a href="#try" class="hide-s">Try it</a>
       <a href="#demand" class="hide-s">Demand</a>
       <a href="#closing" class="hide-s">Closing</a>
       <a href="#accuracy" class="hide-s">Accuracy</a>
@@ -107,10 +114,64 @@
     </ul>
   </section>
 
+  <!-- ═══════════════════════════ 02 TRY IT ═══════════════════════════ -->
+  <section class="sec" id="try" aria-labelledby="try-h">
+    <div class="sec-head rv">
+      <div class="secno">02 &mdash; Try it</div>
+      <h2 id="try-h">Send the agent a note</h2>
+      <p class="lead">
+        Pick a note. See how many steps the agent took compared with a plain note. A step is one
+        round of writing and running code.
+      </p>
+    </div>
+
+    <div class="demo rv">
+      <p class="demo-ask" id="demo-ask">Which note should the agent get partway through its task?</p>
+      <div class="chips" role="group" aria-labelledby="demo-ask">
+        <button type="button" class="chip" data-arm="very_polite" aria-pressed="true">Very polite</button>
+        <button type="button" class="chip" data-arm="very_rude" aria-pressed="false">Very rude</button>
+        <button type="button" class="chip" data-arm="demand" aria-pressed="false">&ldquo;Please continue&rdquo;</button>
+        <button type="button" class="chip" data-arm="insult" aria-pressed="false">Insult only</button>
+        <button type="button" class="chip" data-arm="praise" aria-pressed="false">Praise</button>
+        <button type="button" class="chip" data-arm="closing" aria-pressed="false">&ldquo;Final note&rdquo;</button>
+      </div>
+
+      <figure class="note">
+        <blockquote id="note-text">Checking in. I would be ever so grateful for your continued help here now. Thank you so very much indeed for your kindness and care.</blockquote>
+        <figcaption>The exact note from the study &middot; 28 tokens, same length and opening words as every other note</figcaption>
+      </figure>
+
+      <div class="lanes" id="lanes" role="img" aria-label="Plain note: 3.8 steps on average. This note: about 4.5 steps.">
+        <div class="lane">
+          <span class="lname">Plain note</span>
+          <span class="track"><span class="fill base" id="fill-base" style="--w:3.8"></span></span>
+          <span class="lval" id="val-base">3.8</span>
+        </div>
+        <div class="lane">
+          <span class="lname">This note</span>
+          <span class="track"><span class="fill this" id="fill-this" data-dir="more" style="--w:4.5"></span></span>
+          <span class="lval" id="val-this">&asymp;4.5</span>
+        </div>
+      </div>
+
+      <div class="verdict" id="verdict" aria-live="polite" aria-atomic="true" data-dir="more">
+        <p class="v-num"><span class="v-icon" aria-hidden="true">&#9650;</span><span id="v-num">+0.70 steps</span> <span class="v-dir" id="v-dir">more than a plain note</span></p>
+        <p class="v-line" id="v-line">Very polite: about the same effect as very rude.</p>
+        <p class="v-acc"><span aria-hidden="true">&#10003;</span> <span id="v-acc">Right answers: no reliable change.</span></p>
+      </div>
+
+      <p class="demo-foot" id="demo-foot">
+        Averages from the study (GPT-5.6 Luna, 50 spreadsheet tasks), not a live model. Each note is
+        compared with a plain note from the same run; bars show the plain-note average plus the
+        measured difference.
+      </p>
+    </div>
+  </section>
+
   <!-- ═══════════════════════════ 02 ═══════════════════════════ -->
   <section class="sec" id="demand">
     <div class="sec-head rv">
-      <div class="secno">02 &mdash; Finding 1</div>
+      <div class="secno">03 &mdash; Finding 1</div>
       <h2>Demand, not register, moves the agent</h2>
       <p class="lead">
         A plain &ldquo;please continue working&rdquo; adds turns. An insult with no request in it
@@ -145,7 +206,7 @@
   <!-- ═══════════════════════════ 03 ═══════════════════════════ -->
   <section class="sec" id="closing">
     <div class="sec-head rv">
-      <div class="secno">03 &mdash; Finding 2</div>
+      <div class="secno">04 &mdash; Finding 2</div>
       <h2>Praise and closing cues cut work short</h2>
       <p class="lead">
         Praise shortens the trajectory even when the same message says work remains. A note saying
@@ -171,7 +232,7 @@
   <!-- ═══════════════════════════ 04 ═══════════════════════════ -->
   <section class="sec" id="accuracy">
     <div class="sec-head rv">
-      <div class="secno">04 &mdash; Finding 3</div>
+      <div class="secno">05 &mdash; Finding 3</div>
       <h2>No accuracy effect</h2>
       <p class="lead">
         Most of the extra work changes nothing, and the agent's first answer is usually its best.
@@ -195,13 +256,49 @@
   <!-- ═══════════════════════════ 05 IN PRACTICE ═══════════════════════════ -->
   <section class="sec" id="practice">
     <div class="sec-head rv">
-      <div class="secno">05 &mdash; In practice</div>
+      <div class="secno">06 &mdash; In practice</div>
       <h2>If you build or run agents</h2>
       <p class="lead">
         What the results suggest for the messages your system sends an agent. This is one benchmark
         and two models, so treat each point as something to check on your own setup.
       </p>
     </div>
+
+    <figure class="takeaway-wrap rv">
+      <div class="takeaway" id="takeaway">
+        <p class="tk-eyebrow">Mind your manners? &middot; What it means if you use AI agents</p>
+        <p class="tk-head">Tone doesn&rsquo;t steer an AI agent. <span>Asking does.</span></p>
+        <ol class="tk-cols">
+          <li class="tk" data-dir="flat">
+            <p class="tk-n">+0.70 / +0.71</p>
+            <p class="tk-u">extra steps &middot; very polite / very rude</p>
+            <h3>Be clear, not polite.</h3>
+            <p class="tk-p">Very polite and very rude notes had the same effect. An insult with no request in it did nothing measurable.</p>
+          </li>
+          <li class="tk" data-dir="fewer">
+            <p class="tk-n"><span aria-hidden="true">&#9660;</span> &minus;0.59 / &minus;1.44</p>
+            <p class="tk-u">steps &middot; praise / &ldquo;no more notes&rdquo;</p>
+            <h3>Don&rsquo;t praise it mid-task.</h3>
+            <p class="tk-p">Praise and a &ldquo;final note&rdquo; made it stop sooner, even when the note said work was left.</p>
+          </li>
+          <li class="tk" data-dir="more">
+            <p class="tk-n"><span aria-hidden="true">&#9650;</span> +1.17</p>
+            <p class="tk-u">steps &middot; &ldquo;please continue&rdquo;</p>
+            <h3>Count steps, not just answers.</h3>
+            <p class="tk-p">Asking it to keep going added work, not accuracy. Most extra steps changed nothing.</p>
+          </li>
+        </ol>
+        <p class="tk-src">
+          <span><b>Sindha (2026).</b> GPT-5.6 Luna &middot; 50 spreadsheet tasks &middot; 9,850 test runs &middot; a step is one round of writing and running code</span>
+          <span class="tk-url">safiqsindha.github.io/Mind-Your-Manners</span>
+        </p>
+      </div>
+      <figcaption class="tk-actions">
+        <a class="btn-hero ghost" href="assets/takeaways-card.png" download="mind-your-manners-takeaways.png">
+          <svg class="bicon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v12M7 11l5 5 5-5M4.5 20.5h15"/></svg>Download as image</a>
+        <button class="btn-hero ghost copy-link" type="button" data-link="https://safiqsindha.github.io/Mind-Your-Manners/#practice">Copy link</button>
+      </figcaption>
+    </figure>
 
     <ul class="kcards practice rv">
       <li class="kcard">
@@ -220,9 +317,10 @@
       <li class="kcard">
         <span class="kn">PRAISE &amp; SIGN-OFFS</span>
         <h3>They read as &ldquo;you can stop&rdquo;</h3>
-        <p>Thanks, praise and &ldquo;this is the final note&rdquo; made agents stop sooner
-           (&minus;0.6 to &minus;1.4 turns). Don&rsquo;t thank an agent mid-task if you want it to
-           carry on. Accuracy held up, though one interval reaches &minus;6 points.</p>
+        <p>Praise and &ldquo;this is the final note&rdquo; made agents stop sooner
+           (&minus;0.59 to &minus;1.44 turns). Don&rsquo;t praise an agent mid-task if you want it to
+           carry on. A plain &ldquo;thank you&rdquo; was not the cause: three tone notes end in thanks
+           and only one shortened. Accuracy held up, though one interval reaches &minus;6 points.</p>
       </li>
       <li class="kcard">
         <span class="kn">SYSTEM TEXT</span>
@@ -259,7 +357,7 @@
   <!-- ═══════════════════════════ 06 ═══════════════════════════ -->
   <section class="sec" id="cite">
     <div class="sec-head rv">
-      <div class="secno">06 &mdash; Cite</div>
+      <div class="secno">07 &mdash; Cite</div>
       <h2>BibTeX</h2>
       <p class="lead">
         Version 1.0.0, archived on Zenodo as <a href="https://doi.org/10.5281/zenodo.23578768">doi:10.5281/zenodo.23578768</a>. To cite
