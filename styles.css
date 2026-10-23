@@ -553,3 +553,30 @@ thead th.num { font-size: 10px; }
 
 /* links inside running text are underlined, so they never depend on colour alone */
 .lead a, .prose a, .tagline a, .callout a, .tk-p a { text-decoration: underline; text-underline-offset: 3px; }
+
+/* ============================================================
+   WATCH — the explainer video, with a full transcript
+   ============================================================ */
+.sec.watch { padding-top: 34px; border-top: 0; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.video-wrap { max-width: 1000px; margin: 0 auto; }
+.video-wrap video {
+  width: 100%; height: auto; display: block; background: #0F1115;
+  border: 1px solid var(--line-2); border-radius: 14px; box-shadow: var(--shadow);
+}
+.video-wrap video:focus-visible { outline: 3px solid var(--env); outline-offset: 3px; }
+.video-wrap figcaption { text-align: center; font-size: 14.5px; }
+.transcript { max-width: var(--measure); margin: 16px auto 0; }
+.transcript summary {
+  cursor: pointer; text-align: center; font-family: var(--sans); font-weight: 500; font-size: 15px;
+  color: var(--env); min-height: 44px; display: flex; align-items: center; justify-content: center;
+}
+.transcript summary:focus-visible { outline: 3px solid var(--env); outline-offset: 2px; border-radius: 8px; }
+.transcript-body {
+  margin-top: 8px; padding: 18px 22px; background: var(--panel);
+  border: 1px solid var(--line); border-radius: 12px;
+}
+.transcript-body h3 { font-size: 15px; margin: 18px 0 4px; }
+.transcript-body h3:first-child { margin-top: 0; }
+.transcript-body p, .transcript-body li { font-family: var(--read); font-size: 15.5px; line-height: 1.65; color: var(--ink-2); }
+.transcript-body ul { padding-left: 1.2em; }

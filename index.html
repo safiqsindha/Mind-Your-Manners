@@ -81,11 +81,76 @@
 
       <div class="cta rv in d3">
         <a class="btn-hero primary" href="assets/mind-your-manners-v1.0.pdf"><svg class="bicon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2.5h7l5 5v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-18a1 1 0 0 1 1-1z"/><path d="M13 2.5v5h5"/></svg>Paper</a>
+        <a class="btn-hero ghost" href="#watch"><svg class="bicon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>Watch (1:55)</a>
         <a class="btn-hero ghost" href="https://github.com/safiqsindha/Mind-Your-Manners"><svg class="bicon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18.5L3 12l6-6.5M15 5.5L21 12l-6 6.5"/></svg>Code &amp; data</a>
         <a class="btn-hero ghost" href="https://doi.org/10.5281/zenodo.23578768"><svg class="bicon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5h17v12a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1z"/><path d="M2.5 3.5h19v4h-19z"/><path d="M9.5 11.5h5"/></svg>Zenodo</a>
         <a class="btn-hero ghost" href="#cite">BibTeX</a>
       </div>
     </div>
+  </section>
+
+  <!-- ═══════════════════════════ WATCH ═══════════════════════════ -->
+  <section class="sec watch" id="watch" aria-labelledby="watch-h">
+    <h2 id="watch-h" class="visually-hidden">The two-minute explainer</h2>
+    <figure class="video-wrap rv">
+      <video controls playsinline preload="none" width="1920" height="1080"
+             poster="assets/explainer-poster.jpg" aria-describedby="watch-cap">
+        <source src="assets/mind-your-manners-explainer.mp4" type="video/mp4">
+        <a href="assets/mind-your-manners-explainer.mp4">Download the explainer video (MP4, 1 min 55 s)</a>
+      </video>
+      <figcaption id="watch-cap">
+        The two-minute version. Captions are built into the video; there is no narration.
+      </figcaption>
+      <details class="transcript">
+        <summary>Read the transcript and description</summary>
+        <div class="transcript-body">
+          <h3>The question</h3>
+          <p>Two speech bubbles: a polite one (&quot;Would you kindly keep going?&quot;) and a rude one (&quot;Hurry up and keep going.&quot;).</p>
+          <p>Does tone change what an AI agent does?</p>
+          <h3>How we tested</h3>
+          <p>Diagram: an AI agent and a spreadsheet task, with arrows showing it runs code and sees the result. A dot travels the loop while a counter ticks up: step 1, 2, 3.</p>
+          <p>An AI agent worked on 50 real spreadsheet tasks, one step at a time. A step is one round of writing and running code.</p>
+          <p>Partway through, we slipped one short note into what it saw.</p>
+          <p>Four rows of 28 squares show that every note was exactly 28 tokens and started with the same first words. Only the words after that changed.</p>
+          <p>9,850 test runs · 2 AI models · 50 tasks.</p>
+          <h3>Result 1</h3>
+          <p>On a number line of extra steps compared with a plain note, the &quot;very polite&quot; and &quot;very rude&quot; bubbles each collapse into a point and slide out to their values:</p>
+          <ul>
+          <li>Very polite: +0.70 steps.</li>
+          <li>Very rude: +0.71 steps.</li>
+          </ul>
+          <p>Very polite and very rude notes added almost exactly the same number of steps.</p>
+          <ul>
+          <li>&quot;Please continue&quot;: +1.17 steps.</li>
+          <li>An insult with no request: −0.08 steps.</li>
+          </ul>
+          <p>What mattered was asking it to keep going. An insult with no request did nothing measurable.</p>
+          <p>Asking moved the agent. Tone didn&#x27;t.</p>
+          <h3>Result 2</h3>
+          <ul>
+          <li>A note saying work remains: +1.85 steps.</li>
+          <li>The same note with praise added slides back to +0.50 steps.</li>
+          </ul>
+          <p>Adding praise to that same note made the agent stop sooner, even though it said work was left.</p>
+          <ul>
+          <li>&quot;No more notes will follow&quot;: −1.44 steps (measured in one run).</li>
+          </ul>
+          <p>A note saying no more notes would follow made it stop soonest.</p>
+          <h3>Result 3</h3>
+          <p>Six step blocks: the extra steps 5 and 6 are marked &quot;changed nothing&quot;, and a star over step 2 marks the best answer.</p>
+          <p>Most extra steps changed nothing. The agent&#x27;s first answer was usually already its best.</p>
+          <p>On a number line of change in right answers, a green band from −4 to +4 percentage points reads &quot;no reliable change&quot;.</p>
+          <p>None of the notes reliably changed how often it got the right answer.</p>
+          <h3>What it means</h3>
+          <p>Tone doesn&#x27;t steer an AI agent. Asking does.</p>
+          <p>+0.70 / +0.71 — Be clear, not polite.</p>
+          <p>−0.59 / −1.44 — Don&#x27;t praise it mid-task.</p>
+          <p>+1.17 — Count steps, not just right answers.</p>
+          <p>Sindha, 2026 · GPT-5.6 Luna · 50 tasks · 9,850 test runs</p>
+          <p>safiqsindha.github.io/Mind-Your-Manners</p>
+        </div>
+      </details>
+    </figure>
   </section>
 
   <!-- ═══════════════════════════ 01 ═══════════════════════════ -->
